@@ -1,0 +1,145 @@
+/* ===== ENHANCED BUTTON HIGHLIGHTING ===== */
+
+/* Active button states - make them really obvious */
+.btn.active {
+    transform: scale(1.05);
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 20px rgba(255, 255, 255, 0.8),
+        0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    position: relative;
+}
+
+/* Hover effects for better feedback */
+.btn:hover:not(.disabled):not(.active) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.5),
+        0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Disabled buttons should be very obvious */
+.btn.disabled {
+    opacity: 0.3;
+    filter: grayscale(50%);
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Special highlighting for mode selection (buttons 1-5) */
+.btn[data-value="1"].active,
+.btn[data-value="2"].active,
+.btn[data-value="3"].active,
+.btn[data-value="4"].active,
+.btn[data-value="5"].active {
+    box-shadow: 
+        0 0 0 4px #00ff00,
+        0 0 30px rgba(0, 255, 0, 0.6),
+        0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: modeSelectPulse 2s infinite;
+}
+
+@keyframes modeSelectPulse {
+    0%, 100% { 
+        box-shadow: 
+            0 0 0 4px #00ff00,
+            0 0 30px rgba(0, 255, 0, 0.6),
+            0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    50% { 
+        box-shadow: 
+            0 0 0 6px #00ff00,
+            0 0 40px rgba(0, 255, 0, 0.8),
+            0 6px 24px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Suit button active states with suit-specific colors */
+.btn-clubs.active {
+    box-shadow: 
+        0 0 0 3px #00ff00,
+        0 0 25px rgba(0, 255, 0, 0.7);
+}
+
+.btn-diamonds.active, .btn-hearts.active {
+    box-shadow: 
+        0 0 0 3px #ff0000,
+        0 0 25px rgba(255, 0, 0, 0.7);
+}
+
+.btn-spades.active {
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 25px rgba(255, 255, 255, 0.8);
+}
+
+.btn-notrump.active {
+    box-shadow: 
+        0 0 0 3px #9b59b6,
+        0 0 25px rgba(155, 89, 182, 0.7);
+}
+
+/* Declarer button highlighting */
+.btn-north.active {
+    box-shadow: 
+        0 0 0 3px #3498db,
+        0 0 25px rgba(52, 152, 219, 0.7);
+}
+
+.btn-south.active {
+    box-shadow: 
+        0 0 0 3px #27ae60,
+        0 0 25px rgba(39, 174, 96, 0.7);
+}
+
+.btn-east.active {
+    box-shadow: 
+        0 0 0 3px #e74c3c,
+        0 0 25px rgba(231, 76, 60, 0.7);
+}
+
+.btn-west.active {
+    box-shadow: 
+        0 0 0 3px #f39c12,
+        0 0 25px rgba(243, 156, 18, 0.7);
+}
+
+/* Press feedback animation */
+.btn:active:not(.disabled) {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+/* Focus states for keyboard navigation */
+.btn:focus-visible {
+    outline: none;
+    box-shadow: 
+        0 0 0 3px #3498db,
+        0 0 20px rgba(52, 152, 219, 0.6);
+}
+
+/* Add a subtle glow to available buttons */
+.btn:not(.disabled):not(.active) {
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Make counter buttons more obvious when they can be clicked */
+.btn-counter:not(.disabled) {
+    box-shadow: 
+        0 0 0 2px rgba(52, 152, 219, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-counter.active {
+    animation: counterPulse 1s infinite;
+}
+
+@keyframes counterPulse {
+    0%, 100% { transform: scale(1.05); }
+    50% { transform: scale(1.1); }
+}

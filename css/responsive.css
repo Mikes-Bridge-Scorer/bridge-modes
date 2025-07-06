@@ -1,0 +1,452 @@
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+/* Mobile First Approach */
+
+/* Small Mobile (320px - 375px) */
+@media (max-width: 375px) {
+    .calculator {
+        padding: 12px;
+        border-radius: 16px;
+        max-width: 100%;
+    }
+    
+    .display-panel {
+        padding: 12px;
+        margin-bottom: 12px;
+        min-height: 100px;
+        font-size: 13px;
+    }
+    
+    .mode-title {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .button-grid {
+        gap: 6px;
+        min-height: 260px;
+    }
+    
+    .btn {
+        min-height: 46px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    
+    .suit-symbol {
+        font-size: 24px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 14px;
+    }
+    
+    .counter-value {
+        font-size: 18px;
+    }
+    
+    .btn-declarer {
+        font-size: 18px;
+    }
+    
+    .btn-action {
+        font-size: 11px;
+    }
+}
+
+/* Standard Mobile (375px - 414px) */
+@media (min-width: 375px) and (max-width: 414px) {
+    .calculator {
+        padding: 14px;
+        max-width: 100%;
+    }
+    
+    .display-panel {
+        padding: 14px;
+        margin-bottom: 14px;
+        min-height: 110px;
+    }
+    
+    .button-grid {
+        gap: 7px;
+        min-height: 270px;
+    }
+    
+    .btn {
+        min-height: 48px;
+        font-size: 15px;
+    }
+    
+    .suit-symbol {
+        font-size: 26px;
+    }
+    
+    .counter-value {
+        font-size: 20px;
+    }
+}
+
+/* Large Mobile (414px - 480px) */
+@media (min-width: 414px) and (max-width: 480px) {
+    .calculator {
+        padding: 16px;
+        max-width: 100%;
+    }
+    
+    .display-panel {
+        padding: 16px;
+        margin-bottom: 16px;
+        min-height: 120px;
+    }
+    
+    .button-grid {
+        gap: 8px;
+        min-height: 280px;
+    }
+    
+    .btn {
+        min-height: 50px;
+        font-size: 16px;
+    }
+    
+    .suit-symbol {
+        font-size: 28px;
+    }
+}
+
+/* Small Tablet Portrait (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .app-container {
+        padding: 20px;
+    }
+    
+    .calculator {
+        max-width: 480px;
+        padding: 20px;
+        max-height: 90vh;
+    }
+    
+    .display-panel {
+        padding: 20px;
+        margin-bottom: 20px;
+        min-height: 140px;
+        max-height: 220px;
+        font-size: 15px;
+    }
+    
+    .mode-title {
+        font-size: 20px;
+        margin-bottom: 14px;
+    }
+    
+    .button-grid {
+        gap: 10px;
+        min-height: 320px;
+    }
+    
+    .btn {
+        min-height: 56px;
+        font-size: 18px;
+        border-radius: 14px;
+    }
+    
+    .suit-symbol {
+        font-size: 32px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 18px;
+    }
+    
+    .counter-value {
+        font-size: 24px;
+    }
+    
+    .btn-declarer {
+        font-size: 24px;
+    }
+    
+    .btn-action {
+        font-size: 14px;
+    }
+}
+
+/* Tablet Portrait (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .app-container {
+        padding: 30px;
+    }
+    
+    .calculator {
+        max-width: 520px;
+        padding: 24px;
+        max-height: 85vh;
+    }
+    
+    .display-panel {
+        padding: 24px;
+        margin-bottom: 24px;
+        min-height: 160px;
+        max-height: 240px;
+        font-size: 16px;
+    }
+    
+    .mode-title {
+        font-size: 22px;
+        margin-bottom: 16px;
+    }
+    
+    .button-grid {
+        gap: 12px;
+        min-height: 360px;
+    }
+    
+    .btn {
+        min-height: 60px;
+        font-size: 20px;
+        border-radius: 16px;
+    }
+    
+    .suit-symbol {
+        font-size: 36px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 20px;
+    }
+    
+    .counter-value {
+        font-size: 26px;
+    }
+    
+    .btn-declarer {
+        font-size: 26px;
+    }
+    
+    .btn-action {
+        font-size: 15px;
+    }
+}
+
+/* Desktop and Large Tablets (1024px+) */
+@media (min-width: 1024px) {
+    .app-container {
+        padding: 40px;
+    }
+    
+    .calculator {
+        max-width: 560px;
+        padding: 28px;
+        max-height: 80vh;
+    }
+    
+    .display-panel {
+        padding: 28px;
+        margin-bottom: 28px;
+        min-height: 180px;
+        max-height: 260px;
+        font-size: 17px;
+    }
+    
+    .mode-title {
+        font-size: 24px;
+        margin-bottom: 18px;
+    }
+    
+    .button-grid {
+        gap: 14px;
+        min-height: 400px;
+    }
+    
+    .btn {
+        min-height: 64px;
+        font-size: 22px;
+        border-radius: 18px;
+    }
+    
+    .suit-symbol {
+        font-size: 40px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 22px;
+    }
+    
+    .counter-value {
+        font-size: 28px;
+    }
+    
+    .btn-declarer {
+        font-size: 28px;
+    }
+    
+    .btn-action {
+        font-size: 16px;
+    }
+    
+    /* Enhanced hover effects for desktop */
+    .btn:hover:not(.disabled) {
+        transform: translateY(-3px);
+        box-shadow: 
+            0 8px 20px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* ===== ORIENTATION RESPONSIVE ===== */
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .app-container {
+        padding: 10px;
+        min-height: 100vh;
+        height: auto;
+    }
+    
+    .calculator {
+        height: auto;
+        max-height: none;
+        min-height: 480px;
+        flex-shrink: 0;
+    }
+    
+    .display-panel {
+        min-height: 80px;
+        max-height: 120px;
+        margin-bottom: 12px;
+        font-size: 13px;
+    }
+    
+    .mode-title {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .button-grid {
+        min-height: 240px;
+        gap: 6px;
+    }
+    
+    .btn {
+        min-height: 42px;
+        font-size: 14px;
+    }
+    
+    .suit-symbol {
+        font-size: 22px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 13px;
+    }
+    
+    .counter-value {
+        font-size: 18px;
+    }
+    
+    .btn-declarer {
+        font-size: 18px;
+    }
+    
+    .btn-action {
+        font-size: 11px;
+    }
+}
+
+/* ===== SCORE OVERLAY RESPONSIVE ===== */
+@media (max-width: 480px) {
+    .score-content {
+        padding: 16px;
+        max-width: 95%;
+        border-radius: 12px;
+    }
+    
+    .score-content h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+    
+    .score-table {
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+}
+
+/* ===== ACCESSIBILITY RESPONSIVE ===== */
+
+/* Large text preference */
+@media (prefers-reduced-motion: no-preference) {
+    .btn {
+        transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+}
+
+/* High contrast responsive adjustments */
+@media (prefers-contrast: high) {
+    .display-panel {
+        border: 2px solid #000;
+    }
+    
+    .btn {
+        border: 2px solid #fff;
+        box-shadow: none;
+    }
+    
+    .btn:hover:not(.disabled) {
+        border-color: #000;
+        background: #fff !important;
+        color: #000 !important;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .calculator {
+        box-shadow: none;
+        border: 2px solid #000;
+        background: #fff;
+        color: #000;
+    }
+    
+    .button-grid {
+        display: none;
+    }
+    
+    .display-panel {
+        background: #fff;
+        color: #000;
+        border: 1px solid #000;
+    }
+    
+    .score-overlay {
+        position: static;
+        background: transparent;
+        display: block;
+    }
+    
+    .score-content {
+        background: #fff;
+        color: #000;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
+
+/* ===== SAFE AREA INSETS (iPhone X+) ===== */
+@supports (padding: max(0px)) {
+    .app-container {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    
+    .calculator {
+        margin-bottom: env(safe-area-inset-bottom);
+    }
+}
