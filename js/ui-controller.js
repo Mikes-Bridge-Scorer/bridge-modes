@@ -1,219 +1,83 @@
-// ===== UI CONTROLLER - MANAGES ALL USER INTERFACE INTERACTIONS =====
+/**
+ * UI Controller - Manages all user interface interactions and display updates
+ * Handles button states, modals, display panel, and UI utilities
+ */
 
-export class UIController {
+class UIController {
     constructor() {
-        // DOM elements
-        this.display = document.getElementById('display');
-        this.buttonGrid = document.getElementById('buttonGrid');
-        this.scoreOverlay = document.getElementById('scoreOverlay');
-        this.scoreTable = document.getElementById('scoreTable');
-        this.loading = document.getElementById('loading');
+        this.display = null;
+        this.buttons = null;
+        this.vulnControl = null;
+        this.vulnText = null;
+        this.wakeToggle = null;
+        this.doubleBtn = null;
         
-        // Button references
-        this.buttons = document.querySelectorAll('.btn');
-        this.downTricksBtn = document.getElementById('downTricksBtn');
-        this.upTricksBtn = document.getElementById('upTricksBtn');
+        // Wake lock for keeping screen active
+        this.wakeLock = null;
+        this.isWakeActive = false;
         
-        // Counter values
-        this.counters = {
-            'down-tricks': 1,
-            'up-tricks': 1
-        };
+        // Modal management
+        this.currentModal = null;
         
-        // Mode names mapping
-        this.modeNames = {
-            'kitchen': 'Kitchen Bridge',
-            'bonus': 'Bonus Bridge',
-            'chicago': 'Chicago Bridge',
-            'rubber': 'Rubber Bridge',
-            'duplicate': 'Duplicate Bridge'
-        };
-        
-        // Initialize
-        this.init();
+        // Loading state
+        this.isLoading = false;
     }
     
-    init() {
-        console.log('🎨 Initializing UI Controller');
-        this.setupAccessibility();
-        this.setupAnimations();
-    }
-    
-    // ===== MAIN DISPLAY UPDATE =====
-    updateDisplay(state) {
-        const { appState, currentMode, gameState, currentContract } = state;
+    /**
+     * Initialize UI Controller
+     */
+    async init() {
+        console.log('🖥️ Initializing UI Controller');
         
-        let displayContent = '';
-        let activeButtons = [];
-        
-        switch (appState) {
-            case 'mode_selection':
-                displayContent = this.getModeSelectionDisplay();
-                activeButtons = ['1', '2', '3', '4', '5'];
-                break;
-                
-            case 'level_selection':
-                displayContent = this.getLevelSelectionDisplay(currentMode, gameState);
-                activeButtons = ['1', '2', '3', '4', '5', '6', '7', 'PASS'];
-                break;
-                
-            case 'suit_selection':
-                displayContent = this.getSuitSelectionDisplay(currentMode, gameState, currentContract);
-                activeButtons = ['♣', '♦', '♥', '♠', 'NT'];
-                break;
-                
-            case 'declarer_selection':
-                displayContent = this.getDeclarerSelectionDisplay(currentMode, gameState, currentContract);
-                activeButtons = this.getDeclarerActiveButtons(currentContract);
-                break;
-                
-            case 'result_selection':
-                displayContent = this.getResultSelectionDisplay(currentMode, gameState, currentContract);
-                activeButtons = ['down-tricks', '-', '=', '+', 'up-tricks'];
-                break;
-                
-            case 'scoring':
-                displayContent = this.getScoringDisplay(currentMode, gameState, currentContract);
-                activeButtons = ['DEAL', 'MENU', 'SCORE'];
-                break;
+        try {
+            this.cacheElements();
+            this.setupWakeLock();
+            
+            console.log('✅ UI Controller ready');
+            
+        } catch (error) {
+            console.error('❌ Failed to initialize UI Controller:', error);
+            throw error;
         }
+    }
+    
+    /**
+     * Cache DOM elements for performance
+     */
+    cacheElements() {
+        this.display = document.getElementById('display');
+        this.buttons = document.querySelectorAll('.btn');
+        this.vulnControl = document.getElementById('vulnControl');
+        this.vulnText = document.getElementById('vulnText');
+        this.wakeToggle = document.getElementById('wakeToggle');
+        this.doubleBtn = document.getElementById('doubleBtn');
         
-        // Update display
-        this.display.innerHTML = displayContent;
+        if (!this.display) {
+            throw new Error('Display element not found');
+        }
+    }
+    
+    /**
+     * Update the main display panel
+     */
+    updateDisplay(content) {
+        if (!this.display) return;
         
-        // Update button states
-        this.setActiveButtons(activeButtons);
+        this.display.innerHTML = content;
+    }
+    
+    /**
+     * Update button states based on active buttons array
+     */
+    updateButtonStates(activeButtons = []) {
+        if (!this.buttons) return;
         
-        // Add fade-in animation
-        this.display.classList.add('fade-in');
-        setTimeout(() => this.display.classList.remove('fade-in'), 300);
-    }
-    
-    // ===== DISPLAY CONTENT GENERATORS =====
-    
-    getModeSelectionDisplay() {
-        return `
-            <div class="mode-title">Bridge Modes Calculator</div>
-            <div class="game-info">
-                <div>Select scoring mode:</div>
-                <div class="mode-list">
-                    1 - Kitchen Bridge<br>
-                    2 - Bonus Bridge<br>
-                    3 - Chicago Bridge<br>
-                    4 - Rubber Bridge<br>
-                    5 - Duplicate Bridge
-                </div>
-            </div>
-            <div class="current-state">Press 1-5 to select mode</div>
-        `;
-    }
-    
-    getLevelSelectionDisplay(mode, gameState) {
-        const modeName = this.modeNames[mode] || 'Bridge';
-        return `
-            <div class="mode-title">${modeName}</div>
-            <div class="game-info">
-                Game ${gameState.gameNumber} - Deal ${gameState.dealNumber}<br>
-                Dealer: ${gameState.dealer}
-            </div>
-            <div class="vulnerability-info">
-                Vulnerability: ${this.formatVulnerability(gameState.vulnerability)}
-            </div>
-            <div class="current-state">Select bid level (1-7) or PASS</div>
-        `;
-    }
-    
-    getSuitSelectionDisplay(mode, gameState, contract) {
-        const modeName = this.modeNames[mode] || 'Bridge';
-        return `
-            <div class="mode-title">${modeName}</div>
-            <div class="game-info">
-                Game ${gameState.gameNumber} - Deal ${gameState.dealNumber}<br>
-                Dealer: ${gameState.dealer} - ${this.formatVulnerability(gameState.vulnerability)}
-            </div>
-            <div class="number-display">Level: ${contract.level}</div>
-            <div class="current-state">Select suit</div>
-        `;
-    }
-    
-    getDeclarerSelectionDisplay(mode, gameState, contract) {
-        const modeName = this.modeNames[mode] || 'Bridge';
-        const contractText = `${contract.level}${contract.suit}${contract.doubled}`;
-        
-        return `
-            <div class="mode-title">${modeName}</div>
-            <div class="game-info">
-                Game ${gameState.gameNumber} - Deal ${gameState.dealNumber}<br>
-                Dealer: ${gameState.dealer} - ${this.formatVulnerability(gameState.vulnerability)}
-            </div>
-            <div class="number-display">Contract: ${contractText}</div>
-            <div class="current-state">
-                Select declarer (N/E/S/W)
-                ${contract.doubled === '' ? '<br>or Double (X)' : ''}
-                ${contract.doubled === 'X' ? '<br>or Redouble (XX)' : ''}
-            </div>
-        `;
-    }
-    
-    getResultSelectionDisplay(mode, gameState, contract) {
-        const modeName = this.modeNames[mode] || 'Bridge';
-        const contractText = `${contract.level}${contract.suit}${contract.doubled}`;
-        
-        return `
-            <div class="mode-title">${modeName}</div>
-            <div class="game-info">
-                Game ${gameState.gameNumber} - Deal ${gameState.dealNumber}<br>
-                Dealer: ${gameState.dealer} - ${this.formatVulnerability(gameState.vulnerability)}
-            </div>
-            <div class="number-display">
-                Contract: ${contractText}<br>
-                Declarer: ${contract.declarer}
-            </div>
-            <div class="current-state">
-                Select result:<br>
-                Down ${this.counters['down-tricks']} (-) | MADE (=) | Up ${this.counters['up-tricks']} (+)<br>
-                <small>Press counter buttons to adjust tricks</small>
-            </div>
-        `;
-    }
-    
-    getScoringDisplay(mode, gameState, contract) {
-        const modeName = this.modeNames[mode] || 'Bridge';
-        const contractText = `${contract.level}${contract.suit}${contract.doubled}`;
-        
-        return `
-            <div class="mode-title">${modeName}</div>
-            <div class="game-info">
-                Game ${gameState.gameNumber} - Deal ${gameState.dealNumber}<br>
-                Contract: ${contractText} by ${contract.declarer}<br>
-                Result: ${this.formatResult(contract.result)}
-            </div>
-            <div class="score-display">
-                North-South: ${gameState.scores.NS}<br>
-                East-West: ${gameState.scores.EW}
-            </div>
-            <div class="current-state">
-                Press DEAL for next deal<br>
-                Press MENU for main menu<br>
-                Press SCORE for detailed scores
-            </div>
-        `;
-    }
-    
-    // ===== BUTTON MANAGEMENT =====
-    
-    setActiveButtons(activeValues) {
         this.buttons.forEach(btn => {
             const value = btn.dataset.value;
-            const isGlobalAction = ['C', 'MENU', 'SCORE'].includes(value);
             
-            if (activeValues.includes(value) || isGlobalAction) {
+            if (activeButtons.includes(value)) {
                 btn.classList.remove('disabled');
-                if (activeValues.includes(value)) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                btn.classList.add('active');
             } else {
                 btn.classList.add('disabled');
                 btn.classList.remove('active');
@@ -221,340 +85,426 @@ export class UIController {
         });
     }
     
-    getDeclarerActiveButtons(contract) {
-        let buttons = ['N', 'S', 'E', 'W'];
+    /**
+     * Update the double button text (X/XX cycling)
+     */
+    updateDoubleButton(doubledState = '') {
+        if (!this.doubleBtn) return;
         
-        if (contract.doubled === '') {
-            buttons.push('X');
-        } else if (contract.doubled === 'X') {
-            buttons.push('XX');
-        }
-        
-        return buttons;
-    }
-    
-    addButtonFeedback(button) {
-        // Add press animation
-        button.classList.add('btn-press');
-        setTimeout(() => button.classList.remove('btn-press'), 100);
-        
-        // Add pulse effect for important actions
-        if (button.dataset.value === 'DEAL' || button.dataset.value === 'SCORE') {
-            button.classList.add('pulse');
-            setTimeout(() => button.classList.remove('pulse'), 600);
-        }
-        
-        // Haptic feedback (if supported)
-        if ('vibrate' in navigator) {
-            navigator.vibrate(50);
+        switch (doubledState) {
+            case '':
+                this.doubleBtn.textContent = 'X/XX';
+                break;
+            case 'X':
+                this.doubleBtn.textContent = 'X';
+                break;
+            case 'XX':
+                this.doubleBtn.textContent = 'XX';
+                break;
+            default:
+                this.doubleBtn.textContent = 'X/XX';
         }
     }
     
-    // ===== COUNTER MANAGEMENT =====
-    
-    incrementCounter(counterType) {
-        const maxValues = {
-            'down-tricks': 13,
-            'up-tricks': 6
+    /**
+     * Update vulnerability display
+     */
+    updateVulnerabilityDisplay(vulnerability = 'None') {
+        if (!this.vulnText) return;
+        
+        const shortNames = {
+            'None': 'NV',
+            'NS': 'NS', 
+            'EW': 'EW',
+            'Both': 'Both'
         };
         
-        const max = maxValues[counterType] || 6;
-        this.counters[counterType] = this.counters[counterType] >= max ? 1 : this.counters[counterType] + 1;
+        this.vulnText.textContent = shortNames[vulnerability] || 'NV';
+    }
+    
+    /**
+     * Highlight vulnerability based on declarer
+     */
+    highlightVulnerability(declarer, vulnerability) {
+        if (!this.vulnControl || !declarer) return;
         
-        // Update button display
-        const buttonId = counterType === 'down-tricks' ? 'downTricksBtn' : 'upTricksBtn';
-        const button = document.getElementById(buttonId);
-        if (button) {
-            const valueSpan = button.querySelector('.counter-value');
-            if (valueSpan) {
-                valueSpan.textContent = this.counters[counterType];
-                
-                // Add animation
-                valueSpan.classList.add('pulse');
-                setTimeout(() => valueSpan.classList.remove('pulse'), 300);
+        const declarerSide = ['N', 'S'].includes(declarer) ? 'NS' : 'EW';
+        const isVulnerable = vulnerability === declarerSide || vulnerability === 'Both';
+        
+        this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
+        
+        if (isVulnerable) {
+            this.vulnControl.classList.add('vulnerable-active');
+        } else {
+            this.vulnControl.classList.add('vulnerable-safe');
+        }
+    }
+    
+    /**
+     * Clear vulnerability highlighting
+     */
+    clearVulnerabilityHighlight() {
+        if (!this.vulnControl) return;
+        
+        this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
+    }
+    
+    /**
+     * Show modal dialog
+     */
+    showModal(type, content) {
+        console.log('🖼️ Showing modal type:', type);
+        console.log('Modal content:', content);
+        
+        // Remove any existing modal
+        this.closeModal();
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        
+        // Force high z-index and proper display
+        overlay.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            z-index: 10000 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            animation: fadeIn 0.3s ease !important;
+        `;
+        
+        let modalHTML = '';
+        
+        if (typeof content === 'string') {
+            // Simple content string
+            modalHTML = content;
+            console.log('Using string content');
+        } else if (content && typeof content === 'object') {
+            // Structured content object
+            modalHTML = this.buildModalContent(content);
+            console.log('Built structured content');
+        } else {
+            console.error('Invalid modal content:', content);
+            return;
+        }
+        
+        overlay.innerHTML = modalHTML;
+        
+        // Force modal content styling
+        const modalContent = overlay.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.style.cssText = `
+                background: #34495e !important;
+                border-radius: 16px !important;
+                padding: 24px !important;
+                color: white !important;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+                max-height: 90vh !important;
+                overflow-y: auto !important;
+                position: relative !important;
+                z-index: 10001 !important;
+            `;
+            
+            // Make score history modal wider
+            if (type === 'history') {
+                modalContent.style.maxWidth = '95%';
+                modalContent.style.width = 'auto';
+                modalContent.style.minWidth = '600px';
+                console.log('Applied history modal sizing');
+            } else {
+                modalContent.style.maxWidth = '90%';
             }
         }
+        
+        document.body.appendChild(overlay);
+        this.currentModal = overlay;
+        
+        console.log('Modal added to DOM with forced styling');
+        
+        // Setup modal event listeners
+        this.setupModalEvents(overlay, content);
+        
+        console.log('Modal setup complete');
+        
+        // Test visibility
+        const rect = overlay.getBoundingClientRect();
+        console.log('Modal overlay position:', rect);
+        console.log('Modal overlay computed style:', window.getComputedStyle(overlay).display);
     }
     
-    getCounterValue(counterType) {
-        return this.counters[counterType];
-    }
-    
-    resetCounters() {
-        this.counters['down-tricks'] = 1;
-        this.counters['up-tricks'] = 1;
+    /**
+     * Build modal content from structured object
+     */
+    buildModalContent(content) {
+        const title = content.title || 'Information';
+        const body = content.content || '';
+        const buttons = content.buttons || [{ text: 'Close', action: 'close', class: 'close-btn' }];
         
-        // Update UI
-        const downBtn = document.getElementById('downTricksBtn');
-        const upBtn = document.getElementById('upTricksBtn');
+        let buttonsHTML = '';
+        buttons.forEach((btn, index) => {
+            const actionAttr = typeof btn.action === 'string' ? btn.action : `action-${index}`;
+            const style = btn.style ? ` style="${btn.style}"` : '';
+            buttonsHTML += `<button class="${btn.class} modal-button" data-action="${actionAttr}"${style}>${btn.text}</button>`;
+        });
         
-        if (downBtn) {
-            const valueSpan = downBtn.querySelector('.counter-value');
-            if (valueSpan) valueSpan.textContent = '1';
-        }
-        
-        if (upBtn) {
-            const valueSpan = upBtn.querySelector('.counter-value');
-            if (valueSpan) valueSpan.textContent = '1';
-        }
-    }
-    
-    // ===== SCORE OVERLAY =====
-    
-    showScoreOverlay(gameState) {
-        if (!this.scoreOverlay) return;
-        
-        // Generate score table
-        const scoreTableHTML = this.generateScoreTable(gameState);
-        this.scoreTable.innerHTML = scoreTableHTML;
-        
-        // Show overlay
-        this.scoreOverlay.classList.add('show');
-        
-        // Focus trap
-        this.setupScoreOverlayFocus();
-    }
-    
-    hideScoreOverlay() {
-        if (this.scoreOverlay) {
-            this.scoreOverlay.classList.remove('show');
-        }
-    }
-    
-    generateScoreTable(gameState) {
-        let html = `
-            <div class="score-summary">
-                <h4>Current Totals</h4>
-                <div class="score-row">
-                    <span>North-South:</span>
-                    <span class="score-value">${gameState.scores.NS}</span>
-                </div>
-                <div class="score-row">
-                    <span>East-West:</span>
-                    <span class="score-value">${gameState.scores.EW}</span>
+        return `
+            <div class="modal-content">
+                <h3>${title}</h3>
+                <div class="modal-body">${body}</div>
+                <div class="modal-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px;">
+                    ${buttonsHTML}
                 </div>
             </div>
         `;
-        
-        if (gameState.history && gameState.history.length > 0) {
-            html += `
-                <div class="score-history">
-                    <h4>Deal History</h4>
-                    <div class="history-table">
-            `;
+    }
+    
+    /**
+     * Setup modal event listeners
+     */
+    setupModalEvents(overlay, content) {
+        overlay.addEventListener('click', (e) => {
+            // Close on background click
+            if (e.target === overlay) {
+                this.closeModal();
+                return;
+            }
             
-            gameState.history.slice(-10).forEach((deal, index) => {
-                const contractText = `${deal.contract.level}${deal.contract.suit}${deal.contract.doubled}`;
-                const side = ['N', 'S'].includes(deal.contract.declarer) ? 'NS' : 'EW';
+            // Handle button clicks
+            const button = e.target.closest('.modal-button');
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
                 
-                html += `
-                    <div class="history-row">
-                        <span class="deal-num">#${deal.deal}</span>
-                        <span class="contract">${contractText}</span>
-                        <span class="declarer">${deal.contract.declarer}</span>
-                        <span class="result">${this.formatResult(deal.contract.result)}</span>
-                        <span class="score ${side.toLowerCase()}">${deal.score > 0 ? '+' : ''}${deal.score}</span>
-                    </div>
-                `;
-            });
-            
-            html += `
-                    </div>
-                </div>
-            `;
-        }
+                const action = button.dataset.action;
+                console.log('Modal button clicked:', action);
+                
+                if (action === 'close') {
+                    this.closeModal();
+                } else if (content && content.buttons) {
+                    // Find the button config and execute action
+                    const btnConfig = content.buttons.find(b => {
+                        // Handle both string actions and function actions
+                        return (typeof b.action === 'string' && b.action === action) ||
+                               (typeof b.action === 'function' && b.text === button.textContent.trim());
+                    });
+                    
+                    if (btnConfig && typeof btnConfig.action === 'function') {
+                        try {
+                            btnConfig.action();
+                            this.closeModal();
+                        } catch (error) {
+                            console.error('Error executing modal action:', error);
+                        }
+                    }
+                }
+            }
+        });
         
-        return html;
-    }
-    
-    setupScoreOverlayFocus() {
-        // Basic focus management for accessibility
-        const closeButton = this.scoreOverlay.querySelector('.btn');
-        if (closeButton) {
-            closeButton.focus();
-        }
-        
-        // Close on escape key
-        const handleEscape = (e) => {
+        // Close on Escape key
+        const escapeHandler = (e) => {
             if (e.key === 'Escape') {
-                this.hideScoreOverlay();
-                document.removeEventListener('keydown', handleEscape);
+                this.closeModal();
+                document.removeEventListener('keydown', escapeHandler);
             }
         };
-        
-        document.addEventListener('keydown', handleEscape);
+        document.addEventListener('keydown', escapeHandler);
     }
     
-    // ===== UTILITY METHODS =====
-    
-    formatVulnerability(vuln) {
-        const vulnMap = {
-            'None': 'None Vulnerable',
-            'NS': 'N-S Vulnerable',
-            'EW': 'E-W Vulnerable', 
-            'Both': 'Both Vulnerable'
-        };
-        return vulnMap[vuln] || vuln;
-    }
-    
-    formatResult(result) {
-        if (!result) return '';
-        
-        if (result === '=') return 'Made exactly';
-        if (result.startsWith('+')) return `Made +${result.substring(1)}`;
-        if (result.startsWith('-')) return `Down ${result.substring(1)}`;
-        
-        return result;
-    }
-    
-    showLoading() {
-        if (this.loading) {
-            this.loading.classList.add('show');
+    /**
+     * Close current modal
+     */
+    closeModal() {
+        if (this.currentModal) {
+            this.currentModal.remove();
+            this.currentModal = null;
         }
     }
     
+    /**
+     * Show loading state
+     */
+    showLoading(message = 'Loading...') {
+        this.isLoading = true;
+        
+        const content = `
+            <div class="title-score-row">
+                <div class="mode-title">Bridge Calculator</div>
+                <div class="score-display">Loading...</div>
+            </div>
+            <div class="game-content">
+                <div class="loading-message">${message}</div>
+            </div>
+            <div class="current-state">Please wait...</div>
+        `;
+        
+        this.updateDisplay(content);
+        this.updateButtonStates([]); // Disable all buttons
+    }
+    
+    /**
+     * Hide loading state
+     */
     hideLoading() {
-        if (this.loading) {
-            this.loading.classList.remove('show');
+        this.isLoading = false;
+    }
+    
+    /**
+     * Show error message
+     */
+    showError(message) {
+        const content = `
+            <div class="title-score-row">
+                <div class="mode-title">Error</div>
+                <div class="score-display">⚠️</div>
+            </div>
+            <div class="game-content">
+                <div style="color: #e74c3c; font-weight: 600;">${message}</div>
+            </div>
+            <div class="current-state">Press Back to continue</div>
+        `;
+        
+        this.updateDisplay(content);
+        this.updateButtonStates(['BACK']);
+    }
+    
+    /**
+     * Toggle keep awake functionality
+     */
+    async toggleKeepAwake() {
+        if (this.isWakeActive) {
+            this.releaseWakeLock();
+        } else {
+            await this.requestWakeLock();
         }
     }
     
-    showError(message) {
-        // Simple error display - could be enhanced
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-toast';
-        errorDiv.textContent = message;
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #e74c3c;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 10000;
-            font-weight: bold;
+    /**
+     * Setup wake lock functionality
+     */
+    setupWakeLock() {
+        // Handle visibility change to re-acquire wake lock
+        document.addEventListener('visibilitychange', async () => {
+            if (this.wakeLock !== null && document.visibilityState === 'visible') {
+                await this.requestWakeLock();
+            }
+        });
+    }
+    
+    /**
+     * Request wake lock to keep screen active
+     */
+    async requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                this.wakeLock = await navigator.wakeLock.request('screen');
+                this.isWakeActive = true;
+                
+                if (this.wakeToggle) {
+                    this.wakeToggle.classList.add('active');
+                }
+                
+                console.log('🔋 Wake lock acquired');
+                
+                // Listen for wake lock release
+                this.wakeLock.addEventListener('release', () => {
+                    console.log('🔋 Wake lock released');
+                });
+                
+            } else {
+                console.warn('Wake Lock API not supported');
+            }
+        } catch (err) {
+            console.error('Failed to acquire wake lock:', err);
+        }
+    }
+    
+    /**
+     * Release wake lock
+     */
+    releaseWakeLock() {
+        if (this.wakeLock) {
+            this.wakeLock.release();
+            this.wakeLock = null;
+        }
+        
+        this.isWakeActive = false;
+        
+        if (this.wakeToggle) {
+            this.wakeToggle.classList.remove('active');
+        }
+        
+        console.log('🔋 Wake lock released manually');
+    }
+    
+    /**
+     * Reset UI to initial state
+     */
+    reset() {
+        this.clearVulnerabilityHighlight();
+        this.updateDoubleButton('');
+        this.updateVulnerabilityDisplay('None');
+        this.closeModal();
+        this.hideLoading();
+        
+        // Don't reset wake lock state - user preference should persist
+    }
+    
+    /**
+     * Show success message briefly
+     */
+    showSuccess(message, duration = 2000) {
+        const originalContent = this.display.innerHTML;
+        
+        const content = `
+            <div class="title-score-row">
+                <div class="mode-title">Success</div>
+                <div class="score-display">✅</div>
+            </div>
+            <div class="game-content">
+                <div style="color: #27ae60; font-weight: 600;">${message}</div>
+            </div>
+            <div class="current-state">Continuing...</div>
         `;
         
-        document.body.appendChild(errorDiv);
+        this.updateDisplay(content);
         
+        // Restore original content after duration
         setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
-            }
-        }, 3000);
+            this.display.innerHTML = originalContent;
+        }, duration);
     }
     
-    // ===== ACCESSIBILITY SETUP =====
-    
-    setupAccessibility() {
-        // Add ARIA labels to buttons
-        this.buttons.forEach(btn => {
-            const value = btn.dataset.value;
-            const row = btn.dataset.row;
-            
-            if (!btn.getAttribute('aria-label')) {
-                btn.setAttribute('aria-label', this.getButtonAriaLabel(value, row));
-            }
-            
-            btn.setAttribute('role', 'button');
-            btn.setAttribute('tabindex', '0');
-        });
-        
-        // Add keyboard navigation
-        this.setupKeyboardNavigation();
+    /**
+     * Animate button press for visual feedback
+     */
+    animateButtonPress(buttonValue) {
+        const button = Array.from(this.buttons).find(btn => btn.dataset.value === buttonValue);
+        if (button && !button.classList.contains('disabled')) {
+            button.classList.add('pressed');
+            setTimeout(() => {
+                button.classList.remove('pressed');
+            }, 150);
+        }
     }
     
-    getButtonAriaLabel(value, row) {
-        const labels = {
-            // Numbers
-            '1': 'Bid level 1', '2': 'Bid level 2', '3': 'Bid level 3',
-            '4': 'Bid level 4', '5': 'Bid level 5', '6': 'Bid level 6', '7': 'Bid level 7',
-            
-            // Suits
-            '♣': 'Clubs', '♦': 'Diamonds', '♥': 'Hearts', '♠': 'Spades', 'NT': 'No Trump',
-            
-            // Actions
-            'X': 'Double', 'XX': 'Redouble',
-            '=': 'Made exactly', '+': 'Made with overtricks', '-': 'Failed',
-            'down-tricks': 'Down tricks counter', 'up-tricks': 'Up tricks counter',
-            
-            // Directions
-            'N': 'North', 'S': 'South', 'E': 'East', 'W': 'West',
-            
-            // Commands
-            'C': 'Clear', 'PASS': 'Pass', 'MENU': 'Main menu', 
-            'SCORE': 'Show scores', 'DEAL': 'Next deal'
-        };
-        
-        return labels[value] || value;
+    /**
+     * Get current loading state
+     */
+    getLoadingState() {
+        return this.isLoading;
     }
     
-    setupKeyboardNavigation() {
-        // Basic keyboard support
-        document.addEventListener('keydown', (e) => {
-            if (e.target.classList.contains('btn')) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    e.target.click();
-                }
-            }
-        });
-    }
-    
-    setupAnimations() {
-        // Add CSS for dynamic animations
-        const style = document.createElement('style');
-        style.textContent = `
-            .error-toast {
-                animation: slideDown 0.3s ease-out;
-            }
-            
-            @keyframes slideDown {
-                from {
-                    transform: translateX(-50%) translateY(-100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-            }
-            
-            .history-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-                gap: 8px;
-                padding: 4px 0;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-                font-size: 12px;
-            }
-            
-            .score-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid rgba(255,255,255,0.2);
-            }
-            
-            .score-value {
-                font-weight: bold;
-                color: #3498db;
-            }
-            
-            .score.ns { color: #27ae60; }
-            .score.ew { color: #e74c3c; }
-        `;
-        
-        document.head.appendChild(style);
+    /**
+     * Check if wake lock is active
+     */
+    isWakeLockActive() {
+        return this.isWakeActive;
     }
 }
 
-// Global function for score overlay close button
-window.hideScoreOverlay = function() {
-    const overlay = document.getElementById('scoreOverlay');
-    if (overlay) {
-        overlay.classList.remove('show');
-    }
-};
+// Export the UI Controller
+export { UIController };

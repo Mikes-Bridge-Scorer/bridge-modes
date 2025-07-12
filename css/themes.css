@@ -28,30 +28,71 @@
     --color-hearts-dark: #c0392b;
     --color-spades: #2c3e50;
     --color-spades-dark: #1b2631;
-    --color-notrump: #9b59b6;
-    --color-notrump-dark: #8e44ad;
+    --color-notrump: #27ae60;
+    --color-notrump-dark: #229954;
+    
+    /* Background Colors */
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+    --calculator-bg: #34495e;
+    --display-bg-start: #ecf0f1;
+    --display-bg-end: #d5dbdb;
+    
+    /* Text Colors */
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --text-white: #ffffff;
+    --text-danger: #e74c3c;
+    --text-success: #27ae60;
+    --text-warning: #f39c12;
+    
+    /* Shadow Colors */
+    --shadow-light: rgba(255, 255, 255, 0.1);
+    --shadow-dark: rgba(0, 0, 0, 0.3);
+    --shadow-button: rgba(0, 0, 0, 0.2);
+    
+    /* Vulnerability Colors */
+    --vuln-active: rgba(231, 76, 60, 0.8);
+    --vuln-safe: rgba(39, 174, 96, 0.8);
+    --vuln-neutral: rgba(149, 165, 166, 0.3);
 }
 
 /* ===== BUTTON COLOR THEMES ===== */
 
-/* Level Buttons (Row 1) - Primary Blue */
-.btn-level {
+/* Number Buttons - Primary Blue */
+.btn-number {
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+    color: var(--text-white);
+}
+
+.btn-number:hover:not(.disabled) {
+    background: linear-gradient(135deg, #7fb3d3, var(--color-primary-light));
+}
+
+.btn-number:active:not(.disabled) {
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
 }
 
-.btn-level:hover:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+/* Clear Button - Danger Red */
+.btn-clear {
+    background: linear-gradient(135deg, var(--color-danger), var(--color-danger-dark));
+    color: var(--text-white);
 }
 
-.btn-level:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-primary-dark), #1f5f99);
+.btn-clear:hover:not(.disabled) {
+    background: linear-gradient(135deg, #ec7063, var(--color-danger));
 }
 
-/* ===== SUIT BUTTONS (Row 2) ===== */
+.btn-clear:active:not(.disabled) {
+    background: linear-gradient(135deg, var(--color-danger-dark), #a93226);
+}
+
+/* ===== SUIT BUTTONS ===== */
 
 /* Clubs - Green */
 .btn-clubs {
     background: linear-gradient(135deg, var(--color-clubs), var(--color-clubs-dark));
+    color: var(--text-white);
 }
 
 .btn-clubs:hover:not(.disabled) {
@@ -65,6 +106,7 @@
 /* Diamonds - Red */
 .btn-diamonds {
     background: linear-gradient(135deg, var(--color-diamonds), var(--color-diamonds-dark));
+    color: var(--text-white);
 }
 
 .btn-diamonds:hover:not(.disabled) {
@@ -78,6 +120,7 @@
 /* Hearts - Red */
 .btn-hearts {
     background: linear-gradient(135deg, var(--color-hearts), var(--color-hearts-dark));
+    color: var(--text-white);
 }
 
 .btn-hearts:hover:not(.disabled) {
@@ -91,27 +134,45 @@
 /* Spades - Dark */
 .btn-spades {
     background: linear-gradient(135deg, var(--color-spades), var(--color-spades-dark));
+    color: var(--text-white);
 }
 
 .btn-spades:hover:not(.disabled) {
-    background: linear-gradient(135deg, #34495e, var(--color-spades));
+    background: linear-gradient(135deg, var(--color-dark-light), var(--color-spades));
 }
 
 .btn-spades:active:not(.disabled) {
     background: linear-gradient(135deg, var(--color-spades-dark), #17202a);
 }
 
-/* No Trump - Purple */
+/* No Trump - Green */
 .btn-notrump {
     background: linear-gradient(135deg, var(--color-notrump), var(--color-notrump-dark));
+    color: var(--text-white);
 }
 
 .btn-notrump:hover:not(.disabled) {
-    background: linear-gradient(135deg, #af7ac5, var(--color-notrump));
+    background: linear-gradient(135deg, #2ecc71, var(--color-notrump));
 }
 
 .btn-notrump:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-notrump-dark), #7d3c98);
+    background: linear-gradient(135deg, var(--color-notrump-dark), #1e8449);
+}
+
+/* ===== DECLARER BUTTONS ===== */
+
+/* Declarer - Purple */
+.btn-declarer {
+    background: linear-gradient(135deg, var(--color-purple), var(--color-purple-dark));
+    color: var(--text-white);
+}
+
+.btn-declarer:hover:not(.disabled) {
+    background: linear-gradient(135deg, #af7ac5, var(--color-purple));
+}
+
+.btn-declarer:active:not(.disabled) {
+    background: linear-gradient(135deg, var(--color-purple-dark), #7d3c98);
 }
 
 /* ===== DOUBLE BUTTONS ===== */
@@ -119,6 +180,7 @@
 /* Double - Orange */
 .btn-double {
     background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+    color: var(--text-white);
 }
 
 .btn-double:hover:not(.disabled) {
@@ -129,174 +191,36 @@
     background: linear-gradient(135deg, var(--color-warning-dark), #d68910);
 }
 
-/* Redouble - Dark Orange */
-.btn-redouble {
-    background: linear-gradient(135deg, var(--color-warning-dark), #d68910);
+/* ===== RESULT BUTTONS ===== */
+
+/* Result - Dark Gray */
+.btn-result {
+    background: linear-gradient(135deg, var(--color-dark-light), var(--color-dark));
+    color: var(--text-white);
 }
 
-.btn-redouble:hover:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+.btn-result:hover:not(.disabled) {
+    background: linear-gradient(135deg, #3f5773, var(--color-dark-light));
 }
 
-.btn-redouble:active:not(.disabled) {
-    background: linear-gradient(135deg, #d68910, #bb6a0a);
-}
-
-/* ===== RESULT CONTROL BUTTONS (Row 3) ===== */
-
-/* Counter Buttons - Blue */
-.btn-counter {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-}
-
-.btn-counter:hover:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
-}
-
-.btn-counter:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-primary-dark), #1f5f99);
-}
-
-/* Fail Button - Red */
-.btn-fail {
-    background: linear-gradient(135deg, var(--color-danger), var(--color-danger-dark));
-}
-
-.btn-fail:hover:not(.disabled) {
-    background: linear-gradient(135deg, #ec7063, var(--color-danger));
-}
-
-.btn-fail:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-danger-dark), #a93226);
-}
-
-/* Made Button - Green */
-.btn-made {
-    background: linear-gradient(135deg, var(--color-success), var(--color-success-dark));
-}
-
-.btn-made:hover:not(.disabled) {
-    background: linear-gradient(135deg, #2ecc71, var(--color-success));
-}
-
-.btn-made:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-success-dark), #1e8449);
-}
-
-/* Extra Tricks Button - Green */
-.btn-extra {
-    background: linear-gradient(135deg, var(--color-success), var(--color-success-dark));
-}
-
-.btn-extra:hover:not(.disabled) {
-    background: linear-gradient(135deg, #2ecc71, var(--color-success));
-}
-
-.btn-extra:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-success-dark), #1e8449);
+.btn-result:active:not(.disabled) {
+    background: linear-gradient(135deg, var(--color-dark), #1b2631);
 }
 
 /* ===== ACTION BUTTONS ===== */
 
-/* Clear Button - Yellow */
-.btn-clear {
-    background: linear-gradient(135deg, #f1c40f, #f39c12);
-    color: var(--color-dark);
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-}
-
-.btn-clear:hover:not(.disabled) {
-    background: linear-gradient(135deg, #f7dc6f, #f1c40f);
-}
-
-.btn-clear:active:not(.disabled) {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-}
-
-/* Pass Button - Purple */
-.btn-pass {
-    background: linear-gradient(135deg, var(--color-purple), var(--color-purple-dark));
-}
-
-.btn-pass:hover:not(.disabled) {
-    background: linear-gradient(135deg, #af7ac5, var(--color-purple));
-}
-
-.btn-pass:active:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-purple-dark), #7d3c98);
-}
-
-/* ===== DECLARER BUTTONS (Row 4) ===== */
-
-/* North - Blue */
-.btn-north {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-}
-
-.btn-north:hover:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
-}
-
-/* South - Green */
-.btn-south {
-    background: linear-gradient(135deg, var(--color-success), var(--color-success-dark));
-}
-
-.btn-south:hover:not(.disabled) {
-    background: linear-gradient(135deg, #2ecc71, var(--color-success));
-}
-
-/* East - Red */
-.btn-east {
-    background: linear-gradient(135deg, var(--color-danger), var(--color-danger-dark));
-}
-
-.btn-east:hover:not(.disabled) {
-    background: linear-gradient(135deg, #ec7063, var(--color-danger));
-}
-
-/* West - Orange */
-.btn-west {
+/* Action - Orange */
+.btn-action {
     background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+    color: var(--text-white);
 }
 
-.btn-west:hover:not(.disabled) {
+.btn-action:hover:not(.disabled) {
     background: linear-gradient(135deg, #f7b84b, var(--color-warning));
 }
 
-/* ===== NAVIGATION BUTTONS ===== */
-
-/* Score Button - Purple */
-.btn-score {
-    background: linear-gradient(135deg, var(--color-purple), var(--color-purple-dark));
-}
-
-.btn-score:hover:not(.disabled) {
-    background: linear-gradient(135deg, #af7ac5, var(--color-purple));
-}
-
-/* Menu Button - Dark */
-.btn-menu {
-    background: linear-gradient(135deg, var(--color-dark), var(--color-dark-light));
-}
-
-.btn-menu:hover:not(.disabled) {
-    background: linear-gradient(135deg, var(--color-dark-light), #3f5773);
-}
-
-/* Deal Button - Yellow */
-.btn-deal {
-    background: linear-gradient(135deg, #f1c40f, #f39c12);
-    color: var(--color-dark);
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-}
-
-.btn-deal:hover:not(.disabled) {
-    background: linear-gradient(135deg, #f7dc6f, #f1c40f);
-}
-
-.btn-deal:active:not(.disabled) {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
+.btn-action:active:not(.disabled) {
+    background: linear-gradient(135deg, var(--color-warning-dark), #d68910);
 }
 
 /* ===== SPECIAL BUTTON STATES ===== */
@@ -304,61 +228,221 @@
 /* Vulnerable Indicator */
 .btn.vulnerable {
     box-shadow: 
-        0 0 0 2px #e74c3c,
-        0 2px 8px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
+        0 0 0 2px var(--color-danger),
+        0 2px 8px var(--shadow-button),
+        0 0 0 1px var(--shadow-light);
 }
 
 .btn.vulnerable.active {
     box-shadow: 
         0 0 20px rgba(231, 76, 60, 0.6),
-        0 0 0 3px #e74c3c,
-        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        0 0 0 3px var(--color-danger),
+        inset 0 0 0 1px var(--shadow-light);
 }
 
 /* Not Vulnerable Indicator */
 .btn.not-vulnerable {
     box-shadow: 
-        0 0 0 2px #27ae60,
-        0 2px 8px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
+        0 0 0 2px var(--color-success),
+        0 2px 8px var(--shadow-button),
+        0 0 0 1px var(--shadow-light);
 }
 
 .btn.not-vulnerable.active {
     box-shadow: 
         0 0 20px rgba(39, 174, 96, 0.6),
-        0 0 0 3px #27ae60,
-        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        0 0 0 3px var(--color-success),
+        inset 0 0 0 1px var(--shadow-light);
 }
 
-/* ===== DARK MODE THEME ===== */
+/* ===== CONTROL BAR THEMES ===== */
+
+.control-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--shadow-light);
+    color: var(--text-white);
+}
+
+.control-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.control-item.vulnerable-active {
+    background: var(--vuln-active);
+    border-color: var(--color-danger);
+}
+
+.control-item.vulnerable-safe {
+    background: var(--vuln-safe);
+    border-color: var(--color-success);
+}
+
+.toggle-switch {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.toggle-switch.active {
+    background: var(--color-primary);
+}
+
+/* ===== DISPLAY THEMES ===== */
+
+.display-panel {
+    background: linear-gradient(145deg, var(--display-bg-start), var(--display-bg-end));
+    color: var(--text-primary);
+}
+
+.mode-title {
+    color: var(--color-primary);
+}
+
+.current-state {
+    color: var(--text-danger);
+    background: rgba(231, 76, 60, 0.1);
+    border-left-color: var(--color-danger);
+}
+
+.score-display {
+    color: var(--text-primary);
+}
+
+/* ===== MODAL THEMES ===== */
+
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    background: var(--calculator-bg);
+    color: var(--text-white);
+}
+
+.modal-content h3 {
+    color: var(--color-primary);
+}
+
+.modal-content h4 {
+    color: var(--color-warning);
+}
+
+.modal-button {
+    background: var(--color-primary);
+    color: var(--text-white);
+}
+
+.modal-button:hover {
+    background: var(--color-primary-dark);
+}
+
+.menu-btn {
+    background: var(--color-warning) !important;
+}
+
+.menu-btn:hover {
+    background: var(--color-warning-dark) !important;
+}
+
+.close-app-btn {
+    background: var(--color-danger) !important;
+}
+
+.close-app-btn:hover {
+    background: var(--color-danger-dark) !important;
+}
+
+/* ===== THEME VARIATIONS ===== */
+
+/* Classic Theme */
+.theme-classic {
+    --color-primary: #34495e;
+    --color-success: #27ae60;
+    --color-warning: #f39c12;
+    --color-danger: #e74c3c;
+    --bg-gradient-start: #34495e;
+    --bg-gradient-end: #2c3e50;
+}
+
+/* Modern Theme */
+.theme-modern {
+    --color-primary: #667eea;
+    --color-success: #56ca00;
+    --color-warning: #ff9500;
+    --color-danger: #ff3b30;
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+}
+
+/* High Contrast Theme */
+.theme-high-contrast {
+    --color-primary: #0066cc;
+    --color-success: #00aa00;
+    --color-warning: #ff8800;
+    --color-danger: #cc0000;
+    --calculator-bg: #000000;
+    --display-bg-start: #ffffff;
+    --display-bg-end: #f0f0f0;
+    --text-primary: #000000;
+}
+
+/* Dark Theme */
+.theme-dark {
+    --calculator-bg: #1a1a1a;
+    --display-bg-start: #2d2d2d;
+    --display-bg-end: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --bg-gradient-start: #2c3e50;
+    --bg-gradient-end: #1a1a1a;
+}
+
+/* ===== RESPONSIVE THEME ADJUSTMENTS ===== */
+
+@media (max-width: 375px) {
+    .btn {
+        box-shadow: 0 1px 3px var(--shadow-button);
+    }
+    
+    .btn:hover:not(.disabled) {
+        box-shadow: 0 2px 6px var(--shadow-button);
+    }
+}
+
+/* ===== DARK MODE SUPPORT ===== */
 @media (prefers-color-scheme: dark) {
     :root {
         --color-primary: #5dade2;
         --color-primary-dark: #3498db;
         --color-success: #2ecc71;
         --color-success-dark: #27ae60;
+        --calculator-bg: #1a1a1a;
+        --display-bg-start: #2d2d2d;
+        --display-bg-end: #1a1a1a;
+        --text-primary: #ffffff;
+        --text-secondary: #cccccc;
     }
 }
 
-/* ===== THEME VARIATIONS ===== */
-.theme-classic {
-    --color-primary: #34495e;
-    --color-success: #27ae60;
-    --color-warning: #f39c12;
-    --color-danger: #e74c3c;
-}
+/* ===== ACCESSIBILITY THEME SUPPORT ===== */
 
-.theme-modern {
-    --color-primary: #667eea;
-    --color-success: #56ca00;
-    --color-warning: #ff9500;
-    --color-danger: #ff3b30;
-}
-
-.theme-high-contrast {
-    --color-primary: #0066cc;
-    --color-success: #00aa00;
-    --color-warning: #ff8800;
-    --color-danger: #cc0000;
+@media (prefers-contrast: high) {
+    :root {
+        --color-primary: #0066cc;
+        --color-success: #00aa00;
+        --color-warning: #ff8800;
+        --color-danger: #cc0000;
+        --shadow-light: rgba(255, 255, 255, 0.5);
+        --shadow-dark: rgba(0, 0, 0, 0.8);
+    }
+    
+    .btn {
+        border: 2px solid var(--text-white);
+    }
+    
+    .btn.disabled {
+        border-color: #666;
+    }
+    
+    .display-panel {
+        border: 2px solid var(--text-primary);
+    }
 }

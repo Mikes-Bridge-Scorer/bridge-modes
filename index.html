@@ -5,267 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Bridge Modes Calculator</title>
     
-    <style>
-        /* Reset & Base */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; height: 100vh; overflow: hidden; user-select: none;
-            position: fixed; width: 100%; top: 0; left: 0;
-        }
-
-        .app-container {
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; padding: 10px;
-        }
-
-        .calculator {
-            background: #34495e; border-radius: 20px; padding: 12px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            width: 100%; max-width: 420px; height: 100%; max-height: 680px;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        /* Enhanced Display Panel */
-        .display-panel {
-            background: linear-gradient(145deg, #ecf0f1, #d5dbdb);
-            border-radius: 16px; padding: 16px; margin-bottom: 12px;
-            flex: 1; min-height: 160px; max-height: 200px;
-            font-size: 14px; color: #2c3e50; line-height: 1.4; overflow-y: auto;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex; flex-direction: column;
-        }
-
-        .title-score-row {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; flex-shrink: 0;
-        }
-
-        .mode-title {
-            font-weight: 700; color: #3498db; margin: 0;
-            font-size: 18px; text-align: left;
-        }
-
-        .score-display {
-            font-size: 12px; text-align: right; color: #2c3e50;
-            font-weight: 600; line-height: 1.2; white-space: nowrap;
-        }
-
-        .game-content {
-            flex: 1; margin-bottom: 8px; overflow-y: auto;
-        }
-
-        .current-state {
-            font-weight: 600; color: #e74c3c; padding: 6px 8px;
-            background: rgba(231, 76, 60, 0.1); border-radius: 6px;
-            border-left: 3px solid #e74c3c; font-size: 13px;
-            margin-top: auto; flex-shrink: 0;
-        }
-
-        /* Control Bar */
-        .control-bar {
-            display: flex; gap: 8px; margin-bottom: 8px; height: 40px;
-        }
-
-        .control-item {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(255, 255, 255, 0.1); border-radius: 10px;
-            padding: 0 12px; color: white; font-size: 12px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .control-item:hover { background: rgba(255, 255, 255, 0.2); }
-
-        .control-item.vulnerable-active {
-            background: rgba(231, 76, 60, 0.8); border-color: #e74c3c;
-            animation: vulnerablePulse 2s infinite;
-        }
-
-        .control-item.vulnerable-safe {
-            background: rgba(39, 174, 96, 0.8); border-color: #27ae60;
-        }
-
-        @keyframes vulnerablePulse {
-            0%, 100% { opacity: 1; } 50% { opacity: 0.7; }
-        }
-
-        .toggle-switch {
-            width: 32px; height: 16px; background: rgba(255, 255, 255, 0.3);
-            border-radius: 8px; position: relative; transition: all 0.3s ease;
-        }
-
-        .toggle-switch.active { background: #3498db; }
-
-        .toggle-knob {
-            width: 12px; height: 12px; background: white; border-radius: 50%;
-            position: absolute; top: 2px; left: 2px; transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        .toggle-switch.active .toggle-knob { transform: translateX(16px); }
-
-        .copyright {
-            font-size: 10px; color: rgba(255, 255, 255, 0.6);
-            text-align: center; margin-bottom: 8px;
-        }
-
-        /* Button Grid - 5 Rows × 5 Columns */
-        .button-grid {
-            display: grid; grid-template-columns: repeat(5, 1fr);
-            gap: 8px; flex: 2; min-height: 300px;
-        }
-
-        /* Base Button Styles */
-        .btn {
-            border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease; color: white;
-            display: flex; align-items: center; justify-content: center;
-            min-height: 48px; text-align: center; line-height: 1;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:hover:not(.disabled) {
-            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn:active:not(.disabled) { transform: translateY(0); }
-
-        .btn.active {
-            transform: scale(1.05);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8);
-        }
-
-        .btn.disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
-
-        /* Button Colors - Subtle Palette */
-        .btn-number { background: linear-gradient(135deg, #5dade2, #3498db); }
-        .btn-clear { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .btn-double { background: linear-gradient(135deg, #f39c12, #e67e22); }
-        .btn-clubs { background: linear-gradient(135deg, #27ae60, #229954); }
-        .btn-diamonds { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .btn-hearts { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .btn-spades { background: linear-gradient(135deg, #2c3e50, #1b2631); }
-        .btn-notrump { background: linear-gradient(135deg, #27ae60, #229954); }
-        .btn-declarer { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-        .btn-result { background: linear-gradient(135deg, #34495e, #2c3e50); }
-        .btn-action { background: linear-gradient(135deg, #f39c12, #e67e22); }
-
-        /* Suit symbols */
-        .suit-symbol { font-size: 24px; font-weight: 900; }
-        .btn-notrump .suit-symbol { font-size: 16px; font-weight: 700; }
-
-        /* Modal Overlay Styles */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); z-index: 1000;
-            display: flex; justify-content: center; align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background: #34495e; border-radius: 16px; padding: 24px;
-            max-width: 90%; max-height: 80%; overflow-y: auto;
-            color: white; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            animation: slideIn 0.3s ease;
-        }
-
-        .modal-content h3 {
-            color: #3498db; margin-bottom: 20px; text-align: center;
-            font-size: 20px;
-        }
-
-        .modal-content h4 {
-            color: #f39c12; margin: 16px 0 8px 0; font-size: 16px;
-        }
-
-        .help-section {
-            margin-bottom: 20px; line-height: 1.5;
-        }
-
-        .help-section ul, .help-section ol {
-            margin: 10px 0; padding-left: 20px;
-        }
-
-        .help-section li {
-            margin: 6px 0; font-size: 14px;
-        }
-
-        .help-section p {
-            margin: 10px 0; font-size: 14px; line-height: 1.5;
-        }
-
-        .quit-options {
-            display: flex; flex-direction: column; gap: 12px;
-            margin: 20px 0;
-        }
-
-        .modal-button {
-            background: #3498db; color: white; border: none;
-            padding: 12px 20px; border-radius: 8px; font-size: 16px;
-            font-weight: 600; cursor: pointer; transition: all 0.2s ease;
-        }
-
-        .modal-button:hover {
-            background: #2980b9; transform: translateY(-1px);
-        }
-
-        .menu-btn {
-            background: #f39c12 !important;
-        }
-
-        .menu-btn:hover {
-            background: #e67e22 !important;
-        }
-
-        .close-app-btn {
-            background: #e74c3c !important;
-        }
-
-        .close-app-btn:hover {
-            background: #c0392b !important;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Responsive */
-        @media (max-width: 375px) {
-            .calculator { padding: 12px; max-width: 100%; }
-            .display-panel { padding: 16px; min-height: 160px; }
-            .button-grid { gap: 6px; min-height: 280px; }
-            .btn { min-height: 44px; font-size: 15px; }
-            
-            .modal-content {
-                padding: 16px; max-width: 95%;
-            }
-            
-            .modal-content h3 {
-                font-size: 18px;
-            }
-            
-            .help-section li, .help-section p {
-                font-size: 13px;
-            }
-        }
-    </style>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#34495e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bridge Calculator">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon - temporarily commented out -->
+    <!-- <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png"> -->
+    <!-- <link rel="apple-touch-icon" href="assets/icon-192.png"> -->
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/calculator.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
-    <div class="app-container">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>Bridge Calculator</h2>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="app-container" style="display: none;">
         <div class="calculator">
             <!-- Enhanced Display Panel -->
             <div class="display-panel" id="display">
-                <div class="mode-title">Bridge Modes Calculator</div>
-                <div class="game-info">
+                <div class="title-score-row">
+                    <div class="mode-title">Bridge Modes Calculator</div>
+                    <div class="score-display">
+                        NS: 0<br>
+                        EW: 0
+                    </div>
+                </div>
+                <div class="game-content">
                     Select scoring mode:<br>
                     1-Kitchen  2-Bonus  3-Chicago  4-Rubber  5-Duplicate
                 </div>
@@ -295,14 +76,14 @@
             
             <!-- Button Grid - 5 Rows × 5 Columns -->
             <div class="button-grid">
-                <!-- Row 1: Numbers 1-5 (Modes 1-5, then Levels 1-5, then HCP tens) -->
+                <!-- Row 1: Numbers 1-5 -->
                 <button class="btn btn-number" data-value="1">1</button>
                 <button class="btn btn-number" data-value="2">2</button>
                 <button class="btn btn-number" data-value="3">3</button>
                 <button class="btn btn-number" data-value="4">4</button>
                 <button class="btn btn-number" data-value="5">5</button>
                 
-                <!-- Row 2: Numbers 6-7, 8-9-0 (Levels 6-7, then HCP units 0-9) -->
+                <!-- Row 2: Numbers 6-7, 8-9-0 -->
                 <button class="btn btn-number" data-value="6">6</button>
                 <button class="btn btn-number" data-value="7">7</button>
                 <button class="btn btn-number" data-value="8">8</button>
@@ -343,799 +124,56 @@
         </div>
     </div>
 
-    <script>
-        class BridgeCalculator {
-            constructor() {
-                this.currentMode = null;
-                this.gameState = {
-                    mode: null, dealNumber: 1, vulnerability: 'None',
-                    scores: { NS: 0, EW: 0 }, history: [], keepAwake: false
-                };
-                
-                this.appState = 'mode_selection';
-                this.currentContract = {
-                    level: null, suit: null, declarer: null, doubled: '', result: null, hcp: null
-                };
-                
-                this.hcpInput = { stage: null, tens: null, units: null };
-                this.resultMode = null; // 'down', 'made', 'plus'
-                
-                this.init();
-            }
-            
-            init() {
-                this.display = document.getElementById('display');
-                this.buttons = document.querySelectorAll('.btn');
-                this.vulnControl = document.getElementById('vulnControl');
-                this.vulnText = document.getElementById('vulnText');
-                this.wakeToggle = document.getElementById('wakeToggle');
-                this.doubleBtn = document.getElementById('doubleBtn');
-                
-                this.setupEventListeners();
-                this.updateDisplay();
-                this.updateDoubleButton();
-            }
-            
-            updateDoubleButton() {
-                if (this.doubleBtn) {
-                    if (this.currentContract.doubled === '') {
-                        this.doubleBtn.textContent = 'X/XX';
-                    } else if (this.currentContract.doubled === 'X') {
-                        this.doubleBtn.textContent = 'X';
-                    } else if (this.currentContract.doubled === 'XX') {
-                        this.doubleBtn.textContent = 'XX';
-                    }
-                }
-            }
-            
-            setupEventListeners() {
-                document.addEventListener('click', (event) => {
-                    const button = event.target.closest('.btn');
-                    if (button && !button.classList.contains('disabled')) {
-                        this.processAction(button.dataset.value);
-                    }
-                    
-                    if (event.target.closest('#wakeControl')) this.toggleKeepAwake();
-                    else if (event.target.closest('#vulnControl')) this.toggleVulnerability();
-                    else if (event.target.closest('#helpControl')) this.showHelp();
-                    else if (event.target.closest('#quitControl')) this.quit();
-                });
-            }
-            
-            processAction(value) {
-                console.log(`🎮 Action: ${value} in state: ${this.appState}`);
-                
-                switch (this.appState) {
-                    case 'mode_selection': this.handleModeSelection(value); break;
-                    case 'level_selection': this.handleLevelSelection(value); break;
-                    case 'hcp_tens': this.handleHCPTens(value); break;
-                    case 'hcp_units': this.handleHCPUnits(value); break;
-                    case 'suit_selection': this.handleSuitSelection(value); break;
-                    case 'declarer_selection': this.handleDeclarerSelection(value); break;
-                    case 'result_type_selection': this.handleResultTypeSelection(value); break;
-                    case 'result_number_selection': this.handleResultNumberSelection(value); break;
-                    case 'scoring': this.handleScoringActions(value); break;
-                }
-                
-                if (value === 'BACK') this.goBack();
-                this.updateDisplay();
-            }
-            
-            handleModeSelection(value) {
-                const modes = { '1': 'kitchen', '2': 'bonus', '3': 'chicago', '4': 'rubber', '5': 'duplicate' };
-                if (modes[value]) {
-                    this.currentMode = modes[value];
-                    this.gameState.mode = this.currentMode;
-                    this.appState = 'level_selection';
-                    this.initializeMode();
-                }
-            }
-            
-            handleLevelSelection(value) {
-                if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
-                    this.currentContract.level = parseInt(value);
-                    if (this.currentMode === 'bonus') {
-                        this.appState = 'hcp_tens';
-                        this.hcpInput = { stage: 'tens', tens: null, units: null };
-                    } else {
-                        this.appState = 'suit_selection';
-                    }
-                }
-            }
-            
-            handleHCPTens(value) {
-                if (['0', '1', '2', '3'].includes(value)) {
-                    this.hcpInput.tens = parseInt(value);
-                    this.appState = 'hcp_units';
-                }
-            }
-            
-            handleHCPUnits(value) {
-                if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(value)) {
-                    this.hcpInput.units = parseInt(value);
-                    this.currentContract.hcp = this.hcpInput.tens * 10 + this.hcpInput.units;
-                    this.appState = 'suit_selection';
-                }
-            }
-            
-            handleSuitSelection(value) {
-                if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
-                    this.currentContract.suit = value;
-                    this.appState = 'declarer_selection';
-                }
-            }
-            
-            handleDeclarerSelection(value) {
-                if (['N', 'S', 'E', 'W'].includes(value)) {
-                    this.currentContract.declarer = value;
-                    this.updateVulnerabilityHighlight();
-                    // Don't advance state yet - allow doubling
-                } else if (value === 'X') {
-                    // Cycle through: '' -> 'X' -> 'XX' -> ''
-                    if (this.currentContract.doubled === '') {
-                        this.currentContract.doubled = 'X';
-                    } else if (this.currentContract.doubled === 'X') {
-                        this.currentContract.doubled = 'XX';
-                    } else {
-                        this.currentContract.doubled = '';
-                    }
-                } else if (value === 'MADE' || value === 'PLUS' || value === 'DOWN') {
-                    // Only advance to result selection if declarer is selected
-                    if (this.currentContract.declarer) {
-                        this.appState = 'result_type_selection';
-                        this.handleResultTypeSelection(value);
-                        return; // Prevent double processing
-                    }
-                }
-            }
-            
-            handleResultTypeSelection(value) {
-                if (value === 'MADE') {
-                    this.currentContract.result = '=';
-                    this.calculateScore();
-                    this.appState = 'scoring';
-                } else if (value === 'DOWN') {
-                    this.resultMode = 'down';
-                    this.appState = 'result_number_selection';
-                } else if (value === 'PLUS') {
-                    this.resultMode = 'plus';
-                    this.appState = 'result_number_selection';
-                }
-            }
-            
-            handleResultNumberSelection(value) {
-                if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
-                    const num = parseInt(value);
-                    if (this.resultMode === 'down') {
-                        this.currentContract.result = `-${num}`;
-                    } else if (this.resultMode === 'plus') {
-                        const maxOvertricks = 13 - (6 + this.currentContract.level);
-                        if (num <= maxOvertricks) {
-                            this.currentContract.result = `+${num}`;
-                        } else {
-                            return; // Invalid overtricks
-                        }
-                    }
-                    this.calculateScore();
-                    this.appState = 'scoring';
-                }
-            }
-            
-            handleScoringActions(value) {
-                if (value === 'DEAL') this.nextDeal();
-            }
-            
-            calculateScore() {
-                const level = this.currentContract.level;
-                const suit = this.currentContract.suit;
-                const result = this.currentContract.result;
-                const doubled = this.currentContract.doubled;
-                const declarer = this.currentContract.declarer;
-                
-                let score = 0;
-                
-                // Basic suit values per trick
-                const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-                
-                if (result === '=' || result?.startsWith('+')) {
-                    // Contract made
-                    let basicScore = level * suitValues[suit];
-                    if (suit === 'NT') basicScore += 10; // NT first trick bonus
-                    
-                    // Handle doubling of basic score
-                    let contractScore = basicScore;
-                    if (doubled === 'X') contractScore = basicScore * 2;
-                    else if (doubled === 'XX') contractScore = basicScore * 4;
-                    
-                    score = contractScore;
-                    
-                    // Add overtricks
-                    if (result?.startsWith('+')) {
-                        const overtricks = parseInt(result.substring(1));
-                        let overtrickValue;
-                        
-                        if (doubled === '') {
-                            // Undoubled overtricks
-                            overtrickValue = suitValues[suit] * overtricks;
-                        } else {
-                            // Doubled overtricks (100 NV, 200 Vul)
-                            const isVulnerable = this.isDeclarerVulnerable();
-                            overtrickValue = overtricks * (isVulnerable ? 200 : 100);
-                            if (doubled === 'XX') overtrickValue *= 2;
-                        }
-                        score += overtrickValue;
-                    }
-                    
-                    // Game/Part-game bonus
-                    if (contractScore >= 100) {
-                        // Game made
-                        const isVulnerable = this.isDeclarerVulnerable();
-                        score += isVulnerable ? 500 : 300;
-                    } else {
-                        // Part-game
-                        score += 50;
-                    }
-                    
-                    // Double bonuses
-                    if (doubled === 'X') score += 50;
-                    else if (doubled === 'XX') score += 100;
-                    
-                } else if (result?.startsWith('-')) {
-                    // Contract failed
-                    const undertricks = parseInt(result.substring(1));
-                    const isVulnerable = this.isDeclarerVulnerable();
-                    
-                    if (doubled === '') {
-                        // Undoubled penalties
-                        score = -undertricks * (isVulnerable ? 100 : 50);
-                    } else {
-                        // Doubled penalties (simplified)
-                        let penalty = 0;
-                        for (let i = 1; i <= undertricks; i++) {
-                            if (i === 1) {
-                                penalty += isVulnerable ? 200 : 100;
-                            } else if (i <= 3) {
-                                penalty += isVulnerable ? 300 : 200;
-                            } else {
-                                penalty += 300;
-                            }
-                        }
-                        if (doubled === 'XX') penalty *= 2;
-                        score = -penalty;
-                    }
-                }
-                
-                const declarerSide = ['N', 'S'].includes(declarer) ? 'NS' : 'EW';
-                this.gameState.scores[declarerSide] += score;
-                
-                this.gameState.history.push({
-                    deal: this.gameState.dealNumber,
-                    contract: { ...this.currentContract },
-                    score: score
-                });
-            }
-            
-            isDeclarerVulnerable() {
-                const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
-                return this.gameState.vulnerability === declarerSide || this.gameState.vulnerability === 'Both';
-            }
-            
-            nextDeal() {
-                this.gameState.dealNumber++;
-                this.updateVulnerabilityForNewDeal();
-                this.resetContract();
-                this.appState = 'level_selection';
-            }
-            
-            resetContract() {
-                this.currentContract = { level: null, suit: null, declarer: null, doubled: '', result: null, hcp: null };
-                this.hcpInput = { stage: null, tens: null, units: null };
-                this.resultMode = null;
-            }
-            
-            initializeMode() {
-                this.updateVulnerabilityForNewDeal();
-            }
-            
-            updateVulnerabilityForNewDeal() {
-                if (this.currentMode === 'chicago' || this.currentMode === 'bonus') {
-                    const cycle = ['None', 'NS', 'EW', 'Both'];
-                    this.gameState.vulnerability = cycle[(this.gameState.dealNumber - 1) % 4];
-                } else if (this.currentMode === 'kitchen') {
-                    this.gameState.vulnerability = 'None';
-                }
-                this.updateVulnerabilityDisplay();
-            }
-            
-            toggleVulnerability() {
-                if (['kitchen', 'rubber', 'duplicate'].includes(this.currentMode)) {
-                    const cycle = ['None', 'NS', 'EW', 'Both'];
-                    const current = cycle.indexOf(this.gameState.vulnerability);
-                    this.gameState.vulnerability = cycle[(current + 1) % 4];
-                    this.updateVulnerabilityDisplay();
-                }
-            }
-            
-            updateVulnerabilityDisplay() {
-                const shortNames = { 'None': 'NV', 'NS': 'NS', 'EW': 'EW', 'Both': 'Both' };
-                this.vulnText.textContent = shortNames[this.gameState.vulnerability];
-            }
-            
-            updateVulnerabilityHighlight() {
-                const declarer = this.currentContract.declarer;
-                if (!declarer) return;
-                
-                const declarerSide = ['N', 'S'].includes(declarer) ? 'NS' : 'EW';
-                const isVulnerable = this.gameState.vulnerability === declarerSide || this.gameState.vulnerability === 'Both';
-                
-                this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
-                if (isVulnerable) {
-                    this.vulnControl.classList.add('vulnerable-active');
-                } else {
-                    this.vulnControl.classList.add('vulnerable-safe');
-                }
-            }
-            
-            toggleKeepAwake() {
-                this.gameState.keepAwake = !this.gameState.keepAwake;
-                this.wakeToggle.classList.toggle('active', this.gameState.keepAwake);
-            }
-            
-            goBack() {
-                switch (this.appState) {
-                    case 'level_selection':
-                        this.appState = 'mode_selection';
-                        this.currentMode = null;
-                        this.resetContract();
-                        break;
-                    case 'hcp_tens':
-                        this.appState = 'level_selection';
-                        this.currentContract.level = null;
-                        this.hcpInput = { stage: null, tens: null, units: null };
-                        break;
-                    case 'hcp_units':
-                        this.appState = 'hcp_tens';
-                        this.hcpInput.units = null;
-                        break;
-                    case 'suit_selection':
-                        if (this.currentMode === 'bonus' && this.currentContract.hcp) {
-                            this.appState = 'hcp_units';
-                            this.currentContract.hcp = null;
-                            this.hcpInput.units = null;
-                        } else {
-                            this.appState = 'level_selection';
-                            this.currentContract.level = null;
-                        }
-                        break;
-                    case 'declarer_selection':
-                        this.appState = 'suit_selection';
-                        this.currentContract.suit = null;
-                        this.currentContract.doubled = '';
-                        break;
-                    case 'result_type_selection':
-                        this.appState = 'declarer_selection';
-                        this.currentContract.declarer = null;
-                        this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
-                        break;
-                    case 'result_number_selection':
-                        this.appState = 'result_type_selection';
-                        this.resultMode = null;
-                        break;
-                    case 'scoring':
-                        // Go back to result entry for this deal
-                        this.appState = 'result_type_selection';
-                        // Remove the last history entry
-                        const lastEntry = this.gameState.history.pop();
-                        if (lastEntry) {
-                            // Restore the score
-                            const declarerSide = ['N', 'S'].includes(lastEntry.contract.declarer) ? 'NS' : 'EW';
-                            this.gameState.scores[declarerSide] -= lastEntry.score;
-                        }
-                        this.currentContract.result = null;
-                        break;
-                    default:
-                        this.goToMenu();
-                }
-            }
-            
-            goToMenu() {
-                this.appState = 'mode_selection';
-                this.currentMode = null;
-                this.resetContract();
-                this.gameState = {
-                    mode: null, dealNumber: 1, vulnerability: 'None',
-                    scores: { NS: 0, EW: 0 }, history: [], keepAwake: this.gameState.keepAwake
-                };
-                this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
-            }
-            
-            showHelp() {
-                this.showOverlay('help');
-            }
-            
-            quit() {
-                this.showOverlay('quit');
-            }
-            
-            showOverlay(type) {
-                // Remove any existing overlay
-                const existingOverlay = document.querySelector('.modal-overlay');
-                if (existingOverlay) {
-                    existingOverlay.remove();
-                }
-                
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                
-                let content = '';
-                if (type === 'help') {
-                    content = this.getHelpContent();
-                } else if (type === 'quit') {
-                    content = this.getQuitContent();
-                }
-                
-                overlay.innerHTML = content;
-                document.body.appendChild(overlay);
-                
-                // Add event listeners for buttons
-                overlay.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('close-btn')) {
-                        overlay.remove();
-                    } else if (e.target.classList.contains('menu-btn')) {
-                        overlay.remove();
-                        this.goToMenu();
-                    } else if (e.target.classList.contains('close-app-btn')) {
-                        overlay.remove();
-                        this.closeApp();
-                    } else if (e.target.classList.contains('modal-overlay')) {
-                        overlay.remove();
-                    }
-                });
-            }
-            
-            getHelpContent() {
-                const currentModeName = this.currentMode ? 
-                    { 'kitchen': 'Kitchen Bridge', 'bonus': 'Bonus Bridge', 'chicago': 'Chicago Bridge', 
-                      'rubber': 'Rubber Bridge', 'duplicate': 'Duplicate Bridge' }[this.currentMode] : 
-                    'Bridge Modes Calculator';
-                
-                return `
-                    <div class="modal-content">
-                        <h3>${currentModeName} Help</h3>
-                        
-                        ${this.currentMode === 'kitchen' ? `
-                            <div class="help-section">
-                                <h4>About Kitchen Bridge</h4>
-                                <p><strong>Kitchen Bridge</strong> is a simplified, social form of bridge scoring perfect for casual games at home. It removes the complexity of rubber bridge while maintaining the essence of bridge scoring.</p>
-                            </div>
-                            
-                            <div class="help-section">
-                                <h4>How Kitchen Bridge Scoring Works</h4>
-                                <ul>
-                                    <li><strong>Basic Scoring:</strong> Clubs/Diamonds = 20 per trick, Hearts/Spades = 30 per trick, No Trump = 30 + 10 bonus</li>
-                                    <li><strong>Game Bonus:</strong> 300 points (NV) or 500 points (Vul) for contracts worth 100+ points</li>
-                                    <li><strong>Part-Game Bonus:</strong> 50 points for contracts under 100 points</li>
-                                    <li><strong>Overtricks:</strong> Same value as basic scoring (undoubled)</li>
-                                    <li><strong>Penalties:</strong> 50 per trick NV, 100 per trick Vul (undoubled)</li>
-                                    <li><strong>Doubling:</strong> Doubles basic score, adds 50 (X) or 100 (XX) bonus</li>
-                                </ul>
-                            </div>
-                        ` : `
-                            <div class="help-section">
-                                <h4>About ${currentModeName}</h4>
-                                <p>This bridge variant has specific scoring rules and gameplay features.</p>
-                            </div>
-                        `}
-                        
-                        <div class="help-section">
-                            <h4>How to Use This App</h4>
-                            <ol>
-                                <li><strong>Select Mode:</strong> Press 1-5 to choose scoring system</li>
-                                <li><strong>Enter Level:</strong> Press 1-7 for bid level</li>
-                                ${this.currentMode === 'bonus' ? '<li><strong>Enter HCP:</strong> Input combined Declarer+Dummy high card points</li>' : ''}
-                                <li><strong>Choose Suit:</strong> Select trump suit or No Trump</li>
-                                <li><strong>Pick Declarer:</strong> Choose N/S/E/W</li>
-                                <li><strong>Add Doubling:</strong> Press X to cycle through None/Double/Redouble</li>
-                                <li><strong>Enter Result:</strong> Made exactly, Plus overtricks, or Down</li>
-                                <li><strong>Next Deal:</strong> Press Deal to continue</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="help-section">
-                            <h4>Button Functions</h4>
-                            <ul>
-                                <li><strong>Back:</strong> Return to previous step</li>
-                                <li><strong>Wake:</strong> Keep screen on during long games</li>
-                                <li><strong>Vuln:</strong> Shows/controls vulnerability</li>
-                                <li><strong>Help:</strong> Shows this help screen</li>
-                                <li><strong>Quit:</strong> Exit options</li>
-                            </ul>
-                        </div>
-                        
-                        <button class="close-btn modal-button">Close Help</button>
-                    </div>
-                `;
-            }
-            
-            getQuitContent() {
-                return `
-                    <div class="modal-content">
-                        <h3>Exit Bridge Calculator</h3>
-                        <p>What would you like to do?</p>
-                        
-                        <div class="quit-options">
-                            <button class="menu-btn modal-button">Return to Menu</button>
-                            <button class="close-app-btn modal-button">Close App</button>
-                            <button class="close-btn modal-button">Cancel</button>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            closeApp() {
-                this.releaseWakeLock();
-                if (confirm('Really close Bridge Calculator?')) {
-                    // Try to close the window/tab
-                    window.close();
-                    // If that doesn't work (PWA), show message
-                    alert('Please close the app manually or switch to another app.');
-                }
-            }
-            
-            updateDisplay() {
-                if (!this.display) return;
-                
-                let content = this.getDisplayContent();
-                this.display.innerHTML = content;
-                this.updateButtonStates();
-            }
-            
-            getDisplayContent() {
-                const modeNames = {
-                    'kitchen': 'Kitchen Bridge', 'bonus': 'Bonus Bridge',
-                    'chicago': 'Chicago Bridge', 'rubber': 'Rubber Bridge', 'duplicate': 'Duplicate Bridge'
-                };
-                
-                const modeName = modeNames[this.currentMode] || 'Bridge Modes Calculator';
-                
-                switch (this.appState) {
-                    case 'mode_selection':
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">Bridge Modes Calculator</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div>Select scoring mode:<br>1-Kitchen  2-Bonus  3-Chicago  4-Rubber  5-Duplicate</div>
-                            </div>
-                            <div class="current-state">Press 1-5 to select mode</div>
-                        `;
-                        
-                    case 'level_selection':
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Deal ${this.gameState.dealNumber}</strong></div>
-                            </div>
-                            <div class="current-state">Select bid level (1-7)</div>
-                        `;
-                        
-                    case 'hcp_tens':
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Contract: ${this.currentContract.level}?</strong></div>
-                            </div>
-                            <div class="current-state">Enter HCP tens digit (0-3)</div>
-                        `;
-                        
-                    case 'hcp_units':
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Contract: ${this.currentContract.level}? | HCP: ${this.hcpInput.tens}_</strong></div>
-                            </div>
-                            <div class="current-state">Enter HCP units digit (0-9)</div>
-                        `;
-                        
-                    case 'suit_selection':
-                        const hcpText = this.currentContract.hcp ? ` | HCP: ${this.currentContract.hcp}` : '';
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Level: ${this.currentContract.level}${hcpText}</strong></div>
-                            </div>
-                            <div class="current-state">Select suit</div>
-                        `;
-                        
-                    case 'declarer_selection':
-                        const contractSoFar = `${this.currentContract.level}${this.currentContract.suit}`;
-                        const doubleText = this.currentContract.doubled ? ` ${this.currentContract.doubled}` : '';
-                        const hcpDisplay = this.currentContract.hcp ? ` (${this.currentContract.hcp} HCP)` : '';
-                        
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Contract: ${contractSoFar}${doubleText}${hcpDisplay}</strong></div>
-                            </div>
-                            <div class="current-state">
-                                ${this.currentContract.declarer ? 
-                                    'Press Made/Plus/Down for result, or X for double/redouble' : 
-                                    'Select declarer (N/S/E/W)'}
-                            </div>
-                        `;
-                        
-                    case 'result_type_selection':
-                        const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                        const hcp = this.currentContract.hcp ? ` (${this.currentContract.hcp} HCP)` : '';
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Contract: ${contract} by ${this.currentContract.declarer}${hcp}</strong></div>
-                            </div>
-                            <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
-                        `;
-                        
-                    case 'result_number_selection':
-                        const fullContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                        const hcpInfo = this.currentContract.hcp ? ` (${this.currentContract.hcp} HCP)` : '';
-                        const modeText = this.resultMode === 'down' ? 'tricks down (1-7)' : 'overtricks (1-6)';
-                        return `
-                            <div class="title-score-row">
-                                <div class="mode-title">${modeName}</div>
-                                <div class="score-display">
-                                    NS: ${this.gameState.scores.NS}<br>
-                                    EW: ${this.gameState.scores.EW}
-                                </div>
-                            </div>
-                            <div class="game-content">
-                                <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}${hcpInfo}</strong></div>
-                            </div>
-                            <div class="current-state">Enter number of ${modeText}</div>
-                        `;
-                        
-                    case 'scoring':
-                        const lastEntry = this.gameState.history[this.gameState.history.length - 1];
-                        if (lastEntry) {
-                            const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
-                            const hcpShow = lastEntry.contract.hcp ? ` (${lastEntry.contract.hcp} HCP)` : '';
-                            return `
-                                <div class="title-score-row">
-                                    <div class="mode-title">${modeName}</div>
-                                    <div class="score-display">
-                                        NS: ${this.gameState.scores.NS}<br>
-                                        EW: ${this.gameState.scores.EW}
-                                    </div>
-                                </div>
-                                <div class="game-content">
-                                    <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
-                                    ${contractDisplay} by ${lastEntry.contract.declarer}${hcpShow} = ${lastEntry.contract.result}<br>
-                                    <span style="color: ${lastEntry.score >= 0 ? '#27ae60' : '#e74c3c'};">
-                                        Score: ${lastEntry.score >= 0 ? '+' : ''}${lastEntry.score}
-                                    </span></div>
-                                </div>
-                                <div class="current-state">Press Deal for next hand</div>
-                            `;
-                        }
-                        break;
-                        
-                    default:
-                        return '<div class="current-state">Loading...</div>';
-                }
-            }
-            
-            updateButtonStates() {
-                if (!this.buttons) return;
-                
-                let activeButtons = [];
-                
-                switch (this.appState) {
-                    case 'mode_selection':
-                        activeButtons = ['1', '2', '3', '4', '5'];
-                        break;
-                    case 'level_selection':
-                        activeButtons = ['1', '2', '3', '4', '5', '6', '7'];
-                        break;
-                    case 'hcp_tens':
-                        activeButtons = ['0', '1', '2', '3'];
-                        break;
-                    case 'hcp_units':
-                        activeButtons = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-                        break;
-                    case 'suit_selection':
-                        activeButtons = ['♣', '♦', '♥', '♠', 'NT'];
-                        break;
-                    case 'declarer_selection':
-                        activeButtons = ['N', 'S', 'E', 'W', 'X'];
-                        // If declarer is selected, also allow result buttons
-                        if (this.currentContract.declarer) {
-                            activeButtons.push('MADE', 'PLUS', 'DOWN');
-                        }
-                        break;
-                    case 'result_type_selection':
-                        activeButtons = ['MADE', 'PLUS', 'DOWN'];
-                        break;
-                    case 'result_number_selection':
-                        if (this.resultMode === 'down') {
-                            activeButtons = ['1', '2', '3', '4', '5', '6', '7'];
-                        } else if (this.resultMode === 'plus') {
-                            const maxOvertricks = Math.min(6, 13 - (6 + this.currentContract.level));
-                            for (let i = 1; i <= maxOvertricks; i++) {
-                                activeButtons.push(i.toString());
-                            }
-                        }
-                        break;
-                    case 'scoring':
-                        activeButtons = ['DEAL'];
-                        break;
-                }
-                
-                // Always allow Back action (except in mode selection)
-                if (this.appState !== 'mode_selection') {
-                    activeButtons.push('BACK');
-                }
-                
-                // Update button states
-                this.buttons.forEach(btn => {
-                    const value = btn.dataset.value;
-                    if (activeButtons.includes(value)) {
-                        btn.classList.remove('disabled');
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.add('disabled');
-                        btn.classList.remove('active');
-                    }
-                });
-            }
-        }
+    <!-- Error Screen -->
+    <div id="error-screen" class="error-overlay" style="display: none;">
+        <div class="error-content">
+            <h2>⚠️ Loading Error</h2>
+            <p id="error-message">Failed to load the calculator. Please refresh the page.</p>
+            <button onclick="location.reload()" class="modal-button">Reload App</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script type="module">
+        // Main App Initialization
+        import { BridgeApp } from './js/app.js';
         
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            window.bridgeApp = new BridgeCalculator();
+        // Initialize app when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Hide loading screen after a brief moment
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'flex';
+                }, 500);
+                
+                // Initialize the Bridge Calculator
+                window.bridgeApp = new BridgeApp();
+                
+                console.log('🃏 Bridge Calculator initialized successfully');
+                
+            } catch (error) {
+                console.error('Failed to initialize Bridge Calculator:', error);
+                
+                // Show error screen
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('error-screen').style.display = 'flex';
+                document.getElementById('error-message').textContent = 
+                    `Error: ${error.message}. Please check the console for details.`;
+            }
         });
         
-        // Also initialize immediately if DOM is already loaded
-        if (document.readyState !== 'loading') {
-            window.bridgeApp = new BridgeCalculator();
+        // Service Worker Registration (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
         }
     </script>
 </body>

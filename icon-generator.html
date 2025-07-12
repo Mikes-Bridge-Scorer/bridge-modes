@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Calculator Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .icon-preview {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .icon-size {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        .icon-size h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background: white;
+            margin: 5px 0;
+        }
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .download-btn:hover {
+            background: #218838;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .download-all {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .download-all:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Bridge Calculator Icon Generator</h1>
+        <p>Generate all the needed icon sizes for your Bridge Calculator PWA.</p>
+        
+        <div class="instructions">
+            <h3>📝 Instructions:</h3>
+            <ol>
+                <li>Click "Generate All Icons" below</li>
+                <li>Download each icon size using the individual download buttons</li>
+                <li>Place files in your project:
+                    <ul>
+                        <li><code>favicon.ico</code> → root folder</li>
+                        <li><code>icon-*.png</code> → assets/ folder</li>
+                    </ul>
+                </li>
+                <li>Refresh your bridge calculator to see the icons working!</li>
+            </ol>
+        </div>
+
+        <button class="download-all" onclick="generateAllIcons()">🚀 Generate All Icons</button>
+        <button class="download-all" onclick="testButton()" style="background: #6c757d; margin-left: 10px;">🧪 Test JavaScript</button>
+        
+        <div class="icon-preview" id="iconPreview">
+            <!-- Icons will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        function createIcon(size, filename) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Light green background
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Large "B"
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = `bold ${Math.floor(size * 0.47)}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('B', size / 2, size * 0.42);
+            
+            // Small "Modes" (only if size is large enough)
+            if (size >= 32) {
+                ctx.font = `600 ${Math.floor(size * 0.094)}px Arial, sans-serif`;
+                ctx.fillStyle = '#34495e';
+                ctx.fillText('Modes', size / 2, size * 0.78);
+            }
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            try {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log('Downloaded:', filename);
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert('Download failed. Please try right-clicking the canvas and "Save image as..."');
+            }
+        }
+        
+        function generateAllIcons() {
+            console.log('Generating icons...');
+            
+            const iconSizes = [
+                { size: 16, label: 'Favicon 16x16', filename: 'favicon-16.png' },
+                { size: 32, label: 'Favicon 32x32', filename: 'favicon-32.png' },
+                { size: 144, label: 'Icon 144x144', filename: 'icon-144.png' },
+                { size: 192, label: 'Icon 192x192', filename: 'icon-192.png' },
+                { size: 512, label: 'Icon 512x512', filename: 'icon-512.png' }
+            ];
+            
+            const preview = document.getElementById('iconPreview');
+            preview.innerHTML = '';
+            
+            iconSizes.forEach(({ size, label, filename }) => {
+                const canvas = createIcon(size, filename);
+                
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'icon-size';
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.textContent = `💾 Download ${filename}`;
+                downloadBtn.onclick = () => downloadCanvas(canvas, filename);
+                
+                iconDiv.innerHTML = `<h3>${label}</h3>`;
+                iconDiv.appendChild(canvas);
+                iconDiv.appendChild(downloadBtn);
+                
+                preview.appendChild(iconDiv);
+            });
+            
+            // Add special favicon.ico download
+            const faviconDiv = document.createElement('div');
+            faviconDiv.className = 'icon-size';
+            faviconDiv.innerHTML = `<h3>Favicon ICO</h3><p style="margin: 10px 0; font-size: 12px;">32x32 PNG renamed as ICO</p>`;
+            
+            const faviconBtn = document.createElement('button');
+            faviconBtn.className = 'download-btn';
+            faviconBtn.textContent = '💾 Download favicon.ico';
+            faviconBtn.onclick = () => {
+                const canvas = createIcon(32, 'favicon.ico');
+                downloadCanvas(canvas, 'favicon.ico');
+            };
+            
+            faviconDiv.appendChild(faviconBtn);
+            preview.appendChild(faviconDiv);
+            
+            console.log('Icons generated successfully!');
+        }
+        
+        // Test function
+        function testButton() {
+            alert('JavaScript is working!');
+        }
+    </script>
+</body>
+</html>

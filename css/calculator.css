@@ -1,59 +1,58 @@
 /* ===== BUTTON GRID LAYOUT ===== */
 .button-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
     flex: 2;
-    min-height: 280px;
-    max-height: 400px;
+    min-height: 260px;
     padding: 4px;
 }
 
 /* ===== BASE BUTTON STYLES ===== */
 .btn {
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 52px;
-    padding: 8px 4px;
+    min-height: 44px;
+    padding: 4px 3px;
     text-align: center;
     line-height: 1.2;
     position: relative;
     overflow: hidden;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.2),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     background-clip: padding-box;
 }
 
 /* ===== BUTTON INTERACTIONS ===== */
 .btn:hover:not(.disabled) {
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.02);
     box-shadow: 
-        0 6px 16px rgba(0, 0, 0, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 .btn:active:not(.disabled) {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
     box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.2),
         inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .btn.active {
     transform: scale(1.05);
     box-shadow: 
+        0 0 0 3px rgba(255, 255, 255, 0.8),
         0 0 20px rgba(255, 255, 255, 0.4),
-        0 0 0 2px rgba(255, 255, 255, 0.6),
         inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     animation: activeGlow 0.3s ease-out;
 }
@@ -61,7 +60,11 @@
 @keyframes activeGlow {
     0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
     50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.6); }
-    100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
+    100% { 
+        box-shadow: 
+            0 0 0 3px rgba(255, 255, 255, 0.8),
+            0 0 20px rgba(255, 255, 255, 0.4);
+    }
 }
 
 .btn.disabled {
@@ -78,72 +81,228 @@
 
 /* ===== BUTTON TYPE STYLES ===== */
 
-/* Level Buttons (Row 1) */
-.btn-level {
-    font-size: 20px;
+/* Numbers (Rows 1-2) */
+.btn-number {
+    font-size: 16px;
     font-weight: 800;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #5dade2, #3498db);
 }
 
-/* Suit Buttons (Row 2) */
+.btn-number:hover:not(.disabled) {
+    background: linear-gradient(135deg, #7fb3d3, #5dade2);
+}
+
+.btn-number:active:not(.disabled) {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+/* Suits (Row 3) */
 .btn-suit {
-    padding: 6px;
+    padding: 4px;
+    border-radius: 14px;
 }
 
 .suit-symbol {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 900;
     line-height: 1;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+.btn-clubs {
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.btn-clubs:hover:not(.disabled) {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.btn-clubs:active:not(.disabled) {
+    background: linear-gradient(135deg, #229954, #1e8449);
+}
+
+.btn-diamonds {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.btn-diamonds:hover:not(.disabled) {
+    background: linear-gradient(135deg, #ec7063, #e74c3c);
+}
+
+.btn-diamonds:active:not(.disabled) {
+    background: linear-gradient(135deg, #c0392b, #a93226);
+}
+
+.btn-hearts {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.btn-hearts:hover:not(.disabled) {
+    background: linear-gradient(135deg, #ec7063, #e74c3c);
+}
+
+.btn-hearts:active:not(.disabled) {
+    background: linear-gradient(135deg, #c0392b, #a93226);
+}
+
+.btn-spades {
+    background: linear-gradient(135deg, #2c3e50, #1b2631);
+}
+
+.btn-spades:hover:not(.disabled) {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+}
+
+.btn-spades:active:not(.disabled) {
+    background: linear-gradient(135deg, #1b2631, #17202a);
+}
+
+.btn-notrump {
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.btn-notrump:hover:not(.disabled) {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.btn-notrump:active:not(.disabled) {
+    background: linear-gradient(135deg, #229954, #1e8449);
+}
+
 .btn-notrump .suit-symbol {
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-/* Double Buttons */
-.btn-double, .btn-redouble {
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-/* Result Control Buttons (Row 3) */
-.btn-counter {
-    flex-direction: column;
-    padding: 4px;
-}
-
-.counter-value {
-    font-size: 22px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.btn-result {
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.btn-made {
     font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-}
-
-/* Action Buttons */
-.btn-action {
-    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 /* Declarer Buttons (Row 4) */
 .btn-declarer {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 800;
     letter-spacing: 1px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+.btn-declarer:hover:not(.disabled) {
+    background: linear-gradient(135deg, #af7ac5, #9b59b6);
+}
+
+.btn-declarer:active:not(.disabled) {
+    background: linear-gradient(135deg, #8e44ad, #7d3c98);
+}
+
+/* Double Button */
+.btn-double {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.btn-double:hover:not(.disabled) {
+    background: linear-gradient(135deg, #f7b84b, #f39c12);
+}
+
+.btn-double:active:not(.disabled) {
+    background: linear-gradient(135deg, #e67e22, #d68910);
+}
+
+/* Result Buttons (Row 5) */
+.btn-result {
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+}
+
+.btn-result:hover:not(.disabled) {
+    background: linear-gradient(135deg, #3f5773, #34495e);
+}
+
+.btn-result:active:not(.disabled) {
+    background: linear-gradient(135deg, #2c3e50, #1b2631);
+}
+
+/* Action Buttons (Row 5) */
+.btn-action {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.btn-action:hover:not(.disabled) {
+    background: linear-gradient(135deg, #f7b84b, #f39c12);
+}
+
+.btn-action:active:not(.disabled) {
+    background: linear-gradient(135deg, #e67e22, #d68910);
+}
+
+/* ===== SPECIAL BUTTON EFFECTS ===== */
+
+/* Suit-specific active states */
+.btn-clubs.active {
+    box-shadow: 
+        0 0 0 3px #00ff00,
+        0 0 25px rgba(0, 255, 0, 0.7);
+}
+
+.btn-diamonds.active, .btn-hearts.active {
+    box-shadow: 
+        0 0 0 3px #ff0000,
+        0 0 25px rgba(255, 0, 0, 0.7);
+}
+
+.btn-spades.active {
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 25px rgba(255, 255, 255, 0.8);
+}
+
+.btn-notrump.active {
+    box-shadow: 
+        0 0 0 3px #9b59b6,
+        0 0 25px rgba(155, 89, 182, 0.7);
+}
+
+/* Declarer-specific active states */
+.btn-declarer.active {
+    box-shadow: 
+        0 0 0 3px #9b59b6,
+        0 0 25px rgba(155, 89, 182, 0.7);
+}
+
+/* Mode selection highlighting */
+.btn-number.active[data-value="1"],
+.btn-number.active[data-value="2"],
+.btn-number.active[data-value="3"],
+.btn-number.active[data-value="4"],
+.btn-number.active[data-value="5"] {
+    box-shadow: 
+        0 0 0 4px #00ff00,
+        0 0 30px rgba(0, 255, 0, 0.6),
+        0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: modeSelectPulse 2s infinite;
+}
+
+@keyframes modeSelectPulse {
+    0%, 100% { 
+        box-shadow: 
+            0 0 0 4px #00ff00,
+            0 0 30px rgba(0, 255, 0, 0.6),
+            0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    50% { 
+        box-shadow: 
+            0 0 0 6px #00ff00,
+            0 0 40px rgba(0, 255, 0, 0.8),
+            0 6px 24px rgba(0, 0, 0, 0.4);
+    }
 }
 
 /* ===== BUTTON PRESS EFFECTS ===== */
@@ -170,7 +329,7 @@
 
 /* ===== HAPTIC FEEDBACK SIMULATION ===== */
 .btn-press {
-    animation: buttonPress 0.1s ease-out;
+    animation: buttonPress 0.15s ease-out;
 }
 
 @keyframes buttonPress {
@@ -185,6 +344,71 @@
     outline-offset: 2px;
 }
 
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 375px) {
+    .button-grid {
+        gap: 4px;
+        padding: 2px;
+        min-height: 240px;
+    }
+    
+    .btn {
+        min-height: 40px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+    
+    .btn-number {
+        font-size: 15px;
+    }
+    
+    .suit-symbol {
+        font-size: 20px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 12px;
+    }
+    
+    .btn-declarer {
+        font-size: 16px;
+    }
+    
+    .btn-double {
+        font-size: 12px;
+    }
+    
+    .btn-result {
+        font-size: 12px;
+    }
+    
+    .btn-action {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 320px) {
+    .button-grid {
+        gap: 3px;
+        min-height: 220px;
+    }
+    
+    .btn {
+        min-height: 38px;
+        font-size: 13px;
+        padding: 2px;
+    }
+    
+    .suit-symbol {
+        font-size: 18px;
+    }
+    
+    .btn-declarer {
+        font-size: 15px;
+    }
+}
+
+/* ===== REDUCED MOTION PREFERENCES ===== */
 @media (prefers-reduced-motion: reduce) {
     .btn {
         transition: none;
@@ -196,6 +420,10 @@
     
     .btn.active {
         transform: none;
+        animation: none;
+    }
+    
+    .btn-press {
         animation: none;
     }
 }
@@ -210,5 +438,17 @@
     .btn.disabled {
         border-color: #666;
         opacity: 0.5;
+    }
+    
+    .btn:hover:not(.disabled) {
+        border-color: #000;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    
+    .btn.active {
+        border-color: #000;
+        background: #fff !important;
+        color: #000 !important;
     }
 }
