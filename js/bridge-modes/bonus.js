@@ -1,9 +1,786 @@
 /**
- * Bonus Bridge Mode - HCP-Based Enhanced Scoring System
+     * Adjust HCP values
+     */
+    adjustHCP(change) {
+        this.handAnalysis.totalHCP = Math.max(0, Math.min(40, this.handAnalysis.totalHCP + change));
+    }
+    
+    adjustSingletons(change) {
+        this.handAnalysis.singletons = Math.max(0, Math.min(4, this.handAnalysis.singletons + change));
+    }
+    
+    adjustVoids(change) {
+        this.handAnalysis.voids = Math.max(0, Math.min(4, this.handAnalysis.voids + change));
+    }
+    
+    adjustLongSuits(change) {
+        this.handAnalysis.longSuits = Math.max(0, Math.min(4, this.handAnalysis.longSuits + change));
+    }
+    
+    /**
+     * Handle actions in scoring state
+     */
+    handleScoringActions(value) {
+        if (value === 'DEAL') {
+            this.nextDeal();
+        }
+    }
+    
+    /**
+     * Calculate raw bridge score
+     */
+    calculateRawScore() {
+        const { level, suit, result, doubled } = this.currentContract;
+        const vulnerability = this.gameState.getVulnerability();
+        
+        // Basic suit values per trick
+        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        let score = 0;
+        
+        if (result === '=' || result?.startsWith('+')) {
+            // Contract made
+            let basicScore = level * suitValues[suit];
+            if (suit === 'NT') basicScore += 10; // NT first trick bonus
+            
+            // Handle doubling of basic score
+            let contractScore = basicScore;
+            if (doubled === 'X') contractScore = basicScore * 2;
+            else if (doubled === 'XX') contractScore = basicScore * 4;
+            
+            score = contractScore;
+            
+            // Add overtricks
+            if (result?.startsWith('+')) {
+                const overtricks = parseInt(result.substring(1));
+                let overtrickValue;
+                
+                if (doubled === '') {
+                    overtrickValue = suitValues[suit] * overtricks;
+                } else {
+                    const isVulnerable = this.isDeclarerVulnerable();
+                    overtrickValue = overtricks * (isVulnerable ? 200 : 100);
+                    if (doubled === 'XX') overtrickValue *= 2;
+                }
+                score += overtrickValue;
+            }
+            
+            // Game/Part-game bonus
+            if (contractScore >= 100) {
+                const isVulnerable = this.isDeclarerVulnerable();
+                score += isVulnerable ? 500 : 300;
+            } else {
+                score += 50;
+            }
+            
+            // Double bonuses
+            if (doubled === 'X') score += 50;
+            else if (doubled === 'XX') score += 100;
+            
+        } else if (result?.startsWith('-')) {
+            // Contract failed
+            const undertricks = parseInt(result.substring(1));
+            const isVulnerable = this.isDeclarerVulnerable();
+            
+            if (doubled === '') {
+                score = -undertricks * (isVulnerable ? 100 : 50);
+            } else {
+                let penalty = 0;
+                for (let i = 1; i <= undertricks; i++) {
+                    if (i === 1) {
+                        penalty += isVulnerable ? 200 : 100;
+                    } else if (i <= 3) {
+                        penalty += isVulnerable ? 300 : 200;
+                    } else {
+                        penalty += 300;
+                    }
+                }
+                if (doubled === 'XX') penalty *= 2;
+                score = -penalty;
+            }
+        }
+        
+        this.currentContract.rawScore = score;
+        console.log(`🎯 Raw score calculated: ${score}`);
+    }
+    
+    /**
+     * Calculate Bonus Bridge score
+     */
+    calculateBonusScore() {
+        const analysisData = this.calculateFinalAnalysis();
+        if (!analysisData) return;
+        
+        // Apply Bonus Bridge scoring
+        const nsPoints = analysisData.nsPoints;
+        const ewPoints = analysisData.ewPoints;
+        
+        // Add points to teams
+        if (nsPoints > 0) {
+            this.gameState.addScore('NS', nsPoints);
+        }
+        if (ewPoints > 0) {
+            this.gameState.addScore('EW', ewPoints);
+        }
+        
+        // Record in history
+        this.gameState.addToHistory({
+            deal: this.gameState.getDealNumber(),
+            contract: { ...this.currentContract },
+            score: this.currentContract.rawScore,
+            actualScore: nsPoints + ewPoints, // Total points awarded
+            scoringSide: nsPoints > ewPoints ? 'NS' : 'EW',
+            mode: 'bonus',
+            handAnalysis: { ...this.handAnalysis },
+            bonusAnalysis: analysisData,
+            vulnerability: this.gameState.getVulnerability()
+        });
+        
+        console.log(`💾 Bonus Bridge score recorded: NS=${nsPoints}, EW=${ewPoints}`);
+    }
+    
+    /**
+     * Calculate final analysis (main Bonus Bridge logic)
+     */
+    calculateFinalAnalysis() {
+        const { level, suit, result, declarer } = this.currentContract;
+        const { totalHCP, singletons, voids, longSuits } = this.handAnalysis;
+        
+        // Expected HCP for contract type
+        const expectedHCP = this.getExpectedHCP(level, suit);
+        
+        // Calculate distribution points
+        const distributionPoints = (voids * 3) + (singletons * 2) + longSuits;
+        
+        // HCP percentages
+        const declarerHCPPercentage = Math.round((totalHCP / 40) * 100);
+        const defenderHCPPercentage = 100 - declarerHCPPercentage;
+        const hcpAdvantage = Math.abs(declarerHCPPercentage - 50);
+        const advantageSide = declarerHCPPercentage > 50 ? "declarer" : "defender";
+        
+        // Expected tricks calculations
+        const contractExpectedTricks = level + 6;
+        const handExpectedTricks = Math.min(13, 6 + Math.floor(totalHCP / 3) + Math.floor(distributionPoints / 4));
+        
+        // Actual result
+        const actualTricks = this.getActualTricks();
+        const madeContract = actualTricks >= contractExpectedTricks;
+        const isNS = declarer === 'N' || declarer === 'S';
+        
+        let nsPoints = 0;
+        let ewPoints = 0;
+        
+        if (madeContract) {
+            // Contract made - apply Bonus Bridge scoring
+            const rawScore = Math.abs(this.currentContract.rawScore) / 20;
+            
+            // HCP Adjustment
+            const hcpAdjustment = (totalHCP - expectedHCP) * 0.75;
+            let adjustedScore = totalHCP > expectedHCP 
+                ? rawScore - hcpAdjustment 
+                : rawScore + Math.abs(hcpAdjustment);
+            
+            // Performance assessment
+            const performanceVariance = actualTricks - contractExpectedTricks;
+            if (performanceVariance > 0) {
+                adjustedScore += (performanceVariance * 1.5);
+            }
+            
+            // Contract type adjustments
+            let contractAdjustment = 0;
+            if (this.isGameContract()) contractAdjustment += 2;
+            if (level === 6) contractAdjustment += 4;
+            if (level === 7) contractAdjustment += 6;
+            if (suit === 'NT') contractAdjustment += 1;
+            
+            adjustedScore += contractAdjustment;
+            
+            // Distribution adjustment (suit contracts only)
+            if (suit !== 'NT') {
+                if (distributionPoints >= 7) adjustedScore -= 3;
+                else if (distributionPoints >= 5) adjustedScore -= 2;
+                else if (distributionPoints >= 3) adjustedScore -= 1;
+            }
+            
+            // Defender reward
+            let defenderReward = 0;
+            if (handExpectedTricks > contractExpectedTricks && 
+                actualTricks < handExpectedTricks) {
+                const trickDifference = handExpectedTricks - actualTricks;
+                defenderReward = trickDifference * 2;
+                
+                if (advantageSide === "declarer") {
+                    defenderReward += Math.min(3, hcpAdvantage / 10);
+                }
+            }
+            
+            // Final points
+            const declarerPoints = Math.max(1, Math.round(adjustedScore));
+            const defenderPoints = Math.round(defenderReward);
+            
+            if (isNS) {
+                nsPoints = declarerPoints;
+                ewPoints = defenderPoints;
+            } else {
+                nsPoints = defenderPoints;
+                ewPoints = declarerPoints;
+            }
+            
+        } else {
+            // Contract failed
+            const basePenalty = Math.abs(this.currentContract.rawScore) / 10;
+            let levelPenalties = 0;
+            
+            if (this.isGameContract()) levelPenalties += 3;
+            if (level === 6) levelPenalties += 5;
+            if (level === 7) levelPenalties += 7;
+            
+            // Performance bonus for defenders
+            let performanceBonus = 0;
+            if (declarerHCPPercentage > 60) {
+                performanceBonus += (declarerHCPPercentage - 50) / 5;
+            }
+            
+            const undertricks = Math.abs(actualTricks - contractExpectedTricks);
+            if (undertricks >= 2) {
+                performanceBonus += 2;
+                if (undertricks >= 3) performanceBonus += 3;
+            }
+            
+            // Declarer consolation
+            let consolationPoints = 0;
+            if (declarerHCPPercentage < 40) {
+                consolationPoints = (50 - declarerHCPPercentage) / 10;
+            }
+            
+            // Final points for defeated contracts
+            const defenderPoints = Math.max(3, Math.round(basePenalty + levelPenalties + performanceBonus));
+            const declarerPoints = Math.round(consolationPoints);
+            
+            if (isNS) {
+                ewPoints = defenderPoints; // Defenders get points
+                nsPoints = declarerPoints; // Declarer consolation
+            } else {
+                nsPoints = defenderPoints; // Defenders get points
+                ewPoints = declarerPoints; // Declarer consolation
+            }
+        }
+        
+        return {
+            totalHCP,
+            distributionPoints,
+            expectedHCP,
+            contractExpectedTricks,
+            handExpectedTricks,
+            actualTricks,
+            nsPoints,
+            ewPoints,
+            madeContract
+        };
+    }
+    
+    /**
+     * Get expected HCP for contract type
+     */
+    getExpectedHCP(level, suit) {
+        if (level <= 2) return 21; // Part scores
+        if (level === 3 && suit === 'NT') return 25; // 3NT
+        if (level === 4 && (suit === '♥' || suit === '♠')) return 24; // 4 major
+        if (level === 5 && (suit === '♣' || suit === '♦')) return 27; // 5 minor
+        if (level === 6) return 30; // Small slam
+        if (level === 7) return 32; // Grand slam
+        return 21 + (level * 1.5); // Other levels
+    }
+    
+    /**
+     * Check if contract is a game contract
+     */
+    isGameContract() {
+        const { level, suit } = this.currentContract;
+        return (level === 3 && suit === 'NT') ||
+               (level === 4 && (suit === '♥' || suit === '♠')) ||
+               (level === 5 && (suit === '♣' || suit === '♦')) ||
+               level >= 6;
+    }
+    
+    /**
+     * Get actual tricks taken
+     */
+    getActualTricks() {
+        const { level, result } = this.currentContract;
+        const contractTricks = level + 6;
+        
+        if (result === '=') return contractTricks;
+        if (result?.startsWith('+')) return contractTricks + parseInt(result.substring(1));
+        if (result?.startsWith('-')) return contractTricks - parseInt(result.substring(1));
+        return contractTricks;
+    }
+    
+    /**
+     * Check if declarer is vulnerable
+     */
+    isDeclarerVulnerable() {
+        const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
+        const vulnerability = this.gameState.getVulnerability();
+        return vulnerability === declarerSide || vulnerability === 'Both';
+    }
+    
+    /**
+     * Move to next deal
+     */
+    nextDeal() {
+        console.log('🃏 Moving to next deal');
+        
+        this.gameState.nextDeal();
+        this.resetContract();
+        this.resetHandAnalysis();
+        this.inputState = 'level_selection';
+        this.ui.clearVulnerabilityHighlight();
+    }
+    
+    /**
+     * Reset contract to initial state
+     */
+    resetContract() {
+        this.currentContract = {
+            level: null,
+            suit: null,
+            declarer: null,
+            doubled: '',
+            result: null,
+            rawScore: null
+        };
+        this.resultMode = null;
+        this.ui.updateDoubleButton('');
+    }
+    
+    /**
+     * Reset hand analysis to default values
+     */
+    resetHandAnalysis() {
+        this.handAnalysis = {
+            totalHCP: 20,
+            singletons: 0,
+            voids: 0,
+            longSuits: 0
+        };
+    }
+    
+    /**
+     * Handle back navigation
+     */
+    handleBack() {
+        switch (this.inputState) {
+            case 'suit_selection':
+                this.inputState = 'level_selection';
+                this.currentContract.level = null;
+                break;
+            case 'declarer_selection':
+                this.inputState = 'suit_selection';
+                this.currentContract.suit = null;
+                this.currentContract.doubled = '';
+                this.ui.updateDoubleButton('');
+                break;
+            case 'result_type_selection':
+                this.inputState = 'declarer_selection';
+                this.currentContract.declarer = null;
+                this.ui.clearVulnerabilityHighlight();
+                break;
+            case 'result_number_selection':
+                this.inputState = 'result_type_selection';
+                this.resultMode = null;
+                break;
+            case 'hcp_analysis':
+                this.inputState = 'result_type_selection';
+                this.currentContract.result = null;
+                this.currentContract.rawScore = null;
+                break;
+            case 'scoring':
+                // Undo the last score and go back to HCP analysis
+                this.undoLastScore();
+                this.inputState = 'hcp_analysis';
+                break;
+            default:
+                return false; // Let app handle return to mode selection
+        }
+        
+        this.updateDisplay();
+        return true;
+    }
+    
+    /**
+     * Undo the last score entry
+     */
+    undoLastScore() {
+        const lastEntry = this.gameState.getLastHistoryEntry();
+        if (lastEntry && lastEntry.deal === this.gameState.getDealNumber()) {
+            // Remove points from both sides
+            if (lastEntry.bonusAnalysis) {
+                this.gameState.addScore('NS', -lastEntry.bonusAnalysis.nsPoints);
+                this.gameState.addScore('EW', -lastEntry.bonusAnalysis.ewPoints);
+            }
+            this.gameState.removeLastHistoryEntry();
+            console.log(`↩️ Undid Bonus Bridge score`);
+        }
+    }
+    
+    /**
+     * Check if back navigation is possible
+     */
+    canGoBack() {
+        return this.inputState !== 'level_selection';
+    }
+    
+    /**
+     * Toggle vulnerability - NOT ALLOWED in Bonus Bridge (auto mode)
+     */
+    toggleVulnerability() {
+        console.log('🚫 Manual vulnerability control not allowed in Bonus Bridge - uses auto cycle');
+        // Bonus Bridge vulnerability is automatic - no manual control
+    }
+    
+    /**
+     * Get active buttons for current state
+     */
+    getActiveButtons() {
+        switch (this.inputState) {
+            case 'level_selection':
+                return ['1', '2', '3', '4', '5', '6', '7'];
+                
+            case 'suit_selection':
+                return ['♣', '♦', '♥', '♠', 'NT'];
+                
+            case 'declarer_selection':
+                const buttons = ['N', 'S', 'E', 'W', 'X'];
+                if (this.currentContract.declarer) {
+                    buttons.push('MADE', 'PLUS', 'DOWN');
+                }
+                return buttons;
+                
+            case 'result_type_selection':
+                return ['MADE', 'PLUS', 'DOWN'];
+                
+            case 'result_number_selection':
+                if (this.resultMode === 'down') {
+                    return ['1', '2', '3', '4', '5', '6', '7'];
+                } else if (this.resultMode === 'plus') {
+                    const maxOvertricks = Math.min(6, 13 - (6 + this.currentContract.level));
+                    const buttons = [];
+                    for (let i = 1; i <= maxOvertricks; i++) {
+                        buttons.push(i.toString());
+                    }
+                    return buttons;
+                }
+                break;
+                
+            case 'hcp_analysis':
+                return []; // Popup handles all interactions
+                
+            case 'scoring':
+                return ['DEAL'];
+                
+            default:
+                return [];
+        }
+    }
+    
+    /**
+     * Update the display
+     */
+    updateDisplay() {
+        const content = this.getDisplayContent();
+        this.ui.updateDisplay(content);
+        this.ui.updateButtonStates(this.getActiveButtons());
+    }
+    
+    /**
+     * Get display content for current state
+     */
+    getDisplayContent() {
+        const scores = this.gameState.getScores();
+        const dealInfo = this.gameState.getDealInfo();
+        
+        switch (this.inputState) {
+            case 'level_selection':
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            NS: ${scores.NS}<br>
+                            EW: ${scores.EW}
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            HCP-based enhanced scoring • Auto vulnerability cycle
+                        </div>
+                    </div>
+                    <div class="current-state">Select bid level (1-7)</div>
+                `;
+                
+            case 'suit_selection':
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            NS: ${scores.NS}<br>
+                            EW: ${scores.EW}
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Level: ${this.currentContract.level}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            Raw score will be calculated after result entry
+                        </div>
+                    </div>
+                    <div class="current-state">Select suit</div>
+                `;
+                
+            case 'declarer_selection':
+                const contractSoFar = `${this.currentContract.level}${this.currentContract.suit}`;
+                const doubleText = this.currentContract.doubled ? ` ${this.currentContract.doubled}` : '';
+                
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            NS: ${scores.NS}<br>
+                            EW: ${scores.EW}
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            Enter result to see raw score before HCP analysis
+                        </div>
+                    </div>
+                    <div class="current-state">
+                        ${this.currentContract.declarer ? 
+                            'Press Made/Plus/Down for result, or X for double/redouble' : 
+                            'Select declarer (N/S/E/W)'}
+                    </div>
+                `;
+                
+            case 'result_type_selection':
+                const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            NS: ${scores.NS}<br>
+                            EW: ${scores.EW}
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            Raw score will be calculated, then HCP analysis popup will appear
+                        </div>
+                    </div>
+                    <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
+                `;
+                
+            case 'result_number_selection':
+                const fullContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
+                const modeText = this.resultMode === 'down' ? 'tricks down (1-7)' : 'overtricks (1-6)';
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            NS: ${scores.NS}<br>
+                            EW: ${scores.EW}
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            After number entry: raw score + HCP analysis popup
+                        </div>
+                    </div>
+                    <div class="current-state">Enter number of ${modeText}</div>
+                `;
+                
+            case 'hcp_analysis':
+                // This state now shows a popup, so show the contract and raw score
+                const analysisContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            NS: ${scores.NS}<br>
+                            EW: ${scores.EW}
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>${analysisContract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong></div>
+                        <div style="color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px; background: rgba(52,152,219,0.3); padding: 6px; border-radius: 4px;">
+                            Raw Score: ${this.currentContract.rawScore} points
+                        </div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            Complete HCP analysis in popup to calculate final Bonus Bridge score
+                        </div>
+                    </div>
+                    <div class="current-state">Use the popup to enter HCP and distribution details</div>
+                `;
+                
+            case 'scoring':
+                const lastEntry = this.gameState.getLastHistoryEntry();
+                if (lastEntry && lastEntry.bonusAnalysis) {
+                    const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
+                    const analysis = lastEntry.bonusAnalysis;
+                    const nextDealInfo = this.gameState.getDealInfo().replace(`Deal ${this.gameState.getDealNumber()}`, `Deal ${this.gameState.getDealNumber() + 1}`);
+                    
+                    return `
+                        <div class="title-score-row">
+                            <div class="mode-title">${this.displayName}</div>
+                            <div class="score-display">
+                                NS: ${scores.NS}<br>
+                                EW: ${scores.EW}
+                            </div>
+                        </div>
+                        <div class="game-content">
+                            <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
+                            ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}</div>
+                            <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                                HCP: ${analysis.totalHCP} | Expected: ${analysis.expectedHCP} | 
+                                Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks}
+                            </div>
+                            <div style="margin-top: 6px;">
+                                <span style="color: #3498db; font-weight: bold;">
+                                    NS: +${analysis.nsPoints} | EW: +${analysis.ewPoints}
+                                </span>
+                            </div>
+                            <div style="color: #95a5a6; font-size: 11px; margin-top: 4px;">
+                                Next: ${nextDealInfo}
+                            </div>
+                        </div>
+                        <div class="current-state">Press Deal for next hand</div>
+                    `;
+                }
+                break;
+                
+            default:
+                return '<div class="current-state">Loading...</div>';
+        }
+    }
+    
+    /**
+     * Get help content specific to Bonus Bridge
+     */
+    getHelpContent() {
+        return {
+            title: 'Bonus Bridge Help',
+            content: `
+                <div class="help-section">
+                    <h4>What is Bonus Bridge?</h4>
+                    <p><strong>Bonus Bridge</strong> is an enhanced scoring system created by Mike Smith that rewards both declarers and defenders based on hand strength and performance versus expectations. It balances luck and skill by considering HCP distribution and playing performance.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Enhanced Features</h4>
+                    <ul>
+                        <li><strong>Auto Vulnerability:</strong> Follows 4-deal cycle like Chicago Bridge</li>
+                        <li><strong>Dealer Rotation:</strong> Standard N→E→S→W progression</li>
+                        <li><strong>HCP Analysis:</strong> Required for fair, skill-based scoring</li>
+                        <li><strong>Balanced Rewards:</strong> Both sides can earn points</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Vulnerability Cycle</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                        <tr style="background: rgba(255,255,255,0.1);">
+                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Deal</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Dealer</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Vulnerability</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">1</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">North</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #95a5a6;">None</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">2</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">East</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #27ae60;">NS Vul</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">3</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">South</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #e74c3c;">EW Vul</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">4</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">West</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #f39c12;">Both Vul</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="help-section">
+                    <h4>HCP Analysis Process</h4>
+                    <ol>
+                        <li><strong>Enter Contract Result:</strong> Made/Plus/Down as normal</li>
+                        <li><strong>Popup Appears:</strong> Shows raw score and analysis form</li>
+                        <li><strong>Count Combined HCP:</strong> Declarer + Dummy only (A=4, K=3, Q=2, J=1)</li>
+                        <li><strong>Count Distribution:</strong> Singletons, voids, long suits (6+)</li>
+                        <li><strong>Calculate:</strong> System applies Bonus Bridge scoring</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Why Bonus Bridge is Superior</h4>
+                    <div style="background: rgba(39,174,96,0.2); padding: 10px; border-radius: 5px; border-left: 3px solid #27ae60;">
+                        <ul style="margin: 5px 0;">
+                            <li>Rewards skill and good judgment over lucky cards</li>
+                            <li>Gives points to both sides for balanced gameplay</li>
+                            <li>Considers actual hand strength, not just results</li>
+                            <li>Makes every deal competitive and engaging</li>
+                            <li>Professional dealer rotation and vulnerability cycle</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Scoring Philosophy</h4>
+                    <ul>
+                        <li><strong>Strong Hands (28+ HCP):</strong> Lower scores - expected to make contracts</li>
+                        <li><strong>Weak Hands (16- HCP):</strong> Bonus points for good results</li>
+                        <li><strong>Balanced Hands (20-24 HCP):</strong> Standard scoring adjustments</li>
+                        <li><strong>Great Defense:</strong> Always rewarded, even when contracts make</li>
+                    </ul>
+                </div>
+            `,
+            buttons: [
+                { text: 'Close Help', action: 'close', class: 'close-btn' }
+            ]
+        };
+    }
+    
+    /**
+     * Cleanup when switching modes
+     */
+    cleanup() {
+        this.ui.clearVulnerabilityHighlight();
+        this.ui.updateDoubleButton('');
+        console.log('🧹 Bonus Bridge cleanup completed');
+    }
+}
+
+export default BonusBridge;
+                            /**
+ * Bonus Bridge Mode - HCP-Based Enhanced Scoring System (Enhanced)
  * 
  * An enhanced scoring system that rewards both declarers and defenders
  * based on hand strength and performance versus expectations.
  * Created by Mike Smith for fair, skill-based bridge scoring.
+ * 
+ * Enhanced with dealer rotation and auto-vulnerability.
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -44,8 +821,8 @@ class BonusBridge extends BaseBridgeMode {
     initialize() {
         console.log('🎯 Starting Bonus Bridge session');
         
-        // Bonus Bridge uses simple vulnerability (always None unless manually set)
-        this.gameState.setVulnerability('None');
+        // Bonus Bridge now uses auto-vulnerability like Chicago
+        this.gameState.setMode('bonus'); // This will auto-set vulnerability
         
         // Start with level selection
         this.inputState = 'level_selection';
@@ -393,842 +1170,9 @@ class BonusBridge extends BaseBridgeMode {
         const longsuitDisplay = modal.querySelector('.longsuit-display');
         if (longsuitDisplay) longsuitDisplay.textContent = longSuits;
     }
+    
+    /**
+     * Adjust HCP values
+     */
     adjustHCP(change) {
-        this.handAnalysis.totalHCP = Math.max(0, Math.min(40, this.handAnalysis.totalHCP + change));
-    }
-    
-    adjustSingletons(change) {
-        this.handAnalysis.singletons = Math.max(0, Math.min(4, this.handAnalysis.singletons + change));
-    }
-    
-    adjustVoids(change) {
-        this.handAnalysis.voids = Math.max(0, Math.min(4, this.handAnalysis.voids + change));
-    }
-    
-    adjustLongSuits(change) {
-        this.handAnalysis.longSuits = Math.max(0, Math.min(4, this.handAnalysis.longSuits + change));
-    }
-    
-    /**
-     * Handle actions in scoring state
-     */
-    handleScoringActions(value) {
-        if (value === 'DEAL') {
-            this.nextDeal();
-        }
-    }
-    
-    /**
-     * Calculate raw bridge score
-     */
-    calculateRawScore() {
-        const { level, suit, result, doubled } = this.currentContract;
-        const vulnerability = this.gameState.getVulnerability();
-        
-        // Basic suit values per trick
-        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-        let score = 0;
-        
-        if (result === '=' || result?.startsWith('+')) {
-            // Contract made
-            let basicScore = level * suitValues[suit];
-            if (suit === 'NT') basicScore += 10; // NT first trick bonus
-            
-            // Handle doubling of basic score
-            let contractScore = basicScore;
-            if (doubled === 'X') contractScore = basicScore * 2;
-            else if (doubled === 'XX') contractScore = basicScore * 4;
-            
-            score = contractScore;
-            
-            // Add overtricks
-            if (result?.startsWith('+')) {
-                const overtricks = parseInt(result.substring(1));
-                let overtrickValue;
-                
-                if (doubled === '') {
-                    overtrickValue = suitValues[suit] * overtricks;
-                } else {
-                    const isVulnerable = this.isDeclarerVulnerable();
-                    overtrickValue = overtricks * (isVulnerable ? 200 : 100);
-                    if (doubled === 'XX') overtrickValue *= 2;
-                }
-                score += overtrickValue;
-            }
-            
-            // Game/Part-game bonus
-            if (contractScore >= 100) {
-                const isVulnerable = this.isDeclarerVulnerable();
-                score += isVulnerable ? 500 : 300;
-            } else {
-                score += 50;
-            }
-            
-            // Double bonuses
-            if (doubled === 'X') score += 50;
-            else if (doubled === 'XX') score += 100;
-            
-        } else if (result?.startsWith('-')) {
-            // Contract failed
-            const undertricks = parseInt(result.substring(1));
-            const isVulnerable = this.isDeclarerVulnerable();
-            
-            if (doubled === '') {
-                score = -undertricks * (isVulnerable ? 100 : 50);
-            } else {
-                let penalty = 0;
-                for (let i = 1; i <= undertricks; i++) {
-                    if (i === 1) {
-                        penalty += isVulnerable ? 200 : 100;
-                    } else if (i <= 3) {
-                        penalty += isVulnerable ? 300 : 200;
-                    } else {
-                        penalty += 300;
-                    }
-                }
-                if (doubled === 'XX') penalty *= 2;
-                score = -penalty;
-            }
-        }
-        
-        this.currentContract.rawScore = score;
-        console.log(`🎯 Raw score calculated: ${score}`);
-    }
-    
-    /**
-     * Calculate Bonus Bridge score
-     */
-    calculateBonusScore() {
-        const analysisData = this.calculateFinalAnalysis();
-        if (!analysisData) return;
-        
-        // Apply Bonus Bridge scoring
-        const nsPoints = analysisData.nsPoints;
-        const ewPoints = analysisData.ewPoints;
-        
-        // Add points to teams
-        if (nsPoints > 0) {
-            this.gameState.addScore('NS', nsPoints);
-        }
-        if (ewPoints > 0) {
-            this.gameState.addScore('EW', ewPoints);
-        }
-        
-        // Record in history
-        this.gameState.addToHistory({
-            deal: this.gameState.getDealNumber(),
-            contract: { ...this.currentContract },
-            score: this.currentContract.rawScore,
-            actualScore: nsPoints + ewPoints, // Total points awarded
-            scoringSide: nsPoints > ewPoints ? 'NS' : 'EW',
-            mode: 'bonus',
-            handAnalysis: { ...this.handAnalysis },
-            bonusAnalysis: analysisData
-        });
-        
-        console.log(`💾 Bonus Bridge score recorded: NS=${nsPoints}, EW=${ewPoints}`);
-    }
-    
-    /**
-     * Calculate final analysis (main Bonus Bridge logic)
-     */
-    calculateFinalAnalysis() {
-        const { level, suit, result, declarer } = this.currentContract;
-        const { totalHCP, singletons, voids, longSuits } = this.handAnalysis;
-        
-        // Expected HCP for contract type
-        const expectedHCP = this.getExpectedHCP(level, suit);
-        
-        // Calculate distribution points
-        const distributionPoints = (voids * 3) + (singletons * 2) + longSuits;
-        
-        // HCP percentages
-        const declarerHCPPercentage = Math.round((totalHCP / 40) * 100);
-        const defenderHCPPercentage = 100 - declarerHCPPercentage;
-        const hcpAdvantage = Math.abs(declarerHCPPercentage - 50);
-        const advantageSide = declarerHCPPercentage > 50 ? "declarer" : "defender";
-        
-        // Expected tricks calculations
-        const contractExpectedTricks = level + 6;
-        const handExpectedTricks = Math.min(13, 6 + Math.floor(totalHCP / 3) + Math.floor(distributionPoints / 4));
-        
-        // Actual result
-        const actualTricks = this.getActualTricks();
-        const madeContract = actualTricks >= contractExpectedTricks;
-        const isNS = declarer === 'N' || declarer === 'S';
-        
-        let nsPoints = 0;
-        let ewPoints = 0;
-        
-        if (madeContract) {
-            // Contract made - apply Bonus Bridge scoring
-            const rawScore = Math.abs(this.currentContract.rawScore) / 20;
-            
-            // HCP Adjustment
-            const hcpAdjustment = (totalHCP - expectedHCP) * 0.75;
-            let adjustedScore = totalHCP > expectedHCP 
-                ? rawScore - hcpAdjustment 
-                : rawScore + Math.abs(hcpAdjustment);
-            
-            // Performance assessment
-            const performanceVariance = actualTricks - contractExpectedTricks;
-            if (performanceVariance > 0) {
-                adjustedScore += (performanceVariance * 1.5);
-            }
-            
-            // Contract type adjustments
-            let contractAdjustment = 0;
-            if (this.isGameContract()) contractAdjustment += 2;
-            if (level === 6) contractAdjustment += 4;
-            if (level === 7) contractAdjustment += 6;
-            if (suit === 'NT') contractAdjustment += 1;
-            
-            adjustedScore += contractAdjustment;
-            
-            // Distribution adjustment (suit contracts only)
-            if (suit !== 'NT') {
-                if (distributionPoints >= 7) adjustedScore -= 3;
-                else if (distributionPoints >= 5) adjustedScore -= 2;
-                else if (distributionPoints >= 3) adjustedScore -= 1;
-            }
-            
-            // Defender reward
-            let defenderReward = 0;
-            if (handExpectedTricks > contractExpectedTricks && 
-                actualTricks < handExpectedTricks) {
-                const trickDifference = handExpectedTricks - actualTricks;
-                defenderReward = trickDifference * 2;
-                
-                if (advantageSide === "declarer") {
-                    defenderReward += Math.min(3, hcpAdvantage / 10);
-                }
-            }
-            
-            // Final points
-            const declarerPoints = Math.max(1, Math.round(adjustedScore));
-            const defenderPoints = Math.round(defenderReward);
-            
-            if (isNS) {
-                nsPoints = declarerPoints;
-                ewPoints = defenderPoints;
-            } else {
-                nsPoints = defenderPoints;
-                ewPoints = declarerPoints;
-            }
-            
-        } else {
-            // Contract failed
-            const basePenalty = Math.abs(this.currentContract.rawScore) / 10;
-            let levelPenalties = 0;
-            
-            if (this.isGameContract()) levelPenalties += 3;
-            if (level === 6) levelPenalties += 5;
-            if (level === 7) levelPenalties += 7;
-            
-            // Performance bonus for defenders
-            let performanceBonus = 0;
-            if (declarerHCPPercentage > 60) {
-                performanceBonus += (declarerHCPPercentage - 50) / 5;
-            }
-            
-            const undertricks = Math.abs(actualTricks - contractExpectedTricks);
-            if (undertricks >= 2) {
-                performanceBonus += 2;
-                if (undertricks >= 3) performanceBonus += 3;
-            }
-            
-            // Declarer consolation
-            let consolationPoints = 0;
-            if (declarerHCPPercentage < 40) {
-                consolationPoints = (50 - declarerHCPPercentage) / 10;
-            }
-            
-            // Final points for defeated contracts
-            const defenderPoints = Math.max(3, Math.round(basePenalty + levelPenalties + performanceBonus));
-            const declarerPoints = Math.round(consolationPoints);
-            
-            if (isNS) {
-                ewPoints = defenderPoints; // Defenders get points
-                nsPoints = declarerPoints; // Declarer consolation
-            } else {
-                nsPoints = defenderPoints; // Defenders get points
-                ewPoints = declarerPoints; // Declarer consolation
-            }
-        }
-        
-        return {
-            totalHCP,
-            distributionPoints,
-            expectedHCP,
-            contractExpectedTricks,
-            handExpectedTricks,
-            actualTricks,
-            nsPoints,
-            ewPoints,
-            madeContract
-        };
-    }
-    
-    /**
-     * Get expected HCP for contract type
-     */
-    getExpectedHCP(level, suit) {
-        if (level <= 2) return 21; // Part scores
-        if (level === 3 && suit === 'NT') return 25; // 3NT
-        if (level === 4 && (suit === '♥' || suit === '♠')) return 24; // 4 major
-        if (level === 5 && (suit === '♣' || suit === '♦')) return 27; // 5 minor
-        if (level === 6) return 30; // Small slam
-        if (level === 7) return 32; // Grand slam
-        return 21 + (level * 1.5); // Other levels
-    }
-    
-    /**
-     * Check if contract is a game contract
-     */
-    isGameContract() {
-        const { level, suit } = this.currentContract;
-        return (level === 3 && suit === 'NT') ||
-               (level === 4 && (suit === '♥' || suit === '♠')) ||
-               (level === 5 && (suit === '♣' || suit === '♦')) ||
-               level >= 6;
-    }
-    
-    /**
-     * Get actual tricks taken
-     */
-    getActualTricks() {
-        const { level, result } = this.currentContract;
-        const contractTricks = level + 6;
-        
-        if (result === '=') return contractTricks;
-        if (result?.startsWith('+')) return contractTricks + parseInt(result.substring(1));
-        if (result?.startsWith('-')) return contractTricks - parseInt(result.substring(1));
-        return contractTricks;
-    }
-    
-    /**
-     * Check if declarer is vulnerable
-     */
-    isDeclarerVulnerable() {
-        const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
-        const vulnerability = this.gameState.getVulnerability();
-        return vulnerability === declarerSide || vulnerability === 'Both';
-    }
-    
-    /**
-     * Move to next deal
-     */
-    nextDeal() {
-        console.log('🃏 Moving to next deal');
-        
-        this.gameState.nextDeal();
-        this.resetContract();
-        this.resetHandAnalysis();
-        this.inputState = 'level_selection';
-        this.ui.clearVulnerabilityHighlight();
-    }
-    
-    /**
-     * Reset contract to initial state
-     */
-    resetContract() {
-        this.currentContract = {
-            level: null,
-            suit: null,
-            declarer: null,
-            doubled: '',
-            result: null,
-            rawScore: null
-        };
-        this.resultMode = null;
-        this.ui.updateDoubleButton('');
-    }
-    
-    /**
-     * Reset hand analysis to default values
-     */
-    resetHandAnalysis() {
-        this.handAnalysis = {
-            totalHCP: 20,
-            singletons: 0,
-            voids: 0,
-            longSuits: 0
-        };
-    }
-    
-    /**
-     * Handle back navigation
-     */
-    handleBack() {
-        switch (this.inputState) {
-            case 'suit_selection':
-                this.inputState = 'level_selection';
-                this.currentContract.level = null;
-                break;
-            case 'declarer_selection':
-                this.inputState = 'suit_selection';
-                this.currentContract.suit = null;
-                this.currentContract.doubled = '';
-                this.ui.updateDoubleButton('');
-                break;
-            case 'result_type_selection':
-                this.inputState = 'declarer_selection';
-                this.currentContract.declarer = null;
-                this.ui.clearVulnerabilityHighlight();
-                break;
-            case 'result_number_selection':
-                this.inputState = 'result_type_selection';
-                this.resultMode = null;
-                break;
-            case 'hcp_analysis':
-                this.inputState = 'result_type_selection';
-                this.currentContract.result = null;
-                this.currentContract.rawScore = null;
-                break;
-            case 'scoring':
-                // Undo the last score and go back to HCP analysis
-                this.undoLastScore();
-                this.inputState = 'hcp_analysis';
-                break;
-            default:
-                return false; // Let app handle return to mode selection
-        }
-        
-        this.updateDisplay();
-        return true;
-    }
-    
-    /**
-     * Undo the last score entry
-     */
-    undoLastScore() {
-        const lastEntry = this.gameState.getLastHistoryEntry();
-        if (lastEntry && lastEntry.deal === this.gameState.getDealNumber()) {
-            // Remove points from both sides
-            if (lastEntry.bonusAnalysis) {
-                this.gameState.addScore('NS', -lastEntry.bonusAnalysis.nsPoints);
-                this.gameState.addScore('EW', -lastEntry.bonusAnalysis.ewPoints);
-            }
-            this.gameState.removeLastHistoryEntry();
-            console.log(`↩️ Undid Bonus Bridge score`);
-        }
-    }
-    
-    /**
-     * Check if back navigation is possible
-     */
-    canGoBack() {
-        return this.inputState !== 'level_selection';
-    }
-    
-    /**
-     * Toggle vulnerability (Bonus Bridge allows manual control)
-     */
-    toggleVulnerability() {
-        const cycle = ['None', 'NS', 'EW', 'Both'];
-        const current = cycle.indexOf(this.gameState.getVulnerability());
-        const newVuln = cycle[(current + 1) % 4];
-        
-        this.gameState.setVulnerability(newVuln);
-        this.ui.updateVulnerabilityDisplay(newVuln);
-        
-        // Update highlight if declarer is selected
-        if (this.currentContract.declarer) {
-            this.ui.highlightVulnerability(this.currentContract.declarer, newVuln);
-        }
-        
-        console.log(`🎯 Vulnerability changed to: ${newVuln}`);
-    }
-    
-    /**
-     * Get active buttons for current state
-     */
-    getActiveButtons() {
-        switch (this.inputState) {
-            case 'level_selection':
-                return ['1', '2', '3', '4', '5', '6', '7'];
-                
-            case 'suit_selection':
-                return ['♣', '♦', '♥', '♠', 'NT'];
-                
-            case 'declarer_selection':
-                const buttons = ['N', 'S', 'E', 'W', 'X'];
-                if (this.currentContract.declarer) {
-                    buttons.push('MADE', 'PLUS', 'DOWN');
-                }
-                return buttons;
-                
-            case 'result_type_selection':
-                return ['MADE', 'PLUS', 'DOWN'];
-                
-            case 'result_number_selection':
-                if (this.resultMode === 'down') {
-                    return ['1', '2', '3', '4', '5', '6', '7'];
-                } else if (this.resultMode === 'plus') {
-                    const maxOvertricks = Math.min(6, 13 - (6 + this.currentContract.level));
-                    const buttons = [];
-                    for (let i = 1; i <= maxOvertricks; i++) {
-                        buttons.push(i.toString());
-                    }
-                    return buttons;
-                }
-                break;
-                
-            case 'hcp_analysis':
-                return []; // Popup handles all interactions
-                
-            case 'scoring':
-                return ['DEAL'];
-                
-            default:
-                return [];
-        }
-    }
-    
-    /**
-     * Update the display
-     */
-    updateDisplay() {
-        const content = this.getDisplayContent();
-        this.ui.updateDisplay(content);
-        this.ui.updateButtonStates(this.getActiveButtons());
-    }
-    
-    /**
-     * Get display content for current state
-     */
-    getDisplayContent() {
-        const scores = this.gameState.getScores();
-        
-        switch (this.inputState) {
-            case 'level_selection':
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${scores.NS}<br>
-                            EW: ${scores.EW}
-                        </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>Deal ${this.gameState.getDealNumber()}</strong></div>
-                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                            HCP-based enhanced scoring • Raw scores will be shown
-                        </div>
-                    </div>
-                    <div class="current-state">Select bid level (1-7)</div>
-                `;
-                
-            case 'suit_selection':
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${scores.NS}<br>
-                            EW: ${scores.EW}
-                        </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>Level: ${this.currentContract.level}</strong></div>
-                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                            Raw score will be calculated after result entry
-                        </div>
-                    </div>
-                    <div class="current-state">Select suit</div>
-                `;
-                
-            case 'declarer_selection':
-                const contractSoFar = `${this.currentContract.level}${this.currentContract.suit}`;
-                const doubleText = this.currentContract.doubled ? ` ${this.currentContract.doubled}` : '';
-                
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${scores.NS}<br>
-                            EW: ${scores.EW}
-                        </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
-                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                            Enter result to see raw score before HCP analysis
-                        </div>
-                    </div>
-                    <div class="current-state">
-                        ${this.currentContract.declarer ? 
-                            'Press Made/Plus/Down for result, or X for double/redouble' : 
-                            'Select declarer (N/S/E/W)'}
-                    </div>
-                `;
-                
-            case 'result_type_selection':
-                const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${scores.NS}<br>
-                            EW: ${scores.EW}
-                        </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
-                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                            Raw score will be calculated, then HCP analysis popup will appear
-                        </div>
-                    </div>
-                    <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
-                `;
-                
-            case 'result_number_selection':
-                const fullContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                const modeText = this.resultMode === 'down' ? 'tricks down (1-7)' : 'overtricks (1-6)';
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${scores.NS}<br>
-                            EW: ${scores.EW}
-                        </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
-                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                            After number entry: raw score + HCP analysis popup
-                        </div>
-                    </div>
-                    <div class="current-state">Enter number of ${modeText}</div>
-                `;
-                
-            case 'hcp_analysis':
-                // This state now shows a popup, so show the contract and raw score
-                const analysisContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${scores.NS}<br>
-                            EW: ${scores.EW}
-                        </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>${analysisContract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong></div>
-                        <div style="color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px; background: rgba(52,152,219,0.3); padding: 6px; border-radius: 4px;">
-                            Raw Score: ${this.currentContract.rawScore} points
-                        </div>
-                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                            Complete HCP analysis in popup to calculate final Bonus Bridge score
-                        </div>
-                    </div>
-                    <div class="current-state">Use the popup to enter HCP and distribution details</div>
-                `;
-                
-            case 'scoring':
-                const lastEntry = this.gameState.getLastHistoryEntry();
-                if (lastEntry && lastEntry.bonusAnalysis) {
-                    const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
-                    const analysis = lastEntry.bonusAnalysis;
-                    
-                    return `
-                        <div class="title-score-row">
-                            <div class="mode-title">${this.displayName}</div>
-                            <div class="score-display">
-                                NS: ${scores.NS}<br>
-                                EW: ${scores.EW}
-                            </div>
-                        </div>
-                        <div class="game-content">
-                            <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
-                            ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}</div>
-                            <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
-                                HCP: ${analysis.totalHCP} | Expected: ${analysis.expectedHCP} | 
-                                Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks}
-                            </div>
-                            <div style="margin-top: 6px;">
-                                <span style="color: #3498db; font-weight: bold;">
-                                    NS: +${analysis.nsPoints} | EW: +${analysis.ewPoints}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="current-state">Press Deal for next hand</div>
-                    `;
-                }
-                break;
-                
-            default:
-                return '<div class="current-state">Loading...</div>';
-        }
-    }
-    
-    /**
-     * Get help content specific to Bonus Bridge
-     */
-    getHelpContent() {
-        return {
-            title: 'Bonus Bridge Help',
-            content: `
-                <div class="help-section">
-                    <h4>What is Bonus Bridge?</h4>
-                    <p><strong>Bonus Bridge</strong> is an enhanced scoring system created by Mike Smith that rewards both declarers and defenders based on hand strength and performance versus expectations. It balances luck and skill by considering HCP distribution and playing performance.</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>The Core Innovation</h4>
-                    <div style="background: rgba(39,174,96,0.2); padding: 10px; border-radius: 5px; border-left: 3px solid #27ae60;">
-                        <strong>Unlike Kitchen Bridge, Bonus Bridge rewards skill over luck</strong>
-                        <ul style="margin: 5px 0;">
-                            <li>Strong hands get fewer points for making contracts</li>
-                            <li>Weak hands get bonus points for good results</li>
-                            <li>Defenders get rewarded even when contracts make</li>
-                            <li>HCP analysis ensures fair scoring</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Key Features</h4>
-                    <ul>
-                        <li><strong>HCP Balance:</strong> Evaluates point distribution between teams</li>
-                        <li><strong>Performance Analysis:</strong> Compares expected vs. actual tricks</li>
-                        <li><strong>Contract Ambition:</strong> Rewards appropriate bidding choices</li>
-                        <li><strong>Distribution Points:</strong> Accounts for shapely hands</li>
-                        <li><strong>Defender Rewards:</strong> Points for limiting overperformance</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>HCP Analysis (Critical Step)</h4>
-                    <p style="background: rgba(255,193,7,0.2); padding: 10px; border-radius: 5px; border-left: 3px solid #ffc107;">
-                        <strong>After each deal, you must enter the actual HCP and distribution:</strong>
-                    </p>
-                    <ul>
-                        <li><strong>Combined HCP:</strong> Declarer + Dummy high card points (A=4, K=3, Q=2, J=1)</li>
-                        <li><strong>Singletons:</strong> Number of singleton suits in declarer+dummy</li>
-                        <li><strong>Voids:</strong> Number of void suits in declarer+dummy</li>
-                        <li><strong>Long Suits:</strong> Number of 6+ card suits in declarer+dummy</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Expected HCP by Contract</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-                        <tr style="background: rgba(255,255,255,0.1);">
-                            <th style="padding: 8px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">Contract</th>
-                            <th style="padding: 8px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">Expected HCP</th>
-                            <th style="padding: 8px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">Adjustment</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">1-2 level</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">21 HCP</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Part game standard</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">3NT</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">25 HCP</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Game requirement</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">4♥/♠</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">24 HCP</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Major suit game</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">5♣/♦</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">27 HCP</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Minor suit game</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">6 level</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">30 HCP</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Small slam</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">7 level</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">32 HCP</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Grand slam</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Scoring Examples</h4>
-                    <div style="background: rgba(52,152,219,0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">
-                        <strong>Strong Hand (28 HCP):</strong> 4♥ making exactly<br>
-                        Expected: 24 HCP → Penalty for strong hand → NS: 17 pts, EW: 9 pts
-                    </div>
-                    
-                    <div style="background: rgba(46,204,113,0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">
-                        <strong>Weak Hand (16 HCP):</strong> 2♦ making +2<br>
-                        Expected: 21 HCP → Bonus for weak hand → EW: 15 pts, NS: 0 pts
-                    </div>
-                    
-                    <div style="background: rgba(231,76,60,0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">
-                        <strong>Failed Contract:</strong> 4♠ down 2 with balanced hands<br>
-                        Good defense rewarded → Defenders: 25 pts, Declarer: 0 pts
-                    </div>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use</h4>
-                    <ol>
-                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result (same as other modes)</li>
-                        <li><strong>HCP Analysis:</strong> Use buttons 1-8 to adjust HCP and distribution</li>
-                        <li><strong>Calculate:</strong> Press Deal to apply Bonus Bridge scoring</li>
-                        <li><strong>Review:</strong> See how HCP balance affected the final score</li>
-                        <li><strong>Next Deal:</strong> Continue with fair, skill-based scoring</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>HCP Analysis Controls</h4>
-                    <ul>
-                        <li><strong>Buttons 1/2:</strong> Decrease/Increase HCP by 1</li>
-                        <li><strong>Buttons 3/4:</strong> Decrease/Increase Singletons by 1</li>
-                        <li><strong>Buttons 5/6:</strong> Decrease/Increase Voids by 1</li>
-                        <li><strong>Buttons 7/8:</strong> Decrease/Increase Long Suits by 1</li>
-                        <li><strong>Deal Button:</strong> Calculate and record final score</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Why Choose Bonus Bridge?</h4>
-                    <div style="background: rgba(39,174,96,0.2); padding: 10px; border-radius: 5px; border-left: 3px solid #27ae60;">
-                        <strong>Bonus Bridge is perfect for:</strong>
-                        <ul style="margin: 5px 0;">
-                            <li>Players who want skill to matter more than luck</li>
-                            <li>Teaching the value of hand evaluation</li>
-                            <li>Rewarding good defense even when contracts make</li>
-                            <li>Creating more balanced, competitive games</li>
-                            <li>Bridge players seeking innovation and fairness</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Tips for Success</h4>
-                    <ul>
-                        <li><strong>Honest Analysis:</strong> Accurate HCP entry is crucial for fair scoring</li>
-                        <li><strong>Strategic Bidding:</strong> Avoid underbidding with strong hands</li>
-                        <li><strong>Defensive Focus:</strong> Great defense is always rewarded</li>
-                        <li><strong>Hand Evaluation:</strong> Learn to count distribution points</li>
-                    </ul>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    /**
-     * Cleanup when switching modes
-     */
-    cleanup() {
-        this.ui.clearVulnerabilityHighlight();
-        this.ui.updateDoubleButton('');
-        console.log('🧹 Bonus Bridge cleanup completed');
-    }
-}
-
-export default BonusBridge;
+        this.handAnalysis.totalHCP = Math.max(0, Math.min(40, this.handAnalysis.

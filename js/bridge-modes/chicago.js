@@ -1,9 +1,11 @@
 /**
- * Chicago Bridge Mode - 4-Deal Vulnerability Cycle Bridge
+ * Chicago Bridge Mode - 4-Deal Vulnerability Cycle Bridge (Enhanced)
  * 
  * Chicago Bridge combines standard bridge scoring with a structured 4-deal 
  * vulnerability cycle: None → NS → EW → Both → repeat. This provides 
  * predictable, fair vulnerability rotation with natural break points.
+ * 
+ * Enhanced with comprehensive dealer rotation and vulnerability display.
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -27,9 +29,6 @@ class ChicagoBridge extends BaseBridgeMode {
         this.inputState = 'level_selection';
         this.resultMode = null; // 'down', 'plus'
         
-        // Chicago-specific: vulnerability cycle
-        this.vulnerabilityCycle = ['None', 'NS', 'EW', 'Both'];
-        
         console.log('🏙️ Chicago Bridge mode initialized');
     }
     
@@ -39,33 +38,14 @@ class ChicagoBridge extends BaseBridgeMode {
     initialize() {
         console.log('🎯 Starting Chicago Bridge session');
         
-        // Chicago Bridge starts with deal 1, vulnerability 'None'
-        if (this.gameState.getDealNumber() === 1) {
-            this.gameState.setVulnerability('None');
-        } else {
-            // Set vulnerability based on current deal number
-            this.updateVulnerabilityForDeal();
-        }
+        // Chicago Bridge uses automatic vulnerability cycling
+        this.gameState.setMode('chicago'); // This enables auto vulnerability
         
         // Start with level selection
         this.inputState = 'level_selection';
         this.resetContract();
         
         this.updateDisplay();
-    }
-    
-    /**
-     * Update vulnerability based on deal number (Chicago cycle)
-     */
-    updateVulnerabilityForDeal() {
-        const dealNumber = this.gameState.getDealNumber();
-        const cyclePosition = (dealNumber - 1) % 4;
-        const vulnerability = this.vulnerabilityCycle[cyclePosition];
-        
-        this.gameState.setVulnerability(vulnerability);
-        this.ui.updateVulnerabilityDisplay(vulnerability);
-        
-        console.log(`🔄 Deal ${dealNumber}: Vulnerability set to ${vulnerability}`);
     }
     
     /**
@@ -239,10 +219,8 @@ class ChicagoBridge extends BaseBridgeMode {
                 let overtrickValue;
                 
                 if (doubled === '') {
-                    // Undoubled overtricks
                     overtrickValue = suitValues[suit] * overtricks;
                 } else {
-                    // Doubled overtricks (100 NV, 200 Vul)
                     const isVulnerable = this.isDeclarerVulnerable();
                     overtrickValue = overtricks * (isVulnerable ? 200 : 100);
                     if (doubled === 'XX') overtrickValue *= 2;
@@ -252,11 +230,9 @@ class ChicagoBridge extends BaseBridgeMode {
             
             // Game/Part-game bonus
             if (contractScore >= 100) {
-                // Game made
                 const isVulnerable = this.isDeclarerVulnerable();
                 score += isVulnerable ? 500 : 300;
             } else {
-                // Part-game
                 score += 50;
             }
             
@@ -270,10 +246,8 @@ class ChicagoBridge extends BaseBridgeMode {
             const isVulnerable = this.isDeclarerVulnerable();
             
             if (doubled === '') {
-                // Undoubled penalties
                 score = -undertricks * (isVulnerable ? 100 : 50);
             } else {
-                // Doubled penalties
                 let penalty = 0;
                 for (let i = 1; i <= undertricks; i++) {
                     if (i === 1) {
@@ -341,8 +315,7 @@ class ChicagoBridge extends BaseBridgeMode {
         
         this.gameState.nextDeal();
         
-        // Chicago Bridge: automatically update vulnerability based on deal number
-        this.updateVulnerabilityForDeal();
+        // Chicago Bridge: vulnerability updates automatically in GameState
         
         this.resetContract();
         this.inputState = 'level_selection';
@@ -435,7 +408,7 @@ class ChicagoBridge extends BaseBridgeMode {
      * Toggle vulnerability - NOT ALLOWED in Chicago Bridge
      */
     toggleVulnerability() {
-        console.log('🚫 Manual vulnerability control not allowed in Chicago Bridge');
+        console.log('🚫 Manual vulnerability control not allowed in Chicago Bridge - uses auto cycle');
         // Chicago Bridge vulnerability is automatic - no manual control
     }
     
@@ -495,16 +468,7 @@ class ChicagoBridge extends BaseBridgeMode {
      * Get cycle position information
      */
     getCycleInfo() {
-        const dealNumber = this.gameState.getDealNumber();
-        const cyclePosition = ((dealNumber - 1) % 4) + 1;
-        const cycleNumber = Math.floor((dealNumber - 1) / 4) + 1;
-        
-        return {
-            dealNumber,
-            cyclePosition,
-            cycleNumber,
-            vulnerability: this.gameState.getVulnerability()
-        };
+        return this.gameState.getChicagoCycleInfo();
     }
     
     /**
@@ -512,6 +476,7 @@ class ChicagoBridge extends BaseBridgeMode {
      */
     getDisplayContent() {
         const scores = this.gameState.getScores();
+        const dealInfo = this.gameState.getDealInfo();
         const cycleInfo = this.getCycleInfo();
         
         switch (this.inputState) {
@@ -525,9 +490,9 @@ class ChicagoBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${cycleInfo.dealNumber} (${cycleInfo.cyclePosition}/4)</strong></div>
+                        <div><strong>${dealInfo}</strong></div>
                         <div style="color: #3498db; font-size: 12px; margin-top: 4px;">
-                            Cycle ${cycleInfo.cycleNumber} • ${cycleInfo.vulnerability} vulnerable
+                            Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4) • Auto vulnerability cycle
                         </div>
                     </div>
                     <div class="current-state">Select bid level (1-7)</div>
@@ -543,9 +508,10 @@ class ChicagoBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${cycleInfo.dealNumber} (${cycleInfo.cyclePosition}/4) • Level: ${this.currentContract.level}</strong></div>
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Level: ${this.currentContract.level}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
-                            ${cycleInfo.vulnerability} vulnerable
+                            Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4)
                         </div>
                     </div>
                     <div class="current-state">Select suit</div>
@@ -564,9 +530,10 @@ class ChicagoBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${cycleInfo.dealNumber} (${cycleInfo.cyclePosition}/4) • Contract: ${contractSoFar}${doubleText}</strong></div>
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
-                            ${cycleInfo.vulnerability} vulnerable
+                            Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4)
                         </div>
                     </div>
                     <div class="current-state">
@@ -587,9 +554,10 @@ class ChicagoBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${cycleInfo.dealNumber} (${cycleInfo.cyclePosition}/4) • Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
-                            ${cycleInfo.vulnerability} vulnerable
+                            Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4)
                         </div>
                     </div>
                     <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
@@ -607,9 +575,10 @@ class ChicagoBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${cycleInfo.dealNumber} (${cycleInfo.cyclePosition}/4) • Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
+                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
-                            ${cycleInfo.vulnerability} vulnerable
+                            Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4)
                         </div>
                     </div>
                     <div class="current-state">Enter number of ${modeText}</div>
@@ -619,7 +588,7 @@ class ChicagoBridge extends BaseBridgeMode {
                 const lastEntry = this.gameState.getLastHistoryEntry();
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
-                    const nextCycleInfo = this.getCycleInfoForDeal(cycleInfo.dealNumber + 1);
+                    const nextCycleInfo = this.getNextCycleInfo();
                     
                     return `
                         <div class="title-score-row">
@@ -635,8 +604,8 @@ class ChicagoBridge extends BaseBridgeMode {
                             <span style="color: ${lastEntry.score >= 0 ? '#27ae60' : '#e74c3c'};">
                                 Score: ${lastEntry.score >= 0 ? '+' : ''}${lastEntry.score}
                             </span></div>
-                            <div style="color: #3498db; font-size: 12px; margin-top: 4px;">
-                                Next: Deal ${nextCycleInfo.dealNumber} (${nextCycleInfo.cyclePosition}/4) • ${nextCycleInfo.vulnerability} vulnerable
+                            <div style="color: #95a5a6; font-size: 11px; margin-top: 4px;">
+                                Next: ${nextCycleInfo}
                             </div>
                         </div>
                         <div class="current-state">Press Deal for next hand</div>
@@ -650,19 +619,18 @@ class ChicagoBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get cycle info for a specific deal number
+     * Get next cycle info for display
      */
-    getCycleInfoForDeal(dealNumber) {
-        const cyclePosition = ((dealNumber - 1) % 4) + 1;
-        const cycleNumber = Math.floor((dealNumber - 1) / 4) + 1;
-        const vulnerability = this.vulnerabilityCycle[(dealNumber - 1) % 4];
+    getNextCycleInfo() {
+        const nextDeal = this.gameState.getDealNumber() + 1;
+        const nextDealer = this.gameState.getDealerForDeal(nextDeal);
+        const nextCyclePos = ((nextDeal - 1) % 4) + 1;
+        const nextCycleNum = Math.floor((nextDeal - 1) / 4) + 1;
+        const vulnerabilityCycle = ['None', 'NS', 'EW', 'Both'];
+        const nextVuln = vulnerabilityCycle[(nextDeal - 1) % 4];
+        const vulnDisplay = { 'None': 'None', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
         
-        return {
-            dealNumber,
-            cyclePosition,
-            cycleNumber,
-            vulnerability
-        };
+        return `Deal ${nextDeal} • Dealer: ${nextDealer} • Vuln: ${vulnDisplay[nextVuln]} • Cycle ${nextCycleNum} (${nextCyclePos}/4)`;
     }
     
     /**
@@ -678,30 +646,45 @@ class ChicagoBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
+                    <h4>Enhanced Display Features</h4>
+                    <ul>
+                        <li><strong>Complete Deal Info:</strong> Deal number, dealer, and vulnerability shown</li>
+                        <li><strong>Cycle Progress:</strong> Shows current cycle number and position (X/4)</li>
+                        <li><strong>Auto Rotation:</strong> Dealer and vulnerability advance automatically</li>
+                        <li><strong>Next Deal Preview:</strong> Shows upcoming deal info after scoring</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
                     <h4>The 4-Deal Vulnerability Cycle</h4>
                     <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
                         <tr style="background: rgba(255,255,255,0.1);">
                             <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Deal</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Dealer</th>
                             <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Vulnerability</th>
                             <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Strategy</th>
                         </tr>
                         <tr>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">1</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">North</td>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #95a5a6;">None</td>
                             <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Aggressive bidding</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">2</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">East</td>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #27ae60;">NS Vul</td>
                             <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">NS cautious, EW preempt</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">3</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">South</td>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #e74c3c;">EW Vul</td>
                             <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">EW cautious, NS preempt</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">4</td>
+                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">West</td>
                             <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #f39c12;">Both Vul</td>
                             <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Conservative play</td>
                         </tr>
@@ -732,12 +715,23 @@ class ChicagoBridge extends BaseBridgeMode {
                 <div class="help-section">
                     <h4>How to Use</h4>
                     <ol>
+                        <li><strong>Automatic Setup:</strong> Dealer and vulnerability set automatically</li>
                         <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
-                        <li><strong>Note Vulnerability:</strong> Displayed automatically for current deal</li>
+                        <li><strong>Note Vulnerability:</strong> Red/green highlighting shows vulnerability status</li>
                         <li><strong>Score Deal:</strong> Calculator applies vulnerability automatically</li>
                         <li><strong>Next Deal:</strong> Vulnerability advances to next in cycle</li>
                         <li><strong>Track Progress:</strong> Deal counter shows cycle position</li>
                     </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Cycle Management</h4>
+                    <ul>
+                        <li><strong>Cycle Completion:</strong> After deal 4, new cycle begins with deal 5</li>
+                        <li><strong>Session Breaks:</strong> Natural stopping points after each 4-deal cycle</li>
+                        <li><strong>Fair Play:</strong> Everyone gets to be dealer and experience all vulnerability conditions</li>
+                        <li><strong>Predictable:</strong> Players can plan strategy knowing upcoming vulnerability</li>
+                    </ul>
                 </div>
             `,
             buttons: [

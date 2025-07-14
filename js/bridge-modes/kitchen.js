@@ -1,9 +1,11 @@
 /**
- * Kitchen Bridge Mode - Simplified Social Bridge Scoring
+ * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
  * 
  * Kitchen Bridge is a casual, social form of bridge that removes the complexity
  * of rubber bridge while maintaining the essence of bridge scoring. Perfect for
  * home games where you want proper scoring without the full complexity.
+ * 
+ * Enhanced with dealer rotation display and consistent vulnerability info.
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -36,8 +38,8 @@ class KitchenBridge extends BaseBridgeMode {
     initialize() {
         console.log('🎯 Starting Kitchen Bridge session');
         
-        // Kitchen Bridge uses simple vulnerability (always None unless manually set)
-        this.gameState.setVulnerability('None');
+        // Kitchen Bridge uses manual vulnerability control (starts with None)
+        this.gameState.setMode('kitchen'); // This keeps manual control
         
         // Start with level selection
         this.inputState = 'level_selection';
@@ -295,7 +297,8 @@ class KitchenBridge extends BaseBridgeMode {
             score: score, // Keep original for display purposes
             actualScore: score >= 0 ? score : Math.abs(score), // Actual points awarded
             scoringSide: score >= 0 ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS'),
-            mode: 'kitchen'
+            mode: 'kitchen',
+            vulnerability: this.gameState.getVulnerability()
         });
         
         console.log(`💾 Score recorded: ${score >= 0 ? score + ' for ' + declarerSide : Math.abs(score) + ' penalty for ' + (declarerSide === 'NS' ? 'EW' : 'NS')}`);
@@ -318,8 +321,8 @@ class KitchenBridge extends BaseBridgeMode {
         
         this.gameState.nextDeal();
         
-        // Kitchen Bridge keeps vulnerability as None unless manually changed
-        // (Unlike Chicago which has a cycle)
+        // Kitchen Bridge keeps manual vulnerability control
+        // Vulnerability stays as set by user
         
         this.resetContract();
         this.inputState = 'level_selection';
@@ -478,6 +481,7 @@ class KitchenBridge extends BaseBridgeMode {
      */
     getDisplayContent() {
         const scores = this.gameState.getScores();
+        const dealInfo = this.gameState.getDealInfo();
         
         switch (this.inputState) {
             case 'level_selection':
@@ -490,7 +494,10 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.gameState.getDealNumber()}</strong></div>
+                        <div><strong>${dealInfo}</strong></div>
+                        <div style="color: #3498db; font-size: 12px; margin-top: 4px;">
+                            Traditional bridge scoring • Manual vulnerability control
+                        </div>
                     </div>
                     <div class="current-state">Select bid level (1-7)</div>
                 `;
@@ -505,6 +512,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
                         <div><strong>Level: ${this.currentContract.level}</strong></div>
                     </div>
                     <div class="current-state">Select suit</div>
@@ -523,6 +531,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                     </div>
                     <div class="current-state">
@@ -543,6 +552,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                     </div>
                     <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
@@ -560,6 +570,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                     </div>
                     <div class="current-state">Enter number of ${modeText}</div>
@@ -569,6 +580,8 @@ class KitchenBridge extends BaseBridgeMode {
                 const lastEntry = this.gameState.getLastHistoryEntry();
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
+                    const nextDealInfo = this.gameState.getDealInfo().replace(`Deal ${this.gameState.getDealNumber()}`, `Deal ${this.gameState.getDealNumber() + 1}`);
+                    
                     return `
                         <div class="title-score-row">
                             <div class="mode-title">${this.displayName}</div>
@@ -583,6 +596,9 @@ class KitchenBridge extends BaseBridgeMode {
                             <span style="color: ${lastEntry.score >= 0 ? '#27ae60' : '#e74c3c'};">
                                 Score: ${lastEntry.score >= 0 ? '+' : ''}${lastEntry.score}
                             </span></div>
+                            <div style="color: #95a5a6; font-size: 11px; margin-top: 4px;">
+                                Next: ${nextDealInfo}
+                            </div>
                         </div>
                         <div class="current-state">Press Deal for next hand</div>
                     `;
@@ -607,6 +623,26 @@ class KitchenBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
+                    <h4>Enhanced Features</h4>
+                    <ul>
+                        <li><strong>Dealer Rotation:</strong> Standard N→E→S→W progression displayed</li>
+                        <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
+                        <li><strong>Deal Tracking:</strong> Clear display of current deal, dealer, and vulnerability</li>
+                        <li><strong>Traditional Scoring:</strong> Standard bridge point values</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Dealer & Vulnerability Display</h4>
+                    <p>Each deal shows: <strong>Deal X • Dealer: N/E/S/W • Vuln: None/NS/EW/All</strong></p>
+                    <ul>
+                        <li><strong>Dealer:</strong> Rotates automatically (North → East → South → West)</li>
+                        <li><strong>Vulnerability:</strong> Use Vuln button to cycle through None/NS/EW/All</li>
+                        <li><strong>Deal Counter:</strong> Tracks session progress</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
                     <h4>Key Characteristics</h4>
                     <ul>
                         <li><strong>Standard Scoring:</strong> Uses traditional bridge point values</li>
@@ -617,132 +653,25 @@ class KitchenBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
-                    <h4>Perfect For</h4>
+                    <h4>Vulnerability Control</h4>
+                    <p><strong>Kitchen Bridge allows manual vulnerability control:</strong></p>
                     <ul>
-                        <li>Casual home bridge games</li>
-                        <li>Learning bridge scoring</li>
-                        <li>Quick social games</li>
-                        <li>Traditional bridge enthusiasts</li>
+                        <li>Press the <strong>Vuln</strong> button to cycle: None → NS → EW → All</li>
+                        <li>Set vulnerability as desired for each deal</li>
+                        <li>Red highlighting shows when declarer is vulnerable</li>
+                        <li>Green highlighting shows when declarer is not vulnerable</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Basic Contract Scores</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-                        <tr style="background: rgba(255,255,255,0.1);">
-                            <th style="padding: 8px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">Contract</th>
-                            <th style="padding: 8px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">Points per Trick</th>
-                            <th style="padding: 8px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">Example (4-level)</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">♣ ♦ (Minors)</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">20</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">4♣ = 80 pts</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">♥ ♠ (Majors)</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">30</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">4♥ = 120 pts</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">NT (No Trump)</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">30 + 10</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">3NT = 100 pts</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Bonus Points</h4>
-                    <ul>
-                        <li><strong>Game Bonus:</strong> 300 (not vulnerable) / 500 (vulnerable)</li>
-                        <li><strong>Part Game:</strong> 50 points</li>
-                        <li><strong>Small Slam:</strong> 500 / 750 points</li>
-                        <li><strong>Grand Slam:</strong> 1000 / 1500 points</li>
-                        <li><strong>Doubling:</strong> Doubles contract points and penalties</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Overtricks & Penalties</h4>
-                    <ul>
-                        <li><strong>Overtricks:</strong> Same value as contract suit</li>
-                        <li><strong>Doubled Overtricks:</strong> 100/200 (not vul/vul)</li>
-                        <li><strong>Penalties:</strong> 50/100 per trick (not vul/vul)</li>
-                        <li><strong>Doubled Penalties:</strong> 100/200/300... progression</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>The Core Problem</h4>
-                    <p style="background: rgba(255,193,7,0.2); padding: 10px; border-radius: 5px; border-left: 3px solid #ffc107;">
-                        <strong>Kitchen Bridge treats all hands equally</strong> - a major flaw that makes the game less competitive and fair.
-                    </p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Unfair Scenarios</h4>
-                    <div style="display: flex; gap: 10px; margin: 10px 0;">
-                        <div style="flex: 1; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
-                            <strong>Strong Hand</strong><br>
-                            ♠ AKQ ♥ AKQ ♦ AKQ ♣ AKQ<br>
-                            28 HCP - Easy 4♥ make<br>
-                            <strong>Score: 420 points</strong>
-                        </div>
-                        <div style="flex: 1; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
-                            <strong>Weak Hand</strong><br>
-                            ♠ xxx ♥ Jxxx ♦ xxx ♣ xxx<br>
-                            6 HCP - Lucky 4♥ make<br>
-                            <strong>Score: 420 points</strong>
-                        </div>
-                    </div>
-                    <p style="text-align: center; background: rgba(255,193,7,0.3); padding: 8px; border-radius: 5px; font-weight: bold;">
-                        Same score despite completely different skill requirements!
-                    </p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Other Issues</h4>
-                    <ul>
-                        <li><strong>No Skill Recognition:</strong> Brilliant play gets same score as lucky cards</li>
-                        <li><strong>Defender Frustration:</strong> Great defense unrewarded if contract still makes</li>
-                        <li><strong>Predictable Outcomes:</strong> Best cards usually win</li>
-                        <li><strong>Limited Strategy:</strong> Less incentive for creative bidding or play</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>When to Choose Kitchen Bridge</h4>
-                    <div style="background: rgba(39,174,96,0.2); padding: 10px; border-radius: 5px; border-left: 3px solid #27ae60;">
-                        <strong>Choose Kitchen Bridge For:</strong>
-                        <ul style="margin: 5px 0;">
-                            <li>Casual social games</li>
-                            <li>Learning bridge basics</li>
-                            <li>Quick games without analysis</li>
-                            <li>Traditional bridge purists</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use This Calculator</h4>
+                    <h4>How to Use</h4>
                     <ol>
-                        <li><strong>Enter Level:</strong> Press 1-7 for bid level</li>
-                        <li><strong>Choose Suit:</strong> Select trump suit or No Trump</li>
-                        <li><strong>Pick Declarer:</strong> Choose N/S/E/W</li>
+                        <li><strong>Set Vulnerability:</strong> Use Vuln button before each deal</li>
+                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
                         <li><strong>Add Doubling:</strong> Press X to cycle through None/Double/Redouble</li>
-                        <li><strong>Enter Result:</strong> Made exactly, Plus overtricks, or Down</li>
-                        <li><strong>Next Deal:</strong> Press Deal to continue</li>
+                        <li><strong>Score Automatically:</strong> Calculator applies standard bridge scoring</li>
+                        <li><strong>Next Deal:</strong> Press Deal to continue with automatic dealer rotation</li>
                     </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Controls</h4>
-                    <ul>
-                        <li><strong>Back:</strong> Return to previous step</li>
-                        <li><strong>Vuln:</strong> Manual vulnerability control (NV/NS/EW/Both)</li>
-                        <li><strong>Wake:</strong> Keep screen on during long games</li>
-                    </ul>
                 </div>
             `,
             buttons: [
