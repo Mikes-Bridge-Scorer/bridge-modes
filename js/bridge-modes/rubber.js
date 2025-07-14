@@ -1,14 +1,5 @@
 /**
  * Rubber Bridge Mode - Traditional Rubber Bridge with Full Feature Set
- * 
- * Rubber Bridge is the classic form of bridge scoring where partnerships compete
- * to win 2 games to claim the rubber. Features include:
- * - Two-line scoring (above/below the line)
- * - Part-score carrying forward
- * - Vulnerability after first game won
- * - Honor bonuses (4/5 trump honors, 4 aces in NT)
- * - Rubber bonuses (700 for 2-0, 500 for 2-1)
- * - Back score calculations
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -20,7 +11,6 @@ class RubberBridge extends BaseBridgeMode {
         this.modeName = 'rubber';
         this.displayName = 'Rubber Bridge';
         
-        // Rubber Bridge specific state
         this.currentContract = {
             level: null,
             suit: null,
@@ -30,33 +20,26 @@ class RubberBridge extends BaseBridgeMode {
         };
         
         this.inputState = 'level_selection';
-        this.resultMode = null; // 'down', 'plus'
+        this.resultMode = null;
         
-        // Rubber Bridge scoring state
         this.rubberState = {
-            gamesWon: { NS: 0, EW: 0 }, // Games won by each side
-            belowLineScores: { NS: 0, EW: 0 }, // Current part-scores
-            aboveLineScores: { NS: 0, EW: 0 }, // Bonuses, overtricks, penalties
+            gamesWon: { NS: 0, EW: 0 },
+            belowLineScores: { NS: 0, EW: 0 },
+            aboveLineScores: { NS: 0, EW: 0 },
             rubberComplete: false,
             rubberWinner: null,
-            vulnerability: { NS: false, EW: false }, // Independent vulnerability
-            honorBonusPending: false, // Flag for honor bonus input
-            lastContractSide: null // For honor bonus eligibility
+            vulnerability: { NS: false, EW: false },
+            honorBonusPending: false,
+            lastContractSide: null
         };
         
         console.log('🏆 Rubber Bridge mode initialized');
     }
     
-    /**
-     * Initialize Rubber Bridge mode
-     */
     initialize() {
         console.log('🎯 Starting Rubber Bridge session');
-        
-        // Rubber Bridge uses manual vulnerability control
         this.gameState.setMode('rubber');
         
-        // Initialize rubber state if new session
         if (!this.rubberState.gamesWon.NS && !this.rubberState.gamesWon.EW) {
             this.resetRubber();
         }
@@ -66,9 +49,6 @@ class RubberBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Reset rubber to initial state
-     */
     resetRubber() {
         this.rubberState = {
             gamesWon: { NS: 0, EW: 0 },
@@ -81,25 +61,18 @@ class RubberBridge extends BaseBridgeMode {
             lastContractSide: null
         };
         
-        // Reset game state scores to show rubber totals
         this.gameState.resetScores();
-        
         console.log('🔄 Rubber reset to initial state');
     }
     
-    /**
-     * Handle user actions
-     */
     handleAction(value) {
         console.log(`🎮 Rubber Bridge action: ${value} in state: ${this.inputState}`);
         
-        // Handle rubber completion actions
         if (this.rubberState.rubberComplete && value === 'NEW_RUBBER') {
             this.startNewRubber();
             return;
         }
         
-        // Handle honor bonus input
         if (this.rubberState.honorBonusPending) {
             this.handleHonorBonusInput(value);
             return;
@@ -129,9 +102,6 @@ class RubberBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Handle bid level selection (1-7)
-     */
     handleLevelSelection(value) {
         if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
             this.currentContract.level = parseInt(value);
@@ -140,9 +110,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle suit selection
-     */
     handleSuitSelection(value) {
         if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
             this.currentContract.suit = value;
@@ -151,9 +118,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle declarer selection and doubling
-     */
     handleDeclarerSelection(value) {
         if (['N', 'S', 'E', 'W'].includes(value)) {
             this.currentContract.declarer = value;
@@ -170,9 +134,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle doubling (X/XX cycling)
-     */
     handleDoubling() {
         if (this.currentContract.doubled === '') {
             this.currentContract.doubled = 'X';
@@ -186,9 +147,6 @@ class RubberBridge extends BaseBridgeMode {
         console.log(`💥 Double state: ${this.currentContract.doubled || 'None'}`);
     }
     
-    /**
-     * Handle result type selection
-     */
     handleResultTypeSelection(value) {
         if (value === 'MADE') {
             this.currentContract.result = '=';
@@ -203,9 +161,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle result number selection
-     */
     handleResultNumberSelection(value) {
         if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
             const num = parseInt(value);
@@ -217,7 +172,7 @@ class RubberBridge extends BaseBridgeMode {
                 if (num <= maxOvertricks) {
                     this.currentContract.result = `+${num}`;
                 } else {
-                    console.warn(⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
                     return;
                 }
             }
@@ -227,9 +182,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle actions in scoring state
-     */
     handleScoringActions(value) {
         if (value === 'HONORS') {
             this.startHonorBonusInput();
@@ -238,9 +190,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle honor bonus input
-     */
     handleHonorBonusInput(value) {
         if (value === 'NO_HONORS') {
             this.rubberState.honorBonusPending = false;
@@ -253,18 +202,12 @@ class RubberBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Start honor bonus input process
-     */
     startHonorBonusInput() {
         this.rubberState.honorBonusPending = true;
         console.log('👑 Honor bonus input started');
         this.updateDisplay();
     }
     
-    /**
-     * Award honor bonus
-     */
     awardHonorBonus(honorType) {
         let bonus = 0;
         let description = '';
@@ -290,7 +233,6 @@ class RubberBridge extends BaseBridgeMode {
             
             console.log(`👑 Honor bonus: ${bonus} for ${description} awarded to ${this.rubberState.lastContractSide}`);
             
-            // Add to history
             this.gameState.addToHistory({
                 deal: this.gameState.getDealNumber(),
                 type: 'honor_bonus',
@@ -302,9 +244,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Calculate rubber bridge score
-     */
     calculateScore() {
         const { level, suit, result, doubled, declarer } = this.currentContract;
         
@@ -318,35 +257,28 @@ class RubberBridge extends BaseBridgeMode {
         let aboveLineScore = 0;
         
         if (result === '=' || result?.startsWith('+')) {
-            // Contract made
             let basicScore = level * suitValues[suit];
             if (suit === 'NT') basicScore += 10;
             
-            // Below the line (contract points only)
             belowLineScore = basicScore;
             if (doubled === 'X') belowLineScore *= 2;
             else if (doubled === 'XX') belowLineScore *= 4;
             
-            // Above the line (bonuses)
-            // Game/Part-game bonus
             if (belowLineScore >= 100) {
-                aboveLineScore += isVulnerable ? 500 : 300; // Game bonus
+                aboveLineScore += isVulnerable ? 500 : 300;
             } else {
-                aboveLineScore += 50; // Part-game bonus
+                aboveLineScore += 50;
             }
             
-            // Slam bonuses
             if (level === 6) {
-                aboveLineScore += isVulnerable ? 750 : 500; // Small slam
+                aboveLineScore += isVulnerable ? 750 : 500;
             } else if (level === 7) {
-                aboveLineScore += isVulnerable ? 1500 : 1000; // Grand slam
+                aboveLineScore += isVulnerable ? 1500 : 1000;
             }
             
-            // Double bonuses
             if (doubled === 'X') aboveLineScore += 50;
             else if (doubled === 'XX') aboveLineScore += 100;
             
-            // Overtricks
             if (result?.startsWith('+')) {
                 const overtricks = parseInt(result.substring(1));
                 let overtrickValue;
@@ -361,7 +293,6 @@ class RubberBridge extends BaseBridgeMode {
             }
             
         } else if (result?.startsWith('-')) {
-            // Contract failed - all points go above the line as penalties
             const undertricks = parseInt(result.substring(1));
             
             if (doubled === '') {
@@ -390,35 +321,27 @@ class RubberBridge extends BaseBridgeMode {
         };
     }
     
-    /**
-     * Calculate and record the score
-     */
     calculateAndRecordScore() {
         const scoreResult = this.calculateScore();
         const { belowLineScore, aboveLineScore, declarerSide, contractMade } = scoreResult;
         
         if (contractMade) {
-            // Contract made - points to declarer
             this.rubberState.belowLineScores[declarerSide] += belowLineScore;
             this.rubberState.aboveLineScores[declarerSide] += aboveLineScore;
             this.rubberState.lastContractSide = declarerSide;
             
-            // Check for game (100+ below the line)
             if (this.rubberState.belowLineScores[declarerSide] >= 100) {
                 this.processGameWon(declarerSide);
             }
             
         } else {
-            // Contract failed - penalty to defending side
             const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
             this.rubberState.aboveLineScores[defendingSide] += aboveLineScore;
             this.rubberState.lastContractSide = defendingSide;
         }
         
-        // Update game state with total scores
         this.updateGameStateScores();
         
-        // Record in history
         this.gameState.addToHistory({
             deal: this.gameState.getDealNumber(),
             contract: { ...this.currentContract },
@@ -433,42 +356,30 @@ class RubberBridge extends BaseBridgeMode {
         console.log(`💾 Rubber score recorded - Below: ${belowLineScore}, Above: ${aboveLineScore}`);
     }
     
-    /**
-     * Process game won
-     */
     processGameWon(winningSide) {
         this.rubberState.gamesWon[winningSide]++;
         console.log(`🎉 Game won by ${winningSide}! Games: NS ${this.rubberState.gamesWon.NS}, EW ${this.rubberState.gamesWon.EW}`);
         
-        // Clear part-scores after game
         this.rubberState.belowLineScores = { NS: 0, EW: 0 };
-        
-        // Set vulnerability for game winners
         this.rubberState.vulnerability[winningSide] = true;
         
-        // Check for rubber completion (first to 2 games)
         if (this.rubberState.gamesWon[winningSide] === 2) {
             this.processRubberWon(winningSide);
         }
     }
     
-    /**
-     * Process rubber completion
-     */
     processRubberWon(winningSide) {
         this.rubberState.rubberComplete = true;
         this.rubberState.rubberWinner = winningSide;
         
-        // Calculate rubber bonus
         const losingGames = this.rubberState.gamesWon[winningSide === 'NS' ? 'EW' : 'NS'];
-        const rubberBonus = losingGames === 0 ? 700 : 500; // 700 for 2-0, 500 for 2-1
+        const rubberBonus = losingGames === 0 ? 700 : 500;
         
         this.rubberState.aboveLineScores[winningSide] += rubberBonus;
         this.updateGameStateScores();
         
         console.log(`🏆 Rubber won by ${winningSide}! Bonus: ${rubberBonus}`);
         
-        // Add rubber completion to history
         this.gameState.addToHistory({
             deal: this.gameState.getDealNumber(),
             type: 'rubber_complete',
@@ -479,9 +390,6 @@ class RubberBridge extends BaseBridgeMode {
         });
     }
     
-    /**
-     * Start new rubber
-     */
     startNewRubber() {
         console.log('🆕 Starting new rubber');
         this.resetRubber();
@@ -490,18 +398,12 @@ class RubberBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Update game state scores with rubber totals
-     */
     updateGameStateScores() {
         const totals = this.getRubberTotals();
         this.gameState.scores.NS = totals.NS;
         this.gameState.scores.EW = totals.EW;
     }
     
-    /**
-     * Get rubber totals
-     */
     getRubberTotals() {
         return {
             NS: this.rubberState.belowLineScores.NS + this.rubberState.aboveLineScores.NS,
@@ -509,9 +411,6 @@ class RubberBridge extends BaseBridgeMode {
         };
     }
     
-    /**
-     * Get current vulnerability as string for display
-     */
     getCurrentVulnerabilityString() {
         const nsVuln = this.rubberState.vulnerability.NS;
         const ewVuln = this.rubberState.vulnerability.EW;
@@ -522,9 +421,6 @@ class RubberBridge extends BaseBridgeMode {
         return 'None';
     }
     
-    /**
-     * Move to next deal
-     */
     nextDeal() {
         console.log('🃏 Moving to next deal in rubber');
         
@@ -535,9 +431,6 @@ class RubberBridge extends BaseBridgeMode {
         this.rubberState.honorBonusPending = false;
     }
     
-    /**
-     * Reset contract
-     */
     resetContract() {
         this.currentContract = {
             level: null,
@@ -550,9 +443,6 @@ class RubberBridge extends BaseBridgeMode {
         this.ui.updateDoubleButton('');
     }
     
-    /**
-     * Handle back navigation
-     */
     handleBack() {
         if (this.rubberState.honorBonusPending) {
             this.rubberState.honorBonusPending = false;
@@ -593,13 +483,9 @@ class RubberBridge extends BaseBridgeMode {
         return true;
     }
     
-    /**
-     * Undo last score
-     */
     undoLastScore() {
         const lastEntry = this.gameState.getLastHistoryEntry();
         if (lastEntry && lastEntry.deal === this.gameState.getDealNumber() && lastEntry.mode === 'rubber') {
-            // Remove the score effects
             if (lastEntry.type !== 'honor_bonus' && lastEntry.type !== 'rubber_complete') {
                 const side = lastEntry.scoringSide;
                 
@@ -610,7 +496,6 @@ class RubberBridge extends BaseBridgeMode {
                     this.rubberState.aboveLineScores[side] -= lastEntry.aboveLineScore;
                 }
                 
-                // Reset vulnerability if this caused a game win
                 if (lastEntry.gameWon) {
                     this.rubberState.gamesWon[side]--;
                     this.rubberState.vulnerability[side] = false;
@@ -623,9 +508,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Get active buttons with proper limits
-     */
     getActiveButtons() {
         if (this.rubberState.rubberComplete) {
             return ['NEW_RUBBER'];
@@ -643,7 +525,6 @@ class RubberBridge extends BaseBridgeMode {
         
         switch (this.inputState) {
             case 'level_selection':
-                // Always return all 7 levels as strings
                 return ['1', '2', '3', '4', '5', '6', '7'];
                 
             case 'suit_selection':
@@ -661,7 +542,6 @@ class RubberBridge extends BaseBridgeMode {
                 
             case 'result_number_selection':
                 if (this.resultMode === 'down') {
-                    // Maximum down is 6 + level (all 13 tricks lost)
                     const maxDown = Math.min(7, 6 + this.currentContract.level);
                     const buttons = [];
                     for (let i = 1; i <= maxDown; i++) {
@@ -669,7 +549,6 @@ class RubberBridge extends BaseBridgeMode {
                     }
                     return buttons;
                 } else if (this.resultMode === 'plus') {
-                    // Maximum overtricks: 13 total - (6 + level) = overtricks possible
                     const maxOvertricks = 13 - (6 + this.currentContract.level);
                     const buttons = [];
                     for (let i = 1; i <= maxOvertricks; i++) {
@@ -687,23 +566,16 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Update display
-     */
     updateDisplay() {
         const content = this.getDisplayContent();
         this.ui.updateDisplay(content);
         this.ui.updateButtonStates(this.getActiveButtons());
     }
     
-    /**
-     * Get display content
-     */
     getDisplayContent() {
         const totals = this.getRubberTotals();
         const dealInfo = this.gameState.getDealInfo();
         
-        // Rubber completion screen
         if (this.rubberState.rubberComplete) {
             const winner = this.rubberState.rubberWinner;
             const gamesWon = this.rubberState.gamesWon[winner];
@@ -735,7 +607,6 @@ class RubberBridge extends BaseBridgeMode {
             `;
         }
         
-        // Honor bonus input screen
         if (this.rubberState.honorBonusPending) {
             return `
                 <div class="title-score-row">
@@ -758,7 +629,6 @@ class RubberBridge extends BaseBridgeMode {
             `;
         }
         
-        // Main game states
         switch (this.inputState) {
             case 'level_selection':
                 return `
@@ -915,9 +785,6 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Generate rubber score display (compact two-line scoring)
-     */
     generateRubberScoreDisplay() {
         const nsBelow = this.rubberState.belowLineScores.NS;
         const ewBelow = this.rubberState.belowLineScores.EW;
@@ -966,9 +833,6 @@ class RubberBridge extends BaseBridgeMode {
         `;
     }
     
-    /**
-     * Generate final scorecard for rubber completion (mobile-optimized)
-     */
     generateScorecard() {
         const nsBelow = this.rubberState.belowLineScores.NS;
         const ewBelow = this.rubberState.belowLineScores.EW;
@@ -1013,19 +877,13 @@ class RubberBridge extends BaseBridgeMode {
         `;
     }
     
-    /**
-     * Toggle vulnerability - Rubber Bridge allows manual control
-     */
     toggleVulnerability() {
-        // In Rubber Bridge, vulnerability is determined by games won
-        // But we can allow manual adjustment for special cases
         const current = this.getCurrentVulnerabilityString();
         const cycle = ['None', 'NS', 'EW', 'Both'];
         const currentIndex = cycle.indexOf(current);
         const nextIndex = (currentIndex + 1) % cycle.length;
         const next = cycle[nextIndex];
         
-        // Update vulnerability state
         this.rubberState.vulnerability.NS = next === 'NS' || next === 'Both';
         this.rubberState.vulnerability.EW = next === 'EW' || next === 'Both';
         
@@ -1033,16 +891,13 @@ class RubberBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Get help content for Rubber Bridge
-     */
     getHelpContent() {
         return {
             title: 'Rubber Bridge Help',
             content: `
                 <div class="help-section">
                     <h4>What is Rubber Bridge?</h4>
-                    <p><strong>Rubber Bridge</strong> is the traditional, classic form of bridge scoring. Two partnerships compete to be first to win 2 games, which completes the "rubber." It's the most prestigious form of bridge, combining skill, strategy, and the excitement of cumulative scoring.</p>
+                    <p><strong>Rubber Bridge</strong> is the traditional, classic form of bridge scoring. Two partnerships compete to be first to win 2 games, which completes the "rubber."</p>
                 </div>
                 
                 <div class="help-section">
@@ -1057,77 +912,12 @@ class RubberBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
-                    <h4>The Scorecard</h4>
-                    <p>Rubber Bridge uses a unique two-line scoring system:</p>
-                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-family: monospace;">
-                        <tr style="background: rgba(255,255,255,0.1);">
-                            <th style="padding: 8px; border: 1px solid rgba(255,255,255,0.3);">NS</th>
-                            <th style="padding: 8px; border: 1px solid rgba(255,255,255,0.3);">EW</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.3); color: #3498db;">350</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.3); color: #3498db;">180</td>
-                        </tr>
-                        <tr style="border-top: 2px solid rgba(255,255,255,0.8);">
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.3); color: #e74c3c; font-weight: bold;">120</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.3); color: #e74c3c; font-weight: bold;">60</td>
-                        </tr>
-                    </table>
-                    <ul>
-                        <li><span style="color: #3498db;"><strong>Above the line (blue):</strong></span> Bonuses, overtricks, penalties, honors</li>
-                        <li><span style="color: #e74c3c;"><strong>Below the line (red):</strong></span> Contract points only (count toward game)</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Vulnerability System</h4>
-                    <ul>
-                        <li><strong>Start:</strong> Neither side vulnerable</li>
-                        <li><strong>First Game:</strong> Winners become vulnerable</li>
-                        <li><strong>Vulnerable Effects:</strong> Higher bonuses, steeper penalties</li>
-                        <li><strong>Reset:</strong> New rubber starts with no vulnerability</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Scoring Details</h4>
-                    
-                    <h5>Contract Points (Below the Line)</h5>
-                    <ul>
-                        <li>♣♦: 20 per trick</li>
-                        <li>♥♠: 30 per trick</li>
-                        <li>NT: 30 per trick + 10 first trick bonus</li>
-                        <li>Doubled: Contract points × 2</li>
-                        <li>Redoubled: Contract points × 4</li>
-                    </ul>
-                    
-                    <h5>Bonuses (Above the Line)</h5>
-                    <ul>
-                        <li><strong>Game bonus:</strong> 300 (not vul) / 500 (vul)</li>
-                        <li><strong>Part-game bonus:</strong> 50 points</li>
-                        <li><strong>Small slam:</strong> 500 (not vul) / 750 (vul)</li>
-                        <li><strong>Grand slam:</strong> 1000 (not vul) / 1500 (vul)</li>
-                        <li><strong>Double bonus:</strong> 50 (X) / 100 (XX)</li>
-                        <li><strong>Rubber bonus:</strong> 500 (2-1) / 700 (2-0)</li>
-                    </ul>
-                    
-                    <h5>Honor Bonuses</h5>
+                    <h4>Honor Bonuses</h4>
                     <ul>
                         <li><strong>4 trump honors</strong> (A,K,Q,J,10): 100 points</li>
                         <li><strong>5 trump honors</strong> (all): 150 points</li>
                         <li><strong>4 aces in NT:</strong> 150 points</li>
                         <li>Must be held by one player in the partnership</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Strategic Elements</h4>
-                    <ul>
-                        <li><strong>Part-Score Race:</strong> Partial contracts carry forward toward game</li>
-                        <li><strong>Vulnerability Timing:</strong> When to bid aggressively vs. conservatively</li>
-                        <li><strong>Penalty Doubles:</strong> Higher stakes when opponents are vulnerable</li>
-                        <li><strong>Honor Bonuses:</strong> Small edges that can swing rubbers</li>
-                        <li><strong>Rubber Management:</strong> Protecting leads, catching up from behind</li>
                     </ul>
                 </div>
                 
@@ -1142,17 +932,6 @@ class RubberBridge extends BaseBridgeMode {
                         <li><strong>Rubber Completion:</strong> Celebrates winner and shows final scorecard</li>
                     </ol>
                 </div>
-                
-                <div class="help-section">
-                    <h4>Why Play Rubber Bridge?</h4>
-                    <ul>
-                        <li><strong>Traditional:</strong> The original form of bridge scoring</li>
-                        <li><strong>Skill-Testing:</strong> Rewards consistent performance over many deals</li>
-                        <li><strong>Strategic Depth:</strong> Vulnerability and part-score management</li>
-                        <li><strong>Social:</strong> Natural conversation breaks between rubbers</li>
-                        <li><strong>Prestigious:</strong> The scoring system used in high-level bridge</li>
-                    </ul>
-                </div>
             `,
             buttons: [
                 { text: 'Close Help', action: 'close', class: 'close-btn' }
@@ -1160,9 +939,6 @@ class RubberBridge extends BaseBridgeMode {
         };
     }
     
-    /**
-     * Cleanup when switching modes
-     */
     cleanup() {
         this.ui.clearVulnerabilityHighlight();
         this.ui.updateDoubleButton('');
