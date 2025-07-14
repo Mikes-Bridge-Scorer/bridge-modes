@@ -624,7 +624,7 @@ class RubberBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get active buttons
+     * Get active buttons with proper limits
      */
     getActiveButtons() {
         if (this.rubberState.rubberComplete) {
@@ -644,21 +644,32 @@ class RubberBridge extends BaseBridgeMode {
         switch (this.inputState) {
             case 'level_selection':
                 return ['1', '2', '3', '4', '5', '6', '7'];
+                
             case 'suit_selection':
                 return ['♣', '♦', '♥', '♠', 'NT'];
+                
             case 'declarer_selection':
                 const buttons = ['N', 'S', 'E', 'W', 'X'];
                 if (this.currentContract.declarer) {
                     buttons.push('MADE', 'PLUS', 'DOWN');
                 }
                 return buttons;
+                
             case 'result_type_selection':
                 return ['MADE', 'PLUS', 'DOWN'];
+                
             case 'result_number_selection':
                 if (this.resultMode === 'down') {
-                    return ['1', '2', '3', '4', '5', '6', '7'];
+                    // Maximum down is 6 + level (all 13 tricks lost)
+                    const maxDown = Math.min(7, 6 + this.currentContract.level);
+                    const buttons = [];
+                    for (let i = 1; i <= maxDown; i++) {
+                        buttons.push(i.toString());
+                    }
+                    return buttons;
                 } else if (this.resultMode === 'plus') {
-                    const maxOvertricks = Math.min(6, 13 - (6 + this.currentContract.level));
+                    // Maximum overtricks: 13 total - (6 + level) = overtricks possible
+                    const maxOvertricks = 13 - (6 + this.currentContract.level);
                     const buttons = [];
                     for (let i = 1; i <= maxOvertricks; i++) {
                         buttons.push(i.toString());
@@ -666,8 +677,10 @@ class RubberBridge extends BaseBridgeMode {
                     return buttons;
                 }
                 break;
+                
             case 'scoring':
                 return ['HONORS', 'DEAL'];
+                
             default:
                 return [];
         }
@@ -692,7 +705,8 @@ class RubberBridge extends BaseBridgeMode {
         // Rubber completion screen
         if (this.rubberState.rubberComplete) {
             const winner = this.rubberState.rubberWinner;
-            const finalMargin = Math.abs(totals.NS - totals.EW);
+            const gamesWon = this.rubberState.gamesWon[winner];
+            const gamesLost = this.rubberState.gamesWon[winner === 'NS' ? 'EW' : 'NS'];
             
             return `
                 <div class="title-score-row">
@@ -703,14 +717,11 @@ class RubberBridge extends BaseBridgeMode {
                     </div>
                 </div>
                 <div class="game-content">
-                    <div style="text-align: center; color: #f1c40f; font-size: 18px; margin: 10px 0;">
+                    <div style="text-align: center; color: #f1c40f; font-size: 16px; margin: 8px 0;">
                         🏆 RUBBER COMPLETE! 🏆
                     </div>
-                    <div style="text-align: center; font-size: 16px; margin: 10px 0;">
-                        <strong>${winner} wins ${this.rubberState.gamesWon[winner]}-${this.rubberState.gamesWon[winner === 'NS' ? 'EW' : 'NS']}</strong>
-                    </div>
-                    <div style="text-align: center; margin: 10px 0;">
-                        Final margin: ${finalMargin} points
+                    <div style="text-align: center; font-size: 14px; margin: 6px 0;">
+                        <strong>${winner} wins ${gamesWon}-${gamesLost}</strong>
                     </div>
                     <div class="rubber-scorecard">
                         ${this.generateScorecard()}
@@ -803,7 +814,7 @@ class RubberBridge extends BaseBridgeMode {
                     </div>
                     <div class="current-state">
                         ${this.currentContract.declarer ? 
-                            'Press Made/Plus/Down for result, or X for double/redouble' : 
+                            'Made/Plus/Down or X for double' : 
                             'Select declarer (N/S/E/W)'}
                     </div>
                 `;
@@ -820,7 +831,7 @@ class RubberBridge extends BaseBridgeMode {
                     </div>
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
-                        <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
+                        <div><strong>${contract} by ${this.currentContract.declarer}</strong></div>
                         <div class="rubber-scores">
                             ${this.generateRubberScoreDisplay()}
                         </div>
@@ -830,24 +841,45 @@ class RubberBridge extends BaseBridgeMode {
                 
             case 'result_number_selection':
                 const fullContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                const modeText = this.resultMode === 'down' ? 'tricks down (1-7)' : 'overtricks (1-6)';
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            NS: ${totals.NS}<br>
-                            EW: ${totals.EW}
+                if (this.resultMode === 'down') {
+                    const maxDown = Math.min(7, 6 + this.currentContract.level);
+                    return `
+                        <div class="title-score-row">
+                            <div class="mode-title">${this.displayName}</div>
+                            <div class="score-display">
+                                NS: ${totals.NS}<br>
+                                EW: ${totals.EW}
+                            </div>
                         </div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>${dealInfo}</strong></div>
-                        <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
-                        <div class="rubber-scores">
-                            ${this.generateRubberScoreDisplay()}
+                        <div class="game-content">
+                            <div><strong>${dealInfo}</strong></div>
+                            <div><strong>${fullContract} by ${this.currentContract.declarer}</strong></div>
+                            <div class="rubber-scores">
+                                ${this.generateRubberScoreDisplay()}
+                            </div>
                         </div>
-                    </div>
-                    <div class="current-state">Enter number of ${modeText}</div>
-                `;
+                        <div class="current-state">Tricks down (1-${maxDown})</div>
+                    `;
+                } else {
+                    const maxOvertricks = 13 - (6 + this.currentContract.level);
+                    return `
+                        <div class="title-score-row">
+                            <div class="mode-title">${this.displayName}</div>
+                            <div class="score-display">
+                                NS: ${totals.NS}<br>
+                                EW: ${totals.EW}
+                            </div>
+                        </div>
+                        <div class="game-content">
+                            <div><strong>${dealInfo}</strong></div>
+                            <div><strong>${fullContract} by ${this.currentContract.declarer}</strong></div>
+                            <div class="rubber-scores">
+                                ${this.generateRubberScoreDisplay()}
+                            </div>
+                        </div>
+                        <div class="current-state">Overtricks (1-${maxOvertricks})</div>
+                    `;
+                }
                 
             case 'scoring':
                 const lastEntry = this.gameState.getLastHistoryEntry();
@@ -863,12 +895,11 @@ class RubberBridge extends BaseBridgeMode {
                             </div>
                         </div>
                         <div class="game-content">
-                            <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
-                            ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}</div>
+                            <div><strong>Deal ${lastEntry.deal}:</strong> ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}</div>
                             <div class="rubber-scores">
                                 ${this.generateRubberScoreDisplay()}
                             </div>
-                            ${lastEntry.gameWon ? `<div style="color: #f1c40f; text-align: center; margin: 8px 0;">🎉 GAME to ${lastEntry.scoringSide}! 🎉</div>` : ''}
+                            ${lastEntry.gameWon ? `<div style="color: #f1c40f; text-align: center; margin: 4px 0;">🎉 GAME to ${lastEntry.scoringSide}! 🎉</div>` : ''}
                         </div>
                         <div class="current-state">Press Honors for bonuses, or Deal for next hand</div>
                     `;
@@ -881,7 +912,7 @@ class RubberBridge extends BaseBridgeMode {
     }
     
     /**
-     * Generate rubber score display (two-line scoring)
+     * Generate rubber score display (compact two-line scoring)
      */
     generateRubberScoreDisplay() {
         const nsBelow = this.rubberState.belowLineScores.NS;
@@ -894,37 +925,37 @@ class RubberBridge extends BaseBridgeMode {
         const ewVuln = this.rubberState.vulnerability.EW;
         
         return `
-            <div class="rubber-score-table" style="font-family: monospace; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); margin: 8px 0;">
+            <div class="rubber-score-table" style="font-family: monospace; font-size: 11px; border: 1px solid rgba(255,255,255,0.3); margin: 4px 0;">
                 <div style="display: flex; background: rgba(255,255,255,0.1);">
-                    <div style="flex: 1; text-align: center; padding: 4px; border-right: 1px solid rgba(255,255,255,0.3);">
+                    <div style="flex: 1; text-align: center; padding: 2px; border-right: 1px solid rgba(255,255,255,0.3); font-size: 10px;">
                         <strong>NS ${nsVuln ? '(V)' : ''}</strong>
                     </div>
-                    <div style="flex: 1; text-align: center; padding: 4px;">
+                    <div style="flex: 1; text-align: center; padding: 2px; font-size: 10px;">
                         <strong>EW ${ewVuln ? '(V)' : ''}</strong>
                     </div>
                 </div>
-                <div style="display: flex; min-height: 30px;">
-                    <div style="flex: 1; text-align: center; padding: 4px; border-right: 1px solid rgba(255,255,255,0.3); color: #3498db;">
+                <div style="display: flex; min-height: 20px;">
+                    <div style="flex: 1; text-align: center; padding: 2px; border-right: 1px solid rgba(255,255,255,0.3); color: #3498db; font-size: 11px;">
                         ${nsAbove || ''}
                     </div>
-                    <div style="flex: 1; text-align: center; padding: 4px; color: #3498db;">
+                    <div style="flex: 1; text-align: center; padding: 2px; color: #3498db; font-size: 11px;">
                         ${ewAbove || ''}
                     </div>
                 </div>
                 <div style="border-top: 2px solid rgba(255,255,255,0.5); display: flex;">
-                    <div style="flex: 1; text-align: center; padding: 4px; border-right: 1px solid rgba(255,255,255,0.3); color: #e74c3c; font-weight: bold;">
+                    <div style="flex: 1; text-align: center; padding: 2px; border-right: 1px solid rgba(255,255,255,0.3); color: #e74c3c; font-weight: bold; font-size: 11px;">
                         ${nsBelow || ''}
                     </div>
-                    <div style="flex: 1; text-align: center; padding: 4px; color: #e74c3c; font-weight: bold;">
+                    <div style="flex: 1; text-align: center; padding: 2px; color: #e74c3c; font-weight: bold; font-size: 11px;">
                         ${ewBelow || ''}
                     </div>
                 </div>
-                <div style="display: flex; background: rgba(255,255,255,0.05); font-size: 10px;">
-                    <div style="flex: 1; text-align: center; padding: 2px; border-right: 1px solid rgba(255,255,255,0.3);">
-                        Games: ${'★'.repeat(nsGames)}${'☆'.repeat(2-nsGames)}
+                <div style="display: flex; background: rgba(255,255,255,0.05); font-size: 9px;">
+                    <div style="flex: 1; text-align: center; padding: 1px; border-right: 1px solid rgba(255,255,255,0.3);">
+                        ${'★'.repeat(nsGames)}${'☆'.repeat(2-nsGames)}
                     </div>
-                    <div style="flex: 1; text-align: center; padding: 2px;">
-                        Games: ${'★'.repeat(ewGames)}${'☆'.repeat(2-ewGames)}
+                    <div style="flex: 1; text-align: center; padding: 1px;">
+                        ${'★'.repeat(ewGames)}${'☆'.repeat(2-ewGames)}
                     </div>
                 </div>
             </div>
@@ -932,7 +963,7 @@ class RubberBridge extends BaseBridgeMode {
     }
     
     /**
-     * Generate final scorecard for rubber completion
+     * Generate final scorecard for rubber completion (mobile-optimized)
      */
     generateScorecard() {
         const nsBelow = this.rubberState.belowLineScores.NS;
@@ -941,27 +972,36 @@ class RubberBridge extends BaseBridgeMode {
         const ewAbove = this.rubberState.aboveLineScores.EW;
         const nsTotal = nsBelow + nsAbove;
         const ewTotal = ewBelow + ewAbove;
+        const winner = this.rubberState.rubberWinner;
+        const margin = Math.abs(nsTotal - ewTotal);
         
         return `
-            <div style="font-family: monospace; font-size: 11px; border: 2px solid #f1c40f; margin: 10px 0; background: rgba(241,196,15,0.1);">
-                <div style="background: #f1c40f; color: #2c3e50; text-align: center; padding: 4px; font-weight: bold;">
-                    FINAL SCORECARD
+            <div style="font-family: monospace; font-size: 11px; border: 1px solid #f1c40f; margin: 8px 0; background: rgba(241,196,15,0.1); max-width: 100%;">
+                <div style="background: #f1c40f; color: #2c3e50; text-align: center; padding: 6px; font-weight: bold; font-size: 12px;">
+                    🏆 ${winner} WINS RUBBER 🏆
                 </div>
-                <div style="display: flex; padding: 8px;">
-                    <div style="flex: 1;">
-                        <div style="text-align: center; font-weight: bold; margin-bottom: 4px;">NS</div>
-                        <div>Above line: ${nsAbove}</div>
-                        <div>Below line: ${nsBelow}</div>
-                        <div style="border-top: 1px solid; margin-top: 4px; padding-top: 4px; font-weight: bold;">
-                            Total: ${nsTotal}
+                <div style="padding: 8px;">
+                    <div style="display: flex; margin-bottom: 8px;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="font-weight: bold; color: #f1c40f;">NS TOTAL</div>
+                            <div style="font-size: 16px; font-weight: bold;">${nsTotal}</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="font-weight: bold; color: #f1c40f;">EW TOTAL</div>
+                            <div style="font-size: 16px; font-weight: bold;">${ewTotal}</div>
                         </div>
                     </div>
-                    <div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 8px;">
-                        <div style="text-align: center; font-weight: bold; margin-bottom: 4px;">EW</div>
-                        <div>Above line: ${ewAbove}</div>
-                        <div>Below line: ${ewBelow}</div>
-                        <div style="border-top: 1px solid; margin-top: 4px; padding-top: 4px; font-weight: bold;">
-                            Total: ${ewTotal}
+                    <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 6px; font-size: 12px;">
+                        Winning margin: <strong>${margin} points</strong>
+                    </div>
+                    <div style="display: flex; margin-top: 6px; font-size: 10px; color: rgba(255,255,255,0.8);">
+                        <div style="flex: 1;">
+                            Above: ${nsAbove}<br>
+                            Below: ${nsBelow}
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                            Above: ${ewAbove}<br>
+                            Below: ${ewBelow}
                         </div>
                     </div>
                 </div>
