@@ -1,71 +1,4 @@
-/**
- * Rubber Bridge Mode - Traditional Rubber Bridge with Full Feature Set
- */
-
-import { BaseBridgeMode } from './base-mode.js';
-
-class RubberBridge extends BaseBridgeMode {
-    constructor(gameState, ui) {
-        super(gameState, ui);
-        
-        this.modeName = 'rubber';
-        this.displayName = 'Rubber Bridge';
-        
-        this.currentContract = {
-            level: null,
-            suit: null,
-            declarer: null,
-            doubled: '',
-            result: null
-        };
-        
-        this.inputState = 'level_selection';
-        this.resultMode = null;
-        
-        this.rubberState = {
-            gamesWon: { NS: 0, EW: 0 },
-            belowLineScores: { NS: 0, EW: 0 },
-            aboveLineScores: { NS: 0, EW: 0 },
-            rubberComplete: false,
-            rubberWinner: null,
-            vulnerability: { NS: false, EW: false },
-            honorBonusPending: false,
-            lastContractSide: null
-        };
-        
-        console.log('🏆 Rubber Bridge mode initialized');
-    }
-    
-    initialize() {
-        console.log('🎯 Starting Rubber Bridge session');
-        this.gameState.setMode('rubber');
-        
-        if (!this.rubberState.gamesWon.NS && !this.rubberState.gamesWon.EW) {
-            this.resetRubber();
-        }
-        
-        this.inputState = 'level_selection';
-        this.resetContract();
-        this.updateDisplay();
-    }
-    
-    resetRubber() {
-        this.rubberState = {
-            gamesWon: { NS: 0, EW: 0 },
-            belowLineScores: { NS: 0, EW: 0 },
-            aboveLineScores: { NS: 0, EW: 0 },
-            rubberComplete: false,
-            rubberWinner: null,
-            vulnerability: { NS: false, EW: false },
-            honorBonusPending: false,
-            lastContractSide: null
-        };
-        
-        this.gameState.resetScores();
-        console.log('🔄 Rubber reset to initial state');
-    }
-    
-    handleAction(value) {
+handleAction(value) {
         console.log(`🎮 Rubber Bridge action: ${value} in state: ${this.inputState}`);
         
         if (this.rubberState.rubberComplete && value === 'NEW_RUBBER') {
@@ -599,9 +532,9 @@ class RubberBridge extends BaseBridgeMode {
                     ${this.generateScorecard()}
                 </div>
                 <div class="current-state">
-                    Press NEW below to start again<br>
-                    <div style="background: #f1c40f; color: #2c3e50; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: bold;">
-                        NEW
+                    Press DEAL button for New Rubber<br>
+                    <div style="background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: bold;">
+                        DEAL = NEW RUBBER
                     </div>
                 </div>
             `;
@@ -775,7 +708,7 @@ class RubberBridge extends BaseBridgeMode {
                             </div>
                             ${lastEntry.gameWon ? `<div style="color: #f1c40f; text-align: center; margin: 4px 0;">🎉 GAME to ${lastEntry.scoringSide}! 🎉</div>` : ''}
                         </div>
-                        <div class="current-state">Press Honors for bonuses, or Deal for next hand</div>
+                        <div class="current-state">Press Made for honors, or Deal for next hand</div>
                     `;
                 }
                 break;
@@ -851,18 +784,18 @@ class RubberBridge extends BaseBridgeMode {
                 <div style="padding: 8px;">
                     <div style="display: flex; margin-bottom: 8px;">
                         <div style="flex: 1; text-align: center;">
-                            <div style="font-weight: bold; color: #f1c40f;">NS TOTAL</div>
-                            <div style="font-size: 16px; font-weight: bold;">${nsTotal}</div>
+                            <div style="font-weight: bold; color: #2c3e50;">NS TOTAL</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #2c3e50;">${nsTotal}</div>
                         </div>
                         <div style="flex: 1; text-align: center;">
-                            <div style="font-weight: bold; color: #f1c40f;">EW TOTAL</div>
-                            <div style="font-size: 16px; font-weight: bold;">${ewTotal}</div>
+                            <div style="font-weight: bold; color: #2c3e50;">EW TOTAL</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #2c3e50;">${ewTotal}</div>
                         </div>
                     </div>
-                    <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 6px; font-size: 12px;">
+                    <div style="text-align: center; border-top: 1px solid rgba(44,62,80,0.3); padding-top: 6px; font-size: 12px; color: #2c3e50;">
                         Winning margin: <strong>${margin} points</strong>
                     </div>
-                    <div style="display: flex; margin-top: 6px; font-size: 10px; color: rgba(255,255,255,0.8);">
+                    <div style="display: flex; margin-top: 6px; font-size: 10px; color: #7f8c8d;">
                         <div style="flex: 1;">
                             Above: ${nsAbove}<br>
                             Below: ${nsBelow}
@@ -912,12 +845,34 @@ class RubberBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
+                    <h4>The Scorecard</h4>
+                    <p>Rubber Bridge uses a unique two-line scoring system:</p>
+                    <ul>
+                        <li><span style="color: #3498db;"><strong>Above the line (blue):</strong></span> Bonuses, overtricks, penalties, honors</li>
+                        <li><span style="color: #e74c3c;"><strong>Below the line (red):</strong></span> Contract points only (count toward game)</li>
+                        <li><strong>Game stars:</strong> ★★☆ = 2 games won, need 0 more for rubber</li>
+                        <li><strong>Vulnerability:</strong> (V) = vulnerable after winning first game</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
                     <h4>Honor Bonuses</h4>
                     <ul>
                         <li><strong>4 trump honors</strong> (A,K,Q,J,10): 100 points</li>
                         <li><strong>5 trump honors</strong> (all): 150 points</li>
                         <li><strong>4 aces in NT:</strong> 150 points</li>
                         <li>Must be held by one player in the partnership</li>
+                        <li>Claimed after each deal by pressing "Made" button</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Button Controls</h4>
+                    <ul>
+                        <li><strong>Made button:</strong> Claims honor bonuses when scoring</li>
+                        <li><strong>Plus/Down buttons:</strong> 4/5 trump honors when claiming</li>
+                        <li><strong>NT button:</strong> 4 aces when claiming in NT</li>
+                        <li><strong>Deal button:</strong> No honors / New rubber when complete</li>
                     </ul>
                 </div>
                 
@@ -927,9 +882,10 @@ class RubberBridge extends BaseBridgeMode {
                         <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
                         <li><strong>Automatic Scoring:</strong> Points distributed above/below line correctly</li>
                         <li><strong>Game Detection:</strong> Automatic game completion when 100+ reached</li>
-                        <li><strong>Honor Bonuses:</strong> Press "Honors" after each deal to claim bonuses</li>
+                        <li><strong>Honor Bonuses:</strong> Press "Made" after each deal to claim bonuses</li>
                         <li><strong>Vulnerability:</strong> Updates automatically when games are won</li>
                         <li><strong>Rubber Completion:</strong> Celebrates winner and shows final scorecard</li>
+                        <li><strong>New Rubber:</strong> Press "Deal" button when rubber is complete</li>
                     </ol>
                 </div>
             `,
@@ -946,4 +902,95 @@ class RubberBridge extends BaseBridgeMode {
     }
 }
 
-export default RubberBridge;
+export default RubberBridge; /**
+ * Rubber Bridge Mode - Traditional Rubber Bridge with Full Feature Set
+ */
+
+import { BaseBridgeMode } from './base-mode.js';
+
+class RubberBridge extends BaseBridgeMode {
+    constructor(gameState, ui) {
+        super(gameState, ui);
+        
+        this.modeName = 'rubber';
+        this.displayName = 'Rubber Bridge';
+        
+        this.currentContract = {
+            level: null,
+            suit: null,
+            declarer: null,
+            doubled: '',
+            result: null
+        };
+        
+        this.inputState = 'level_selection';
+        this.resultMode = null;
+        
+        this.rubberState = {
+            gamesWon: { NS: 0, EW: 0 },
+            belowLineScores: { NS: 0, EW: 0 },
+            aboveLineScores: { NS: 0, EW: 0 },
+            rubberComplete: false,
+            rubberWinner: null,
+            vulnerability: { NS: false, EW: false },
+            honorBonusPending: false,
+            lastContractSide: null
+        };
+        
+        console.log('🏆 Rubber Bridge mode initialized');
+    }
+    
+    initialize() {
+        console.log('🎯 Starting Rubber Bridge session');
+        this.gameState.setMode('rubber');
+        
+        if (!this.rubberState.gamesWon.NS && !this.rubberState.gamesWon.EW) {
+            this.resetRubber();
+        }
+        
+        this.inputState = 'level_selection';
+        this.resetContract();
+        this.updateDisplay();
+    }
+    
+    resetRubber() {
+        this.rubberState = {
+            gamesWon: { NS: 0, EW: 0 },
+            belowLineScores: { NS: 0, EW: 0 },
+            aboveLineScores: { NS: 0, EW: 0 },
+            rubberComplete: false,
+            rubberWinner: null,
+            vulnerability: { NS: false, EW: false },
+            honorBonusPending: false,
+            lastContractSide: null
+        };
+        
+        this.gameState.resetScores();
+        console.log('🔄 Rubber reset to initial state');
+    }
+    
+    handleAction(value) {
+        console.log(`🎮 Rubber Bridge action: ${value} in state: ${this.inputState}`);
+        
+        if (this.rubberState.rubberComplete && value === 'NEW_RUBBER') {
+            this.startNewRubber();
+            return;
+        }
+        
+        if (this.rubberState.honorBonusPending) {
+            this.handleHonorBonusInput(value);
+            return;
+        }
+        
+        switch (this.inputState) {
+            case 'level_selection':
+                this.handleLevelSelection(value);
+                break;
+            case 'suit_selection':
+                this.handleSuitSelection(value);
+                break;
+            case 'declarer_selection':
+                this.handleDeclarerSelection(value);
+                break;
+            case 'result_type_selection':
+                this.handleResult
