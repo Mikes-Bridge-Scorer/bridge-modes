@@ -217,7 +217,7 @@ class RubberBridge extends BaseBridgeMode {
                 if (num <= maxOvertricks) {
                     this.currentContract.result = `+${num}`;
                 } else {
-                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                    console.warn(⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
                     return;
                 }
             }
@@ -643,6 +643,7 @@ class RubberBridge extends BaseBridgeMode {
         
         switch (this.inputState) {
             case 'level_selection':
+                // Always return all 7 levels as strings
                 return ['1', '2', '3', '4', '5', '6', '7'];
                 
             case 'suit_selection':
@@ -723,11 +724,14 @@ class RubberBridge extends BaseBridgeMode {
                     <div style="text-align: center; font-size: 14px; margin: 6px 0;">
                         <strong>${winner} wins ${gamesWon}-${gamesLost}</strong>
                     </div>
-                    <div class="rubber-scorecard">
-                        ${this.generateScorecard()}
+                    ${this.generateScorecard()}
+                </div>
+                <div class="current-state">
+                    Press NEW below to start again<br>
+                    <div style="background: #f1c40f; color: #2c3e50; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: bold;">
+                        NEW
                     </div>
                 </div>
-                <div class="current-state">Press New Rubber to start again</div>
             `;
         }
         
