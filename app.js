@@ -85,9 +85,9 @@ class BridgeApp {
                 await this.handleModeSelection(value);
             } else if (value === 'BACK') {
                 this.handleBack();
-            } else if (this.bridgeModeInstance) {
-                // Delegate to current bridge mode
-                this.bridgeModeInstance.handleAction(value);
+            } else {
+                // Handle special rubber bridge buttons and general actions
+                await this.handleBridgeModeAction(value);
             }
             
             this.updateDisplay();
@@ -95,6 +95,82 @@ class BridgeApp {
         } catch (error) {
             console.error('Error handling button click:', error);
             this.ui.showError(`Error: ${error.message}`);
+        }
+    }
+    
+    /**
+     * Handle bridge mode actions including rubber bridge specials
+     */
+    async handleBridgeModeAction(value) {
+        // Map UI buttons to rubber bridge actions
+        if (this.currentMode === 'rubber' && this.bridgeModeInstance) {
+            switch (value) {
+                case 'DEAL':
+                    // Map Deal button to HONORS when in scoring state with pending honors
+                    if (this.bridgeModeInstance.rubberState && 
+                        this.bridgeModeInstance.rubberState.honorBonusPending) {
+                        this.bridgeModeInstance.handleAction('NO_HONORS');
+                        return;
+                    }
+                    // Map Deal button to NEW_RUBBER when rubber is complete
+                    if (this.bridgeModeInstance.rubberState && 
+                        this.bridgeModeInstance.rubberState.rubberComplete) {
+                        this.bridgeModeInstance.handleAction('NEW_RUBBER');
+                        return;
+                    }
+                    break;
+                    
+                case 'Made':
+                    // Map Made button to HONORS when in scoring state
+                    if (this.bridgeModeInstance.inputState === 'scoring' &&
+                        !this.bridgeModeInstance.rubberState.honorBonusPending) {
+                        this.bridgeModeInstance.handleAction('HONORS');
+                        return;
+                    }
+                    break;
+                    
+                case 'Plus':
+                    // Map Plus button to 4_HONORS when in honor bonus state
+                    if (this.bridgeModeInstance.rubberState && 
+                        this.bridgeModeInstance.rubberState.honorBonusPending) {
+                        this.bridgeModeInstance.handleAction('4_HONORS');
+                        return;
+                    }
+                    break;
+                    
+                case 'Down':
+                    // Map Down button to 5_HONORS when in honor bonus state  
+                    if (this.bridgeModeInstance.rubberState && 
+                        this.bridgeModeInstance.rubberState.honorBonusPending) {
+                        this.bridgeModeInstance.handleAction('5_HONORS');
+                        return;
+                    }
+                    break;
+                    
+                case 'NT':
+                    // Map NT button to 4_ACES when in honor bonus state for NT contracts
+                    if (this.bridgeModeInstance.rubberState && 
+                        this.bridgeModeInstance.rubberState.honorBonusPending &&
+                        this.bridgeModeInstance.currentContract &&
+                        this.bridgeModeInstance.currentContract.suit === 'NT') {
+                        this.bridgeModeInstance.handleAction('4_ACES');
+                        return;
+                    }
+                    break;
+            }
+        }
+        
+        // Handle direct rubber bridge actions
+        if (['NEW_RUBBER', 'HONORS', 'NO_HONORS', '4_HONORS', '5_HONORS', '4_ACES'].includes(value)) {
+            if (this.bridgeModeInstance) {
+                this.bridgeModeInstance.handleAction(value);
+                return;
+            }
+        }
+        
+        // Default: delegate to current bridge mode
+        if (this.bridgeModeInstance) {
+            this.bridgeModeInstance.handleAction(value);
         }
     }
     
@@ -250,6 +326,31 @@ class BridgeApp {
             activeButtons = ['1', '2', '3', '4', '5'];
         } else if (this.bridgeModeInstance) {
             activeButtons = this.bridgeModeInstance.getActiveButtons();
+            
+            // Add contextual rubber bridge button mappings
+            if (this.currentMode === 'rubber' && this.bridgeModeInstance.rubberState) {
+                // Honor bonus state - show visual hints
+                if (this.bridgeModeInstance.rubberState.honorBonusPending) {
+                    // Remove default buttons and add honor-specific ones
+                    activeButtons = ['DEAL']; // No Honors (mapped to Deal)
+                    if (this.bridgeModeInstance.currentContract.suit !== 'NT') {
+                        activeButtons.push('Plus', 'Down'); // 4/5 trump honors
+                    } else {
+                        activeButtons.push('NT'); // 4 aces
+                    }
+                }
+                // Rubber complete state
+                else if (this.bridgeModeInstance.rubberState.rubberComplete) {
+                    activeButtons = ['DEAL']; // New Rubber (mapped to Deal)
+                }
+                // Scoring state - show HONORS option
+                else if (this.bridgeModeInstance.inputState === 'scoring') {
+                    if (!activeButtons.includes('Made')) {
+                        activeButtons.push('Made'); // HONORS (mapped to Made)
+                    }
+                }
+            }
+            
             // Always allow back in bridge modes
             if (!activeButtons.includes('BACK')) {
                 activeButtons.push('BACK');
@@ -759,6 +860,16 @@ class BridgeApp {
                         <li><strong>Vuln:</strong> Vulnerability indicator/control</li>
                         <li><strong>Help:</strong> Context-sensitive help</li>
                         <li><strong>Quit:</strong> Exit options</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Rubber Bridge Special Controls</h4>
+                    <ul>
+                        <li><strong>Made button:</strong> Claims honor bonuses when scoring</li>
+                        <li><strong>Plus/Down buttons:</strong> 4/5 trump honors when claiming</li>
+                        <li><strong>NT button:</strong> 4 aces when claiming in NT</li>
+                        <li><strong>Deal button:</strong> No honors / New rubber</li>
                     </ul>
                 </div>
             `,
