@@ -700,3 +700,12 @@ class RubberBridge extends BaseBridgeMode {
                     <h4>📈 Score Display</h4>
                     <p>The score card shows games won (◉○), above-the-line scores, below-the-line scores separated by the red line, and running totals.</p>
                 </div>
+            `,
+    
+    cleanup() {
+        this.ui.clearVulnerabilityHighlight();
+        this.ui.updateDoubleButton('');
+    }
+}
+
+export default RubberBridge;
