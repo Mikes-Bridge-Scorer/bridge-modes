@@ -421,43 +421,60 @@ class RubberBridge extends BaseBridgeMode {
     getDisplayContent() {
         const totals = this.getRubberTotals();
         const dealInfo = this.gameState.getDealInfo();
+        const scoreCard = this.generateScoreCard();
         
         if (this.rubberState.rubberComplete) {
             const winner = this.rubberState.rubberWinner;
             const gamesWon = this.rubberState.gamesWon[winner];
             const gamesLost = this.rubberState.gamesWon[winner === 'NS' ? 'EW' : 'NS'];
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div style="text-align: center; color: #f1c40f; font-size: 16px; margin: 8px 0;">🏆 RUBBER COMPLETE! 🏆</div><div style="text-align: center; font-size: 14px; margin: 6px 0;"><strong>' + winner + ' wins ' + gamesWon + '-' + gamesLost + '</strong></div></div><div class="current-state">Press DEAL button for New Rubber</div>';
+            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">Games: ' + this.rubberState.gamesWon.NS + '-' + this.rubberState.gamesWon.EW + '</div></div><div class="game-content"><div style="text-align: center; color: #f1c40f; font-size: 16px; margin: 8px 0;">🏆 RUBBER COMPLETE! 🏆</div><div style="text-align: center; font-size: 14px; margin: 6px 0;"><strong>' + winner + ' wins ' + gamesWon + '-' + gamesLost + '</strong></div>' + scoreCard + '</div><div class="current-state">Press DEAL button for New Rubber</div>';
         }
         
         if (this.rubberState.honorBonusPending) {
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div></div><div class="current-state">Honor bonuses for ' + this.rubberState.lastContractSide + '?</div>';
+            const contractSuit = this.currentContract.suit;
+            const lastSide = this.rubberState.lastContractSide;
+            let options = '';
+            if (contractSuit === 'NT') {
+                options = 'NT=4 Aces (150), DEAL=None';
+            } else {
+                options = 'Plus=4 Honors (100), Down=5 Honors (150), DEAL=None';
+            }
+            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">Games: ' + this.rubberState.gamesWon.NS + '-' + this.rubberState.gamesWon.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div style="text-align: center; color: #f39c12; margin: 10px 0;">Honor bonuses for ' + lastSide + '?</div><div style="font-size: 12px; text-align: center; color: #bdc3c7;">' + options + '</div>' + scoreCard + '</div><div class="current-state">Select honor bonus or none</div>';
         }
         
+        // Main game display with scorecard
+        const baseDisplay = '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">Games: ' + this.rubberState.gamesWon.NS + '-' + this.rubberState.gamesWon.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div>';
+        
         if (this.inputState === 'level_selection') {
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div></div><div class="current-state">Select bid level (1-7)</div>';
+            return baseDisplay + scoreCard + '</div><div class="current-state">Select bid level (1-7)</div>';
         } else if (this.inputState === 'suit_selection') {
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div><strong>Level: ' + this.currentContract.level + '</strong></div></div><div class="current-state">Select suit</div>';
+            return baseDisplay + '<div><strong>Level: ' + this.currentContract.level + '</strong></div>' + scoreCard + '</div><div class="current-state">Select suit</div>';
         } else if (this.inputState === 'declarer_selection') {
             const contractSoFar = this.currentContract.level + this.currentContract.suit;
             const doubleText = this.currentContract.doubled ? ' ' + this.currentContract.doubled : '';
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div><strong>Contract: ' + contractSoFar + doubleText + '</strong></div></div><div class="current-state">' + (this.currentContract.declarer ? 'Made/Plus/Down or X for double' : 'Select declarer (N/S/E/W)') + '</div>';
+            return baseDisplay + '<div><strong>Contract: ' + contractSoFar + doubleText + '</strong></div>' + scoreCard + '</div><div class="current-state">' + (this.currentContract.declarer ? 'Made/Plus/Down or X for double' : 'Select declarer (N/S/E/W)') + '</div>';
         } else if (this.inputState === 'result_type_selection') {
             const contract = this.currentContract.level + this.currentContract.suit + this.currentContract.doubled;
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div><strong>' + contract + ' by ' + this.currentContract.declarer + '</strong></div></div><div class="current-state">Made exactly, Plus overtricks, or Down?</div>';
+            return baseDisplay + '<div><strong>' + contract + ' by ' + this.currentContract.declarer + '</strong></div>' + scoreCard + '</div><div class="current-state">Made exactly, Plus overtricks, or Down?</div>';
         } else if (this.inputState === 'result_number_selection') {
             const fullContract = this.currentContract.level + this.currentContract.suit + this.currentContract.doubled;
             if (this.resultMode === 'down') {
                 const maxDown = Math.min(7, 6 + this.currentContract.level);
-                return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div><strong>' + fullContract + ' by ' + this.currentContract.declarer + '</strong></div></div><div class="current-state">Tricks down (1-' + maxDown + ')</div>';
+                return baseDisplay + '<div><strong>' + fullContract + ' by ' + this.currentContract.declarer + '</strong></div>' + scoreCard + '</div><div class="current-state">Tricks down (1-' + maxDown + ')</div>';
             } else {
                 const maxOvertricks = 13 - (6 + this.currentContract.level);
-                return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div><strong>' + fullContract + ' by ' + this.currentContract.declarer + '</strong></div></div><div class="current-state">Overtricks (1-' + maxOvertricks + ')</div>';
+                return baseDisplay + '<div><strong>' + fullContract + ' by ' + this.currentContract.declarer + '</strong></div>' + scoreCard + '</div><div class="current-state">Overtricks (1-' + maxOvertricks + ')</div>';
             }
         } else if (this.inputState === 'scoring') {
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">NS: ' + totals.NS + '<br>EW: ' + totals.EW + '</div></div><div class="game-content"><div><strong>Deal completed</strong></div></div><div class="current-state">Press Made for honors, or Deal for next hand</div>';
+            return baseDisplay + '<div><strong>Deal completed</strong></div>' + scoreCard + '</div><div class="current-state">Press Made for honors, or Deal for next hand</div>';
         }
         
         return '<div class="current-state">Loading...</div>';
+    }
+    
+    generateScoreCard() {
+        const ns = this.rubberState;
+        return '<div style="background: #2c3e50; border: 2px solid #34495e; border-radius: 8px; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 14px;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-weight: bold; color: #ecf0f1; margin-bottom: 5px;"><div>NS</div><div>EW</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-bottom: 8px; font-size: 18px; color: #f39c12;"><div>' + '◉'.repeat(ns.gamesWon.NS) + '○'.repeat(2 - ns.gamesWon.NS) + '</div><div>' + '◉'.repeat(ns.gamesWon.EW) + '○'.repeat(2 - ns.gamesWon.EW) + '</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 4px 0; color: #ecf0f1;"><div>' + ns.aboveLineScores.NS + '</div><div>' + ns.aboveLineScores.EW + '</div></div><hr style="border: none; border-top: 2px solid #e74c3c; margin: 5px 0;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 4px 0; color: #ecf0f1;"><div>' + ns.belowLineScores.NS + '</div><div>' + ns.belowLineScores.EW + '</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; border-top: 1px solid #7f8c8d; font-weight: bold; color: #f1c40f; margin-top: 5px; padding-top: 5px;"><div>' + this.getRubberTotals().NS + '</div><div>' + this.getRubberTotals().EW + '</div></div></div>';
     }
     
     toggleVulnerability() {
