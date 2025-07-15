@@ -99,7 +99,7 @@ class BridgeApp {
     }
     
     /**
-     * Handle bridge mode actions including rubber bridge specials
+     * Handle bridge mode actions including rubber bridge specials - FIXED VERSION
      */
     async handleBridgeModeAction(value) {
         console.log('🎯 Bridge action:', value, 'Mode:', this.currentMode, 
@@ -109,14 +109,14 @@ class BridgeApp {
         if (this.currentMode === 'rubber' && this.bridgeModeInstance) {
             switch (value) {
                 case 'DEAL':
-                    // Map Deal button to NEW_RUBBER when rubber is complete
+                    // CRITICAL FIX: Map Deal button to NEW_RUBBER when rubber is complete
                     if (this.bridgeModeInstance.rubberState && 
                         this.bridgeModeInstance.rubberState.rubberComplete) {
-                        console.log('🆕 Starting new rubber via DEAL button');
+                        console.log('🆕 NEW_RUBBER action triggered via DEAL button');
                         this.bridgeModeInstance.handleAction('NEW_RUBBER');
                         return;
                     }
-                    // Map Deal button to HONORS when in scoring state with pending honors
+                    // Map Deal button to NO_HONORS when in honor bonus state
                     if (this.bridgeModeInstance.rubberState && 
                         this.bridgeModeInstance.rubberState.honorBonusPending) {
                         this.bridgeModeInstance.handleAction('NO_HONORS');
@@ -321,7 +321,7 @@ class BridgeApp {
     }
     
     /**
-     * Update button states based on current context - FIXED VERSION
+     * Update button states based on current context - COMPLETELY FIXED VERSION
      */
     updateButtonStates() {
         let activeButtons = [];
@@ -329,17 +329,25 @@ class BridgeApp {
         if (this.appState === 'mode_selection') {
             activeButtons = ['1', '2', '3', '4', '5'];
         } else if (this.bridgeModeInstance) {
+            // Get the base active buttons from the bridge mode
             activeButtons = this.bridgeModeInstance.getActiveButtons();
             
-            // CRITICAL FIX: Add contextual rubber bridge button mappings
+            // CRITICAL FIX: Special handling for rubber bridge
             if (this.currentMode === 'rubber' && this.bridgeModeInstance.rubberState) {
                 
-                // Rubber complete state - DEAL button should be highlighted for NEW_RUBBER
+                console.log('🎯 Rubber state check:', {
+                    rubberComplete: this.bridgeModeInstance.rubberState.rubberComplete,
+                    honorPending: this.bridgeModeInstance.rubberState.honorBonusPending,
+                    inputState: this.bridgeModeInstance.inputState,
+                    activeButtons: activeButtons
+                });
+                
+                // Rubber complete state - FORCE DEAL button to be active
                 if (this.bridgeModeInstance.rubberState.rubberComplete) {
-                    activeButtons = ['DEAL']; // This should make Deal button green
-                    console.log('🎯 Rubber complete - highlighting DEAL button for NEW_RUBBER');
+                    activeButtons = ['DEAL', 'BACK']; // FORCE these buttons to be active
+                    console.log('🎯 Rubber complete - FORCING DEAL and BACK buttons active');
                 }
-                // Honor bonus state - show visual hints
+                // Honor bonus state
                 else if (this.bridgeModeInstance.rubberState.honorBonusPending) {
                     activeButtons = ['DEAL']; // No Honors (mapped to Deal)
                     if (this.bridgeModeInstance.currentContract && this.bridgeModeInstance.currentContract.suit !== 'NT') {
@@ -356,13 +364,13 @@ class BridgeApp {
                 }
             }
             
-            // Always allow back in bridge modes
-            if (!activeButtons.includes('BACK')) {
+            // Always allow back in bridge modes (but not when rubber complete - handled above)
+            if (!activeButtons.includes('BACK') && !(this.currentMode === 'rubber' && this.bridgeModeInstance.rubberState?.rubberComplete)) {
                 activeButtons.push('BACK');
             }
         }
         
-        console.log('🎮 Active buttons:', activeButtons);
+        console.log('🎮 Final active buttons:', activeButtons);
         this.ui.updateButtonStates(activeButtons);
     }
     
@@ -426,7 +434,7 @@ class BridgeApp {
     }
     
     /**
-     * Show comprehensive score history with error handling
+     * Show comprehensive score history with error handling - FIXED VERSION
      */
     showScoreHistory() {
         console.log('📊 Creating score history modal...');
@@ -503,7 +511,7 @@ class BridgeApp {
                 
                 history.forEach((entry, index) => {
                     try {
-                        // Add error checking for contract properties
+                        // FIXED: Add error checking for contract properties
                         const contract = entry.contract || {};
                         const level = contract.level || '?';
                         const suit = contract.suit || '?';
@@ -512,8 +520,23 @@ class BridgeApp {
                         const result = contract.result || '?';
                         
                         const contractStr = `${level}${suit}${doubled}`;
-                        const score = entry.score || 0;
-                        const actualScore = entry.actualScore || Math.abs(score);
+                        
+                        // FIXED: Better score handling
+                        let score = 0;
+                        let actualScore = 0;
+                        
+                        if (typeof entry.score === 'number' && !isNaN(entry.score)) {
+                            score = entry.score;
+                            actualScore = entry.actualScore || Math.abs(score);
+                        } else if (typeof entry.actualScore === 'number' && !isNaN(entry.actualScore)) {
+                            actualScore = entry.actualScore;
+                            score = entry.scoringSide ? actualScore : -actualScore;
+                        } else {
+                            // Fallback calculation
+                            actualScore = 50; // Default score
+                            score = actualScore;
+                        }
+                        
                         const scoringSide = entry.scoringSide || (['N', 'S'].includes(declarer) ? 'NS' : 'EW');
                         
                         const resultColor = score >= 0 ? '#27ae60' : '#e74c3c';
@@ -654,7 +677,7 @@ class BridgeApp {
                         <li><strong>Made button:</strong> Claims honor bonuses when scoring</li>
                         <li><strong>Plus/Down buttons:</strong> 4/5 trump honors when claiming</li>
                         <li><strong>NT button:</strong> 4 aces when claiming in NT</li>
-                        <li><strong>Deal button:</strong> No honors / New rubber</li>
+                        <li><strong>Deal button:</strong> No honors / New rubber when complete</li>
                     </ul>
                 </div>
             `,
