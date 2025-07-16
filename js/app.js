@@ -15,13 +15,14 @@ class BridgeApp {
         
         // App state management
         this.appState = 'mode_selection';
-        this.availableModes = {
-            '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './js/bridge-modes/kitchen.js' },
-            '2': { name: 'bonus', display: 'Bonus Bridge', module: './js/bridge-modes/bonus.js' },
-            '3': { name: 'chicago', display: 'Chicago Bridge', module: './js/bridge-modes/chicago.js' },
-            '4': { name: 'rubber', display: 'Rubber Bridge', module: './js/bridge-modes/rubber.js' },
-            '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './js/bridge-modes/duplicate.js' }
-        };
+       // FIXED:
+this.availableModes = {
+    '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
+    '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
+    '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
+    '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
+    '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
+};
         
         this.init();
     }
