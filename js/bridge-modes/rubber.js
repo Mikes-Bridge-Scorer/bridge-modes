@@ -135,7 +135,7 @@ class RubberBridge extends BaseBridgeMode {
     }
     
     handleScoringActions(value) {
-        if (value === 'HONORS' || value === 'Made') {
+        if (value === 'HONORS') {
             this.startHonorBonusInput();
         } else if (value === 'DEAL') {
             this.nextDeal();
@@ -143,16 +143,17 @@ class RubberBridge extends BaseBridgeMode {
     }
     
     handleHonorBonusInput(value) {
-        if (value === 'NO_HONORS' || value === 'DEAL') {
+        if (value === 'NO_HONORS' || value === 'BACK') {
             this.rubberState.honorBonusPending = false;
         } else if (value === '4_HONORS' || value === 'Plus') {
-            this.awardHonorBonus('4_HONORS');
+            if (this.currentContract.suit === 'NT') {
+                this.awardHonorBonus('4_ACES'); // In NT, Plus = 4 Aces
+            } else {
+                this.awardHonorBonus('4_HONORS'); // In suit, Plus = 4 Honors
+            }
             this.rubberState.honorBonusPending = false;
         } else if (value === '5_HONORS' || value === 'Down') {
-            this.awardHonorBonus('5_HONORS');
-            this.rubberState.honorBonusPending = false;
-        } else if (value === '4_ACES' || value === 'NT') {
-            this.awardHonorBonus('4_ACES');
+            this.awardHonorBonus('5_HONORS'); // Down = 5 Honors (only in suits)
             this.rubberState.honorBonusPending = false;
         }
         this.updateDisplay();
@@ -172,6 +173,7 @@ class RubberBridge extends BaseBridgeMode {
         if (this.rubberState.lastContractSide && bonus > 0) {
             this.rubberState.aboveLineScores[this.rubberState.lastContractSide] += bonus;
             this.updateGameStateScores();
+            console.log(`🏅 Awarded ${honorType} bonus: ${bonus} points to ${this.rubberState.lastContractSide}`);
         }
     }
     
@@ -422,11 +424,11 @@ class RubberBridge extends BaseBridgeMode {
         }
         
         if (this.rubberState.honorBonusPending) {
-            const buttons = ['DEAL']; // No honors
+            const buttons = ['BACK']; // Back for no honors
             if (this.currentContract.suit !== 'NT') {
                 buttons.push('Plus', 'Down'); // 4/5 honors
             } else {
-                buttons.push('NT'); // 4 aces
+                buttons.push('Plus'); // 4 aces (use Plus button)
             }
             return buttons;
         }
@@ -460,8 +462,8 @@ class RubberBridge extends BaseBridgeMode {
                 return buttons;
             }
         } else if (this.inputState === 'scoring') {
-            // FIXED: Made button should be active for honor bonuses!
-            return ['Made', 'DEAL'];
+            // UPDATED: Only Deal button active, Honors button handles honor bonuses
+            return ['DEAL'];
         }
         return [];
     }
@@ -471,6 +473,13 @@ class RubberBridge extends BaseBridgeMode {
         this.ui.updateDisplay(content);
         this.ui.updateButtonStates(this.getActiveButtons());
         this.ui.updateVulnerabilityDisplay(this.getCurrentVulnerabilityString());
+        
+        // Show/hide honors button based on state
+        if (this.inputState === 'scoring' && !this.rubberState.honorBonusPending && !this.rubberState.rubberComplete) {
+            this.ui.showHonorsButton();
+        } else {
+            this.ui.hideHonorsButton();
+        }
     }
     
     getDisplayContent() {
@@ -490,11 +499,11 @@ class RubberBridge extends BaseBridgeMode {
             const lastSide = this.rubberState.lastContractSide;
             let options = '';
             if (contractSuit === 'NT') {
-                options = 'NT=4 Aces (150), DEAL=None';
+                options = 'Plus=4 Aces (150), Back=None';
             } else {
-                options = 'Plus=4 Honors (100), Down=5 Honors (150), DEAL=None';
+                options = 'Plus=4 Honors (100), Down=5 Honors (150), Back=None';
             }
-            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">Games: ' + this.rubberState.gamesWon.NS + '-' + this.rubberState.gamesWon.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div style="text-align: center; color: #f39c12; margin: 10px 0;">Honor bonuses for ' + lastSide + '?</div><div style="font-size: 12px; text-align: center; color: #bdc3c7;">' + options + '</div>' + scoreCard + '</div><div class="current-state">Select honor bonus or none</div>';
+            return '<div class="title-score-row"><div class="mode-title">Rubber Bridge</div><div class="score-display">Games: ' + this.rubberState.gamesWon.NS + '-' + this.rubberState.gamesWon.EW + '</div></div><div class="game-content"><div><strong>' + dealInfo + '</strong></div><div style="text-align: center; color: #f39c12; margin: 10px 0;">Honor bonuses for ' + lastSide + '?</div><div style="font-size: 12px; text-align: center; color: #bdc3c7;">' + options + '</div>' + scoreCard + '</div><div class="current-state">Use Plus/Down buttons or Back for none</div>';
         }
         
         // Main game display with scorecard
@@ -521,8 +530,8 @@ class RubberBridge extends BaseBridgeMode {
                 return baseDisplay + '<div><strong>' + fullContract + ' by ' + this.currentContract.declarer + '</strong></div>' + scoreCard + '</div><div class="current-state">Overtricks (1-' + maxOvertricks + ')</div>';
             }
         } else if (this.inputState === 'scoring') {
-            // FIXED: Make it clear what the Made button does
-            return baseDisplay + '<div><strong>Deal completed</strong></div>' + scoreCard + '</div><div class="current-state">Press <strong>Made</strong> for honor bonuses, or <strong>Deal</strong> for next hand</div>';
+            // UPDATED: Reference the Honors button instead of Made button
+            return baseDisplay + '<div><strong>Deal completed</strong></div>' + scoreCard + '</div><div class="current-state">Press <strong>Honors</strong> button to claim bonuses, or <strong>Deal</strong> for next hand</div>';
         }
         
         return '<div class="current-state">Loading...</div>';
@@ -553,7 +562,7 @@ class RubberBridge extends BaseBridgeMode {
     getHelpContent() {
         return {
             title: 'Rubber Bridge Guide',
-            content: '<div style="max-height: 70vh; overflow-y: auto; padding: 0 10px;"><div class="help-section"><h4>🃏 What Is Rubber Bridge?</h4><p>Rubber bridge is typically played by four players in fixed partnerships. The goal is to be the first partnership to win <strong>two games</strong>, which completes a <em>rubber</em>. Each game is won by scoring 100 or more points in successful contract bids.</p></div><div class="help-section"><h4>🏆 Scoring Structure</h4><p>Rubber bridge scores are divided into <strong>two parts</strong>:</p><ul><li><strong>Below the Line</strong> – Points for contracts bid and made</li><li><strong>Above the Line</strong> – Bonuses, honors, overtricks, slams, and penalties</li></ul></div><div class="help-section"><h4>📊 Below the Line (Game Points)</h4><p>Points for making your contract depend on the suit and number of tricks:</p><ul><li><strong>Major suits (♠ or ♥):</strong> 30 points per trick over six</li><li><strong>Minor suits (♦ or ♣):</strong> 20 points per trick over six</li><li><strong>No-trump:</strong> First trick is 40 points, each additional is 30</li></ul><p><em>Once a partnership scores 100+ points below the line, they win the game!</em></p></div><div class="help-section"><h4>🎯 Above the Line (Bonus Points)</h4><ul><li><strong>Game Bonus:</strong> 300 (non-vulnerable) or 500 (vulnerable)</li><li><strong>Part Game:</strong> 50 points for contracts under 100</li><li><strong>Small Slam (6-level):</strong> 500 (non-vul) or 750 (vul)</li><li><strong>Grand Slam (7-level):</strong> 1000 (non-vul) or 1500 (vul)</li><li><strong>Honors:</strong><ul><li>4 trump honors in one hand: 100 points</li><li>5 trump honors in one hand: 150 points</li><li>4 aces in NT (one hand): 150 points</li></ul></li><li><strong>Rubber Bonus:</strong> 700 (win 2-0) or 500 (win 2-1)</li></ul></div><div class="help-section"><h4>🆚 Vulnerability</h4><p>After winning a game, that partnership becomes <strong>vulnerable</strong>. Vulnerable bonuses are higher, but so are penalties!</p></div><div class="help-section"><h4>📱 How to Use This App</h4><ol><li><strong>Enter Contract:</strong><ul><li>Tap level (1-7)</li><li>Tap suit (♣♦♥♠ or NT)</li><li>Tap declarer (N/S/E/W)</li><li>Optional: Tap X for double/redouble</li></ul></li><li><strong>Enter Result:</strong><ul><li><strong>Made:</strong> Contract made exactly</li><li><strong>Plus:</strong> Made with overtricks (then select number)</li><li><strong>Down:</strong> Failed contract (then select tricks down)</li></ul></li><li><strong>Honor Bonuses:</strong><ul><li>After scoring, tap <strong>Made</strong> to claim honors</li><li><strong>Plus:</strong> 4 trump honors (100 pts)</li><li><strong>Down:</strong> 5 trump honors (150 pts)</li><li><strong>NT:</strong> 4 aces in NT (150 pts)</li><li><strong>Deal:</strong> No honors to claim</li></ul></li><li><strong>Next Hand:</strong> Tap <strong>Deal</strong> for next hand</li></ol></div><div class="help-section"><h4>📋 Scorecard Layout</h4><p>The app shows a traditional rubber bridge scorecard with games won (◉○), above-the-line scores, the red line, below-the-line scores, and running totals.</p></div><div class="help-section"><h4>💡 Tips for Success</h4><ul><li><strong>Game Strategy:</strong> Focus on making 100+ below the line</li><li><strong>Vulnerability:</strong> Be more cautious when vulnerable</li><li><strong>Honor Claims:</strong> Don\'t forget to claim honor bonuses!</li><li><strong>Rubber Bonus:</strong> Winning 2-0 gives extra 200 points</li></ul></div></div>',
+            content: '<div style="max-height: 70vh; overflow-y: auto; padding: 0 10px;"><div class="help-section"><h4>🃏 What Is Rubber Bridge?</h4><p>Rubber bridge is typically played by four players in fixed partnerships. The goal is to be the first partnership to win <strong>two games</strong>, which completes a <em>rubber</em>. Each game is won by scoring 100 or more points in successful contract bids.</p></div><div class="help-section"><h4>🏆 Scoring Structure</h4><p>Rubber bridge scores are divided into <strong>two parts</strong>:</p><ul><li><strong>Below the Line</strong> – Points for contracts bid and made</li><li><strong>Above the Line</strong> – Bonuses, honors, overtricks, slams, and penalties</li></ul></div><div class="help-section"><h4>📊 Below the Line (Game Points)</h4><p>Points for making your contract depend on the suit and number of tricks:</p><ul><li><strong>Major suits (♠ or ♥):</strong> 30 points per trick over six</li><li><strong>Minor suits (♦ or ♣):</strong> 20 points per trick over six</li><li><strong>No-trump:</strong> First trick is 40 points, each additional is 30</li></ul><p><em>Once a partnership scores 100+ points below the line, they win the game!</em></p></div><div class="help-section"><h4>🎯 Above the Line (Bonus Points)</h4><ul><li><strong>Game Bonus:</strong> 300 (non-vulnerable) or 500 (vulnerable)</li><li><strong>Part Game:</strong> 50 points for contracts under 100</li><li><strong>Small Slam (6-level):</strong> 500 (non-vul) or 750 (vul)</li><li><strong>Grand Slam (7-level):</strong> 1000 (non-vul) or 1500 (vul)</li><li><strong>Honors:</strong><ul><li>4 trump honors in one hand: 100 points</li><li>5 trump honors in one hand: 150 points</li><li>4 aces in NT (one hand): 150 points</li></ul></li><li><strong>Rubber Bonus:</strong> 700 (win 2-0) or 500 (win 2-1)</li></ul></div><div class="help-section"><h4>🆚 Vulnerability</h4><p>After winning a game, that partnership becomes <strong>vulnerable</strong>. Vulnerable bonuses are higher, but so are penalties!</p></div><div class="help-section"><h4>📱 How to Use This App</h4><ol><li><strong>Enter Contract:</strong><ul><li>Tap level (1-7)</li><li>Tap suit (♣♦♥♠ or NT)</li><li>Tap declarer (N/S/E/W)</li><li>Optional: Tap X for double/redouble</li></ul></li><li><strong>Enter Result:</strong><ul><li><strong>Made:</strong> Contract made exactly</li><li><strong>Plus:</strong> Made with overtricks (then select number)</li><li><strong>Down:</strong> Failed contract (then select tricks down)</li></ul></li><li><strong>Honor Bonuses:</strong><ul><li>After scoring, tap <strong>Honors</strong> button in control bar</li><li><strong>Plus:</strong> 4 trump honors (100 pts) or 4 aces in NT (150 pts)</li><li><strong>Down:</strong> 5 trump honors (150 pts, suits only)</li><li><strong>Back:</strong> No honors to claim</li></ul></li><li><strong>Next Hand:</strong> Tap <strong>Deal</strong> for next hand</li></ol></div><div class="help-section"><h4>📋 Scorecard Layout</h4><p>The app shows a traditional rubber bridge scorecard with games won (◉○), above-the-line scores, the red line, below-the-line scores, and running totals.</p></div><div class="help-section"><h4>💡 Tips for Success</h4><ul><li><strong>Game Strategy:</strong> Focus on making 100+ below the line</li><li><strong>Vulnerability:</strong> Be more cautious when vulnerable</li><li><strong>Honor Claims:</strong> Don\'t forget to claim honor bonuses using the Honors button!</li><li><strong>Rubber Bonus:</strong> Winning 2-0 gives extra 200 points</li></ul></div></div>',
             buttons: [
                 { text: 'Close Help', action: 'close', class: 'close-btn' }
             ]
@@ -563,6 +572,7 @@ class RubberBridge extends BaseBridgeMode {
     cleanup() {
         this.ui.clearVulnerabilityHighlight();
         this.ui.updateDoubleButton('');
+        this.ui.hideHonorsButton();
     }
 }
 
