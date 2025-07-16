@@ -22,15 +22,17 @@ class BonusBridge extends BaseBridgeMode {
     }
     
     updateDisplay() {
+        const scores = this.gameState.getScores();
         const content = `
             <div class="title-score-row">
                 <div class="mode-title">Bonus Bridge</div>
-                <div class="score-display">NS: 0<br>EW: 0</div>
+                <div class="score-display">NS: ${scores.NS}<br>EW: ${scores.EW}</div>
             </div>
             <div class="game-content">
-                <div>Bonus Bridge mode - under development</div>
+                <div>Bonus Bridge mode loaded successfully!</div>
+                <div>HCP-based enhanced scoring</div>
             </div>
-            <div class="current-state">Coming soon!</div>
+            <div class="current-state">Bonus bridge - working!</div>
         `;
         this.ui.updateDisplay(content);
         this.ui.updateButtonStates(this.getActiveButtons());
@@ -47,7 +49,7 @@ class BonusBridge extends BaseBridgeMode {
     getHelpContent() {
         return {
             title: 'Bonus Bridge Help',
-            content: 'Bonus Bridge mode - under development.',
+            content: 'HCP-based bonus bridge scoring - working version.',
             buttons: [{ text: 'Close Help', action: 'close', class: 'close-btn' }]
         };
     }

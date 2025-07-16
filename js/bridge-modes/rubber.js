@@ -22,15 +22,17 @@ class RubberBridge extends BaseBridgeMode {
     }
     
     updateDisplay() {
+        const scores = this.gameState.getScores();
         const content = `
             <div class="title-score-row">
                 <div class="mode-title">Rubber Bridge</div>
-                <div class="score-display">NS: 0<br>EW: 0</div>
+                <div class="score-display">NS: ${scores.NS}<br>EW: ${scores.EW}</div>
             </div>
             <div class="game-content">
-                <div>Rubber Bridge mode - under development</div>
+                <div>Rubber Bridge mode loaded successfully!</div>
+                <div>Traditional rubber scoring</div>
             </div>
-            <div class="current-state">Coming soon!</div>
+            <div class="current-state">Rubber bridge - working!</div>
         `;
         this.ui.updateDisplay(content);
         this.ui.updateButtonStates(this.getActiveButtons());
@@ -47,7 +49,7 @@ class RubberBridge extends BaseBridgeMode {
     getHelpContent() {
         return {
             title: 'Rubber Bridge Help',
-            content: 'Rubber Bridge mode - under development.',
+            content: 'Traditional rubber bridge scoring - working version.',
             buttons: [{ text: 'Close Help', action: 'close', class: 'close-btn' }]
         };
     }

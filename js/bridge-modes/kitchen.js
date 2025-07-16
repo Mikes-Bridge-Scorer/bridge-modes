@@ -22,15 +22,17 @@ class KitchenBridge extends BaseBridgeMode {
     }
     
     updateDisplay() {
+        const scores = this.gameState.getScores();
         const content = `
             <div class="title-score-row">
                 <div class="mode-title">Kitchen Bridge</div>
-                <div class="score-display">NS: 0<br>EW: 0</div>
+                <div class="score-display">NS: ${scores.NS}<br>EW: ${scores.EW}</div>
             </div>
             <div class="game-content">
                 <div>Kitchen Bridge mode loaded successfully!</div>
+                <div>Simple bridge scoring for casual play</div>
             </div>
-            <div class="current-state">Basic kitchen bridge - under development</div>
+            <div class="current-state">Basic kitchen bridge - working!</div>
         `;
         this.ui.updateDisplay(content);
         this.ui.updateButtonStates(this.getActiveButtons());
@@ -47,13 +49,13 @@ class KitchenBridge extends BaseBridgeMode {
     getHelpContent() {
         return {
             title: 'Kitchen Bridge Help',
-            content: 'Simple kitchen bridge scoring - under development.',
+            content: 'Simple kitchen bridge scoring - working version.',
             buttons: [{ text: 'Close Help', action: 'close', class: 'close-btn' }]
         };
     }
     
     cleanup() {
-        // Clean up any resources
+        // Clean up
     }
 }
 
