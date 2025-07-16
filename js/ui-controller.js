@@ -150,6 +150,30 @@ class UIController {
     }
     
     /**
+     * Show the honors button when in scoring state - NEW METHOD
+     */
+    showHonorsButton() {
+        const honorsBtn = document.getElementById('honorsControl');
+        if (honorsBtn) {
+            honorsBtn.style.display = 'flex'; // Use flex to match other control items
+            honorsBtn.classList.add('active');
+            console.log('🏅 Honors button shown');
+        }
+    }
+    
+    /**
+     * Hide the honors button when not needed - NEW METHOD
+     */
+    hideHonorsButton() {
+        const honorsBtn = document.getElementById('honorsControl');
+        if (honorsBtn) {
+            honorsBtn.style.display = 'none';
+            honorsBtn.classList.remove('active');
+            console.log('🏅 Honors button hidden');
+        }
+    }
+    
+    /**
      * Show modal dialog
      */
     showModal(type, content) {
@@ -441,7 +465,7 @@ class UIController {
     }
     
     /**
-     * Reset UI to initial state
+     * Reset UI to initial state - UPDATED WITH HONORS BUTTON
      */
     reset() {
         this.clearVulnerabilityHighlight();
@@ -449,6 +473,7 @@ class UIController {
         this.updateVulnerabilityDisplay('None');
         this.closeModal();
         this.hideLoading();
+        this.hideHonorsButton(); // NEW: Hide honors button when resetting
         
         // Don't reset wake lock state - user preference should persist
     }
