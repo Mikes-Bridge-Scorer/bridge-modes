@@ -84,6 +84,7 @@ class RubberBridge extends BaseBridgeMode {
     handleDeclarerSelection(value) {
         if (['N', 'S', 'E', 'W'].includes(value)) {
             this.currentContract.declarer = value;
+            this.ui.highlightVulnerability(value, this.getCurrentVulnerabilityString());
         } else if (value === 'X') {
             this.handleDoubling();
         } else if (['MADE', 'PLUS', 'DOWN'].includes(value) && this.currentContract.declarer) {
@@ -190,6 +191,13 @@ class RubberBridge extends BaseBridgeMode {
         let contractMade = false;
         let totalScore = 0;
         
+        console.log('📊 Calculating score for:', {
+            contract: level + suit + doubled,
+            declarer: declarer,
+            result: result,
+            vulnerable: isVulnerable
+        });
+        
         if (result === '=' || (result && result.startsWith('+'))) {
             contractMade = true;
             let basicScore = level * suitValues[suit];
@@ -199,18 +207,22 @@ class RubberBridge extends BaseBridgeMode {
             if (doubled === 'X') belowLineScore *= 2;
             else if (doubled === 'XX') belowLineScore *= 4;
             
+            // Game bonus
             if (belowLineScore >= 100) {
                 aboveLineScore += isVulnerable ? 500 : 300;
             } else {
                 aboveLineScore += 50;
             }
             
+            // Slam bonuses
             if (level === 6) aboveLineScore += isVulnerable ? 750 : 500;
             else if (level === 7) aboveLineScore += isVulnerable ? 1500 : 1000;
             
+            // Double bonuses
             if (doubled === 'X') aboveLineScore += 50;
             else if (doubled === 'XX') aboveLineScore += 100;
             
+            // Overtricks
             if (result && result.startsWith('+')) {
                 const overtricks = parseInt(result.substring(1));
                 if (doubled === '') {
@@ -239,41 +251,74 @@ class RubberBridge extends BaseBridgeMode {
             totalScore = -aboveLineScore;
         }
         
+        // Update rubber state scores
         if (contractMade) {
             this.rubberState.belowLineScores[declarerSide] += belowLineScore;
             this.rubberState.aboveLineScores[declarerSide] += aboveLineScore;
             this.rubberState.lastContractSide = declarerSide;
             
+            console.log('✅ Contract made - scores updated:', {
+                side: declarerSide,
+                belowLine: belowLineScore,
+                aboveLine: aboveLineScore,
+                newBelowTotal: this.rubberState.belowLineScores[declarerSide]
+            });
+            
             if (this.rubberState.belowLineScores[declarerSide] >= 100) {
+                console.log('🏆 Game won by', declarerSide);
                 this.processGameWon(declarerSide);
             }
         } else {
             const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
             this.rubberState.aboveLineScores[defendingSide] += aboveLineScore;
             this.rubberState.lastContractSide = defendingSide;
+            
+            console.log('❌ Contract failed - penalty to', defendingSide, ':', aboveLineScore);
         }
         
+        // Update game state with new totals
         this.updateGameStateScores();
+        
+        // Record in history with proper scoring side
+        const scoringSide = contractMade ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS');
         
         this.gameState.addToHistory({
             deal: this.gameState.getDealNumber(),
             contract: { ...this.currentContract },
-            score: totalScore,
+            score: contractMade ? totalScore : -totalScore,
             actualScore: Math.abs(totalScore),
             belowLineScore: contractMade ? belowLineScore : 0,
             aboveLineScore: aboveLineScore,
-            scoringSide: contractMade ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS'),
+            scoringSide: scoringSide,
             mode: 'rubber',
+            gameWon: contractMade && this.rubberState.belowLineScores[declarerSide] >= 100,
+            rubberState: { ...this.rubberState }
+        });
+        
+        console.log('📝 History entry added:', {
+            score: contractMade ? totalScore : -totalScore,
+            scoringSide: scoringSide,
             gameWon: contractMade && this.rubberState.belowLineScores[declarerSide] >= 100
         });
     }
     
     processGameWon(winningSide) {
+        console.log('🎉 Processing game won by', winningSide);
+        
         this.rubberState.gamesWon[winningSide]++;
+        
+        console.log('🎯 Games now:', this.rubberState.gamesWon);
+        
+        // Reset below line scores after winning a game
         this.rubberState.belowLineScores = { NS: 0, EW: 0 };
+        
+        // Winner becomes vulnerable
         this.rubberState.vulnerability[winningSide] = true;
         
+        console.log('🆚 Vulnerability now:', this.rubberState.vulnerability);
+        
         if (this.rubberState.gamesWon[winningSide] === 2) {
+            console.log('🏆 Rubber won by', winningSide);
             this.processRubberWon(winningSide);
         }
     }
@@ -298,6 +343,13 @@ class RubberBridge extends BaseBridgeMode {
         const totals = this.getRubberTotals();
         this.gameState.scores.NS = totals.NS;
         this.gameState.scores.EW = totals.EW;
+        
+        console.log('🧮 Rubber scores updated:', {
+            belowLine: this.rubberState.belowLineScores,
+            aboveLine: this.rubberState.aboveLineScores,
+            totals: totals,
+            gameStateScores: this.gameState.scores
+        });
     }
     
     getRubberTotals() {
@@ -368,15 +420,17 @@ class RubberBridge extends BaseBridgeMode {
         if (this.rubberState.rubberComplete) {
             return ['DEAL'];
         }
+        
         if (this.rubberState.honorBonusPending) {
-            const buttons = ['DEAL'];
+            const buttons = ['DEAL']; // No honors
             if (this.currentContract.suit !== 'NT') {
-                buttons.push('Plus', 'Down');
+                buttons.push('Plus', 'Down'); // 4/5 honors
             } else {
-                buttons.push('NT');
+                buttons.push('NT'); // 4 aces
             }
             return buttons;
         }
+        
         if (this.inputState === 'level_selection') {
             return ['1', '2', '3', '4', '5', '6', '7'];
         } else if (this.inputState === 'suit_selection') {
@@ -406,6 +460,7 @@ class RubberBridge extends BaseBridgeMode {
                 return buttons;
             }
         } else if (this.inputState === 'scoring') {
+            // FIXED: Made button should be active for honor bonuses!
             return ['Made', 'DEAL'];
         }
         return [];
@@ -466,7 +521,8 @@ class RubberBridge extends BaseBridgeMode {
                 return baseDisplay + '<div><strong>' + fullContract + ' by ' + this.currentContract.declarer + '</strong></div>' + scoreCard + '</div><div class="current-state">Overtricks (1-' + maxOvertricks + ')</div>';
             }
         } else if (this.inputState === 'scoring') {
-            return baseDisplay + '<div><strong>Deal completed</strong></div>' + scoreCard + '</div><div class="current-state">Press Made for honors, or Deal for next hand</div>';
+            // FIXED: Make it clear what the Made button does
+            return baseDisplay + '<div><strong>Deal completed</strong></div>' + scoreCard + '</div><div class="current-state">Press <strong>Made</strong> for honor bonuses, or <strong>Deal</strong> for next hand</div>';
         }
         
         return '<div class="current-state">Loading...</div>';
@@ -474,7 +530,9 @@ class RubberBridge extends BaseBridgeMode {
     
     generateScoreCard() {
         const ns = this.rubberState;
-        return '<div style="background: #2c3e50; border: 2px solid #34495e; border-radius: 8px; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 14px;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-weight: bold; color: #ecf0f1; margin-bottom: 5px;"><div>NS</div><div>EW</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-bottom: 8px; font-size: 18px; color: #f39c12;"><div>' + '◉'.repeat(ns.gamesWon.NS) + '○'.repeat(2 - ns.gamesWon.NS) + '</div><div>' + '◉'.repeat(ns.gamesWon.EW) + '○'.repeat(2 - ns.gamesWon.EW) + '</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 4px 0; color: #ecf0f1;"><div>' + ns.aboveLineScores.NS + '</div><div>' + ns.aboveLineScores.EW + '</div></div><hr style="border: none; border-top: 2px solid #e74c3c; margin: 5px 0;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 4px 0; color: #ecf0f1;"><div>' + ns.belowLineScores.NS + '</div><div>' + ns.belowLineScores.EW + '</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; border-top: 1px solid #7f8c8d; font-weight: bold; color: #f1c40f; margin-top: 5px; padding-top: 5px;"><div>' + this.getRubberTotals().NS + '</div><div>' + this.getRubberTotals().EW + '</div></div></div>';
+        const totals = this.getRubberTotals();
+        
+        return '<div style="background: #2c3e50; border: 2px solid #34495e; border-radius: 8px; padding: 15px; margin: 15px 0; font-family: \'Courier New\', monospace; font-size: 14px;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-weight: bold; color: #ecf0f1; margin-bottom: 8px; font-size: 16px;"><div>NS</div><div>EW</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-bottom: 12px; font-size: 20px; color: #f39c12;"><div>' + '◉'.repeat(ns.gamesWon.NS) + '○'.repeat(2 - ns.gamesWon.NS) + '</div><div>' + '◉'.repeat(ns.gamesWon.EW) + '○'.repeat(2 - ns.gamesWon.EW) + '</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 8px 0; color: #ecf0f1; background: #34495e; border-radius: 4px; margin-bottom: 5px;"><div>' + (ns.aboveLineScores.NS || 0) + '</div><div>' + (ns.aboveLineScores.EW || 0) + '</div></div><div style="text-align: center; font-size: 10px; color: #95a5a6; margin-bottom: 8px;">Above the Line</div><hr style="border: none; border-top: 3px solid #e74c3c; margin: 8px 0;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding: 8px 0; color: #ecf0f1; background: #34495e; border-radius: 4px; margin-bottom: 5px;"><div>' + (ns.belowLineScores.NS || 0) + '</div><div>' + (ns.belowLineScores.EW || 0) + '</div></div><div style="text-align: center; font-size: 10px; color: #95a5a6; margin-bottom: 12px;">Below the Line</div><div style="border-top: 2px solid #7f8c8d; padding-top: 8px;"><div style="display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-weight: bold; color: #f1c40f; font-size: 16px;"><div>' + totals.NS + '</div><div>' + totals.EW + '</div></div><div style="text-align: center; font-size: 10px; color: #95a5a6; margin-top: 4px;">Running Totals</div></div></div>';
     }
     
     toggleVulnerability() {
@@ -494,9 +552,11 @@ class RubberBridge extends BaseBridgeMode {
     
     getHelpContent() {
         return {
-            title: 'Rubber Bridge Help',
-            content: 'Traditional rubber bridge scoring. First to win 2 games wins the rubber. Games are won by reaching 100+ points below the line. Vulnerability affects bonuses and penalties.',
-            buttons: [{ text: 'Close Help', action: 'close', class: 'close-btn' }]
+            title: 'Rubber Bridge Guide',
+            content: '<div style="max-height: 70vh; overflow-y: auto; padding: 0 10px;"><div class="help-section"><h4>🃏 What Is Rubber Bridge?</h4><p>Rubber bridge is typically played by four players in fixed partnerships. The goal is to be the first partnership to win <strong>two games</strong>, which completes a <em>rubber</em>. Each game is won by scoring 100 or more points in successful contract bids.</p></div><div class="help-section"><h4>🏆 Scoring Structure</h4><p>Rubber bridge scores are divided into <strong>two parts</strong>:</p><ul><li><strong>Below the Line</strong> – Points for contracts bid and made</li><li><strong>Above the Line</strong> – Bonuses, honors, overtricks, slams, and penalties</li></ul></div><div class="help-section"><h4>📊 Below the Line (Game Points)</h4><p>Points for making your contract depend on the suit and number of tricks:</p><ul><li><strong>Major suits (♠ or ♥):</strong> 30 points per trick over six</li><li><strong>Minor suits (♦ or ♣):</strong> 20 points per trick over six</li><li><strong>No-trump:</strong> First trick is 40 points, each additional is 30</li></ul><p><em>Once a partnership scores 100+ points below the line, they win the game!</em></p></div><div class="help-section"><h4>🎯 Above the Line (Bonus Points)</h4><ul><li><strong>Game Bonus:</strong> 300 (non-vulnerable) or 500 (vulnerable)</li><li><strong>Part Game:</strong> 50 points for contracts under 100</li><li><strong>Small Slam (6-level):</strong> 500 (non-vul) or 750 (vul)</li><li><strong>Grand Slam (7-level):</strong> 1000 (non-vul) or 1500 (vul)</li><li><strong>Honors:</strong><ul><li>4 trump honors in one hand: 100 points</li><li>5 trump honors in one hand: 150 points</li><li>4 aces in NT (one hand): 150 points</li></ul></li><li><strong>Rubber Bonus:</strong> 700 (win 2-0) or 500 (win 2-1)</li></ul></div><div class="help-section"><h4>🆚 Vulnerability</h4><p>After winning a game, that partnership becomes <strong>vulnerable</strong>. Vulnerable bonuses are higher, but so are penalties!</p></div><div class="help-section"><h4>📱 How to Use This App</h4><ol><li><strong>Enter Contract:</strong><ul><li>Tap level (1-7)</li><li>Tap suit (♣♦♥♠ or NT)</li><li>Tap declarer (N/S/E/W)</li><li>Optional: Tap X for double/redouble</li></ul></li><li><strong>Enter Result:</strong><ul><li><strong>Made:</strong> Contract made exactly</li><li><strong>Plus:</strong> Made with overtricks (then select number)</li><li><strong>Down:</strong> Failed contract (then select tricks down)</li></ul></li><li><strong>Honor Bonuses:</strong><ul><li>After scoring, tap <strong>Made</strong> to claim honors</li><li><strong>Plus:</strong> 4 trump honors (100 pts)</li><li><strong>Down:</strong> 5 trump honors (150 pts)</li><li><strong>NT:</strong> 4 aces in NT (150 pts)</li><li><strong>Deal:</strong> No honors to claim</li></ul></li><li><strong>Next Hand:</strong> Tap <strong>Deal</strong> for next hand</li></ol></div><div class="help-section"><h4>📋 Scorecard Layout</h4><p>The app shows a traditional rubber bridge scorecard with games won (◉○), above-the-line scores, the red line, below-the-line scores, and running totals.</p></div><div class="help-section"><h4>💡 Tips for Success</h4><ul><li><strong>Game Strategy:</strong> Focus on making 100+ below the line</li><li><strong>Vulnerability:</strong> Be more cautious when vulnerable</li><li><strong>Honor Claims:</strong> Don\'t forget to claim honor bonuses!</li><li><strong>Rubber Bonus:</strong> Winning 2-0 gives extra 200 points</li></ul></div></div>',
+            buttons: [
+                { text: 'Close Help', action: 'close', class: 'close-btn' }
+            ]
         };
     }
     
