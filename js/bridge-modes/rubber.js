@@ -175,12 +175,12 @@ class RubberBridge extends BaseBridgeMode {
         if (value === 'BACK') {
             this.rubberState.honorBonusPending = false;
             console.log('❌ No honor bonuses claimed');
-        } else if (value === 'Plus') {
+        } else if (value === 'PLUS' || value === 'Plus') {
             // 4 honors in suit (100) or 4 aces in NT (150)
             const bonus = this.currentContract.suit === 'NT' ? 150 : 100;
             this.awardHonorBonus(bonus);
             console.log(`✅ Awarded ${bonus} points for 4 honors/aces`);
-        } else if (value === 'Down') {
+        } else if (value === 'DOWN' || value === 'Down') {
             // 5 honors (150) - only available in suit contracts
             if (this.currentContract.suit !== 'NT') {
                 this.awardHonorBonus(150);
@@ -448,10 +448,11 @@ class RubberBridge extends BaseBridgeMode {
         if (this.rubberState.honorBonusPending) {
             const buttons = ['BACK'];
             if (this.currentContract.suit !== 'NT') {
-                buttons.push('Plus', 'Down'); // 4 honors (Plus) or 5 honors (Down)
+                buttons.push('PLUS', 'DOWN'); // Try uppercase to match UI buttons
             } else {
-                buttons.push('Plus'); // 4 aces only
+                buttons.push('PLUS'); // 4 aces only
             }
+            console.log('🏅 Honor buttons active:', buttons);
             return buttons;
         }
         
@@ -553,7 +554,7 @@ class RubberBridge extends BaseBridgeMode {
                         Honors = A, K, Q, J, 10 of trump suit ${contractSuit === 'NT' ? '| NT honors = 4 Aces' : ''}
                     </div>
                 </div>
-                <div class="current-state">Select Plus/Down for honors, or Back for none</div>
+                <div class="current-state">Press <strong>Plus/Down</strong> buttons if you held honors, or <strong>Back</strong> for none</div>
             `;
         }
         
