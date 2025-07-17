@@ -686,17 +686,17 @@ class RubberBridge extends BaseBridgeMode {
                     <span>EW ${vulnEW}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #e74c3c;">Game Points: ${partNS}</span>
-                    <span style="color: #e74c3c;">Game Points: ${partEW}</span>
+                    <span style="color: #e74c3c; font-weight: bold;">Game Points: ${partNS}</span>
+                    <span style="color: #e74c3c; font-weight: bold;">Game Points: ${partEW}</span>
                 </div>
-                <div style="font-size: 10px; color: #bdc3c7; margin-bottom: 4px; text-align: center;">
+                <div style="font-size: 10px; color: #2c3e50; margin-bottom: 4px; text-align: center;">
                     (Below-the-line • Need 100+ for game)
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #3498db;">Bonus Points: ${aboveNS}</span>
-                    <span style="color: #3498db;">Bonus Points: ${aboveEW}</span>
+                    <span style="color: #3498db; font-weight: bold;">Bonus Points: ${aboveNS}</span>
+                    <span style="color: #3498db; font-weight: bold;">Bonus Points: ${aboveEW}</span>
                 </div>
-                <div style="font-size: 10px; color: #bdc3c7; margin-bottom: 6px; text-align: center;">
+                <div style="font-size: 10px; color: #2c3e50; margin-bottom: 6px; text-align: center;">
                     (Above-the-line • Game/slam/honor bonuses)
                 </div>
                 <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-weight: bold; color: #27ae60;">
