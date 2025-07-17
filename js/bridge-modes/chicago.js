@@ -749,5 +749,4 @@ class ChicagoBridge extends BaseBridgeMode {
         console.log('🧹 Chicago Bridge cleanup completed');
     }
 }
-
-export default ChicagoBri
+export default ChicagoBridge;
