@@ -549,8 +549,11 @@ class RubberBridge extends BaseBridgeMode {
                             : '<strong>Plus</strong> = 4 Honors (100 pts)<br><strong>Down</strong> = 5 Honors (150 pts)<br><strong>Back</strong> = No honors'
                         }
                     </div>
+                    <div style="font-size: 11px; color: #bdc3c7; margin-top: 6px;">
+                        Honors = A, K, Q, J, 10 of trump suit ${contractSuit === 'NT' ? '| NT honors = 4 Aces' : ''}
+                    </div>
                 </div>
-                <div class="current-state">Use Plus/Down buttons or Back for none</div>
+                <div class="current-state">Select Plus/Down for honors, or Back for none</div>
             `;
         }
         
@@ -721,13 +724,19 @@ class RubberBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
-                    <h4>🏅 Honor Bonuses</h4>
+                    <h4>🏅 Honor Bonuses (Detailed Explanation)</h4>
+                    <p><strong>What are honors?</strong> In bridge, honors are the top 5 cards of the trump suit: Ace, King, Queen, Jack, and 10. In No Trump contracts, only the four Aces count as honors.</p>
+                    
+                    <p><strong>How honor bonuses work:</strong></p>
                     <ul>
-                        <li><strong>4 Honors in suit:</strong> 100 points</li>
-                        <li><strong>5 Honors in suit:</strong> 150 points</li>
-                        <li><strong>4 Aces in NT:</strong> 150 points</li>
-                        <li>Use <strong>Honors button</strong> after scoring to claim</li>
+                        <li><strong>4 Honors in trump suit:</strong> 100 points (if declarer's side holds A-K-Q-J, A-K-Q-10, A-K-J-10, A-Q-J-10, or K-Q-J-10 of trumps)</li>
+                        <li><strong>5 Honors in trump suit:</strong> 150 points (if declarer's side holds A-K-Q-J-10 of trumps)</li>
+                        <li><strong>4 Aces in No Trump:</strong> 150 points (if declarer's side holds all four Aces)</li>
                     </ul>
+                    
+                    <p><strong>Important:</strong> Honor bonuses are awarded to the side that holds the honors (declarer + dummy combined), regardless of whether the contract was made or failed. These points go above-the-line and don't count toward making game.</p>
+                    
+                    <p><strong>When to claim:</strong> After each deal, if your side (declarer + dummy) held 4+ honors in the trump suit or 4 aces in NT, click the <strong>Honors</strong> button and select the appropriate bonus.</p>
                 </div>
                 
                 <div class="help-section">
@@ -752,8 +761,19 @@ class RubberBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
-                    <h4>🏁 Rubber Completion</h4>
-                    <p>When one side wins 2 games, the rubber is complete. The final score includes all game points, bonuses, and the rubber bonus. Press <strong>Deal</strong> to start a new rubber.</p>
+                    <h4>💾 Game Storage & History</h4>
+                    <p><strong>Data Persistence:</strong> Your game scores and history are automatically saved to your browser's local storage and persist between sessions.</p>
+                    
+                    <ul>
+                        <li><strong>Automatic Saving:</strong> Every deal and score is saved immediately</li>
+                        <li><strong>Session Persistence:</strong> Close and reopen the app - your game continues</li>
+                        <li><strong>History Tracking:</strong> Complete deal-by-deal history with contracts and results</li>
+                        <li><strong>Rubber Completion:</strong> When a rubber ends, you can start a new one or continue scoring</li>
+                        <li><strong>Manual Reset:</strong> Use "Return to Menu" in Quit options to reset scores</li>
+                        <li><strong>Browser Storage:</strong> Data stays until you clear browser data or use different device</li>
+                    </ul>
+                    
+                    <p><strong>Viewing History:</strong> Use Quit → Show Scores to see complete game history with deal-by-deal breakdown.</p>
                 </div>
             `,
             buttons: [
