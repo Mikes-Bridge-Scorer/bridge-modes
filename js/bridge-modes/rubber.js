@@ -680,20 +680,26 @@ class RubberBridge extends BaseBridgeMode {
         const vulnEW = ns.vulnerability.EW ? '🔴' : '🟢';
         
         return `
-            <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; margin: 6px 0; font-size: 11px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <strong>NS ${vulnNS}</strong>
-                    <strong>EW ${vulnEW}</strong>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin: 6px 0; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: bold; color: #f39c12;">
+                    <span>NS ${vulnNS}</span>
+                    <span>EW ${vulnEW}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Game: ${partNS}</span>
-                    <span>Game: ${partEW}</span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: #e74c3c;">Game Points: ${partNS}</span>
+                    <span style="color: #e74c3c;">Game Points: ${partEW}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Bonus: ${aboveNS}</span>
-                    <span>Bonus: ${aboveEW}</span>
+                <div style="font-size: 10px; color: #bdc3c7; margin-bottom: 4px; text-align: center;">
+                    (Below-the-line • Need 100+ for game)
                 </div>
-                <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; margin-top: 4px; font-weight: bold;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: #3498db;">Bonus Points: ${aboveNS}</span>
+                    <span style="color: #3498db;">Bonus Points: ${aboveEW}</span>
+                </div>
+                <div style="font-size: 10px; color: #bdc3c7; margin-bottom: 6px; text-align: center;">
+                    (Above-the-line • Game/slam/honor bonuses)
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-weight: bold; color: #27ae60;">
                     <span>Total: ${totalNS}</span>
                     <span>Total: ${totalEW}</span>
                 </div>
@@ -710,17 +716,67 @@ class RubberBridge extends BaseBridgeMode {
             title: 'Enhanced Rubber Bridge Help',
             content: `
                 <div class="help-section">
-                    <h4>🏆 Rubber Bridge Scoring</h4>
-                    <p>Traditional rubber bridge with visual score breakdown showing below-the-line and above-the-line points.</p>
+                    <h4>🏆 Rubber Bridge Scoring (With Examples)</h4>
+                    <p><strong>Key Concept:</strong> Rubber bridge uses two scoring areas - "below the line" and "above the line."</p>
+                    
+                    <p><strong>Below-the-Line (Game Points):</strong></p>
+                    <ul>
+                        <li>Only basic contract points count here</li>
+                        <li>♣/♦: 20 points per trick • ♥/♠: 30 points per trick • NT: 30 + 10 bonus</li>
+                        <li><strong>Game = 100+ below-the-line points</strong></li>
+                    </ul>
+                    
+                    <p><strong>Above-the-Line (Bonus Points):</strong></p>
+                    <ul>
+                        <li>Game bonuses, slam bonuses, doubled bonuses, honors, penalties</li>
+                        <li>These add to your total but don't count toward making game</li>
+                    </ul>
+                    
+                    <p><strong>Example 1 - Making Game:</strong></p>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                        4♥ by N = Made exactly (not vulnerable)<br>
+                        • Below line: 4 × 30 = <strong>120 points</strong> → GAME!<br>
+                        • Above line: 300 (game bonus)<br>
+                        • Total: 420 points to NS<br>
+                        • Result: NS wins first game, becomes vulnerable
+                    </div>
+                    
+                    <p><strong>Example 2 - Part Score:</strong></p>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                        2♣ by S = Made +1<br>
+                        • Below line: 2 × 20 = <strong>40 points</strong> (not enough for game)<br>
+                        • Above line: 50 (part-game bonus) + 20 (1 overtrick)<br>
+                        • Total: 110 points to NS<br>
+                        • Result: NS has 40 toward next game
+                    </div>
+                    
+                    <p><strong>Example 3 - With Honors:</strong></p>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                        3NT by E = Made exactly + 4 Aces<br>
+                        • Below line: 3 × 30 + 10 = <strong>100 points</strong> → GAME!<br>
+                        • Above line: 300 (game bonus) + 150 (4 aces)<br>
+                        • Total: 550 points to EW<br>
+                        • Result: EW wins game, becomes vulnerable
+                    </div>
                 </div>
                 
                 <div class="help-section">
-                    <h4>🎯 Game & Rubber Rules</h4>
+                    <h4>🎯 Game & Rubber Rules (Detailed)</h4>
                     <ul>
-                        <li><strong>Game:</strong> First to 100+ below-the-line points</li>
-                        <li><strong>Rubber:</strong> First to win 2 games</li>
-                        <li><strong>Vulnerability:</strong> Game winners become vulnerable</li>
-                        <li><strong>Rubber Bonus:</strong> 700 pts (2-0) or 500 pts (2-1)</li>
+                        <li><strong>Making Game:</strong> Accumulate 100+ below-the-line points in one or more deals</li>
+                        <li><strong>Game Examples:</strong> 3NT (100), 4♥/♠ (120), 5♣/♦ (100), or smaller contracts that add up</li>
+                        <li><strong>After Game Won:</strong> Part-scores reset to zero, winner becomes vulnerable</li>
+                        <li><strong>Rubber Complete:</strong> First side to win 2 games wins the rubber</li>
+                        <li><strong>Rubber Bonus:</strong> 700 points (2-0 rubber) or 500 points (2-1 rubber)</li>
+                        <li><strong>Vulnerability Effects:</strong> Higher game bonuses (+500 vs +300) and penalties</li>
+                    </ul>
+                    
+                    <p><strong>Visual Score Display:</strong></p>
+                    <ul>
+                        <li><strong>🔴 Red:</strong> Vulnerable (won a game) • <strong>🟢 Green:</strong> Not vulnerable</li>
+                        <li><strong>Game Points:</strong> Red numbers (below-the-line, count toward game)</li>
+                        <li><strong>Bonus Points:</strong> Blue numbers (above-the-line, don't count toward game)</li>
+                        <li><strong>Total:</strong> Green numbers (your actual score)</li>
                     </ul>
                 </div>
                 
