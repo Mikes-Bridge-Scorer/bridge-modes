@@ -3,7 +3,7 @@
  * 
  * This module handles score entry from completed travelers with automatic
  * score validation and real-time matchpoint calculation for cruise ship
- * or casual duplicate bridge sessions.
+ * or casual duplicate bridge sessions using exact Howell movements.
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -19,16 +19,18 @@ class DuplicateBridge extends BaseBridgeMode {
         this.session = {
             tables: 0,
             pairs: 0,
-            boards: [],
-            totalBoards: 0,
+            totalBoards: 18, // Default to 18 boards
             currentBoard: 1,
-            isSetup: false
+            isSetup: false,
+            movementType: '', // '2tables', '2.5tables', etc.
+            boards: [] // Will store results for each board
         };
         
         // Current entry state
         this.currentEntry = {
             board: null,
             table: null,
+            round: null,
             nsPair: null,
             ewPair: null,
             contract: {
@@ -42,10 +44,202 @@ class DuplicateBridge extends BaseBridgeMode {
             calculatedScore: null
         };
         
-        this.inputState = 'session_setup'; // session_setup, board_selection, table_selection, contract_entry, score_verification, results_view
+        this.inputState = 'session_setup'; // session_setup, board_count, board_selection, table_selection, contract_entry, score_verification, results_view
         this.contractInputStep = 'level'; // level, suit, declarer, result, score
         
-        console.log('🏆 Duplicate Bridge mode initialized');
+        // Initialize movement data
+        this.initializeMovements();
+        
+        console.log('🏆 Duplicate Bridge mode initialized with Howell movements');
+    }
+    
+    /**
+     * Initialize all Howell movement data
+     */
+    initializeMovements() {
+        this.movements = {
+            '2tables': {
+                pairs: 4,
+                tables: 2,
+                rounds: 3,
+                sitOut: false,
+                movement: [
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5,6] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [7,8,9,10,11,12] },
+                    { round: 2, table: 1, ns: 1, ew: 3, boards: [13,14,15,16,17,18] },
+                    { round: 2, table: 2, ns: 2, ew: 4, boards: [1,2,3,4,5,6] },
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9,10,11,12] },
+                    { round: 3, table: 2, ns: 2, ew: 3, boards: [13,14,15,16,17,18] }
+                ]
+            },
+            '2.5tables': {
+                pairs: 5,
+                tables: 2,
+                rounds: 5,
+                sitOut: true,
+                movement: [
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5,6], sitOut: 5 },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [7,8,9,10,11,12], sitOut: 5 },
+                    { round: 2, table: 1, ns: 1, ew: 3, boards: [13,14,15,16,17,18], sitOut: 4 },
+                    { round: 2, table: 2, ns: 2, ew: 5, boards: [1,2,3,4,5,6], sitOut: 4 },
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9,10,11,12], sitOut: 2 },
+                    { round: 3, table: 2, ns: 3, ew: 5, boards: [13,14,15,16,17,18], sitOut: 2 },
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [1,2,3,4,5,6], sitOut: 3 },
+                    { round: 4, table: 2, ns: 2, ew: 4, boards: [7,8,9,10,11,12], sitOut: 3 },
+                    { round: 5, table: 1, ns: 2, ew: 3, boards: [13,14,15,16,17,18], sitOut: 1 },
+                    { round: 5, table: 2, ns: 4, ew: 5, boards: [1,2,3,4,5,6], sitOut: 1 }
+                ]
+            },
+            '3tables': {
+                pairs: 6,
+                tables: 3,
+                rounds: 9,
+                sitOut: false,
+                movement: [
+                    // Round 1
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5,6] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [7,8,9,10,11,12] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [13,14,15,16,17,18] },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 3, boards: [7,8,9,10,11,12] },
+                    { round: 2, table: 2, ns: 2, ew: 5, boards: [13,14,15,16,17,18] },
+                    { round: 2, table: 3, ns: 4, ew: 6, boards: [1,2,3,4,5,6] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [13,14,15,16,17,18] },
+                    { round: 3, table: 2, ns: 3, ew: 6, boards: [1,2,3,4,5,6] },
+                    { round: 3, table: 3, ns: 2, ew: 5, boards: [7,8,9,10,11,12] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [1,2,3,4,5,6] },
+                    { round: 4, table: 2, ns: 2, ew: 6, boards: [7,8,9,10,11,12] },
+                    { round: 4, table: 3, ns: 3, ew: 4, boards: [13,14,15,16,17,18] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 6, boards: [7,8,9,10,11,12] },
+                    { round: 5, table: 2, ns: 2, ew: 4, boards: [13,14,15,16,17,18] },
+                    { round: 5, table: 3, ns: 3, ew: 5, boards: [1,2,3,4,5,6] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 2, ew: 3, boards: [13,14,15,16,17,18] },
+                    { round: 6, table: 2, ns: 1, ew: 4, boards: [1,2,3,4,5,6] },
+                    { round: 6, table: 3, ns: 5, ew: 6, boards: [7,8,9,10,11,12] },
+                    // Round 7
+                    { round: 7, table: 1, ns: 3, ew: 6, boards: [1,2,3,4,5,6] },
+                    { round: 7, table: 2, ns: 1, ew: 5, boards: [7,8,9,10,11,12] },
+                    { round: 7, table: 3, ns: 2, ew: 4, boards: [13,14,15,16,17,18] },
+                    // Round 8
+                    { round: 8, table: 1, ns: 4, ew: 5, boards: [7,8,9,10,11,12] },
+                    { round: 8, table: 2, ns: 1, ew: 6, boards: [13,14,15,16,17,18] },
+                    { round: 8, table: 3, ns: 2, ew: 3, boards: [1,2,3,4,5,6] },
+                    // Round 9
+                    { round: 9, table: 1, ns: 2, ew: 6, boards: [1,2,3,4,5,6] },
+                    { round: 9, table: 2, ns: 3, ew: 5, boards: [13,14,15,16,17,18] },
+                    { round: 9, table: 3, ns: 1, ew: 4, boards: [7,8,9,10,11,12] }
+                ]
+            },
+            '4tables': {
+                pairs: 8,
+                tables: 4,
+                rounds: 7,
+                sitOut: false,
+                movement: [
+                    // Round 1
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5,6] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [7,8,9,10,11,12] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [13,14,15,16,17,18] },
+                    { round: 1, table: 4, ns: 7, ew: 8, boards: [1,2,3,4,5,6] },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 3, boards: [7,8,9,10,11,12] },
+                    { round: 2, table: 2, ns: 2, ew: 5, boards: [13,14,15,16,17,18] },
+                    { round: 2, table: 3, ns: 4, ew: 7, boards: [1,2,3,4,5,6] },
+                    { round: 2, table: 4, ns: 6, ew: 8, boards: [7,8,9,10,11,12] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [13,14,15,16,17,18] },
+                    { round: 3, table: 2, ns: 3, ew: 6, boards: [1,2,3,4,5,6] },
+                    { round: 3, table: 3, ns: 2, ew: 7, boards: [7,8,9,10,11,12] },
+                    { round: 3, table: 4, ns: 5, ew: 8, boards: [13,14,15,16,17,18] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [1,2,3,4,5,6] },
+                    { round: 4, table: 2, ns: 2, ew: 6, boards: [7,8,9,10,11,12] },
+                    { round: 4, table: 3, ns: 3, ew: 7, boards: [13,14,15,16,17,18] },
+                    { round: 4, table: 4, ns: 4, ew: 8, boards: [1,2,3,4,5,6] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 6, boards: [7,8,9,10,11,12] },
+                    { round: 5, table: 2, ns: 2, ew: 4, boards: [13,14,15,16,17,18] },
+                    { round: 5, table: 3, ns: 3, ew: 8, boards: [1,2,3,4,5,6] },
+                    { round: 5, table: 4, ns: 5, ew: 7, boards: [7,8,9,10,11,12] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 1, ew: 7, boards: [13,14,15,16,17,18] },
+                    { round: 6, table: 2, ns: 3, ew: 5, boards: [1,2,3,4,5,6] },
+                    { round: 6, table: 3, ns: 2, ew: 8, boards: [7,8,9,10,11,12] },
+                    { round: 6, table: 4, ns: 4, ew: 6, boards: [13,14,15,16,17,18] },
+                    // Round 7
+                    { round: 7, table: 1, ns: 1, ew: 8, boards: [1,2,3,4,5,6] },
+                    { round: 7, table: 2, ns: 2, ew: 3, boards: [7,8,9,10,11,12] },
+                    { round: 7, table: 3, ns: 4, ew: 5, boards: [13,14,15,16,17,18] },
+                    { round: 7, table: 4, ns: 6, ew: 7, boards: [1,2,3,4,5,6] }
+                ]
+            },
+            '5tables': {
+                pairs: 10,
+                tables: 5,
+                rounds: 9,
+                sitOut: false,
+                movement: [
+                    // Round 1
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5,6] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [7,8,9,10,11,12] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [13,14,15,16,17,18] },
+                    { round: 1, table: 4, ns: 7, ew: 8, boards: [1,2,3,4,5,6] },
+                    { round: 1, table: 5, ns: 9, ew: 10, boards: [7,8,9,10,11,12] },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 3, boards: [13,14,15,16,17,18] },
+                    { round: 2, table: 2, ns: 2, ew: 5, boards: [1,2,3,4,5,6] },
+                    { round: 2, table: 3, ns: 4, ew: 7, boards: [7,8,9,10,11,12] },
+                    { round: 2, table: 4, ns: 6, ew: 9, boards: [13,14,15,16,17,18] },
+                    { round: 2, table: 5, ns: 8, ew: 10, boards: [1,2,3,4,5,6] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9,10,11,12] },
+                    { round: 3, table: 2, ns: 3, ew: 6, boards: [13,14,15,16,17,18] },
+                    { round: 3, table: 3, ns: 2, ew: 7, boards: [1,2,3,4,5,6] },
+                    { round: 3, table: 4, ns: 5, ew: 8, boards: [7,8,9,10,11,12] },
+                    { round: 3, table: 5, ns: 9, ew: 10, boards: [13,14,15,16,17,18] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [1,2,3,4,5,6] },
+                    { round: 4, table: 2, ns: 2, ew: 6, boards: [7,8,9,10,11,12] },
+                    { round: 4, table: 3, ns: 3, ew: 8, boards: [13,14,15,16,17,18] },
+                    { round: 4, table: 4, ns: 4, ew: 9, boards: [1,2,3,4,5,6] },
+                    { round: 4, table: 5, ns: 7, ew: 10, boards: [7,8,9,10,11,12] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 6, boards: [13,14,15,16,17,18] },
+                    { round: 5, table: 2, ns: 2, ew: 8, boards: [1,2,3,4,5,6] },
+                    { round: 5, table: 3, ns: 3, ew: 9, boards: [7,8,9,10,11,12] },
+                    { round: 5, table: 4, ns: 4, ew: 10, boards: [13,14,15,16,17,18] },
+                    { round: 5, table: 5, ns: 5, ew: 7, boards: [1,2,3,4,5,6] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 1, ew: 7, boards: [7,8,9,10,11,12] },
+                    { round: 6, table: 2, ns: 2, ew: 9, boards: [13,14,15,16,17,18] },
+                    { round: 6, table: 3, ns: 4, ew: 5, boards: [1,2,3,4,5,6] },
+                    { round: 6, table: 4, ns: 6, ew: 10, boards: [7,8,9,10,11,12] },
+                    { round: 6, table: 5, ns: 3, ew: 8, boards: [13,14,15,16,17,18] },
+                    // Round 7
+                    { round: 7, table: 1, ns: 1, ew: 8, boards: [1,2,3,4,5,6] },
+                    { round: 7, table: 2, ns: 3, ew: 10, boards: [7,8,9,10,11,12] },
+                    { round: 7, table: 3, ns: 2, ew: 4, boards: [13,14,15,16,17,18] },
+                    { round: 7, table: 4, ns: 5, ew: 9, boards: [1,2,3,4,5,6] },
+                    { round: 7, table: 5, ns: 6, ew: 7, boards: [7,8,9,10,11,12] },
+                    // Round 8
+                    { round: 8, table: 1, ns: 1, ew: 9, boards: [13,14,15,16,17,18] },
+                    { round: 8, table: 2, ns: 2, ew: 3, boards: [1,2,3,4,5,6] },
+                    { round: 8, table: 3, ns: 5, ew: 6, boards: [7,8,9,10,11,12] },
+                    { round: 8, table: 4, ns: 7, ew: 10, boards: [13,14,15,16,17,18] },
+                    { round: 8, table: 5, ns: 4, ew: 8, boards: [1,2,3,4,5,6] },
+                    // Round 9
+                    { round: 9, table: 1, ns: 1, ew: 10, boards: [7,8,9,10,11,12] },
+                    { round: 9, table: 2, ns: 4, ew: 6, boards: [13,14,15,16,17,18] },
+                    { round: 9, table: 3, ns: 2, ew: 8, boards: [1,2,3,4,5,6] },
+                    { round: 9, table: 4, ns: 3, ew: 7, boards: [7,8,9,10,11,12] },
+                    { round: 9, table: 5, ns: 5, ew: 9, boards: [13,14,15,16,17,18] }
+                ]
+            }
+        };
     }
     
     /**
@@ -66,6 +260,9 @@ class DuplicateBridge extends BaseBridgeMode {
         switch (this.inputState) {
             case 'session_setup':
                 this.handleSessionSetup(value);
+                break;
+            case 'board_count':
+                this.handleBoardCount(value);
                 break;
             case 'board_selection':
                 this.handleBoardSelection(value);
@@ -91,29 +288,40 @@ class DuplicateBridge extends BaseBridgeMode {
      * Handle session setup (number of tables)
      */
     handleSessionSetup(value) {
-        if (['2', '3', '4', '5'].includes(value)) {
-            const tables = parseInt(value);
-            this.session.tables = tables;
-            this.session.pairs = tables * 2;
+        const validSetups = ['2', '2.5', '3', '3.5', '4', '4.5', '5'];
+        if (validSetups.includes(value)) {
+            this.session.tables = parseFloat(value);
+            this.session.movementType = value.replace('.', '') + 'tables';
             
-            // Standard board counts for different table sizes
-            const boardCounts = { 2: 6, 3: 15, 4: 28, 5: 45 };
-            this.session.totalBoards = boardCounts[tables] || 15;
+            const movement = this.movements[this.session.movementType];
+            this.session.pairs = movement.pairs;
+            
+            this.inputState = 'board_count';
+            console.log(`📋 Session setup: ${value} tables, ${this.session.pairs} pairs`);
+        }
+    }
+    
+    /**
+     * Handle board count selection
+     */
+    handleBoardCount(value) {
+        const boardCount = parseInt(value);
+        if (boardCount >= 16 && boardCount <= 20) {
+            this.session.totalBoards = boardCount;
             
             // Initialize boards array
             this.session.boards = [];
             for (let i = 1; i <= this.session.totalBoards; i++) {
                 this.session.boards.push({
                     number: i,
-                    results: [], // Will store all table results for this board
-                    matchpoints: null // Will store calculated matchpoints
+                    results: [], // Store all table results for this board
+                    matchpoints: null
                 });
             }
             
             this.session.isSetup = true;
             this.inputState = 'board_selection';
-            
-            console.log(`📋 Session setup: ${tables} tables, ${this.session.pairs} pairs, ${this.session.totalBoards} boards`);
+            console.log(`📊 Playing ${boardCount} boards`);
         }
     }
     
@@ -138,21 +346,49 @@ class DuplicateBridge extends BaseBridgeMode {
      * Handle table selection
      */
     handleTableSelection(value) {
-        const tableNum = parseInt(value);
-        if (tableNum >= 1 && tableNum <= this.session.tables) {
-            this.currentEntry.table = tableNum;
-            
-            // Set pair numbers based on standard Howell movement
-            const movement = this.getMovementForBoard(this.currentEntry.board, tableNum);
-            this.currentEntry.nsPair = movement.nsPair;
-            this.currentEntry.ewPair = movement.ewPair;
+        // Parse table selection - could be "Table 1" or just "1"
+        const match = value.match(/(\d+)/);
+        if (!match) return;
+        
+        const tableNum = parseInt(match[1]);
+        const roundNum = parseInt(value.split('-')[1]) || null;
+        
+        // Find the matching movement entry
+        const boardInstances = this.getBoardInstances(this.currentEntry.board);
+        let selectedInstance = null;
+        
+        if (roundNum) {
+            // Specific round selected
+            selectedInstance = boardInstances.find(inst => 
+                inst.table === tableNum && inst.round === roundNum
+            );
+        } else {
+            // Just table selected, find first available
+            selectedInstance = boardInstances.find(inst => inst.table === tableNum);
+        }
+        
+        if (selectedInstance) {
+            this.currentEntry.table = selectedInstance.table;
+            this.currentEntry.round = selectedInstance.round;
+            this.currentEntry.nsPair = selectedInstance.ns;
+            this.currentEntry.ewPair = selectedInstance.ew;
             
             this.contractInputStep = 'level';
             this.inputState = 'contract_entry';
             this.resetCurrentContract();
             
-            console.log(`🏓 Table ${tableNum} selected - NS: Pair ${movement.nsPair}, EW: Pair ${movement.ewPair}`);
+            console.log(`🏓 Selected Board ${this.currentEntry.board}, Round ${selectedInstance.round}, Table ${selectedInstance.table}: NS-${selectedInstance.ns} vs EW-${selectedInstance.ew}`);
         }
+    }
+    
+    /**
+     * Get all instances where a board is played
+     */
+    getBoardInstances(boardNumber) {
+        const movement = this.movements[this.session.movementType];
+        return movement.movement.filter(entry => 
+            entry.boards.includes(boardNumber)
+        );
     }
     
     /**
@@ -245,8 +481,6 @@ class DuplicateBridge extends BaseBridgeMode {
         } else if (value === 'EDIT') {
             this.contractInputStep = 'score';
             this.inputState = 'contract_entry';
-        } else if (value === 'BACK') {
-            this.handleBack();
         }
     }
     
@@ -265,7 +499,7 @@ class DuplicateBridge extends BaseBridgeMode {
     calculateScore() {
         const { level, suit, result, doubled, declarer } = this.currentEntry.contract;
         
-        // Get vulnerability for this board and declarer
+        // Get vulnerability for this board
         const vulnerability = this.getBoardVulnerability(this.currentEntry.board);
         const declarerSide = ['N', 'S'].includes(declarer) ? 'NS' : 'EW';
         const isVulnerable = vulnerability === declarerSide || vulnerability === 'Both';
@@ -348,22 +582,6 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get movement information for a board and table
-     */
-    getMovementForBoard(boardNumber, tableNumber) {
-        // This is a simplified movement - in reality you'd reference your Howell movement cards
-        // For 3 tables, pairs rotate in a standard pattern
-        const round = Math.floor((boardNumber - 1) / 3) + 1;
-        const ewShift = (round - 1) % this.session.pairs;
-        
-        const nsPair = tableNumber;
-        let ewPair = tableNumber + ewShift;
-        if (ewPair > this.session.pairs) ewPair -= this.session.pairs;
-        
-        return { nsPair, ewPair };
-    }
-    
-    /**
      * Save the current result
      */
     saveResult() {
@@ -371,6 +589,7 @@ class DuplicateBridge extends BaseBridgeMode {
         
         const result = {
             table: this.currentEntry.table,
+            round: this.currentEntry.round,
             nsPair: this.currentEntry.nsPair,
             ewPair: this.currentEntry.ewPair,
             contract: { ...this.currentEntry.contract },
@@ -378,13 +597,15 @@ class DuplicateBridge extends BaseBridgeMode {
             calculatedScore: this.currentEntry.calculatedScore
         };
         
-        // Remove any existing result for this table
-        board.results = board.results.filter(r => r.table !== this.currentEntry.table);
+        // Remove any existing result for this table/round
+        board.results = board.results.filter(r => 
+            !(r.table === this.currentEntry.table && r.round === this.currentEntry.round)
+        );
         
         // Add new result
         board.results.push(result);
         
-        console.log(`💾 Saved result for Board ${this.currentEntry.board}, Table ${this.currentEntry.table}`);
+        console.log(`💾 Saved result for Board ${this.currentEntry.board}, Round ${this.currentEntry.round}, Table ${this.currentEntry.table}`);
     }
     
     /**
@@ -395,31 +616,40 @@ class DuplicateBridge extends BaseBridgeMode {
         
         if (board.results.length === 0) return;
         
+        // Get expected number of results for this board
+        const expectedResults = this.getBoardInstances(this.currentEntry.board).length;
+        
+        // Only calculate matchpoints if all results are in
+        if (board.results.length < expectedResults) {
+            console.log(`⏳ Board ${this.currentEntry.board}: ${board.results.length}/${expectedResults} results - waiting for more`);
+            return;
+        }
+        
         // Group results by pair
-        const pairResults = {};
+        const pairScores = {};
         
         board.results.forEach(result => {
             const nsScore = result.score >= 0 ? result.score : 0;
             const ewScore = result.score < 0 ? Math.abs(result.score) : 0;
             
-            if (!pairResults[result.nsPair]) pairResults[result.nsPair] = 0;
-            if (!pairResults[result.ewPair]) pairResults[result.ewPair] = 0;
+            if (!pairScores[result.nsPair]) pairScores[result.nsPair] = 0;
+            if (!pairScores[result.ewPair]) pairScores[result.ewPair] = 0;
             
-            pairResults[result.nsPair] += nsScore;
-            pairResults[result.ewPair] += ewScore;
+            pairScores[result.nsPair] += nsScore;
+            pairScores[result.ewPair] += ewScore;
         });
         
-        // Calculate matchpoints (simplified - top score gets 100%)
-        const scores = Object.values(pairResults);
+        // Calculate matchpoints (top score gets 100%)
+        const scores = Object.values(pairScores);
         const maxScore = Math.max(...scores);
         
         board.matchpoints = {};
-        Object.entries(pairResults).forEach(([pair, score]) => {
+        Object.entries(pairScores).forEach(([pair, score]) => {
             const percentage = maxScore > 0 ? (score / maxScore) * 100 : 50;
-            board.matchpoints[pair] = Math.round(percentage * 10) / 10; // Round to 1 decimal
+            board.matchpoints[pair] = Math.round(percentage * 10) / 10;
         });
         
-        console.log(`📊 Calculated matchpoints for Board ${this.currentEntry.board}`);
+        console.log(`📊 Calculated matchpoints for Board ${this.currentEntry.board} - all results complete`);
     }
     
     /**
@@ -427,7 +657,7 @@ class DuplicateBridge extends BaseBridgeMode {
      */
     isValidScore(value) {
         const num = parseInt(value);
-        return !isNaN(num) && num >= -7600 && num <= 7600; // Reasonable bridge score range
+        return !isNaN(num) && num >= -7600 && num <= 7600;
     }
     
     /**
@@ -437,6 +667,7 @@ class DuplicateBridge extends BaseBridgeMode {
         this.currentEntry = {
             board: null,
             table: null,
+            round: null,
             nsPair: null,
             ewPair: null,
             contract: {
@@ -471,8 +702,13 @@ class DuplicateBridge extends BaseBridgeMode {
      */
     handleBack() {
         switch (this.inputState) {
+            case 'board_count':
+                this.inputState = 'session_setup';
+                break;
+                
             case 'board_selection':
-                return false; // Let app handle return to mode selection
+                this.inputState = 'board_count';
+                break;
                 
             case 'table_selection':
                 this.inputState = 'board_selection';
@@ -523,6 +759,9 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'results_view':
                 this.inputState = 'board_selection';
                 break;
+                
+            default:
+                return false; // Let app handle return to mode selection
         }
         
         this.updateDisplay();
@@ -542,22 +781,21 @@ class DuplicateBridge extends BaseBridgeMode {
     getActiveButtons() {
         switch (this.inputState) {
             case 'session_setup':
-                return ['2', '3', '4', '5'];
+                return ['2', '2.5', '3', '3.5', '4', '4.5', '5'];
+                
+            case 'board_count':
+                return ['16', '17', '18', '19', '20'];
                 
             case 'board_selection':
                 const buttons = [];
-                for (let i = 1; i <= Math.min(this.session.totalBoards, 20); i++) {
+                for (let i = 1; i <= Math.min(this.session.totalBoards, 18); i++) {
                     buttons.push(i.toString());
                 }
                 buttons.push('RESULTS');
                 return buttons;
                 
             case 'table_selection':
-                const tableButtons = [];
-                for (let i = 1; i <= this.session.tables; i++) {
-                    tableButtons.push(i.toString());
-                }
-                return tableButtons;
+                return this.getTableSelectionButtons();
                 
             case 'contract_entry':
                 switch (this.contractInputStep) {
@@ -594,6 +832,14 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
+     * Get table selection buttons based on board instances
+     */
+    getTableSelectionButtons() {
+        const instances = this.getBoardInstances(this.currentEntry.board);
+        return instances.map(inst => `T${inst.table}-R${inst.round}`);
+    }
+    
+    /**
      * Update the display
      */
     updateDisplay() {
@@ -615,30 +861,53 @@ class DuplicateBridge extends BaseBridgeMode {
                     </div>
                     <div class="game-content">
                         <div><strong>Session Setup</strong></div>
-                        <div>Choose number of tables:</div>
-                        <div style="color: #95a5a6; font-size: 11px; margin-top: 8px;">
-                            • 2 tables = 4 pairs, 6 boards<br>
-                            • 3 tables = 6 pairs, 15 boards<br>
-                            • 4 tables = 8 pairs, 28 boards<br>
-                            • 5 tables = 10 pairs, 45 boards
+                        <div style="color: #2c3e50;">Choose number of tables:</div>
+                        <div style="color: #2c3e50; font-size: 11px; margin-top: 8px;">
+                            • 2 tables = 4 pairs • 2.5 = 5 pairs (1 sit-out)<br>
+                            • 3 tables = 6 pairs • 3.5 = 7 pairs (1 sit-out)<br>
+                            • 4 tables = 8 pairs • 4.5 = 9 pairs (1 sit-out)<br>
+                            • 5 tables = 10 pairs (no sit-outs)
                         </div>
                     </div>
-                    <div class="current-state">Select number of tables (2-5)</div>
+                    <div class="current-state">Select table configuration (2-5)</div>
                 `;
                 
-            case 'board_selection':
-                const completedBoards = this.session.boards.filter(b => b.results.length === this.session.tables).length;
+            case 'board_count':
                 return `
                     <div class="title-score-row">
                         <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">
                             ${this.session.tables} Tables<br>
-                            ${completedBoards}/${this.session.totalBoards} Complete
+                            ${this.session.pairs} Pairs
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>${this.session.pairs} Pairs • ${this.session.totalBoards} Boards Total</strong></div>
-                        <div style="color: #3498db; font-size: 12px;">
+                        <div><strong>${this.session.pairs} Pairs Setup Complete</strong></div>
+                        <div style="color: #2c3e50;">Choose number of boards to play:</div>
+                        <div style="color: #2c3e50; font-size: 11px; margin-top: 8px;">
+                            Recommended: 16-18 boards for 2-3 hour session
+                        </div>
+                    </div>
+                    <div class="current-state">Select total boards (16-20)</div>
+                `;
+                
+            case 'board_selection':
+                const completedBoards = this.session.boards.filter(b => {
+                    const expected = this.getBoardInstances(b.number).length;
+                    return b.results.length === expected;
+                }).length;
+                
+                return `
+                    <div class="title-score-row">
+                        <div class="mode-title">${this.displayName}</div>
+                        <div class="score-display">
+                            ${this.session.tables} Tables<br>
+                            ${completedBoards}/${this.session.totalBoards} Done
+                        </div>
+                    </div>
+                    <div class="game-content">
+                        <div><strong>${this.session.pairs} Pairs • ${this.session.totalBoards} Boards • Howell Movement</strong></div>
+                        <div style="color: #2c3e50; font-size: 12px;">
                             Enter results from completed travelers
                         </div>
                         ${this.getBoardStatusDisplay()}
@@ -652,15 +921,15 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">
                             Board ${this.currentEntry.board}<br>
-                            Table Entry
+                            Select Table
                         </div>
                     </div>
                     <div class="game-content">
                         <div><strong>Board ${this.currentEntry.board}</strong></div>
-                        <div>Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
-                        ${this.getTableStatusDisplay()}
+                        <div style="color: #2c3e50;">Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
+                        ${this.getTableInstancesDisplay()}
                     </div>
-                    <div class="current-state">Select table to enter result</div>
+                    <div class="current-state">Select table/round combination</div>
                 `;
                 
             case 'contract_entry':
@@ -682,46 +951,46 @@ class DuplicateBridge extends BaseBridgeMode {
      */
     getBoardStatusDisplay() {
         const statusLines = [];
-        for (let i = 0; i < Math.min(this.session.totalBoards, 10); i++) {
+        for (let i = 0; i < Math.min(this.session.totalBoards, 12); i++) {
             const board = this.session.boards[i];
+            const expected = this.getBoardInstances(board.number).length;
             const completed = board.results.length;
-            const total = this.session.tables;
-            const status = completed === total ? '✓' : `${completed}/${total}`;
-            const color = completed === total ? '#27ae60' : '#95a5a6';
-            statusLines.push(`<span style="color: ${color};">Board ${i + 1}: ${status}</span>`);
+            const status = completed === expected ? '✓' : `${completed}/${expected}`;
+            const color = completed === expected ? '#27ae60' : '#e74c3c';
+            statusLines.push(`<span style="color: ${color};">B${i + 1}: ${status}</span>`);
         }
         
-        if (this.session.totalBoards > 10) {
-            statusLines.push('<span style="color: #95a5a6;">... and more</span>');
+        if (this.session.totalBoards > 12) {
+            statusLines.push('<span style="color: #2c3e50;">...</span>');
         }
         
-        return `<div style="font-size: 11px; margin-top: 8px;">${statusLines.join(' • ')}</div>`;
+        return `<div style="font-size: 11px; margin-top: 8px; color: #2c3e50;">${statusLines.join(' • ')}</div>`;
     }
     
     /**
-     * Get table status display
+     * Get table instances display for board selection
      */
-    getTableStatusDisplay() {
+    getTableInstancesDisplay() {
+        const instances = this.getBoardInstances(this.currentEntry.board);
         const board = this.session.boards[this.currentEntry.board - 1];
-        const lines = [];
         
-        for (let table = 1; table <= this.session.tables; table++) {
-            const movement = this.getMovementForBoard(this.currentEntry.board, table);
-            const hasResult = board.results.some(r => r.table === table);
+        const lines = instances.map(inst => {
+            const hasResult = board.results.some(r => 
+                r.table === inst.table && r.round === inst.round
+            );
             const status = hasResult ? '✓' : '○';
-            const color = hasResult ? '#27ae60' : '#95a5a6';
+            const color = hasResult ? '#27ae60' : '#e74c3c';
             
-            lines.push(`<span style="color: ${color};">Table ${table}: NS-${movement.nsPair} vs EW-${movement.ewPair} ${status}</span>`);
-        }
+            return `<span style="color: ${color};">Round ${inst.round}, Table ${inst.table}: NS-${inst.ns} vs EW-${inst.ew} ${status}</span>`;
+        });
         
-        return `<div style="font-size: 11px; margin-top: 8px;">${lines.join('<br>')}</div>`;
+        return `<div style="font-size: 11px; margin-top: 8px; color: #2c3e50;">${lines.join('<br>')}</div>`;
     }
     
     /**
      * Get contract entry display
      */
     getContractEntryDisplay() {
-        const movement = this.getMovementForBoard(this.currentEntry.board, this.currentEntry.table);
         const contract = this.currentEntry.contract;
         
         let contractSoFar = '';
@@ -747,12 +1016,12 @@ class DuplicateBridge extends BaseBridgeMode {
                 <div class="mode-title">${this.displayName}</div>
                 <div class="score-display">
                     Board ${this.currentEntry.board}<br>
-                    Table ${this.currentEntry.table}
+                    T${this.currentEntry.table}-R${this.currentEntry.round}
                 </div>
             </div>
             <div class="game-content">
-                <div><strong>Table ${this.currentEntry.table}: NS-${movement.nsPair} vs EW-${movement.ewPair}</strong></div>
-                <div>Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
+                <div><strong>Round ${this.currentEntry.round}, Table ${this.currentEntry.table}: NS-${this.currentEntry.nsPair} vs EW-${this.currentEntry.ewPair}</strong></div>
+                <div style="color: #2c3e50;">Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
                 ${contractSoFar ? `<div><strong>Contract: ${contractSoFar}</strong></div>` : ''}
             </div>
             <div class="current-state">${promptText}</div>
@@ -763,7 +1032,6 @@ class DuplicateBridge extends BaseBridgeMode {
      * Get score verification display
      */
     getScoreVerificationDisplay() {
-        const movement = this.getMovementForBoard(this.currentEntry.board, this.currentEntry.table);
         const contract = this.currentEntry.contract;
         const contractString = `${contract.level}${contract.suit}${contract.doubled} by ${contract.declarer} ${contract.result}`;
         
@@ -779,10 +1047,10 @@ class DuplicateBridge extends BaseBridgeMode {
                 </div>
             </div>
             <div class="game-content">
-                <div><strong>Board ${this.currentEntry.board}, Table ${this.currentEntry.table}</strong></div>
-                <div>NS-${movement.nsPair} vs EW-${movement.ewPair}</div>
+                <div><strong>Board ${this.currentEntry.board}, Round ${this.currentEntry.round}, Table ${this.currentEntry.table}</strong></div>
+                <div style="color: #2c3e50;">NS-${this.currentEntry.nsPair} vs EW-${this.currentEntry.ewPair}</div>
                 <div><strong>${contractString}</strong></div>
-                <div style="margin-top: 8px;">
+                <div style="margin-top: 8px; color: #2c3e50;">
                     <div>Traveler Score: <strong>${this.currentEntry.travelerScore}</strong></div>
                     <div>Calculated Score: <strong>${this.currentEntry.calculatedScore}</strong></div>
                     ${!scoreMatch ? '<div style="color: #e74c3c; font-size: 11px; margin-top: 4px;">⚠ Please verify traveler entry</div>' : ''}
@@ -816,8 +1084,10 @@ class DuplicateBridge extends BaseBridgeMode {
             .sort(([, a], [, b]) => b - a)
             .map(([pair, total], index) => ({ pair: parseInt(pair), total, rank: index + 1 }));
         
-        const completedBoards = this.session.boards.filter(b => b.results.length === this.session.tables).length;
-        const totalPossible = completedBoards * 100; // Maximum possible matchpoints
+        const completedBoards = this.session.boards.filter(b => {
+            const expected = this.getBoardInstances(b.number).length;
+            return b.results.length === expected;
+        }).length;
         
         return `
             <div class="title-score-row">
@@ -829,8 +1099,8 @@ class DuplicateBridge extends BaseBridgeMode {
             </div>
             <div class="game-content">
                 <div><strong>Leaderboard</strong></div>
-                <div style="font-size: 11px; color: #95a5a6;">Completed: ${completedBoards} boards</div>
-                ${this.getLeaderboardDisplay(sortedPairs, totalPossible)}
+                <div style="font-size: 11px; color: #2c3e50;">Completed: ${completedBoards} boards</div>
+                ${this.getLeaderboardDisplay(sortedPairs)}
             </div>
             <div class="current-state">Session results • Press Back to enter more scores</div>
         `;
@@ -839,15 +1109,14 @@ class DuplicateBridge extends BaseBridgeMode {
     /**
      * Get leaderboard display
      */
-    getLeaderboardDisplay(sortedPairs, totalPossible) {
-        if (sortedPairs.length === 0) {
-            return '<div style="margin-top: 8px; color: #95a5a6;">No results yet</div>';
+    getLeaderboardDisplay(sortedPairs) {
+        if (sortedPairs.length === 0 || sortedPairs[0].total === 0) {
+            return '<div style="margin-top: 8px; color: #2c3e50;">No results yet</div>';
         }
         
         const lines = sortedPairs.map(({ pair, total, rank }) => {
-            const percentage = totalPossible > 0 ? ((total / totalPossible) * 100).toFixed(1) : '0.0';
-            const color = rank <= 3 ? '#f39c12' : '#95a5a6';
-            return `<div style="color: ${color}; margin: 2px 0;">${rank}. Pair ${pair}: ${total.toFixed(1)} pts (${percentage}%)</div>`;
+            const color = rank <= 3 ? '#f39c12' : '#2c3e50';
+            return `<div style="color: ${color}; margin: 2px 0;">${rank}. Pair ${pair}: ${total.toFixed(1)} pts</div>`;
         });
         
         return `<div style="font-size: 11px; margin-top: 8px;">${lines.join('')}</div>`;
@@ -861,83 +1130,49 @@ class DuplicateBridge extends BaseBridgeMode {
             title: 'Duplicate Bridge Help',
             content: `
                 <div class="help-section">
-                    <h4>What is Duplicate Bridge?</h4>
-                    <p><strong>Duplicate Bridge</strong> allows multiple tables to play the same hands, making results directly comparable. This app handles the scoring from completed travelers with automatic score verification.</p>
+                    <h4>Cruise Duplicate Bridge</h4>
+                    <p>This app handles scoring from completed travelers using exact Howell movements. Perfect for cruise ships and casual duplicate sessions where you want the authentic duplicate experience with minimal setup.</p>
                 </div>
                 
                 <div class="help-section">
                     <h4>Setup Process</h4>
                     <ol>
-                        <li><strong>Physical Setup:</strong> Print movement cards and travelers from templates</li>
-                        <li><strong>App Setup:</strong> Select number of tables (2-5)</li>
-                        <li><strong>Play Hands:</strong> Players follow movement cards, fill travelers</li>
-                        <li><strong>Score Entry:</strong> Director enters results from completed travelers</li>
-                        <li><strong>Results:</strong> App calculates matchpoints and rankings</li>
+                        <li><strong>Choose Tables:</strong> Select 2-5 tables (including half-tables with sit-outs)</li>
+                        <li><strong>Choose Boards:</strong> Select 16-20 boards based on time available</li>
+                        <li><strong>Print Materials:</strong> Movement cards and travelers (from separate templates)</li>
+                        <li><strong>Play Bridge:</strong> Follow movement cards, fill travelers</li>
+                        <li><strong>Enter Scores:</strong> Use app to verify and calculate matchpoints</li>
                     </ol>
                 </div>
                 
                 <div class="help-section">
+                    <h4>Howell Movements Included</h4>
+                    <ul>
+                        <li><strong>2 Tables:</strong> 4 pairs, each pair plays others multiple times</li>
+                        <li><strong>2.5 Tables:</strong> 5 pairs, 1 sit-out per round</li>
+                        <li><strong>3 Tables:</strong> 6 pairs, everyone plays every round</li>
+                        <li><strong>3.5-4.5 Tables:</strong> With rotating sit-outs</li>
+                        <li><strong>5 Tables:</strong> 10 pairs, full movement</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
                     <h4>Score Verification System</h4>
-                    <p>The app automatically calculates what each score should be and compares it to the traveler:</p>
+                    <p>The app automatically calculates expected scores:</p>
                     <ul>
-                        <li><strong>✓ Scores Match:</strong> Green checkmark, safe to accept</li>
-                        <li><strong>⚠ Score Mismatch:</strong> Red warning, review traveler entry</li>
-                        <li><strong>Common Errors:</strong> Wrong vulnerability, arithmetic mistakes, declarer confusion</li>
+                        <li><strong>✓ Green:</strong> Traveler score matches calculation</li>
+                        <li><strong>⚠ Red:</strong> Score mismatch - check traveler entry</li>
+                        <li><strong>Catches:</strong> Wrong vulnerability, arithmetic errors, declarer mistakes</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Board Status Tracking</h4>
+                    <h4>Board Tracking</h4>
                     <ul>
-                        <li><strong>○ Pending:</strong> Results not yet entered for this table</li>
-                        <li><strong>✓ Complete:</strong> All table results entered for this board</li>
-                        <li><strong>X/Y Format:</strong> X results entered out of Y total tables</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Matchpoint Calculation</h4>
-                    <p>Standard duplicate bridge scoring:</p>
-                    <ul>
-                        <li><strong>Best Score:</strong> Gets 100% (top)</li>
-                        <li><strong>Other Scores:</strong> Scaled proportionally</li>
-                        <li><strong>Tied Scores:</strong> Split the available points</li>
-                        <li><strong>Final Ranking:</strong> Total matchpoints across all boards</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Vulnerability Cycle</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 11px;">
-                        <tr style="background: rgba(255,255,255,0.1);">
-                            <th style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">Boards</th>
-                            <th style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">Vulnerability</th>
-                        </tr>
-                        <tr><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">1, 5, 9, 13...</td><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">None</td></tr>
-                        <tr><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">2, 6, 10, 14...</td><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">NS</td></tr>
-                        <tr><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">3, 7, 11, 15...</td><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">EW</td></tr>
-                        <tr><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">4, 8, 12, 16...</td><td style="padding: 4px; border: 1px solid rgba(255,255,255,0.2);">Both</td></tr>
-                    </table>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Session Sizes</h4>
-                    <ul>
-                        <li><strong>2 Tables:</strong> 4 pairs, 6 boards (quick session)</li>
-                        <li><strong>3 Tables:</strong> 6 pairs, 15 boards (standard cruise session)</li>
-                        <li><strong>4 Tables:</strong> 8 pairs, 28 boards (full evening)</li>
-                        <li><strong>5 Tables:</strong> 10 pairs, 45 boards (tournament length)</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Tips for Directors</h4>
-                    <ul>
-                        <li><strong>Print Everything:</strong> Movement cards and travelers before play starts</li>
-                        <li><strong>Check Travelers:</strong> Verify all scores before entering</li>
-                        <li><strong>Score Regularly:</strong> Enter results as travelers come in</li>
-                        <li><strong>Double-Check Mismatches:</strong> Red warnings usually indicate errors</li>
-                        <li><strong>Show Progress:</strong> Let players see current standings</li>
+                        <li><strong>Multiple Instances:</strong> Each board played at several tables</li>
+                        <li><strong>Progress Display:</strong> Shows X/Y results entered per board</li>
+                        <li><strong>Matchpoints:</strong> Calculated when all instances complete</li>
+                        <li><strong>Live Updates:</strong> Leaderboard updates as scores come in</li>
                     </ul>
                 </div>
                 
@@ -945,10 +1180,10 @@ class DuplicateBridge extends BaseBridgeMode {
                     <h4>Perfect for Cruise Ships</h4>
                     <ul>
                         <li><strong>One Device:</strong> Only director needs the app</li>
-                        <li><strong>Offline:</strong> No internet required</li>
-                        <li><strong>Print & Play:</strong> Everything works with standard cards</li>
-                        <li><strong>Fair Competition:</strong> Same hands for all tables</li>
-                        <li><strong>Flexible Timing:</strong> Can accommodate dining schedules</li>
+                        <li><strong>Printed Cards:</strong> All movements work with standard materials</li>
+                        <li><strong>Flexible Sessions:</strong> 2-3 hour sessions with natural break points</li>
+                        <li><strong>Fair Competition:</strong> Exact Howell movements ensure balance</li>
+                        <li><strong>Score Accuracy:</strong> Prevents disputes with automatic verification</li>
                     </ul>
                 </div>
             `,
@@ -966,4 +1201,4 @@ class DuplicateBridge extends BaseBridgeMode {
     }
 }
 
-export default DuplicateBridge;
+export default DuplicateBridge; '
