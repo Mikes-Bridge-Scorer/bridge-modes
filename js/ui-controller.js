@@ -149,29 +149,29 @@ class UIController {
         this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
     }
     
-    /**
-     * Show the honors button when in scoring state - NEW METHOD
-     */
-    showHonorsButton() {
-        const honorsBtn = document.getElementById('honorsControl');
-        if (honorsBtn) {
-            honorsBtn.style.display = 'flex'; // Use flex to match other control items
-            honorsBtn.classList.add('active');
-            console.log('🏅 Honors button shown');
-        }
+/**
+ * Show the honors button when in scoring state - NEW METHOD
+ */
+showHonorsButton() {
+    const honorsBtn = document.getElementById('honorsControl');
+    if (honorsBtn) {
+        honorsBtn.style.display = 'flex'; // Use flex to match other control items
+        honorsBtn.classList.add('active');
+        console.log('🏅 Honors button shown');
     }
-    
-    /**
-     * Hide the honors button when not needed - NEW METHOD
-     */
-    hideHonorsButton() {
-        const honorsBtn = document.getElementById('honorsControl');
-        if (honorsBtn) {
-            honorsBtn.style.display = 'none';
-            honorsBtn.classList.remove('active');
-            console.log('🏅 Honors button hidden');
-        }
+}
+
+/**
+ * Hide the honors button when not needed - NEW METHOD
+ */
+hideHonorsButton() {
+    const honorsBtn = document.getElementById('honorsControl');
+    if (honorsBtn) {
+        honorsBtn.style.display = 'none';
+        honorsBtn.classList.remove('active');
+        console.log('🏅 Honors button hidden');
     }
+}
     
     /**
      * Show modal dialog
