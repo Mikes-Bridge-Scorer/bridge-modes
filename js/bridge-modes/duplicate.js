@@ -134,6 +134,39 @@ class DuplicateBridge extends BaseBridgeMode {
                     { round: 5, table: 3, ns: 4, ew: 2, boards: [3,4] }
                 ]
             },
+            7: {
+                pairs: 7,
+                tables: 3,
+                rounds: 6,
+                totalBoards: 18,
+                boardsPerRound: 3,
+                description: "3.5-table Howell with sit-outs, 18 boards, ~2.5 hours",
+                sitOut: true,
+                movement: [
+                    // Basic movement - would need full Gemini data
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [4,5,6] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8,9] },
+                    { round: 1, sitOut: 7 }
+                ]
+            },
+            9: {
+                pairs: 9,
+                tables: 4,
+                rounds: 8,
+                totalBoards: 24,
+                boardsPerRound: 3,
+                description: "4.5-table Howell with sit-outs, 24 boards, ~3 hours",
+                sitOut: true,
+                movement: [
+                    // Basic movement - would need full Gemini data
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [4,5,6] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8,9] },
+                    { round: 1, table: 4, ns: 7, ew: 8, boards: [10,11,12] },
+                    { round: 1, sitOut: 9 }
+                ]
+            },
             8: {
                 pairs: 8,
                 tables: 4,
@@ -223,7 +256,13 @@ class DuplicateBridge extends BaseBridgeMode {
      * Handle pairs setup
      */
     handlePairsSetup(value) {
-        const pairCount = parseInt(value);
+        let pairCount;
+        if (value === '0') {
+            pairCount = 10; // Button "0" = 10 pairs
+        } else {
+            pairCount = parseInt(value);
+        }
+        
         if (this.movements[pairCount]) {
             this.session.pairs = pairCount;
             const movement = this.movements[pairCount];
@@ -659,7 +698,7 @@ class DuplicateBridge extends BaseBridgeMode {
     getActiveButtons() {
         switch (this.inputState) {
             case 'pairs_setup':
-                return Object.keys(this.movements);
+                return ['4', '5', '6', '7', '8', '9', '0']; // 0 = 10 pairs
             case 'movement_confirm':
                 return ['CONFIRM', 'BACK'];
             case 'board_selection':
@@ -745,7 +784,7 @@ class DuplicateBridge extends BaseBridgeMode {
                             authentic Howell movement for your session.
                         </div>
                     </div>
-                    <div class="current-state">Select number of pairs (4, 5, 6, 8, or 10)</div>
+                    <div class="current-state">Select number of pairs (4,5,6,7,8,9 or 0 for 10)</div>
                 `;
                 
             case 'movement_confirm':
@@ -755,7 +794,7 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">
                             ${this.session.pairs} Pairs<br>
-                            Confirm?
+                            Movement
                         </div>
                     </div>
                     <div class="game-content">
@@ -767,12 +806,13 @@ class DuplicateBridge extends BaseBridgeMode {
                             • ${this.session.totalBoards} boards total<br>
                             ${movement.sitOut ? '• Includes sit-out rounds' : '• No sit-outs'}
                         </div>
+                        ${this.getMovementTableDisplay()}
                         <div style="color: #3498db; font-size: 11px; margin-top: 8px;">
                             This is an authentic Howell movement where each pair<br>
                             plays every other pair exactly once.
                         </div>
                     </div>
-                    <div class="current-state">Confirm this movement or go Back to change</div>
+                    <div class="current-state">Review movement table above, then Confirm or go Back</div>
                 `;
                 
             case 'board_selection':
@@ -992,8 +1032,56 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get leaderboard display
+     * Get movement table display
      */
+    getMovementTableDisplay() {
+        const movement = this.movements[this.session.pairs];
+        if (!movement || !movement.movement) return '';
+        
+        // Group by rounds for display
+        const roundData = {};
+        movement.movement.forEach(entry => {
+            if (!roundData[entry.round]) {
+                roundData[entry.round] = [];
+            }
+            if (entry.sitOut) {
+                roundData[entry.round].push({ type: 'sitout', pair: entry.sitOut });
+            } else if (entry.table) {
+                roundData[entry.round].push({
+                    type: 'table',
+                    table: entry.table,
+                    ns: entry.ns,
+                    ew: entry.ew,
+                    boards: entry.boards
+                });
+            }
+        });
+        
+        let tableHtml = '<div style="margin: 8px 0; font-size: 10px; border: 1px solid #2c3e50; border-radius: 4px; padding: 8px; background: rgba(44,62,80,0.1);">';
+        tableHtml += '<div style="font-weight: bold; margin-bottom: 4px; color: #2c3e50;">Movement Chart:</div>';
+        
+        Object.keys(roundData).forEach(round => {
+            tableHtml += `<div style="margin: 2px 0;"><strong>Round ${round}:</strong> `;
+            const roundInfo = [];
+            
+            roundData[round].forEach(entry => {
+                if (entry.type === 'table') {
+                    const boardRange = entry.boards.length > 1 ? 
+                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
+                        entry.boards[0];
+                    roundInfo.push(`T${entry.table}: ${entry.ns}v${entry.ew} (B${boardRange})`);
+                } else if (entry.type === 'sitout') {
+                    roundInfo.push(`P${entry.pair} sits out`);
+                }
+            });
+            
+            tableHtml += roundInfo.join(', ');
+            tableHtml += '</div>';
+        });
+        
+        tableHtml += '</div>';
+        return tableHtml;
+    }
     getLeaderboardDisplay(sortedPairs) {
         if (sortedPairs.length === 0 || sortedPairs[0].total === 0) {
             return '<div style="margin-top: 8px; color: #2c3e50;">No results yet</div>';
