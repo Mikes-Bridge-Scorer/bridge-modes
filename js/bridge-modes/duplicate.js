@@ -280,10 +280,10 @@ class DuplicateBridge extends BaseBridgeMode {
      * Handle movement confirmation
      */
     handleMovementConfirm(value) {
-        if (value === 'MOVEMENT') {
+        if (value === '1') {
             // Show movement table popup
             this.showMovementPopup();
-        } else if (value === 'CONFIRM') {
+        } else if (value === '2') {
             // Initialize boards array
             this.session.boards = [];
             for (let i = 1; i <= this.session.totalBoards; i++) {
@@ -317,7 +317,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     ${popupContent}
                     <div style="text-align: center; margin-top: 20px;">
                         <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer;">Close</button>
-                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove(); window.duplicateBridge.handleAction('CONFIRM')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 10px;">Confirm Movement</button>
+                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove(); window.duplicateBridge.handleAction('2')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 10px;">Confirm Movement</button>
                     </div>
                 </div>
             </div>
@@ -807,7 +807,7 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'pairs_setup':
                 return ['4', '5', '6', '7', '8', '9', '0']; // 0 = 10 pairs
             case 'movement_confirm':
-                return ['MOVEMENT', 'CONFIRM', 'BACK'];
+                return ['1', '2', 'BACK']; // 1=MOVEMENT, 2=CONFIRM
             case 'board_selection':
                 const buttons = [];
                 for (let i = 1; i <= this.session.totalBoards; i++) {
@@ -917,11 +917,12 @@ class DuplicateBridge extends BaseBridgeMode {
                             This is an authentic Howell movement where each pair<br>
                             plays every other pair exactly once.
                         </div>
-                        <div style="background: #3498db; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; text-align: center; font-weight: bold;">
-                            Press MOVEMENT to see full movement table
+                        <div style="background: #3498db; color: white; padding: 12px; border-radius: 4px; margin-top: 8px; text-align: center; font-weight: bold; font-size: 14px;">
+                            Press <strong>1</strong> to view MOVEMENT table<br>
+                            Press <strong>2</strong> to CONFIRM and proceed
                         </div>
                     </div>
-                    <div class="current-state">Press MOVEMENT to review, then CONFIRM to proceed</div>
+                    <div class="current-state">Press 1 to review movement, 2 to confirm, or Back</div>
                 `;
                 
             case 'board_selection':
