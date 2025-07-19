@@ -280,7 +280,10 @@ class DuplicateBridge extends BaseBridgeMode {
      * Handle movement confirmation
      */
     handleMovementConfirm(value) {
-        if (value === 'CONFIRM') {
+        if (value === 'MOVEMENT') {
+            // Show movement table popup
+            this.showMovementPopup();
+        } else if (value === 'CONFIRM') {
             // Initialize boards array
             this.session.boards = [];
             for (let i = 1; i <= this.session.totalBoards; i++) {
@@ -297,6 +300,110 @@ class DuplicateBridge extends BaseBridgeMode {
         } else if (value === 'BACK') {
             this.inputState = 'pairs_setup';
         }
+    }
+    
+    /**
+     * Show movement table in popup
+     */
+    showMovementPopup() {
+        const movement = this.movements[this.session.pairs];
+        const popupContent = this.getFullMovementTable();
+        
+        // Create popup overlay
+        const popup = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
+                <div style="background: white; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80%; overflow: auto; color: #2c3e50;" onclick="event.stopPropagation()">
+                    <h3 style="margin-top: 0; color: #2c3e50;">${movement.description}</h3>
+                    ${popupContent}
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer;">Close</button>
+                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove(); window.duplicateBridge.handleAction('CONFIRM')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 10px;">Confirm Movement</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add popup to page
+        document.body.insertAdjacentHTML('beforeend', popup);
+        
+        // Store reference for the confirm button
+        window.duplicateBridge = this;
+    }
+    
+    /**
+     * Get full movement table for popup
+     */
+    getFullMovementTable() {
+        const movement = this.movements[this.session.pairs];
+        if (!movement || !movement.movement) return '<p>Movement data not available</p>';
+        
+        // Group by rounds
+        const roundData = {};
+        movement.movement.forEach(entry => {
+            if (!roundData[entry.round]) {
+                roundData[entry.round] = [];
+            }
+            if (entry.sitOut) {
+                roundData[entry.round].push({ type: 'sitout', pair: entry.sitOut });
+            } else if (entry.table) {
+                roundData[entry.round].push({
+                    type: 'table',
+                    table: entry.table,
+                    ns: entry.ns,
+                    ew: entry.ew,
+                    boards: entry.boards
+                });
+            }
+        });
+        
+        let tableHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
+        tableHtml += '<thead><tr style="background: #34495e; color: white;"><th style="padding: 8px; border: 1px solid #2c3e50;">Round</th>';
+        
+        // Add table headers
+        for (let t = 1; t <= this.session.tables; t++) {
+            tableHtml += `<th style="padding: 8px; border: 1px solid #2c3e50;">Table ${t}</th>`;
+        }
+        if (movement.sitOut) {
+            tableHtml += '<th style="padding: 8px; border: 1px solid #2c3e50;">Sit Out</th>';
+        }
+        tableHtml += '</tr></thead><tbody>';
+        
+        // Add round data
+        Object.keys(roundData).sort((a,b) => parseInt(a) - parseInt(b)).forEach(round => {
+            tableHtml += `<tr><td style="padding: 8px; border: 1px solid #2c3e50; font-weight: bold; background: #ecf0f1;">${round}</td>`;
+            
+            const roundEntries = roundData[round];
+            const tableEntries = roundEntries.filter(e => e.type === 'table').sort((a,b) => a.table - b.table);
+            const sitOutEntry = roundEntries.find(e => e.type === 'sitout');
+            
+            // Add table data
+            for (let t = 1; t <= this.session.tables; t++) {
+                const entry = tableEntries.find(e => e.table === t);
+                if (entry) {
+                    const boardRange = entry.boards.length > 1 ? 
+                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
+                        entry.boards[0];
+                    tableHtml += `<td style="padding: 8px; border: 1px solid #2c3e50;">NS: Pair ${entry.ns}<br>EW: Pair ${entry.ew}<br><small>Boards ${boardRange}</small></td>`;
+                } else {
+                    tableHtml += '<td style="padding: 8px; border: 1px solid #2c3e50;">-</td>';
+                }
+            }
+            
+            // Add sit-out data
+            if (movement.sitOut) {
+                if (sitOutEntry) {
+                    tableHtml += `<td style="padding: 8px; border: 1px solid #2c3e50;">Pair ${sitOutEntry.pair}</td>`;
+                } else {
+                    tableHtml += '<td style="padding: 8px; border: 1px solid #2c3e50;">-</td>';
+                }
+            }
+            
+            tableHtml += '</tr>';
+        });
+        
+        tableHtml += '</tbody></table>';
+        
+        return tableHtml;
     }
     
     /**
@@ -700,7 +807,7 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'pairs_setup':
                 return ['4', '5', '6', '7', '8', '9', '0']; // 0 = 10 pairs
             case 'movement_confirm':
-                return ['CONFIRM', 'BACK'];
+                return ['MOVEMENT', 'CONFIRM', 'BACK'];
             case 'board_selection':
                 const buttons = [];
                 for (let i = 1; i <= this.session.totalBoards; i++) {
@@ -794,7 +901,7 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">
                             ${this.session.pairs} Pairs<br>
-                            Movement
+                            Review Movement
                         </div>
                     </div>
                     <div class="game-content">
@@ -806,13 +913,15 @@ class DuplicateBridge extends BaseBridgeMode {
                             • ${this.session.totalBoards} boards total<br>
                             ${movement.sitOut ? '• Includes sit-out rounds' : '• No sit-outs'}
                         </div>
-                        ${this.getMovementTableDisplay()}
                         <div style="color: #3498db; font-size: 11px; margin-top: 8px;">
                             This is an authentic Howell movement where each pair<br>
                             plays every other pair exactly once.
                         </div>
+                        <div style="background: #3498db; color: white; padding: 8px; border-radius: 4px; margin-top: 8px; text-align: center; font-weight: bold;">
+                            Press MOVEMENT to see full movement table
+                        </div>
                     </div>
-                    <div class="current-state">Review movement table above, then Confirm or go Back</div>
+                    <div class="current-state">Press MOVEMENT to review, then CONFIRM to proceed</div>
                 `;
                 
             case 'board_selection':
