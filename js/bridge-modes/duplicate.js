@@ -727,6 +727,23 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
+     * Parse score input from various sources
+     */
+    parseScoreInput(value) {
+        if (value === 'SCORE') {
+            // Trigger manual score entry
+            const score = prompt('Enter score from traveler (use - for negative scores):');
+            if (score === null) return null; // User cancelled
+            const parsedScore = parseInt(score);
+            return this.isValidScore(parsedScore.toString()) ? parsedScore : null;
+        }
+        
+        // Handle direct numerical input
+        const num = parseInt(value);
+        return this.isValidScore(value) ? num : null;
+    }
+    
+    /**
      * Check if a score is valid
      */
     isValidScore(value) {
@@ -971,9 +988,12 @@ class DuplicateBridge extends BaseBridgeMode {
                     <div class="game-content">
                         <div><strong>Board ${this.currentEntry.board}</strong></div>
                         <div style="color: #2c3e50;">Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
+                        <div style="color: #2c3e50; font-size: 11px; margin-top: 8px;">
+                            This board is played ${this.getBoardInstances(this.currentEntry.board).length} times in different rounds:
+                        </div>
                         ${this.getTableInstancesDisplay()}
                     </div>
-                    <div class="current-state">Select which table/round played this board</div>
+                    <div class="current-state">Select which table/round to enter score for</div>
                 `;
                 
             case 'contract_entry':
@@ -1052,7 +1072,7 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'result': promptText = 'Made exactly, Plus overtricks, or Down?'; break;
             case 'plus_tricks': promptText = 'How many overtricks?'; break;
             case 'down_tricks': promptText = 'How many down?'; break;
-            case 'score': promptText = 'Enter traveler score (use - for minus)'; break;
+            case 'score': promptText = 'Press SCORE to enter traveler score manually'; break;
         }
         
         return `
