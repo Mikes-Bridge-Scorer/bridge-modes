@@ -96,6 +96,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] }
                 ]
             },
+            7: {
             5: {
                 pairs: 5,
                 tables: 2,
@@ -127,7 +128,37 @@ class DuplicateBridge extends BaseBridgeMode {
                     { round: 5, table: 3, ns: null, ew: 4, boards: [], sitOut: true }
                 ]
             },
-            7: {
+            6: {
+                pairs: 6,
+                tables: 3,
+                rounds: 5,
+                totalBoards: 10,
+                boardsPerRound: 2,
+                description: "3-table Howell, 10 boards, ~1.5 hours",
+                sitOut: false,
+                movement: [
+                    // Round 1
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 3, boards: [7,8] },
+                    { round: 2, table: 2, ns: 5, ew: 2, boards: [9,10] },
+                    { round: 2, table: 3, ns: 4, ew: 6, boards: [1,2] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [3,4] },
+                    { round: 3, table: 2, ns: 6, ew: 3, boards: [5,6] },
+                    { round: 3, table: 3, ns: 2, ew: 5, boards: [7,8] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [9,10] },
+                    { round: 4, table: 2, ns: 2, ew: 4, boards: [1,2] },
+                    { round: 4, table: 3, ns: 3, ew: 6, boards: [3,4] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 6, boards: [5,6] },
+                    { round: 5, table: 2, ns: 3, ew: 5, boards: [7,8] },
+                    { round: 5, table: 3, ns: 4, ew: 2, boards: [9,10] }
+                ]
+            },
                 pairs: 7,
                 tables: 3,
                 rounds: 7,
@@ -331,6 +362,12 @@ class DuplicateBridge extends BaseBridgeMode {
     handleAction(value) {
         console.log(`🎮 Duplicate Bridge action: ${value} in state: ${this.inputState}`);
         
+        // If traveler popup is active, handle input differently
+        if (this.travelerEntry.isActive) {
+            this.handleTravelerButtonPress(value);
+            return;
+        }
+        
         switch (this.inputState) {
             case 'pairs_setup':
                 this.handlePairsSetup(value);
@@ -341,15 +378,72 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'board_selection':
                 this.handleBoardSelection(value);
                 break;
-            case 'traveler_entry':
-                this.handleTravelerEntry(value);
-                break;
             case 'results_view':
                 this.handleResultsView(value);
                 break;
         }
         
         this.updateDisplay();
+    }
+    
+    /**
+     * Handle button press when traveler popup is active
+     */
+    handleTravelerButtonPress(value) {
+        // Get the currently focused input element
+        const focusedElement = document.activeElement;
+        
+        if (focusedElement && (focusedElement.tagName === 'INPUT' || focusedElement.tagName === 'SELECT')) {
+            const row = parseInt(focusedElement.dataset.row);
+            const field = focusedElement.dataset.field;
+            
+            if (!isNaN(row) && field) {
+                if (field === 'bidLevel') {
+                    // For bid level, only allow 1-7
+                    if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
+                        focusedElement.value = value;
+                        this.travelerEntry.results[row][field] = value;
+                        this.checkRowCompletion(row);
+                    }
+                } else if (field === 'tricks') {
+                    // For tricks, handle two-digit entry
+                    const currentValue = focusedElement.value;
+                    
+                    if (currentValue === '1' && ['0', '1', '2', '3'].includes(value)) {
+                        // Complete two-digit number
+                        focusedElement.value = '1' + value;
+                        this.travelerEntry.results[row][field] = focusedElement.value;
+                        this.checkRowCompletion(row);
+                    } else if (currentValue === '' || currentValue.length === 1) {
+                        if (value === '1') {
+                            // Start building two-digit number
+                            focusedElement.value = '1';
+                            this.travelerEntry.results[row][field] = '1';
+                        } else if (['6', '7', '8', '9'].includes(value)) {
+                            // Single digit 6-9
+                            focusedElement.value = value;
+                            this.travelerEntry.results[row][field] = value;
+                            this.checkRowCompletion(row);
+                        } else if (value === '0' && currentValue === '1') {
+                            // 10 tricks
+                            focusedElement.value = '10';
+                            this.travelerEntry.results[row][field] = '10';
+                            this.checkRowCompletion(row);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Check if row is complete and calculate score
+     */
+    checkRowCompletion(rowIndex) {
+        const result = this.travelerEntry.results[rowIndex];
+        if (result.bidLevel && result.bidSuit && result.declarer && result.tricks) {
+            this.calculateRowScore(rowIndex);
+        }
     }
     
     /**
@@ -579,7 +673,7 @@ class DuplicateBridge extends BaseBridgeMode {
             `;
         });
         
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         return html;
     }
     
@@ -987,7 +1081,8 @@ class DuplicateBridge extends BaseBridgeMode {
      */
     getActiveButtons() {
         if (this.travelerEntry.isActive) {
-            return []; // No buttons when traveler popup is active
+            // When traveler popup is active, provide input buttons
+            return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
         }
         
         switch (this.inputState) {
@@ -1036,7 +1131,7 @@ class DuplicateBridge extends BaseBridgeMode {
                             Howell movement with traveler-based scoring.
                         </div>
                     </div>
-                    <div class="current-state">Select pairs (4,5,7,8,9 or 0 for 10)</div>
+                    <div class="current-state">Select pairs (4,5,6,7,8,9 or 0 for 10)</div>
                 `;
                 
             case 'movement_confirm':
