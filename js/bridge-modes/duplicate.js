@@ -1,8 +1,8 @@
 /**
- * Duplicate Bridge Mode - Authentic Howell Movements
+ * Duplicate Bridge Mode - Authentic Howell Movements with Popup Traveler
  * 
- * This module handles score entry from completed travelers using authentic
- * Howell movements provided by Gemini AI. Perfect for cruise ship duplicate.
+ * Uses authentic movement data from professional bridge sources.
+ * Features popup traveler interface for score entry matching real tournaments.
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -25,187 +25,273 @@ class DuplicateBridge extends BaseBridgeMode {
             isSetup: false
         };
         
-        // Current entry state
-        this.currentEntry = {
-            board: null,
-            table: null,
-            round: null,
-            nsPair: null,
-            ewPair: null,
-            contract: {
-                level: null,
-                suit: null,
-                declarer: null,
-                doubled: '',
-                result: null
-            },
-            travelerScore: null,
-            calculatedScore: null
+        // Current traveler entry state
+        this.travelerEntry = {
+            boardNumber: null,
+            isActive: false,
+            results: [],
+            currentRow: 0,
+            inputMode: 'bid_level', // bid_level, bid_suit, declarer, tricks, score
+            currentInput: ''
         };
         
         this.inputState = 'pairs_setup';
-        this.contractInputStep = 'level';
         
-        // Initialize authentic Howell movements
-        this.initializeMovements();
+        // Initialize authentic Howell movements from PDFs
+        this.initializeAuthenticMovements();
         
-        console.log('🏆 Duplicate Bridge initialized with authentic Howell movements');
+        console.log('🏆 Duplicate Bridge initialized with authentic PDF movements');
     }
     
     /**
-     * Initialize authentic Howell movement data from Gemini
+     * Initialize authentic movement data from professional PDF sources
      */
-    initializeMovements() {
+    initializeAuthenticMovements() {
         this.movements = {
             4: {
                 pairs: 4,
                 tables: 2,
-                rounds: 3,
+                rounds: 6,
                 totalBoards: 12,
-                boardsPerRound: 4,
-                description: "2-table Howell, 12 boards, ~1.5 hours",
+                boardsPerRound: 2,
+                description: "2-table Howell, 12 boards, ~2 hours",
                 sitOut: false,
                 movement: [
                     // Round 1
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [5,6,7,8] },
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
                     // Round 2
-                    { round: 2, table: 1, ns: 1, ew: 3, boards: [5,6,7,8] },
-                    { round: 2, table: 2, ns: 4, ew: 2, boards: [1,2,3,4] },
+                    { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] },
+                    { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] },
                     // Round 3
-                    { round: 3, table: 1, ns: 1, ew: 4, boards: [1,2,3,4] },
-                    { round: 3, table: 2, ns: 2, ew: 3, boards: [5,6,7,8] }
+                    { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] },
+                    { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] },
+                    { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] },
+                    { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] },
+                    { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] }
                 ]
             },
             5: {
                 pairs: 5,
                 tables: 2,
-                rounds: 4,
-                totalBoards: 16,
-                boardsPerRound: 4,
-                description: "2.5-table Howell with sit-outs, 16 boards, ~2 hours",
+                rounds: 5,
+                totalBoards: 15,
+                boardsPerRound: 3,
+                description: "2.5-table Howell with sit-outs, 15 boards, ~2.5 hours",
                 sitOut: true,
                 movement: [
                     // Round 1
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [5,6,7,8] },
-                    { round: 1, sitOut: 5 },
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [10,11,12] },
+                    { round: 1, table: 3, ns: 5, ew: null, boards: [4,5,6], sitOut: true },
                     // Round 2
-                    { round: 2, table: 1, ns: null, ew: 3, boards: [5,6,7,8], sitOutNS: 1 },
-                    { round: 2, table: 2, ns: 2, ew: 5, boards: [1,2,3,4] },
+                    { round: 2, table: 1, ns: 1, ew: 4, boards: [4,5,6] },
+                    { round: 2, table: 2, ns: 2, ew: null, boards: [10,11,12], sitOut: true },
+                    { round: 2, table: 3, ns: 4, ew: null, boards: [7,8,9], sitOut: true },
                     // Round 3
-                    { round: 3, table: 1, ns: 4, ew: 3, boards: [1,2,3,4] },
-                    { round: 3, table: 2, ns: 5, ew: 1, boards: [5,6,7,8] },
-                    { round: 3, sitOut: 2 },
+                    { round: 3, table: 1, ns: 1, ew: null, boards: [7,8,9], sitOut: true },
+                    { round: 3, table: 2, ns: 4, ew: 5, boards: [1,2,3] },
+                    { round: 3, table: 3, ns: 2, ew: 3, boards: [4,5,6] },
                     // Round 4
-                    { round: 4, table: 1, ns: 2, ew: 4, boards: [5,6,7,8] },
-                    { round: 4, table: 2, ns: 1, ew: 3, boards: [1,2,3,4] },
-                    { round: 4, sitOut: 5 }
-                ]
-            },
-            6: {
-                pairs: 6,
-                tables: 3,
-                rounds: 5,
-                totalBoards: 10,
-                boardsPerRound: 2,
-                description: "3-table Howell, 10 boards, ~1.5 hours",
-                sitOut: false,
-                movement: [
-                    // CORRECTED MOVEMENT - No duplicate board/pair combinations
-                    // Round 1
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-                    // Round 2 - Boards move and pairs rotate
-                    { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
-                    { round: 2, table: 2, ns: 5, ew: 2, boards: [5,6] },
-                    { round: 2, table: 3, ns: 4, ew: 6, boards: [1,2] },
-                    // Round 3
-                    { round: 3, table: 1, ns: 1, ew: 4, boards: [1,2] },
-                    { round: 3, table: 2, ns: 6, ew: 3, boards: [3,4] },
-                    { round: 3, table: 3, ns: 2, ew: 5, boards: [5,6] },
-                    // Round 4
-                    { round: 4, table: 1, ns: 1, ew: 5, boards: [5,6] },
-                    { round: 4, table: 2, ns: 2, ew: 4, boards: [1,2] },
-                    { round: 4, table: 3, ns: 3, ew: 6, boards: [3,4] },
-                    // Round 5
-                    { round: 5, table: 1, ns: 1, ew: 6, boards: [3,4] },
-                    { round: 5, table: 2, ns: 3, ew: 5, boards: [5,6] },
-                    { round: 5, table: 3, ns: 4, ew: 2, boards: [1,2] }
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] },
+                    { round: 4, table: 2, ns: 3, ew: null, boards: [1,2,3], sitOut: true },
+                    { round: 4, table: 3, ns: 4, ew: 2, boards: [7,8,9] },
+                    // Round 5 - Boards 13,14,15 shared between tables
+                    { round: 5, table: 1, ns: 1, ew: 3, boards: [13,14,15] },
+                    { round: 5, table: 2, ns: 5, ew: 2, boards: [13,14,15] },
+                    { round: 5, table: 3, ns: null, ew: 4, boards: [], sitOut: true }
                 ]
             },
             7: {
                 pairs: 7,
                 tables: 3,
-                rounds: 6,
-                totalBoards: 18,
-                boardsPerRound: 3,
-                description: "3.5-table Howell with sit-outs, 18 boards, ~2.5 hours",
+                rounds: 7,
+                totalBoards: 14,
+                boardsPerRound: 2,
+                description: "3.5-table Howell with sit-outs, 14 boards, ~2.5 hours",
                 sitOut: true,
                 movement: [
-                    // Basic movement - would need full Gemini data
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [4,5,6] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8,9] },
-                    { round: 1, sitOut: 7 }
-                ]
-            },
-            9: {
-                pairs: 9,
-                tables: 4,
-                rounds: 8,
-                totalBoards: 24,
-                boardsPerRound: 3,
-                description: "4.5-table Howell with sit-outs, 24 boards, ~3 hours",
-                sitOut: true,
-                movement: [
-                    // Basic movement - would need full Gemini data
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [4,5,6] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8,9] },
-                    { round: 1, table: 4, ns: 7, ew: 8, boards: [10,11,12] },
-                    { round: 1, sitOut: 9 }
+                    // Round 1
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
+                    { round: 1, table: 4, ns: 7, ew: null, boards: [9,10], sitOut: true },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 6, boards: [3,4] },
+                    { round: 2, table: 2, ns: 7, ew: 3, boards: [5,6] },
+                    { round: 2, table: 3, ns: 4, ew: null, boards: [7,8], sitOut: true },
+                    { round: 2, table: 4, ns: 2, ew: 5, boards: [11,12] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: null, boards: [5,6], sitOut: true },
+                    { round: 3, table: 2, ns: 2, ew: 7, boards: [7,8] },
+                    { round: 3, table: 3, ns: 3, ew: 5, boards: [9,10] },
+                    { round: 3, table: 4, ns: 6, ew: 4, boards: [13,14] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+                    { round: 4, table: 2, ns: 6, ew: 2, boards: [9,10] },
+                    { round: 4, table: 3, ns: 7, ew: 4, boards: [11,12] },
+                    { round: 4, table: 4, ns: null, ew: 3, boards: [1,2], sitOut: true },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 4, boards: [9,10] },
+                    { round: 5, table: 2, ns: null, ew: 6, boards: [11,12], sitOut: true },
+                    { round: 5, table: 3, ns: 2, ew: 3, boards: [13,14] },
+                    { round: 5, table: 4, ns: 5, ew: 7, boards: [3,4] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 1, ew: 3, boards: [11,12] },
+                    { round: 6, table: 2, ns: 5, ew: null, boards: [13,14], sitOut: true },
+                    { round: 6, table: 3, ns: 6, ew: 7, boards: [1,2] },
+                    { round: 6, table: 4, ns: 4, ew: 2, boards: [5,6] },
+                    // Round 7
+                    { round: 7, table: 1, ns: 1, ew: 7, boards: [13,14] },
+                    { round: 7, table: 2, ns: 4, ew: 5, boards: [1,2] },
+                    { round: 7, table: 3, ns: 2, ew: null, boards: [3,4], sitOut: true },
+                    { round: 7, table: 4, ns: 3, ew: 6, boards: [7,8] }
                 ]
             },
             8: {
                 pairs: 8,
                 tables: 4,
                 rounds: 7,
-                totalBoards: 28,
-                boardsPerRound: 4,
-                description: "4-table Howell, 28 boards, ~3.5 hours",
+                totalBoards: 14,
+                boardsPerRound: 2,
+                description: "4-table Howell, 14 boards, ~2.5 hours",
                 sitOut: false,
                 movement: [
                     // Round 1
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [5,6,7,8] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [9,10,11,12] },
-                    { round: 1, table: 4, ns: 7, ew: 8, boards: [13,14,15,16] },
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
+                    { round: 1, table: 4, ns: 7, ew: 8, boards: [9,10] },
                     // Round 2
-                    { round: 2, table: 1, ns: 1, ew: 3, boards: [13,14,15,16] },
-                    { round: 2, table: 2, ns: 5, ew: 4, boards: [1,2,3,4] },
-                    { round: 2, table: 3, ns: 7, ew: 2, boards: [5,6,7,8] },
-                    { round: 2, table: 4, ns: 8, ew: 6, boards: [9,10,11,12] }
-                    // Additional rounds would continue this pattern
+                    { round: 2, table: 1, ns: 1, ew: 6, boards: [3,4] },
+                    { round: 2, table: 2, ns: 7, ew: 3, boards: [5,6] },
+                    { round: 2, table: 3, ns: 4, ew: 8, boards: [7,8] },
+                    { round: 2, table: 4, ns: 2, ew: 5, boards: [11,12] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 8, boards: [5,6] },
+                    { round: 3, table: 2, ns: 2, ew: 7, boards: [7,8] },
+                    { round: 3, table: 3, ns: 3, ew: 5, boards: [9,10] },
+                    { round: 3, table: 4, ns: 6, ew: 4, boards: [13,14] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+                    { round: 4, table: 2, ns: 6, ew: 2, boards: [9,10] },
+                    { round: 4, table: 3, ns: 7, ew: 4, boards: [11,12] },
+                    { round: 4, table: 4, ns: 8, ew: 3, boards: [1,2] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 4, boards: [9,10] },
+                    { round: 5, table: 2, ns: 8, ew: 6, boards: [11,12] },
+                    { round: 5, table: 3, ns: 2, ew: 3, boards: [13,14] },
+                    { round: 5, table: 4, ns: 5, ew: 7, boards: [3,4] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 1, ew: 3, boards: [11,12] },
+                    { round: 6, table: 2, ns: 5, ew: 8, boards: [13,14] },
+                    { round: 6, table: 3, ns: 6, ew: 7, boards: [1,2] },
+                    { round: 6, table: 4, ns: 4, ew: 2, boards: [5,6] },
+                    // Round 7
+                    { round: 7, table: 1, ns: 1, ew: 7, boards: [13,14] },
+                    { round: 7, table: 2, ns: 4, ew: 5, boards: [1,2] },
+                    { round: 7, table: 3, ns: 8, ew: 2, boards: [3,4] },
+                    { round: 7, table: 4, ns: 3, ew: 6, boards: [7,8] }
+                ]
+            },
+            9: {
+                pairs: 9,
+                tables: 4,
+                rounds: 6,
+                totalBoards: 12,
+                boardsPerRound: 2,
+                description: "4.5-table Howell with sit-outs, 12 boards, ~2.5 hours",
+                sitOut: true,
+                movement: [
+                    // Round 1
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8] },
+                    { round: 1, table: 4, ns: 7, ew: 8, boards: [9,10] },
+                    { round: 1, table: 5, ns: 9, ew: null, boards: [11,12], sitOut: true },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 8, boards: [3,4] },
+                    { round: 2, table: 2, ns: 9, ew: 4, boards: [5,6] },
+                    { round: 2, table: 3, ns: 2, ew: 6, boards: [9,10] },
+                    { round: 2, table: 4, ns: 7, ew: 3, boards: [11,12] },
+                    { round: 2, table: 5, ns: 5, ew: null, boards: [1,2], sitOut: true },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 3, boards: [5,6] },
+                    { round: 3, table: 2, ns: null, ew: 4, boards: [7,8], sitOut: true },
+                    { round: 3, table: 3, ns: 8, ew: 6, boards: [11,12] },
+                    { round: 3, table: 4, ns: 7, ew: 9, boards: [1,2] },
+                    { round: 3, table: 5, ns: 5, ew: 2, boards: [3,4] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 9, boards: [7,8] },
+                    { round: 4, table: 2, ns: 4, ew: 5, boards: [9,10] },
+                    { round: 4, table: 3, ns: 6, ew: 3, boards: [1,2] },
+                    { round: 4, table: 4, ns: null, ew: 7, boards: [3,4], sitOut: true },
+                    { round: 4, table: 5, ns: 2, ew: 8, boards: [5,6] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: null, boards: [9,10], sitOut: true },
+                    { round: 5, table: 2, ns: 4, ew: 2, boards: [11,12] },
+                    { round: 5, table: 3, ns: 6, ew: 9, boards: [3,4] },
+                    { round: 5, table: 4, ns: 5, ew: 7, boards: [5,6] },
+                    { round: 5, table: 5, ns: 8, ew: 3, boards: [7,8] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 1, ew: 5, boards: [11,12] },
+                    { round: 6, table: 2, ns: 4, ew: 8, boards: [1,2] },
+                    { round: 6, table: 3, ns: 6, ew: null, boards: [5,6], sitOut: true },
+                    { round: 6, table: 4, ns: 2, ew: 7, boards: [7,8] },
+                    { round: 6, table: 5, ns: 3, ew: 9, boards: [9,10] }
                 ]
             },
             10: {
                 pairs: 10,
                 tables: 5,
-                rounds: 9,
-                totalBoards: 27,
-                boardsPerRound: 3,
-                description: "5-table Howell, 27 boards, ~3.5 hours",
+                rounds: 6,
+                totalBoards: 12,
+                boardsPerRound: 2,
+                description: "5-table Howell, 12 boards, ~2.5 hours",
                 sitOut: false,
                 movement: [
                     // Round 1
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [4,5,6] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8,9] },
-                    { round: 1, table: 4, ns: 7, ew: 8, boards: [10,11,12] },
-                    { round: 1, table: 5, ns: 9, ew: 10, boards: [13,14,15] }
-                    // Additional rounds would continue this pattern
+                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                    { round: 1, table: 3, ns: 5, ew: 6, boards: [7,8] },
+                    { round: 1, table: 4, ns: 7, ew: 8, boards: [9,10] },
+                    { round: 1, table: 5, ns: 9, ew: 10, boards: [11,12] },
+                    // Round 2
+                    { round: 2, table: 1, ns: 1, ew: 8, boards: [3,4] },
+                    { round: 2, table: 2, ns: 9, ew: 4, boards: [5,6] },
+                    { round: 2, table: 3, ns: 2, ew: 6, boards: [9,10] },
+                    { round: 2, table: 4, ns: 7, ew: 3, boards: [11,12] },
+                    { round: 2, table: 5, ns: 10, ew: 5, boards: [1,2] },
+                    // Round 3
+                    { round: 3, table: 1, ns: 1, ew: 3, boards: [5,6] },
+                    { round: 3, table: 2, ns: 10, ew: 4, boards: [7,8] },
+                    { round: 3, table: 3, ns: 8, ew: 6, boards: [11,12] },
+                    { round: 3, table: 4, ns: 7, ew: 9, boards: [1,2] },
+                    { round: 3, table: 5, ns: 5, ew: 2, boards: [3,4] },
+                    // Round 4
+                    { round: 4, table: 1, ns: 1, ew: 9, boards: [7,8] },
+                    { round: 4, table: 2, ns: 4, ew: 5, boards: [9,10] },
+                    { round: 4, table: 3, ns: 6, ew: 3, boards: [1,2] },
+                    { round: 4, table: 4, ns: 10, ew: 7, boards: [3,4] },
+                    { round: 4, table: 5, ns: 2, ew: 8, boards: [5,6] },
+                    // Round 5
+                    { round: 5, table: 1, ns: 1, ew: 10, boards: [9,10] },
+                    { round: 5, table: 2, ns: 4, ew: 2, boards: [11,12] },
+                    { round: 5, table: 3, ns: 6, ew: 9, boards: [3,4] },
+                    { round: 5, table: 4, ns: 5, ew: 7, boards: [5,6] },
+                    { round: 5, table: 5, ns: 8, ew: 3, boards: [7,8] },
+                    // Round 6
+                    { round: 6, table: 1, ns: 1, ew: 5, boards: [11,12] },
+                    { round: 6, table: 2, ns: 4, ew: 8, boards: [1,2] },
+                    { round: 6, table: 3, ns: 6, ew: 10, boards: [5,6] },
+                    { round: 6, table: 4, ns: 2, ew: 7, boards: [7,8] },
+                    { round: 6, table: 5, ns: 3, ew: 9, boards: [9,10] }
                 ]
             }
         };
@@ -215,7 +301,7 @@ class DuplicateBridge extends BaseBridgeMode {
      * Initialize Duplicate Bridge mode
      */
     initialize() {
-        console.log('🎯 Starting Duplicate Bridge session');
+        console.log('🎯 Starting Duplicate Bridge session with authentic movements');
         this.inputState = 'pairs_setup';
         this.updateDisplay();
     }
@@ -236,14 +322,8 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'board_selection':
                 this.handleBoardSelection(value);
                 break;
-            case 'table_selection':
-                this.handleTableSelection(value);
-                break;
-            case 'contract_entry':
-                this.handleContractEntry(value);
-                break;
-            case 'score_verification':
-                this.handleScoreVerification(value);
+            case 'traveler_entry':
+                this.handleTravelerEntry(value);
                 break;
             case 'results_view':
                 this.handleResultsView(value);
@@ -290,17 +370,433 @@ class DuplicateBridge extends BaseBridgeMode {
             for (let i = 1; i <= this.session.totalBoards; i++) {
                 this.session.boards.push({
                     number: i,
-                    results: [],
+                    travelerResults: [],
                     matchpoints: null
                 });
             }
             
             this.session.isSetup = true;
             this.inputState = 'board_selection';
-            console.log(`✅ Movement confirmed, ready for scoring`);
+            console.log(`✅ Movement confirmed, ready for traveler entry`);
         } else if (value === 'BACK') {
             this.inputState = 'pairs_setup';
         }
+    }
+    
+    /**
+     * Handle board selection
+     */
+    handleBoardSelection(value) {
+        if (value === 'RESULTS') {
+            this.inputState = 'results_view';
+            return;
+        }
+        
+        const boardNum = parseInt(value);
+        if (boardNum >= 1 && boardNum <= this.session.totalBoards) {
+            this.openTravelerPopup(boardNum);
+        }
+    }
+    
+    /**
+     * Open traveler popup for board entry
+     */
+    openTravelerPopup(boardNumber) {
+        this.travelerEntry.boardNumber = boardNumber;
+        this.travelerEntry.isActive = true;
+        this.travelerEntry.results = this.getTravelerInstancesForBoard(boardNumber);
+        this.travelerEntry.currentRow = 0;
+        this.travelerEntry.inputMode = 'bid_level';
+        this.travelerEntry.currentInput = '';
+        
+        this.showTravelerPopup();
+    }
+    
+    /**
+     * Get traveler instances for a board
+     */
+    getTravelerInstancesForBoard(boardNumber) {
+        const movement = this.movements[this.session.movementType];
+        if (!movement) return [];
+        
+        const instances = movement.movement.filter(entry => 
+            entry.boards && entry.boards.includes(boardNumber) && !entry.sitOut
+        );
+        
+        return instances.map(instance => ({
+            nsPair: instance.ns,
+            ewPair: instance.ew,
+            round: instance.round,
+            table: instance.table,
+            bidLevel: '',
+            bidSuit: '',
+            declarer: '',
+            tricks: '',
+            nsScore: null,
+            ewScore: null,
+            calculated: false
+        }));
+    }
+    
+    /**
+     * Show traveler popup
+     */
+    showTravelerPopup() {
+        const board = this.session.boards[this.travelerEntry.boardNumber - 1];
+        const vulnerability = this.getBoardVulnerability(this.travelerEntry.boardNumber);
+        
+        const popup = document.createElement('div');
+        popup.id = 'travelerPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+            font-family: system-ui, -apple-system, sans-serif;
+        `;
+        
+        const popupContent = document.createElement('div');
+        popupContent.style.cssText = `
+            background: white; padding: 20px; border-radius: 8px; 
+            max-width: 90%; max-height: 85%; overflow: auto; 
+            color: #2c3e50; min-width: 600px;
+        `;
+        
+        popupContent.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #34495e; padding-bottom: 10px;">
+                <h3 style="margin: 0; color: #2c3e50;">Board ${this.travelerEntry.boardNumber} - ${vulnerability} Vulnerable</h3>
+                <button id="closeTraveler" style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">✕ Close</button>
+            </div>
+            
+            ${this.getTravelerTableHTML()}
+            
+            <div style="margin-top: 15px; padding: 10px; background: #ecf0f1; border-radius: 4px; font-size: 12px;">
+                <strong>Input Guide:</strong> Select a cell to enter data. Use number buttons or two-digit entry (1+1=11). 
+                Press <strong>Calculate</strong> when row is complete.
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="calculateScores" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px;">Calculate Scores</button>
+                <button id="saveTraveler" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">Save & Close</button>
+            </div>
+        `;
+        
+        popup.appendChild(popupContent);
+        document.body.appendChild(popup);
+        
+        // Add event listeners
+        this.setupTravelerEventListeners();
+    }
+    
+    /**
+     * Get traveler table HTML
+     */
+    getTravelerTableHTML() {
+        let html = `
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #34495e; color: white;">
+                        <th style="padding: 8px; border: 1px solid #2c3e50;">N/S Pair</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50;">E/W Pair</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">Bid</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">Suit</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">By</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">Tricks</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #3498db;">Score N/S</th>
+                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #3498db;">Score E/W</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        this.travelerEntry.results.forEach((result, index) => {
+            html += `
+                <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
+                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${result.nsPair}</td>
+                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${result.ewPair}</td>
+                    <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                        <input type="text" id="bid_${index}" data-row="${index}" data-field="bidLevel" 
+                               style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 4px;" 
+                               maxlength="1" value="${result.bidLevel}">
+                    </td>
+                    <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                        <select id="suit_${index}" data-row="${index}" data-field="bidSuit" 
+                                style="width: 60px; padding: 4px; border: 1px solid #ccc;">
+                            <option value="">-</option>
+                            <option value="♣" ${result.bidSuit === '♣' ? 'selected' : ''}>♣</option>
+                            <option value="♦" ${result.bidSuit === '♦' ? 'selected' : ''}>♦</option>
+                            <option value="♥" ${result.bidSuit === '♥' ? 'selected' : ''}>♥</option>
+                            <option value="♠" ${result.bidSuit === '♠' ? 'selected' : ''}>♠</option>
+                            <option value="NT" ${result.bidSuit === 'NT' ? 'selected' : ''}>NT</option>
+                        </select>
+                    </td>
+                    <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                        <select id="declarer_${index}" data-row="${index}" data-field="declarer" 
+                                style="width: 50px; padding: 4px; border: 1px solid #ccc;">
+                            <option value="">-</option>
+                            <option value="N" ${result.declarer === 'N' ? 'selected' : ''}>N</option>
+                            <option value="S" ${result.declarer === 'S' ? 'selected' : ''}>S</option>
+                            <option value="E" ${result.declarer === 'E' ? 'selected' : ''}>E</option>
+                            <option value="W" ${result.declarer === 'W' ? 'selected' : ''}>W</option>
+                        </select>
+                    </td>
+                    <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                        <input type="text" id="tricks_${index}" data-row="${index}" data-field="tricks" 
+                               style="width: 50px; text-align: center; border: 1px solid #ccc; padding: 4px;" 
+                               maxlength="2" value="${result.tricks}">
+                    </td>
+                    <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
+                        <span id="nsScore_${index}" style="font-weight: bold; color: #2c3e50;">
+                            ${result.nsScore !== null ? result.nsScore : '-'}
+                        </span>
+                    </td>
+                    <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
+                        <span id="ewScore_${index}" style="font-weight: bold; color: #2c3e50;">
+                            ${result.ewScore !== null ? result.ewScore : '-'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        return html;
+    }
+    
+    /**
+     * Setup traveler event listeners
+     */
+    setupTravelerEventListeners() {
+        // Close button
+        document.getElementById('closeTraveler').onclick = () => {
+            this.closeTravelerPopup();
+        };
+        
+        // Calculate scores button
+        document.getElementById('calculateScores').onclick = () => {
+            this.calculateTravelerScores();
+        };
+        
+        // Save traveler button
+        document.getElementById('saveTraveler').onclick = () => {
+            this.saveTravelerData();
+        };
+        
+        // Input field event listeners for two-digit entry
+        this.travelerEntry.results.forEach((_, index) => {
+            const bidInput = document.getElementById(`bid_${index}`);
+            const tricksInput = document.getElementById(`tricks_${index}`);
+            
+            if (bidInput) {
+                bidInput.addEventListener('input', (e) => this.handleTravelerInput(e, index, 'bidLevel'));
+                bidInput.addEventListener('keydown', (e) => this.handleTwoDigitEntry(e, index, 'bidLevel'));
+            }
+            
+            if (tricksInput) {
+                tricksInput.addEventListener('input', (e) => this.handleTravelerInput(e, index, 'tricks'));
+                tricksInput.addEventListener('keydown', (e) => this.handleTwoDigitEntry(e, index, 'tricks'));
+            }
+            
+            // Dropdowns
+            const suitSelect = document.getElementById(`suit_${index}`);
+            const declarerSelect = document.getElementById(`declarer_${index}`);
+            
+            if (suitSelect) {
+                suitSelect.addEventListener('change', (e) => this.handleTravelerInput(e, index, 'bidSuit'));
+            }
+            
+            if (declarerSelect) {
+                declarerSelect.addEventListener('change', (e) => this.handleTravelerInput(e, index, 'declarer'));
+            }
+        });
+        
+        // Close popup when clicking outside
+        document.getElementById('travelerPopup').addEventListener('click', (e) => {
+            if (e.target.id === 'travelerPopup') {
+                this.closeTravelerPopup();
+            }
+        });
+    }
+    
+    /**
+     * Handle two-digit entry for numbers > 9
+     */
+    handleTwoDigitEntry(event, rowIndex, field) {
+        const input = event.target;
+        const key = event.key;
+        
+        // Handle numeric keys for two-digit entry
+        if (/^[0-9]$/.test(key)) {
+            const currentValue = input.value;
+            
+            if (field === 'tricks') {
+                // For tricks, allow 10, 11, 12, 13
+                if (currentValue === '1' && ['0', '1', '2', '3'].includes(key)) {
+                    event.preventDefault();
+                    input.value = '1' + key;
+                    this.travelerEntry.results[rowIndex][field] = input.value;
+                    return;
+                }
+                
+                if (currentValue === '' && key === '1') {
+                    // Start building two-digit number
+                    return;
+                }
+                
+                if (currentValue === '' && ['6', '7', '8', '9'].includes(key)) {
+                    // Single digit 6-9 for tricks
+                    input.value = key;
+                    this.travelerEntry.results[rowIndex][field] = key;
+                    event.preventDefault();
+                    return;
+                }
+            }
+            
+            if (field === 'bidLevel') {
+                // For bid level, only allow 1-7
+                if (['1', '2', '3', '4', '5', '6', '7'].includes(key)) {
+                    input.value = key;
+                    this.travelerEntry.results[rowIndex][field] = key;
+                    event.preventDefault();
+                    return;
+                }
+            }
+        }
+        
+        // Handle backspace
+        if (key === 'Backspace') {
+            return;
+        }
+        
+        // Prevent other keys
+        if (!/^[Backspace|Tab|ArrowLeft|ArrowRight|Delete]$/.test(key)) {
+            event.preventDefault();
+        }
+    }
+    
+    /**
+     * Handle traveler input changes
+     */
+    handleTravelerInput(event, rowIndex, field) {
+        const value = event.target.value;
+        this.travelerEntry.results[rowIndex][field] = value;
+        
+        // Auto-calculate when row is complete
+        const result = this.travelerEntry.results[rowIndex];
+        if (result.bidLevel && result.bidSuit && result.declarer && result.tricks) {
+            this.calculateRowScore(rowIndex);
+        }
+    }
+    
+    /**
+     * Calculate score for a single row
+     */
+    calculateRowScore(rowIndex) {
+        const result = this.travelerEntry.results[rowIndex];
+        const vulnerability = this.getBoardVulnerability(this.travelerEntry.boardNumber);
+        
+        // Determine if declarer's side is vulnerable
+        const declarerSide = ['N', 'S'].includes(result.declarer) ? 'NS' : 'EW';
+        let isVulnerable = false;
+        
+        if (vulnerability === 'Both') isVulnerable = true;
+        else if (vulnerability === 'NS' && declarerSide === 'NS') isVulnerable = true;
+        else if (vulnerability === 'EW' && declarerSide === 'EW') isVulnerable = true;
+        
+        // Calculate the score
+        const score = this.calculateContractScore({
+            level: parseInt(result.bidLevel),
+            suit: result.bidSuit,
+            declarer: result.declarer,
+            tricks: parseInt(result.tricks),
+            vulnerable: isVulnerable
+        });
+        
+        // Assign scores to NS/EW
+        if (declarerSide === 'NS') {
+            result.nsScore = score;
+            result.ewScore = score > 0 ? 0 : Math.abs(score);
+        } else {
+            result.ewScore = score;
+            result.nsScore = score > 0 ? 0 : Math.abs(score);
+        }
+        
+        result.calculated = true;
+        
+        // Update display
+        document.getElementById(`nsScore_${rowIndex}`).textContent = result.nsScore;
+        document.getElementById(`ewScore_${rowIndex}`).textContent = result.ewScore;
+    }
+    
+    /**
+     * Calculate contract score
+     */
+    calculateContractScore(contract) {
+        const { level, suit, tricks, vulnerable } = contract;
+        
+        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        const tricksNeeded = 6 + level;
+        const tricksMade = tricks;
+        const result = tricksMade - tricksNeeded;
+        
+        if (result >= 0) {
+            // Contract made
+            let basicScore = level * suitValues[suit];
+            if (suit === 'NT') basicScore += 10; // NT bonus
+            
+            // Add overtricks
+            const overtricks = result;
+            const overtrickValue = overtricks * suitValues[suit];
+            
+            let totalScore = basicScore + overtrickValue;
+            
+            // Game bonus
+            if (basicScore >= 100) {
+                totalScore += vulnerable ? 500 : 300;
+            } else {
+                totalScore += 50;
+            }
+            
+            return totalScore;
+        } else {
+            // Contract failed
+            const undertricks = Math.abs(result);
+            const penalty = undertricks * (vulnerable ? 100 : 50);
+            return -penalty;
+        }
+    }
+    
+    /**
+     * Calculate all traveler scores
+     */
+    calculateTravelerScores() {
+        this.travelerEntry.results.forEach((_, index) => {
+            const result = this.travelerEntry.results[index];
+            if (result.bidLevel && result.bidSuit && result.declarer && result.tricks) {
+                this.calculateRowScore(index);
+            }
+        });
+    }
+    
+    /**
+     * Save traveler data and close popup
+     */
+    saveTravelerData() {
+        const board = this.session.boards[this.travelerEntry.boardNumber - 1];
+        board.travelerResults = [...this.travelerEntry.results];
+        
+        console.log(`💾 Saved traveler data for Board ${this.travelerEntry.boardNumber}`);
+        this.closeTravelerPopup();
+    }
+    
+    /**
+     * Close traveler popup
+     */
+    closeTravelerPopup() {
+        const popup = document.getElementById('travelerPopup');
+        if (popup) {
+            popup.remove();
+        }
+        this.travelerEntry.isActive = false;
     }
     
     /**
@@ -310,7 +806,6 @@ class DuplicateBridge extends BaseBridgeMode {
         const movement = this.movements[this.session.pairs];
         const popupContent = this.getFullMovementTable();
         
-        // Create popup overlay
         const popup = document.createElement('div');
         popup.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;';
         popup.onclick = () => popup.remove();
@@ -331,7 +826,6 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(popupDialog);
         document.body.appendChild(popup);
         
-        // Add event listeners
         document.getElementById('closeBtn').onclick = () => popup.remove();
         document.getElementById('confirmBtn').onclick = () => {
             popup.remove();
@@ -411,245 +905,7 @@ class DuplicateBridge extends BaseBridgeMode {
         });
         
         tableHtml += '</tbody></table>';
-        
         return tableHtml;
-    }
-    
-    /**
-     * Handle board selection
-     */
-    handleBoardSelection(value) {
-        if (value === 'RESULTS') {
-            this.inputState = 'results_view';
-            return;
-        }
-        
-        const boardNum = parseInt(value);
-        if (boardNum >= 1 && boardNum <= this.session.totalBoards) {
-            this.currentEntry.board = boardNum;
-            this.inputState = 'table_selection';
-            console.log(`🃏 Board ${boardNum} selected`);
-        }
-    }
-    
-    /**
-     * Handle table/round selection
-     */
-    handleTableSelection(value) {
-        // Parse selection like "T1-R1" (Table 1, Round 1)
-        const match = value.match(/T(\d+)-R(\d+)/);
-        if (!match) return;
-        
-        const tableNum = parseInt(match[1]);
-        const roundNum = parseInt(match[2]);
-        
-        // Find the matching movement entry
-        const boardInstances = this.getBoardInstances(this.currentEntry.board);
-        const selectedInstance = boardInstances.find(inst => 
-            inst.table === tableNum && inst.round === roundNum
-        );
-        
-        if (selectedInstance) {
-            this.currentEntry.table = selectedInstance.table;
-            this.currentEntry.round = selectedInstance.round;
-            this.currentEntry.nsPair = selectedInstance.ns;
-            this.currentEntry.ewPair = selectedInstance.ew;
-            
-            this.contractInputStep = 'level';
-            this.inputState = 'contract_entry';
-            this.resetCurrentContract();
-            
-            console.log(`🏓 Selected Board ${this.currentEntry.board}, Round ${selectedInstance.round}, Table ${selectedInstance.table}`);
-        }
-    }
-    
-    /**
-     * Get all instances where a board is played
-     */
-    getBoardInstances(boardNumber) {
-        const movement = this.movements[this.session.movementType];
-        if (!movement) return [];
-        
-        return movement.movement.filter(entry => 
-            entry.boards && entry.boards.includes(boardNumber)
-        );
-    }
-    
-    /**
-     * Handle contract entry
-     */
-    handleContractEntry(value) {
-        switch (this.contractInputStep) {
-            case 'level':
-                if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
-                    this.currentEntry.contract.level = parseInt(value);
-                    this.contractInputStep = 'suit';
-                }
-                break;
-                
-            case 'suit':
-                if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
-                    this.currentEntry.contract.suit = value;
-                    this.contractInputStep = 'declarer';
-                }
-                break;
-                
-            case 'declarer':
-                if (['N', 'S', 'E', 'W'].includes(value)) {
-                    this.currentEntry.contract.declarer = value;
-                    this.contractInputStep = 'result';
-                } else if (value === 'X') {
-                    this.handleDoubling();
-                }
-                break;
-                
-            case 'result':
-                if (value === 'MADE') {
-                    this.currentEntry.contract.result = '=';
-                    this.contractInputStep = 'score';
-                } else if (value === 'PLUS') {
-                    this.contractInputStep = 'plus_tricks';
-                } else if (value === 'DOWN') {
-                    this.contractInputStep = 'down_tricks';
-                }
-                break;
-                
-            case 'plus_tricks':
-                if (['1', '2', '3', '4', '5', '6'].includes(value)) {
-                    this.currentEntry.contract.result = `+${value}`;
-                    this.contractInputStep = 'score';
-                }
-                break;
-                
-            case 'down_tricks':
-                if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
-                    this.currentEntry.contract.result = `-${value}`;
-                    this.contractInputStep = 'score';
-                }
-                break;
-                
-            case 'score':
-                if (this.isValidScore(value)) {
-                    this.currentEntry.travelerScore = parseInt(value);
-                    this.currentEntry.calculatedScore = this.calculateScore();
-                    this.inputState = 'score_verification';
-                }
-                break;
-        }
-    }
-    
-    /**
-     * Handle doubling
-     */
-    handleDoubling() {
-        if (this.currentEntry.contract.doubled === '') {
-            this.currentEntry.contract.doubled = 'X';
-        } else if (this.currentEntry.contract.doubled === 'X') {
-            this.currentEntry.contract.doubled = 'XX';
-        } else {
-            this.currentEntry.contract.doubled = '';
-        }
-        console.log(`💥 Double state: ${this.currentEntry.contract.doubled || 'None'}`);
-    }
-    
-    /**
-     * Handle score verification
-     */
-    handleScoreVerification(value) {
-        if (value === 'ACCEPT') {
-            this.saveResult();
-            this.calculateMatchpoints();
-            this.inputState = 'board_selection';
-            this.resetCurrentEntry();
-        } else if (value === 'EDIT') {
-            this.contractInputStep = 'score';
-            this.inputState = 'contract_entry';
-        }
-    }
-    
-    /**
-     * Handle results view actions
-     */
-    handleResultsView(value) {
-        if (value === 'BACK') {
-            this.inputState = 'board_selection';
-        }
-    }
-    
-    /**
-     * Calculate score based on contract and result
-     */
-    calculateScore() {
-        const { level, suit, result, doubled, declarer } = this.currentEntry.contract;
-        
-        // Get vulnerability for this board
-        const vulnerability = this.getBoardVulnerability(this.currentEntry.board);
-        const declarerSide = ['N', 'S'].includes(declarer) ? 'NS' : 'EW';
-        const isVulnerable = vulnerability === declarerSide || vulnerability === 'Both';
-        
-        // Basic suit values per trick
-        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-        let score = 0;
-        
-        if (result === '=' || result?.startsWith('+')) {
-            // Contract made
-            let basicScore = level * suitValues[suit];
-            if (suit === 'NT') basicScore += 10;
-            
-            let contractScore = basicScore;
-            if (doubled === 'X') contractScore = basicScore * 2;
-            else if (doubled === 'XX') contractScore = basicScore * 4;
-            
-            score = contractScore;
-            
-            // Add overtricks
-            if (result?.startsWith('+')) {
-                const overtricks = parseInt(result.substring(1));
-                let overtrickValue;
-                
-                if (doubled === '') {
-                    overtrickValue = suitValues[suit] * overtricks;
-                } else {
-                    overtrickValue = overtricks * (isVulnerable ? 200 : 100);
-                    if (doubled === 'XX') overtrickValue *= 2;
-                }
-                score += overtrickValue;
-            }
-            
-            // Game/Part-game bonus
-            if (contractScore >= 100) {
-                score += isVulnerable ? 500 : 300;
-            } else {
-                score += 50;
-            }
-            
-            // Double bonuses
-            if (doubled === 'X') score += 50;
-            else if (doubled === 'XX') score += 100;
-            
-        } else if (result?.startsWith('-')) {
-            // Contract failed
-            const undertricks = parseInt(result.substring(1));
-            
-            if (doubled === '') {
-                score = -undertricks * (isVulnerable ? 100 : 50);
-            } else {
-                let penalty = 0;
-                for (let i = 1; i <= undertricks; i++) {
-                    if (i === 1) {
-                        penalty += isVulnerable ? 200 : 100;
-                    } else if (i <= 3) {
-                        penalty += isVulnerable ? 300 : 200;
-                    } else {
-                        penalty += 300;
-                    }
-                }
-                if (doubled === 'XX') penalty *= 2;
-                score = -penalty;
-            }
-        }
-        
-        return score;
     }
     
     /**
@@ -664,128 +920,12 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Save the current result
+     * Handle results view actions
      */
-    saveResult() {
-        const board = this.session.boards[this.currentEntry.board - 1];
-        
-        const result = {
-            table: this.currentEntry.table,
-            round: this.currentEntry.round,
-            nsPair: this.currentEntry.nsPair,
-            ewPair: this.currentEntry.ewPair,
-            contract: { ...this.currentEntry.contract },
-            score: this.currentEntry.travelerScore,
-            calculatedScore: this.currentEntry.calculatedScore
-        };
-        
-        // Remove existing result for this table/round
-        board.results = board.results.filter(r => 
-            !(r.table === this.currentEntry.table && r.round === this.currentEntry.round)
-        );
-        
-        board.results.push(result);
-        console.log(`💾 Saved result for Board ${this.currentEntry.board}`);
-    }
-    
-    /**
-     * Calculate matchpoints for a board
-     */
-    calculateMatchpoints() {
-        const board = this.session.boards[this.currentEntry.board - 1];
-        const expectedResults = this.getBoardInstances(this.currentEntry.board).length;
-        
-        if (board.results.length < expectedResults) {
-            console.log(`⏳ Board ${this.currentEntry.board}: ${board.results.length}/${expectedResults} results`);
-            return;
+    handleResultsView(value) {
+        if (value === 'BACK') {
+            this.inputState = 'board_selection';
         }
-        
-        // Calculate matchpoints when all results are in
-        const pairScores = {};
-        
-        board.results.forEach(result => {
-            const nsScore = result.score >= 0 ? result.score : 0;
-            const ewScore = result.score < 0 ? Math.abs(result.score) : 0;
-            
-            if (!pairScores[result.nsPair]) pairScores[result.nsPair] = 0;
-            if (!pairScores[result.ewPair]) pairScores[result.ewPair] = 0;
-            
-            pairScores[result.nsPair] += nsScore;
-            pairScores[result.ewPair] += ewScore;
-        });
-        
-        const scores = Object.values(pairScores);
-        const maxScore = Math.max(...scores);
-        
-        board.matchpoints = {};
-        Object.entries(pairScores).forEach(([pair, score]) => {
-            const percentage = maxScore > 0 ? (score / maxScore) * 100 : 50;
-            board.matchpoints[pair] = Math.round(percentage * 10) / 10;
-        });
-        
-        console.log(`📊 Calculated matchpoints for Board ${this.currentEntry.board}`);
-    }
-    
-    /**
-     * Parse score input from various sources
-     */
-    parseScoreInput(value) {
-        if (value === 'SCORE') {
-            // Trigger manual score entry
-            const score = prompt('Enter score from traveler (use - for negative scores):');
-            if (score === null) return null; // User cancelled
-            const parsedScore = parseInt(score);
-            return this.isValidScore(parsedScore.toString()) ? parsedScore : null;
-        }
-        
-        // Handle direct numerical input
-        const num = parseInt(value);
-        return this.isValidScore(value) ? num : null;
-    }
-    
-    /**
-     * Check if a score is valid
-     */
-    isValidScore(value) {
-        const num = parseInt(value);
-        return !isNaN(num) && num >= -7600 && num <= 7600;
-    }
-    
-    /**
-     * Reset current entry
-     */
-    resetCurrentEntry() {
-        this.currentEntry = {
-            board: null,
-            table: null,
-            round: null,
-            nsPair: null,
-            ewPair: null,
-            contract: {
-                level: null,
-                suit: null,
-                declarer: null,
-                doubled: '',
-                result: null
-            },
-            travelerScore: null,
-            calculatedScore: null
-        };
-    }
-    
-    /**
-     * Reset current contract
-     */
-    resetCurrentContract() {
-        this.currentEntry.contract = {
-            level: null,
-            suit: null,
-            declarer: null,
-            doubled: '',
-            result: null
-        };
-        this.currentEntry.travelerScore = null;
-        this.currentEntry.calculatedScore = null;
     }
     
     /**
@@ -798,15 +938,6 @@ class DuplicateBridge extends BaseBridgeMode {
                 break;
             case 'board_selection':
                 this.inputState = 'movement_confirm';
-                break;
-            case 'table_selection':
-                this.inputState = 'board_selection';
-                break;
-            case 'contract_entry':
-                this.inputState = 'table_selection';
-                break;
-            case 'score_verification':
-                this.inputState = 'contract_entry';
                 break;
             case 'results_view':
                 this.inputState = 'board_selection';
@@ -822,16 +953,20 @@ class DuplicateBridge extends BaseBridgeMode {
      * Check if back navigation is possible
      */
     canGoBack() {
-        return this.inputState !== 'pairs_setup';
+        return this.inputState !== 'pairs_setup' && !this.travelerEntry.isActive;
     }
     
     /**
      * Get active buttons for current state
      */
     getActiveButtons() {
+        if (this.travelerEntry.isActive) {
+            return []; // No buttons when traveler popup is active
+        }
+        
         switch (this.inputState) {
             case 'pairs_setup':
-                return ['4', '5', '6', '7', '8', '9', '0']; // 0 = 10 pairs
+                return ['4', '5', '7', '8', '9', '0']; // Available movements
             case 'movement_confirm':
                 return ['1', '2', 'BACK']; // 1=MOVEMENT, 2=CONFIRM
             case 'board_selection':
@@ -841,50 +976,8 @@ class DuplicateBridge extends BaseBridgeMode {
                 }
                 buttons.push('RESULTS');
                 return buttons;
-            case 'table_selection':
-                return this.getTableSelectionButtons();
-            case 'contract_entry':
-                return this.getContractButtons();
-            case 'score_verification':
-                return ['ACCEPT', 'EDIT'];
             case 'results_view':
                 return ['BACK'];
-            default:
-                return [];
-        }
-    }
-    
-    /**
-     * Get table selection buttons
-     */
-    getTableSelectionButtons() {
-        const instances = this.getBoardInstances(this.currentEntry.board);
-        return instances.map(inst => `T${inst.table}-R${inst.round}`);
-    }
-    
-    /**
-     * Get contract entry buttons
-     */
-    getContractButtons() {
-        switch (this.contractInputStep) {
-            case 'level':
-                return ['1', '2', '3', '4', '5', '6', '7'];
-            case 'suit':
-                return ['♣', '♦', '♥', '♠', 'NT'];
-            case 'declarer':
-                const buttons = ['N', 'S', 'E', 'W', 'X'];
-                if (this.currentEntry.contract.declarer) {
-                    buttons.push('MADE', 'PLUS', 'DOWN');
-                }
-                return buttons;
-            case 'result':
-                return ['MADE', 'PLUS', 'DOWN'];
-            case 'plus_tricks':
-                return ['1', '2', '3', '4', '5', '6'];
-            case 'down_tricks':
-                return ['1', '2', '3', '4', '5', '6', '7'];
-            case 'score':
-                return [];
             default:
                 return [];
         }
@@ -913,11 +1006,11 @@ class DuplicateBridge extends BaseBridgeMode {
                     <div class="game-content">
                         <div><strong>How many pairs are playing?</strong></div>
                         <div style="color: #2c3e50; margin-top: 8px;">
-                            Choose the number of pairs and I'll show you the<br>
-                            authentic Howell movement for your session.
+                            Choose pairs and I'll show you the authentic<br>
+                            Howell movement with traveler-based scoring.
                         </div>
                     </div>
-                    <div class="current-state">Select number of pairs (4,5,6,7,8,9 or 0 for 10)</div>
+                    <div class="current-state">Select pairs (4,5,7,8,9 or 0 for 10)</div>
                 `;
                 
             case 'movement_confirm':
@@ -927,7 +1020,7 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">
                             ${this.session.pairs} Pairs<br>
-                            Review Movement
+                            Movement
                         </div>
                     </div>
                     <div class="game-content">
@@ -939,23 +1032,22 @@ class DuplicateBridge extends BaseBridgeMode {
                             • ${this.session.totalBoards} boards total<br>
                             ${movement.sitOut ? '• Includes sit-out rounds' : '• No sit-outs'}
                         </div>
-                        <div style="color: #3498db; font-size: 11px; margin-top: 8px;">
-                            This is an authentic Howell movement where each pair<br>
-                            plays every other pair exactly once.
-                        </div>
                         <div style="background: #3498db; color: white; padding: 12px; border-radius: 4px; margin-top: 8px; text-align: center; font-weight: bold; font-size: 14px;">
                             Press <strong>1</strong> to view MOVEMENT table<br>
                             Press <strong>2</strong> to CONFIRM and proceed
+                        </div>
+                        <div style="color: #3498db; font-size: 11px; margin-top: 8px;">
+                            Features popup traveler interface with automatic<br>
+                            score calculation matching tournament play.
                         </div>
                     </div>
                     <div class="current-state">Press 1 to review movement, 2 to confirm, or Back</div>
                 `;
                 
             case 'board_selection':
-                const completedBoards = this.session.boards.filter(b => {
-                    const expected = this.getBoardInstances(b.number).length;
-                    return b.results.length === expected;
-                }).length;
+                const completedBoards = this.session.boards.filter(b => 
+                    b.travelerResults && b.travelerResults.length > 0
+                ).length;
                 
                 return `
                     <div class="title-score-row">
@@ -966,41 +1058,19 @@ class DuplicateBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Score Entry - ${this.movements[this.session.pairs].description}</strong></div>
+                        <div><strong>Traveler Entry - ${this.movements[this.session.pairs].description}</strong></div>
                         <div style="color: #2c3e50; font-size: 12px;">
-                            Enter results from completed travelers.<br>
-                            Each board plays at ${this.session.tables} table${this.session.tables > 1 ? 's' : ''}.
+                            Select a board to open the traveler popup.<br>
+                            Enter results from completed travelers.
                         </div>
                         ${this.getBoardStatusDisplay()}
-                    </div>
-                    <div class="current-state">Select board number to enter results (or view Results)</div>
-                `;
-                
-            case 'table_selection':
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">${this.displayName}</div>
-                        <div class="score-display">
-                            Board ${this.currentEntry.board}<br>
-                            Select Instance
+                        <div style="background: #ecf0f1; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 11px; color: #2c3e50;">
+                            <strong>Traveler Features:</strong> Two-digit entry (1+1=11), automatic scoring, 
+                            vulnerability display, tournament-style interface.
                         </div>
                     </div>
-                    <div class="game-content">
-                        <div><strong>Board ${this.currentEntry.board}</strong></div>
-                        <div style="color: #2c3e50;">Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
-                        <div style="color: #2c3e50; font-size: 11px; margin-top: 8px;">
-                            This board is played ${this.getBoardInstances(this.currentEntry.board).length} times in different rounds:
-                        </div>
-                        ${this.getTableInstancesDisplay()}
-                    </div>
-                    <div class="current-state">Select which table/round to enter score for</div>
+                    <div class="current-state">Select board number to enter traveler results</div>
                 `;
-                
-            case 'contract_entry':
-                return this.getContractEntryDisplay();
-                
-            case 'score_verification':
-                return this.getScoreVerificationDisplay();
                 
             case 'results_view':
                 return this.getResultsDisplay();
@@ -1017,10 +1087,9 @@ class DuplicateBridge extends BaseBridgeMode {
         const statusLines = [];
         for (let i = 0; i < Math.min(this.session.totalBoards, 10); i++) {
             const board = this.session.boards[i];
-            const expected = this.getBoardInstances(board.number).length;
-            const completed = board.results.length;
-            const status = completed === expected ? '✓' : `${completed}/${expected}`;
-            const color = completed === expected ? '#27ae60' : '#e74c3c';
+            const hasResults = board.travelerResults && board.travelerResults.length > 0;
+            const status = hasResults ? '✓' : '○';
+            const color = hasResults ? '#27ae60' : '#e74c3c';
             statusLines.push(`<span style="color: ${color};">B${i + 1}: ${status}</span>`);
         }
         
@@ -1032,206 +1101,26 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get table instances display for board selection
-     */
-    getTableInstancesDisplay() {
-        const instances = this.getBoardInstances(this.currentEntry.board);
-        const board = this.session.boards[this.currentEntry.board - 1];
-        
-        const lines = instances.map(inst => {
-            const hasResult = board.results.some(r => 
-                r.table === inst.table && r.round === inst.round
-            );
-            const status = hasResult ? '✓' : '○';
-            const color = hasResult ? '#27ae60' : '#e74c3c';
-            
-            return `<span style="color: ${color};">Round ${inst.round}, Table ${inst.table}: NS-${inst.ns} vs EW-${inst.ew} ${status}</span>`;
-        });
-        
-        return `<div style="font-size: 11px; margin-top: 8px; color: #2c3e50;">${lines.join('<br>')}</div>`;
-    }
-    
-    /**
-     * Get contract entry display
-     */
-    getContractEntryDisplay() {
-        const contract = this.currentEntry.contract;
-        
-        let contractSoFar = '';
-        if (contract.level) contractSoFar += contract.level;
-        if (contract.suit) contractSoFar += contract.suit;
-        if (contract.doubled) contractSoFar += contract.doubled;
-        if (contract.declarer) contractSoFar += ` by ${contract.declarer}`;
-        if (contract.result) contractSoFar += ` ${contract.result}`;
-        
-        let promptText = '';
-        switch (this.contractInputStep) {
-            case 'level': promptText = 'Enter bid level (1-7)'; break;
-            case 'suit': promptText = 'Select suit'; break;
-            case 'declarer': promptText = contract.declarer ? 'Press Made/Plus/Down or X for double' : 'Select declarer (N/S/E/W)'; break;
-            case 'result': promptText = 'Made exactly, Plus overtricks, or Down?'; break;
-            case 'plus_tricks': promptText = 'How many overtricks?'; break;
-            case 'down_tricks': promptText = 'How many down?'; break;
-            case 'score': promptText = 'Press SCORE to enter traveler score manually'; break;
-        }
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display">
-                    Board ${this.currentEntry.board}<br>
-                    T${this.currentEntry.table}-R${this.currentEntry.round}
-                </div>
-            </div>
-            <div class="game-content">
-                <div><strong>Round ${this.currentEntry.round}, Table ${this.currentEntry.table}: NS-${this.currentEntry.nsPair} vs EW-${this.currentEntry.ewPair}</strong></div>
-                <div style="color: #2c3e50;">Vulnerability: ${this.getBoardVulnerability(this.currentEntry.board)}</div>
-                ${contractSoFar ? `<div><strong>Contract: ${contractSoFar}</strong></div>` : ''}
-            </div>
-            <div class="current-state">${promptText}</div>
-        `;
-    }
-    
-    /**
-     * Get score verification display
-     */
-    getScoreVerificationDisplay() {
-        const contract = this.currentEntry.contract;
-        const contractString = `${contract.level}${contract.suit}${contract.doubled} by ${contract.declarer} ${contract.result}`;
-        
-        const scoreMatch = this.currentEntry.travelerScore === this.currentEntry.calculatedScore;
-        const statusColor = scoreMatch ? '#27ae60' : '#e74c3c';
-        const statusText = scoreMatch ? '✓ SCORES MATCH' : '⚠ SCORE MISMATCH';
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display" style="color: ${statusColor};">
-                    ${statusText}
-                </div>
-            </div>
-            <div class="game-content">
-                <div><strong>Board ${this.currentEntry.board}, Round ${this.currentEntry.round}, Table ${this.currentEntry.table}</strong></div>
-                <div style="color: #2c3e50;">NS-${this.currentEntry.nsPair} vs EW-${this.currentEntry.ewPair}</div>
-                <div><strong>${contractString}</strong></div>
-                <div style="margin-top: 8px; color: #2c3e50;">
-                    <div>Traveler Score: <strong>${this.currentEntry.travelerScore}</strong></div>
-                    <div>Calculated Score: <strong>${this.currentEntry.calculatedScore}</strong></div>
-                    ${!scoreMatch ? '<div style="color: #e74c3c; font-size: 11px; margin-top: 4px;">⚠ Please verify traveler entry</div>' : ''}
-                </div>
-            </div>
-            <div class="current-state">${scoreMatch ? 'Accept result or Edit score' : 'Score mismatch detected - Edit to correct'}</div>
-        `;
-    }
-    
-    /**
      * Get results display
      */
     getResultsDisplay() {
-        const pairTotals = {};
-        
-        // Calculate total matchpoints for each pair
-        for (let pairNum = 1; pairNum <= this.session.pairs; pairNum++) {
-            pairTotals[pairNum] = 0;
-        }
-        
-        this.session.boards.forEach(board => {
-            if (board.matchpoints) {
-                Object.entries(board.matchpoints).forEach(([pair, points]) => {
-                    pairTotals[pair] += points;
-                });
-            }
-        });
-        
-        // Sort pairs by total matchpoints
-        const sortedPairs = Object.entries(pairTotals)
-            .sort(([, a], [, b]) => b - a)
-            .map(([pair, total], index) => ({ pair: parseInt(pair), total, rank: index + 1 }));
-        
-        const completedBoards = this.session.boards.filter(b => {
-            const expected = this.getBoardInstances(b.number).length;
-            return b.results.length === expected;
-        }).length;
-        
         return `
             <div class="title-score-row">
                 <div class="mode-title">${this.displayName}</div>
                 <div class="score-display">
-                    Final Results<br>
-                    ${completedBoards}/${this.session.totalBoards}
+                    Results<br>
+                    ${this.session.pairs} Pairs
                 </div>
             </div>
             <div class="game-content">
-                <div><strong>Leaderboard - ${this.movements[this.session.pairs].description}</strong></div>
-                <div style="font-size: 11px; color: #2c3e50;">Completed: ${completedBoards} boards</div>
-                ${this.getLeaderboardDisplay(sortedPairs)}
+                <div><strong>Session Results - ${this.movements[this.session.pairs].description}</strong></div>
+                <div style="color: #2c3e50; margin-top: 8px;">
+                    Results will be calculated from traveler data<br>
+                    when all boards are completed.
+                </div>
             </div>
-            <div class="current-state">Session results • Press Back to enter more scores</div>
+            <div class="current-state">Press Back to continue entering travelers</div>
         `;
-    }
-    
-    /**
-     * Get movement table display
-     */
-    getMovementTableDisplay() {
-        const movement = this.movements[this.session.pairs];
-        if (!movement || !movement.movement) return '';
-        
-        // Group by rounds for display
-        const roundData = {};
-        movement.movement.forEach(entry => {
-            if (!roundData[entry.round]) {
-                roundData[entry.round] = [];
-            }
-            if (entry.sitOut) {
-                roundData[entry.round].push({ type: 'sitout', pair: entry.sitOut });
-            } else if (entry.table) {
-                roundData[entry.round].push({
-                    type: 'table',
-                    table: entry.table,
-                    ns: entry.ns,
-                    ew: entry.ew,
-                    boards: entry.boards
-                });
-            }
-        });
-        
-        let tableHtml = '<div style="margin: 8px 0; font-size: 10px; border: 1px solid #2c3e50; border-radius: 4px; padding: 8px; background: rgba(44,62,80,0.1);">';
-        tableHtml += '<div style="font-weight: bold; margin-bottom: 4px; color: #2c3e50;">Movement Chart:</div>';
-        
-        Object.keys(roundData).forEach(round => {
-            tableHtml += `<div style="margin: 2px 0;"><strong>Round ${round}:</strong> `;
-            const roundInfo = [];
-            
-            roundData[round].forEach(entry => {
-                if (entry.type === 'table') {
-                    const boardRange = entry.boards.length > 1 ? 
-                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
-                        entry.boards[0];
-                    roundInfo.push(`T${entry.table}: ${entry.ns}v${entry.ew} (B${boardRange})`);
-                } else if (entry.type === 'sitout') {
-                    roundInfo.push(`P${entry.pair} sits out`);
-                }
-            });
-            
-            tableHtml += roundInfo.join(', ');
-            tableHtml += '</div>';
-        });
-        
-        tableHtml += '</div>';
-        return tableHtml;
-    }
-    getLeaderboardDisplay(sortedPairs) {
-        if (sortedPairs.length === 0 || sortedPairs[0].total === 0) {
-            return '<div style="margin-top: 8px; color: #2c3e50;">No results yet</div>';
-        }
-        
-        const lines = sortedPairs.map(({ pair, total, rank }) => {
-            const color = rank <= 3 ? '#f39c12' : '#2c3e50';
-            return `<div style="color: ${color}; margin: 2px 0;">${rank}. Pair ${pair}: ${total.toFixed(1)} pts</div>`;
-        });
-        
-        return `<div style="font-size: 11px; margin-top: 8px;">${lines.join('')}</div>`;
     }
     
     /**
@@ -1242,48 +1131,50 @@ class DuplicateBridge extends BaseBridgeMode {
             title: 'Duplicate Bridge Help',
             content: `
                 <div class="help-section">
-                    <h4>Authentic Howell Movements</h4>
-                    <p>This app uses authentic Howell movements where each pair plays every other pair exactly once. Perfect for cruise ship duplicate bridge with 4-10 pairs.</p>
+                    <h4>Authentic Tournament Movements</h4>
+                    <p>Uses professional PDF movement data with popup traveler interface matching real duplicate bridge tournaments.</p>
                 </div>
                 
                 <div class="help-section">
                     <h4>Available Movements</h4>
                     <ul>
-                        <li><strong>4 pairs:</strong> 2-table Howell, 12 boards, ~1.5 hours</li>
-                        <li><strong>5 pairs:</strong> 2.5-table with sit-outs, 16 boards, ~2 hours</li>
-                        <li><strong>6 pairs:</strong> 3-table Howell, 10 boards, ~1.5 hours</li>
-                        <li><strong>8 pairs:</strong> 4-table Howell, 28 boards, ~3.5 hours</li>
-                        <li><strong>10 pairs:</strong> 5-table Howell, 27 boards, ~3.5 hours</li>
+                        <li><strong>4 pairs:</strong> 2-table, 12 boards, ~2 hours</li>
+                        <li><strong>5 pairs:</strong> 2.5-table with sit-outs, 15 boards</li>
+                        <li><strong>7 pairs:</strong> 3.5-table with sit-outs, 14 boards</li>
+                        <li><strong>8 pairs:</strong> 4-table, 14 boards, ~2.5 hours</li>
+                        <li><strong>9 pairs:</strong> 4.5-table with sit-outs, 12 boards</li>
+                        <li><strong>10 pairs:</strong> 5-table, 12 boards, ~2.5 hours</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Traveler Interface</h4>
+                    <ul>
+                        <li><strong>Red columns:</strong> Manual entry (Bid, Suit, By, Tricks)</li>
+                        <li><strong>Two-digit entry:</strong> Press 1+1 for 11 tricks</li>
+                        <li><strong>Automatic scoring:</strong> Calculates when row complete</li>
+                        <li><strong>Vulnerability:</strong> Shows board vulnerability</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
                     <h4>How to Use</h4>
                     <ol>
-                        <li><strong>Setup:</strong> Choose number of pairs → confirm movement</li>
-                        <li><strong>Play:</strong> Use printed movement cards and travelers</li>
-                        <li><strong>Score Entry:</strong> Enter results from completed travelers</li>
-                        <li><strong>Verification:</strong> App checks traveler scores against calculations</li>
-                        <li><strong>Results:</strong> View live leaderboard as scores come in</li>
+                        <li><strong>Setup:</strong> Choose pairs → view movement → confirm</li>
+                        <li><strong>Play session:</strong> Use printed movement cards</li>
+                        <li><strong>Score entry:</strong> Select board → popup traveler opens</li>
+                        <li><strong>Enter data:</strong> Fill red columns, auto-calculate blue</li>
+                        <li><strong>Save:</strong> Save traveler when complete</li>
                     </ol>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Score Verification</h4>
+                    <h4>Perfect for Cruise Ships</h4>
                     <ul>
-                        <li><strong>✓ Green:</strong> Traveler score matches calculation</li>
-                        <li><strong>⚠ Red:</strong> Score mismatch - check traveler entry</li>
-                        <li><strong>Automatic:</strong> Handles vulnerability, doubling, bonuses</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Perfect for Cruises</h4>
-                    <ul>
-                        <li><strong>One Device:</strong> Only director needs the app</li>
-                        <li><strong>Authentic:</strong> Uses real tournament movements</li>
-                        <li><strong>Flexible:</strong> Choose session length based on time available</li>
-                        <li><strong>Fair:</strong> Everyone plays everyone exactly once</li>
+                        <li><strong>Authentic movements:</strong> Real tournament quality</li>
+                        <li><strong>Director-friendly:</strong> One device, popup interface</li>
+                        <li><strong>Flexible timing:</strong> Choose session length</li>
+                        <li><strong>Professional scoring:</strong> Automatic calculations</li>
                     </ul>
                 </div>
             `,
@@ -1297,6 +1188,12 @@ class DuplicateBridge extends BaseBridgeMode {
      * Cleanup when switching modes
      */
     cleanup() {
+        // Close any open popups
+        const travelerPopup = document.getElementById('travelerPopup');
+        if (travelerPopup) {
+            travelerPopup.remove();
+        }
+        
         console.log('🧹 Duplicate Bridge cleanup completed');
     }
 }
