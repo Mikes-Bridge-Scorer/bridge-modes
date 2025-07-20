@@ -44,6 +44,25 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
+     * Go to next board
+     */
+    goToNextBoard() {
+        // Save current traveler first
+        this.saveTravelerData();
+        
+        // Move to next board
+        const nextBoard = this.travelerEntry.boardNumber + 1;
+        if (nextBoard <= this.session.totalBoards) {
+            this.closeTravelerPopup();
+            this.openTravelerPopup(nextBoard);
+        } else {
+            // No more boards
+            this.closeTravelerPopup();
+            alert('No more boards to enter!');
+        }
+    }
+    
+    /**
      * Initialize authentic movement data from professional PDF sources
      */
     initializeAuthenticMovements() {
@@ -456,9 +475,9 @@ class DuplicateBridge extends BaseBridgeMode {
         
         const popupContent = document.createElement('div');
         popupContent.style.cssText = `
-            background: white; padding: 20px; border-radius: 8px; 
-            max-width: 90%; max-height: 85%; overflow: auto; 
-            color: #2c3e50; min-width: 600px;
+            background: white; padding: 15px; border-radius: 8px; 
+            max-width: 95%; max-height: 90%; overflow: auto; 
+            color: #2c3e50; width: 100%; box-sizing: border-box;
         `;
         
         popupContent.innerHTML = `
@@ -475,8 +494,9 @@ class DuplicateBridge extends BaseBridgeMode {
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button id="calculateScores" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px;">Calculate Scores</button>
-                <button id="saveTraveler" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">Save & Close</button>
+                <button id="calculateScores" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Calculate Scores</button>
+                <button id="nextBoard" style="background: #f39c12; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Next Board</button>
+                <button id="saveTraveler" style="background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px;">Save & Close</button>
             </div>
         `;
         
@@ -492,17 +512,18 @@ class DuplicateBridge extends BaseBridgeMode {
      */
     getTravelerTableHTML() {
         let html = `
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px;">
                 <thead>
                     <tr style="background: #34495e; color: white;">
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">N/S Pair</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">E/W Pair</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">Bid</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">Suit</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">By</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #e74c3c;">Tricks</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #3498db;">Score N/S</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50; background: #3498db;">Score E/W</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50;">N/S Pair</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50;">E/W Pair</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50; background: #e74c3c;">Bid</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50; background: #e74c3c;">Suit</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50; background: #e74c3c;">By</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50; background: #e74c3c;">Tricks</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50; background: #3498db;">Score N/S</th>
+                        <th style="padding: 6px; border: 1px solid #2c3e50; background: #3498db;">Score E/W</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -511,16 +532,16 @@ class DuplicateBridge extends BaseBridgeMode {
         this.travelerEntry.results.forEach((result, index) => {
             html += `
                 <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${result.nsPair}</td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${result.ewPair}</td>
+                    <td style="padding: 6px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${result.nsPair}</td>
+                    <td style="padding: 6px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${result.ewPair}</td>
                     <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                         <input type="text" id="bid_${index}" data-row="${index}" data-field="bidLevel" 
-                               style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 4px;" 
+                               style="width: 30px; text-align: center; border: 1px solid #ccc; padding: 2px; font-size: 12px;" 
                                maxlength="1" value="${result.bidLevel}">
                     </td>
                     <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                         <select id="suit_${index}" data-row="${index}" data-field="bidSuit" 
-                                style="width: 60px; padding: 4px; border: 1px solid #ccc;">
+                                style="width: 50px; padding: 2px; border: 1px solid #ccc; font-size: 12px;">
                             <option value="">-</option>
                             <option value="♣" ${result.bidSuit === '♣' ? 'selected' : ''}>♣</option>
                             <option value="♦" ${result.bidSuit === '♦' ? 'selected' : ''}>♦</option>
@@ -531,7 +552,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     </td>
                     <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                         <select id="declarer_${index}" data-row="${index}" data-field="declarer" 
-                                style="width: 50px; padding: 4px; border: 1px solid #ccc;">
+                                style="width: 40px; padding: 2px; border: 1px solid #ccc; font-size: 12px;">
                             <option value="">-</option>
                             <option value="N" ${result.declarer === 'N' ? 'selected' : ''}>N</option>
                             <option value="S" ${result.declarer === 'S' ? 'selected' : ''}>S</option>
@@ -541,16 +562,16 @@ class DuplicateBridge extends BaseBridgeMode {
                     </td>
                     <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                         <input type="text" id="tricks_${index}" data-row="${index}" data-field="tricks" 
-                               style="width: 50px; text-align: center; border: 1px solid #ccc; padding: 4px;" 
+                               style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 2px; font-size: 12px;" 
                                maxlength="2" value="${result.tricks}">
                     </td>
                     <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
-                        <span id="nsScore_${index}" style="font-weight: bold; color: #2c3e50;">
+                        <span id="nsScore_${index}" style="font-weight: bold; color: #2c3e50; font-size: 12px;">
                             ${result.nsScore !== null ? result.nsScore : '-'}
                         </span>
                     </td>
                     <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
-                        <span id="ewScore_${index}" style="font-weight: bold; color: #2c3e50;">
+                        <span id="ewScore_${index}" style="font-weight: bold; color: #2c3e50; font-size: 12px;">
                             ${result.ewScore !== null ? result.ewScore : '-'}
                         </span>
                     </td>
@@ -574,6 +595,11 @@ class DuplicateBridge extends BaseBridgeMode {
         // Calculate scores button
         document.getElementById('calculateScores').onclick = () => {
             this.calculateTravelerScores();
+        };
+        
+        // Next board button
+        document.getElementById('nextBoard').onclick = () => {
+            this.goToNextBoard();
         };
         
         // Save traveler button
@@ -966,7 +992,7 @@ class DuplicateBridge extends BaseBridgeMode {
         
         switch (this.inputState) {
             case 'pairs_setup':
-                return ['4', '5', '7', '8', '9', '0']; // Available movements
+                return ['4', '5', '6', '7', '8', '9', '0']; // Available movements
             case 'movement_confirm':
                 return ['1', '2', 'BACK']; // 1=MOVEMENT, 2=CONFIRM
             case 'board_selection':
