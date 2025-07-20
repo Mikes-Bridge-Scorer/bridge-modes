@@ -457,6 +457,8 @@ class DuplicateBridge extends BaseBridgeMode {
             pairCount = parseInt(value);
         }
         
+        console.log(`🎯 Pairs setup: value=${value}, pairCount=${pairCount}`);
+        
         if (this.movements[pairCount]) {
             this.session.pairs = pairCount;
             const movement = this.movements[pairCount];
@@ -467,6 +469,8 @@ class DuplicateBridge extends BaseBridgeMode {
             
             this.inputState = 'movement_confirm';
             console.log(`📋 Selected ${pairCount} pairs: ${movement.description}`);
+        } else {
+            console.error(`❌ No movement found for ${pairCount} pairs`);
         }
     }
     
@@ -515,6 +519,8 @@ class DuplicateBridge extends BaseBridgeMode {
      * Open traveler popup for board entry
      */
     openTravelerPopup(boardNumber) {
+        console.log(`🎯 Opening traveler for board ${boardNumber}`);
+        
         this.travelerEntry.boardNumber = boardNumber;
         this.travelerEntry.isActive = true;
         this.travelerEntry.results = this.getTravelerInstancesForBoard(boardNumber);
@@ -522,7 +528,14 @@ class DuplicateBridge extends BaseBridgeMode {
         this.travelerEntry.inputMode = 'bid_level';
         this.travelerEntry.currentInput = '';
         
+        console.log(`🎯 Traveler entry state: active=${this.travelerEntry.isActive}`);
+        
         this.showTravelerPopup();
+        
+        // Force button update after popup is shown
+        setTimeout(() => {
+            this.updateDisplay();
+        }, 100);
     }
     
     /**
@@ -917,6 +930,12 @@ class DuplicateBridge extends BaseBridgeMode {
             popup.remove();
         }
         this.travelerEntry.isActive = false;
+        console.log(`🎯 Traveler popup closed, active=${this.travelerEntry.isActive}`);
+        
+        // Force button update after popup is closed
+        setTimeout(() => {
+            this.updateDisplay();
+        }, 100);
     }
     
     /**
@@ -1110,7 +1129,11 @@ class DuplicateBridge extends BaseBridgeMode {
     updateDisplay() {
         const content = this.getDisplayContent();
         this.ui.updateDisplay(content);
-        this.ui.updateButtonStates(this.getActiveButtons());
+        
+        const activeButtons = this.getActiveButtons();
+        console.log(`🎮 Active buttons: [${activeButtons.join(', ')}] | Traveler active: ${this.travelerEntry.isActive}`);
+        
+        this.ui.updateButtonStates(activeButtons);
     }
     
     /**
