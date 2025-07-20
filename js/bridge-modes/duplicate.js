@@ -41,6 +41,7 @@ class DuplicateBridge extends BaseBridgeMode {
         this.initializeAuthenticMovements();
         
         console.log('🏆 Duplicate Bridge initialized with authentic PDF movements');
+        console.log('🏆 Available movements:', Object.keys(this.movements));
     }
     
     /**
@@ -458,6 +459,8 @@ class DuplicateBridge extends BaseBridgeMode {
         }
         
         console.log(`🎯 Pairs setup: value=${value}, pairCount=${pairCount}`);
+        console.log(`🎯 Available movements:`, Object.keys(this.movements));
+        console.log(`🎯 Movement for ${pairCount}:`, this.movements[pairCount]);
         
         if (this.movements[pairCount]) {
             this.session.pairs = pairCount;
@@ -471,6 +474,7 @@ class DuplicateBridge extends BaseBridgeMode {
             console.log(`📋 Selected ${pairCount} pairs: ${movement.description}`);
         } else {
             console.error(`❌ No movement found for ${pairCount} pairs`);
+            console.error(`Available movements: ${Object.keys(this.movements).join(', ')}`);
         }
     }
     
