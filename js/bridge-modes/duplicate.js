@@ -1,6 +1,6 @@
 /**
- * Simplified Duplicate Bridge Mode
- * Clean, focused implementation with proper button integration
+ * Simplified Duplicate Bridge Mode - Fixed with Dropdown Interface
+ * Uses dropdown fields in popup for easy data entry
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -25,8 +25,6 @@ class DuplicateBridge extends BaseBridgeMode {
         this.traveler = {
             isActive: false,
             boardNumber: null,
-            currentField: 'level', // level, suit, declarer, tricks
-            currentRow: 0,
             data: []
         };
         
@@ -90,7 +88,26 @@ class DuplicateBridge extends BaseBridgeMode {
                     { round: 2, table: 2, ns: 7, ew: 3, boards: [11,12] },
                     { round: 2, table: 3, ns: 4, ew: 8, boards: [13,14] },
                     { round: 2, table: 4, ns: 2, ew: 5, boards: [1,2] },
-                    // ... continuing movement pattern
+                    { round: 3, table: 1, ns: 1, ew: 8, boards: [3,4] },
+                    { round: 3, table: 2, ns: 2, ew: 7, boards: [5,6] },
+                    { round: 3, table: 3, ns: 3, ew: 5, boards: [7,8] },
+                    { round: 3, table: 4, ns: 6, ew: 4, boards: [9,10] },
+                    { round: 4, table: 1, ns: 1, ew: 5, boards: [11,12] },
+                    { round: 4, table: 2, ns: 6, ew: 2, boards: [13,14] },
+                    { round: 4, table: 3, ns: 7, ew: 4, boards: [1,2] },
+                    { round: 4, table: 4, ns: 8, ew: 3, boards: [3,4] },
+                    { round: 5, table: 1, ns: 1, ew: 4, boards: [5,6] },
+                    { round: 5, table: 2, ns: 8, ew: 6, boards: [7,8] },
+                    { round: 5, table: 3, ns: 2, ew: 3, boards: [9,10] },
+                    { round: 5, table: 4, ns: 5, ew: 7, boards: [11,12] },
+                    { round: 6, table: 1, ns: 1, ew: 3, boards: [13,14] },
+                    { round: 6, table: 2, ns: 5, ew: 8, boards: [1,2] },
+                    { round: 6, table: 3, ns: 6, ew: 7, boards: [3,4] },
+                    { round: 6, table: 4, ns: 4, ew: 2, boards: [5,6] },
+                    { round: 7, table: 1, ns: 1, ew: 7, boards: [7,8] },
+                    { round: 7, table: 2, ns: 4, ew: 5, boards: [9,10] },
+                    { round: 7, table: 3, ns: 8, ew: 2, boards: [11,12] },
+                    { round: 7, table: 4, ns: 3, ew: 6, boards: [13,14] }
                 ]
             }
         };
@@ -107,14 +124,13 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Handle user actions - SIMPLIFIED
+     * Handle user actions
      */
     handleAction(value) {
         console.log(`🎮 Duplicate action: ${value} in state: ${this.inputState}`);
         
-        // Handle traveler popup input
+        // Don't handle buttons when traveler popup is active
         if (this.traveler.isActive) {
-            this.handleTravelerInput(value);
             return;
         }
         
@@ -182,6 +198,11 @@ class DuplicateBridge extends BaseBridgeMode {
      * Handle board selection
      */
     handleBoardSelection(value) {
+        if (value === 'BACK') {
+            this.inputState = 'movement_confirm';
+            return;
+        }
+        
         const boardNum = parseInt(value);
         if (boardNum >= 1 && boardNum <= this.session.movement.totalBoards) {
             this.openTravelerPopup(boardNum);
@@ -189,19 +210,16 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Open traveler popup - SIMPLIFIED
+     * Open traveler popup
      */
     openTravelerPopup(boardNumber) {
         console.log(`🎯 Opening traveler for board ${boardNumber}`);
         
         this.traveler.isActive = true;
         this.traveler.boardNumber = boardNumber;
-        this.traveler.currentField = 'level';
-        this.traveler.currentRow = 0;
         this.traveler.data = this.generateTravelerRows(boardNumber);
         
         this.showTravelerPopup();
-        this.updateDisplay();
     }
     
     /**
@@ -226,151 +244,7 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Handle traveler input - BUTTON BASED
-     */
-    handleTravelerInput(value) {
-        const currentRow = this.traveler.data[this.traveler.currentRow];
-        if (!currentRow) return;
-        
-        switch (this.traveler.currentField) {
-            case 'level':
-                if (['1','2','3','4','5','6','7'].includes(value)) {
-                    currentRow.level = value;
-                    this.traveler.currentField = 'suit';
-                    this.updateTravelerDisplay();
-                }
-                break;
-                
-            case 'suit':
-                const suits = { '1': '♣', '2': '♦', '3': '♥', '4': '♠', '5': 'NT' };
-                if (suits[value]) {
-                    currentRow.suit = suits[value];
-                    this.traveler.currentField = 'declarer';
-                    this.updateTravelerDisplay();
-                }
-                break;
-                
-            case 'declarer':
-                const declarers = { '1': 'N', '2': 'S', '3': 'E', '4': 'W' };
-                if (declarers[value]) {
-                    currentRow.declarer = declarers[value];
-                    this.traveler.currentField = 'tricks';
-                    this.updateTravelerDisplay();
-                }
-                break;
-                
-            case 'tricks':
-                if (['6','7','8','9'].includes(value) || (value === '0' && currentRow.tricks === '1')) {
-                    if (value === '0' && currentRow.tricks === '1') {
-                        currentRow.tricks = '10';
-                    } else if (currentRow.tricks === '1' && ['1','2','3'].includes(value)) {
-                        currentRow.tricks = '1' + value;
-                    } else {
-                        currentRow.tricks = value;
-                    }
-                    
-                    // Calculate score and move to next row
-                    this.calculateScore(this.traveler.currentRow);
-                    this.moveToNextRow();
-                }
-                break;
-        }
-        
-        // Handle special buttons
-        if (value === 'NEXT') {
-            this.moveToNextRow();
-        } else if (value === 'SAVE') {
-            this.saveTravelerData();
-        } else if (value === 'BACK' && this.traveler.currentField !== 'level') {
-            this.moveToPreviousField();
-        }
-    }
-    
-    /**
-     * Move to next row
-     */
-    moveToNextRow() {
-        if (this.traveler.currentRow < this.traveler.data.length - 1) {
-            this.traveler.currentRow++;
-            this.traveler.currentField = 'level';
-        } else {
-            // All rows complete
-            this.traveler.currentField = 'complete';
-        }
-        this.updateTravelerDisplay();
-    }
-    
-    /**
-     * Move to previous field
-     */
-    moveToPreviousField() {
-        const fields = ['level', 'suit', 'declarer', 'tricks'];
-        const currentIndex = fields.indexOf(this.traveler.currentField);
-        if (currentIndex > 0) {
-            this.traveler.currentField = fields[currentIndex - 1];
-            this.updateTravelerDisplay();
-        }
-    }
-    
-    /**
-     * Calculate score for a row
-     */
-    calculateScore(rowIndex) {
-        const row = this.traveler.data[rowIndex];
-        if (!row.level || !row.suit || !row.declarer || !row.tricks) return;
-        
-        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
-        const declarerSide = ['N', 'S'].includes(row.declarer) ? 'NS' : 'EW';
-        
-        // Simplified scoring
-        const level = parseInt(row.level);
-        const tricks = parseInt(row.tricks);
-        const needed = 6 + level;
-        const result = tricks - needed;
-        
-        let score = 0;
-        if (result >= 0) {
-            // Made contract
-            const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-            score = level * suitPoints[row.suit];
-            if (row.suit === 'NT') score += 10; // NT bonus
-            score += result * suitPoints[row.suit]; // Overtricks
-            
-            // Game bonus
-            if (score >= 100) {
-                score += vulnerability.includes(declarerSide) ? 500 : 300;
-            } else {
-                score += 50;
-            }
-        } else {
-            // Failed contract
-            const undertricks = Math.abs(result);
-            score = -(undertricks * (vulnerability.includes(declarerSide) ? 100 : 50));
-        }
-        
-        // Assign scores
-        if (declarerSide === 'NS') {
-            row.nsScore = score;
-            row.ewScore = score > 0 ? 0 : Math.abs(score);
-        } else {
-            row.ewScore = score;
-            row.nsScore = score > 0 ? 0 : Math.abs(score);
-        }
-    }
-    
-    /**
-     * Get board vulnerability
-     */
-    getBoardVulnerability(boardNumber) {
-        const cycle = (boardNumber - 1) % 16;
-        if (cycle < 4) return 'None';
-        if (cycle < 8) return 'NS';
-        if (cycle < 12) return 'EW';
-        return 'Both';
-    }
-    
-    /**
-     * Show traveler popup
+     * Show traveler popup with dropdown interface
      */
     showTravelerPopup() {
         const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
@@ -388,106 +262,249 @@ class DuplicateBridge extends BaseBridgeMode {
         content.style.cssText = `
             background: white; padding: 20px; border-radius: 8px; 
             max-width: 95%; max-height: 90%; overflow: auto; 
-            color: #2c3e50; min-width: 300px;
+            color: #2c3e50; min-width: 320px; box-sizing: border-box;
         `;
         
         content.innerHTML = `
-            <div style="text-align: center; margin-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #34495e; padding-bottom: 10px;">
                 <h3 style="margin: 0; color: #2c3e50;">Board ${this.traveler.boardNumber}</h3>
-                <div style="color: #e74c3c; font-weight: bold;">${vulnerability} Vulnerable</div>
+                <div style="color: #e74c3c; font-weight: bold; font-size: 14px;">${vulnerability} Vulnerable</div>
             </div>
             
-            <div id="travelerTable"></div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px;">
+                    <thead>
+                        <tr style="background: #34495e; color: white;">
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 60px;">NS</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 60px;">EW</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #e74c3c;">Bid</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #e74c3c;">Suit</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 60px; background: #e74c3c;">By</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #e74c3c;">Tricks</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #3498db;">Score NS</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #3498db;">Score EW</th>
+                        </tr>
+                    </thead>
+                    <tbody id="travelerTableBody">
+                        ${this.getTravelerRowsHTML()}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 4px; font-size: 12px;">
+                <strong>Instructions:</strong> 
+                <br>• Fill in the <span style="color: #e74c3c; font-weight: bold;">red columns</span> with contract details
+                <br>• <span style="color: #3498db; font-weight: bold;">Blue columns</span> will calculate automatically when you click Calculate
+                <br>• Use dropdowns to select bid level, suit, declarer, and tricks taken
+            </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="window.saveTraveler()" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Save & Close</button>
-                <button onclick="window.closeTraveler()" style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button onclick="window.calculateAllScores()" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Calculate All Scores</button>
+                <button onclick="window.saveTravelerData()" style="background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Save & Close</button>
+                <button onclick="window.closeTravelerPopup()" style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px;">Cancel</button>
             </div>
         `;
         
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        this.updateTravelerDisplay();
+        // Set up global functions for the popup buttons
+        this.setupTravelerGlobals();
         
-        // Add global functions for buttons
-        window.saveTraveler = () => this.saveTravelerData();
-        window.closeTraveler = () => this.closeTravelerPopup();
+        // Add change listeners to all dropdowns
+        this.setupDropdownListeners();
     }
     
     /**
-     * Update traveler display
+     * Get traveler rows HTML with dropdowns
      */
-    updateTravelerDisplay() {
-        const table = document.getElementById('travelerTable');
-        if (!table) return;
-        
-        let html = `
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                <thead>
-                    <tr style="background: #34495e; color: white;">
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">NS</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">EW</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">Contract</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">Score NS</th>
-                        <th style="padding: 8px; border: 1px solid #2c3e50;">Score EW</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        this.traveler.data.forEach((row, index) => {
-            const isCurrentRow = index === this.traveler.currentRow;
-            const contract = `${row.level}${row.suit} ${row.declarer} ${row.tricks}`;
-            
-            html += `
-                <tr style="background: ${isCurrentRow ? '#3498db20' : (index % 2 === 0 ? '#f8f9fa' : 'white')};">
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${row.nsPair}</td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${row.ewPair}</td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center;">${contract}</td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center;">${row.nsScore || '-'}</td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center;">${row.ewScore || '-'}</td>
-                </tr>
-            `;
+    getTravelerRowsHTML() {
+        return this.traveler.data.map((row, index) => `
+            <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
+                <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${row.nsPair}</td>
+                <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${row.ewPair}</td>
+                <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                    <select data-row="${index}" data-field="level" style="width: 60px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                        <option value="">-</option>
+                        <option value="1" ${row.level === '1' ? 'selected' : ''}>1</option>
+                        <option value="2" ${row.level === '2' ? 'selected' : ''}>2</option>
+                        <option value="3" ${row.level === '3' ? 'selected' : ''}>3</option>
+                        <option value="4" ${row.level === '4' ? 'selected' : ''}>4</option>
+                        <option value="5" ${row.level === '5' ? 'selected' : ''}>5</option>
+                        <option value="6" ${row.level === '6' ? 'selected' : ''}>6</option>
+                        <option value="7" ${row.level === '7' ? 'selected' : ''}>7</option>
+                    </select>
+                </td>
+                <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                    <select data-row="${index}" data-field="suit" style="width: 60px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                        <option value="">-</option>
+                        <option value="♣" ${row.suit === '♣' ? 'selected' : ''}>♣</option>
+                        <option value="♦" ${row.suit === '♦' ? 'selected' : ''}>♦</option>
+                        <option value="♥" ${row.suit === '♥' ? 'selected' : ''}>♥</option>
+                        <option value="♠" ${row.suit === '♠' ? 'selected' : ''}>♠</option>
+                        <option value="NT" ${row.suit === 'NT' ? 'selected' : ''}>NT</option>
+                    </select>
+                </td>
+                <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                    <select data-row="${index}" data-field="declarer" style="width: 45px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                        <option value="">-</option>
+                        <option value="N" ${row.declarer === 'N' ? 'selected' : ''}>N</option>
+                        <option value="S" ${row.declarer === 'S' ? 'selected' : ''}>S</option>
+                        <option value="E" ${row.declarer === 'E' ? 'selected' : ''}>E</option>
+                        <option value="W" ${row.declarer === 'W' ? 'selected' : ''}>W</option>
+                    </select>
+                </td>
+                <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                    <select data-row="${index}" data-field="tricks" style="width: 60px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                        <option value="">-</option>
+                        <option value="0" ${row.tricks === '0' ? 'selected' : ''}>0</option>
+                        <option value="1" ${row.tricks === '1' ? 'selected' : ''}>1</option>
+                        <option value="2" ${row.tricks === '2' ? 'selected' : ''}>2</option>
+                        <option value="3" ${row.tricks === '3' ? 'selected' : ''}>3</option>
+                        <option value="4" ${row.tricks === '4' ? 'selected' : ''}>4</option>
+                        <option value="5" ${row.tricks === '5' ? 'selected' : ''}>5</option>
+                        <option value="6" ${row.tricks === '6' ? 'selected' : ''}>6</option>
+                        <option value="7" ${row.tricks === '7' ? 'selected' : ''}>7</option>
+                        <option value="8" ${row.tricks === '8' ? 'selected' : ''}>8</option>
+                        <option value="9" ${row.tricks === '9' ? 'selected' : ''}>9</option>
+                        <option value="10" ${row.tricks === '10' ? 'selected' : ''}>10</option>
+                        <option value="11" ${row.tricks === '11' ? 'selected' : ''}>11</option>
+                        <option value="12" ${row.tricks === '12' ? 'selected' : ''}>12</option>
+                        <option value="13" ${row.tricks === '13' ? 'selected' : ''}>13</option>
+                    </select>
+                </td>
+                <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
+                    <span id="nsScore_${index}" style="font-weight: bold; color: #2c3e50; font-size: 12px;">
+                        ${row.nsScore !== null ? row.nsScore : '-'}
+                    </span>
+                </td>
+                <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
+                    <span id="ewScore_${index}" style="font-weight: bold; color: #2c3e50; font-size: 12px;">
+                        ${row.ewScore !== null ? row.ewScore : '-'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    /**
+     * Setup dropdown change listeners
+     */
+    setupDropdownListeners() {
+        const selects = document.querySelectorAll('#travelerPopup select');
+        selects.forEach(select => {
+            select.addEventListener('change', (e) => {
+                const rowIndex = parseInt(e.target.dataset.row);
+                const field = e.target.dataset.field;
+                const value = e.target.value;
+                
+                this.traveler.data[rowIndex][field] = value;
+                
+                // Auto-calculate if row is complete
+                const row = this.traveler.data[rowIndex];
+                if (row.level && row.suit && row.declarer && row.tricks) {
+                    this.calculateScore(rowIndex);
+                }
+            });
         });
+    }
+    
+    /**
+     * Setup global functions for popup buttons
+     */
+    setupTravelerGlobals() {
+        window.calculateAllScores = () => {
+            this.traveler.data.forEach((_, index) => {
+                this.calculateScore(index);
+            });
+        };
         
-        html += '</tbody></table>';
+        window.saveTravelerData = () => {
+            this.saveTravelerData();
+        };
         
-        // Add input instructions
-        if (this.traveler.currentField !== 'complete') {
-            const currentRow = this.traveler.data[this.traveler.currentRow];
-            let instruction = '';
+        window.closeTravelerPopup = () => {
+            this.closeTravelerPopup();
+        };
+    }
+    
+    /**
+     * Calculate score for a row
+     */
+    calculateScore(rowIndex) {
+        const row = this.traveler.data[rowIndex];
+        if (!row.level || !row.suit || !row.declarer || !row.tricks) return;
+        
+        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
+        const declarerSide = ['N', 'S'].includes(row.declarer) ? 'NS' : 'EW';
+        
+        // Determine if declarer's side is vulnerable
+        let isVulnerable = false;
+        if (vulnerability === 'Both') isVulnerable = true;
+        else if (vulnerability === 'NS' && declarerSide === 'NS') isVulnerable = true;
+        else if (vulnerability === 'EW' && declarerSide === 'EW') isVulnerable = true;
+        
+        // Calculate score
+        const level = parseInt(row.level);
+        const tricks = parseInt(row.tricks);
+        const needed = 6 + level;
+        const result = tricks - needed;
+        
+        let score = 0;
+        if (result >= 0) {
+            // Contract made
+            const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+            score = level * suitPoints[row.suit];
+            if (row.suit === 'NT') score += 10; // NT bonus
             
-            switch (this.traveler.currentField) {
-                case 'level':
-                    instruction = 'Enter bid level (1-7)';
-                    break;
-                case 'suit':
-                    instruction = 'Enter suit: 1=♣, 2=♦, 3=♥, 4=♠, 5=NT';
-                    break;
-                case 'declarer':
-                    instruction = 'Enter declarer: 1=N, 2=S, 3=E, 4=W';
-                    break;
-                case 'tricks':
-                    instruction = 'Enter tricks taken (6-13)';
-                    break;
+            // Add overtricks
+            if (result > 0) {
+                score += result * suitPoints[row.suit];
             }
             
-            html += `
-                <div style="margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 4px;">
-                    <div style="font-weight: bold; color: #2c3e50;">Row ${this.traveler.currentRow + 1}: Pair ${currentRow.nsPair} vs ${currentRow.ewPair}</div>
-                    <div style="color: #34495e; margin-top: 5px;">${instruction}</div>
-                </div>
-            `;
+            // Game bonus
+            if (score >= 100) {
+                score += isVulnerable ? 500 : 300;
+            } else {
+                score += 50;
+            }
         } else {
-            html += `
-                <div style="margin-top: 20px; padding: 15px; background: #27ae60; color: white; border-radius: 4px; text-align: center;">
-                    <strong>All entries complete! Click Save & Close.</strong>
-                </div>
-            `;
+            // Contract failed
+            const undertricks = Math.abs(result);
+            if (isVulnerable) {
+                // Vulnerable penalties: -100, -200, -300, etc.
+                score = -(undertricks * 100);
+            } else {
+                // Non-vulnerable penalties: -50, -100, -150, etc.
+                score = -(undertricks * 50);
+            }
         }
         
-        table.innerHTML = html;
+        // Assign scores
+        if (declarerSide === 'NS') {
+            row.nsScore = score;
+            row.ewScore = score > 0 ? 0 : Math.abs(score);
+        } else {
+            row.ewScore = score;
+            row.nsScore = score > 0 ? 0 : Math.abs(score);
+        }
+        
+        // Update display
+        const nsSpan = document.getElementById(`nsScore_${rowIndex}`);
+        const ewSpan = document.getElementById(`ewScore_${rowIndex}`);
+        if (nsSpan) nsSpan.textContent = row.nsScore;
+        if (ewSpan) ewSpan.textContent = row.ewScore;
+    }
+    
+    /**
+     * Get board vulnerability
+     */
+    getBoardVulnerability(boardNumber) {
+        const cycle = (boardNumber - 1) % 16;
+        if (cycle < 4) return 'None';
+        if (cycle < 8) return 'NS';
+        if (cycle < 12) return 'EW';
+        return 'Both';
     }
     
     /**
@@ -511,57 +528,130 @@ class DuplicateBridge extends BaseBridgeMode {
         this.traveler.isActive = false;
         
         // Clean up global functions
-        delete window.saveTraveler;
-        delete window.closeTraveler;
+        delete window.calculateAllScores;
+        delete window.saveTravelerData;
+        delete window.closeTravelerPopup;
         
         this.updateDisplay();
     }
     
     /**
-     * Show movement popup
+     * Show movement popup - FIXED
      */
     showMovementPopup() {
         const movement = this.session.movement;
         
         const popup = document.createElement('div');
-        popup.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;';
-        popup.onclick = () => popup.remove();
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+        `;
         
         const content = document.createElement('div');
-        content.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80%; overflow: auto; color: #2c3e50;';
-        content.onclick = (e) => e.stopPropagation();
+        content.style.cssText = `
+            background: white; padding: 20px; border-radius: 8px; 
+            max-width: 90%; max-height: 80%; overflow: auto; 
+            color: #2c3e50; min-width: 300px;
+        `;
         
         content.innerHTML = `
-            <h3 style="margin-top: 0;">${movement.description}</h3>
-            <p>Movement table will be displayed here...</p>
+            <h3 style="margin-top: 0; text-align: center;">${movement.description}</h3>
+            ${this.getMovementTableHTML()}
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer;">Close</button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                        style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Close</button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove(); window.duplicateBridge.handleAction('2');" 
+                        style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer;">Confirm Movement</button>
             </div>
         `;
         
         popup.appendChild(content);
         document.body.appendChild(popup);
+        
+        // Store reference for button callback
+        window.duplicateBridge = this;
+    }
+    
+    /**
+     * Get movement table HTML
+     */
+    getMovementTableHTML() {
+        const movement = this.session.movement;
+        if (!movement || !movement.movement) return '<p>Movement data not available</p>';
+        
+        // Group by rounds
+        const roundData = {};
+        movement.movement.forEach(entry => {
+            if (!roundData[entry.round]) {
+                roundData[entry.round] = [];
+            }
+            roundData[entry.round].push(entry);
+        });
+        
+        let html = `
+            <div style="overflow-x: auto; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 400px;">
+                    <thead>
+                        <tr style="background: #34495e; color: white;">
+                            <th style="padding: 8px; border: 1px solid #2c3e50;">Round</th>
+        `;
+        
+        // Add table headers
+        for (let t = 1; t <= movement.tables; t++) {
+            html += `<th style="padding: 8px; border: 1px solid #2c3e50;">Table ${t}</th>`;
+        }
+        html += '</tr></thead><tbody>';
+        
+        // Add round data
+        Object.keys(roundData).sort((a,b) => parseInt(a) - parseInt(b)).forEach(round => {
+            html += `<tr><td style="padding: 8px; border: 1px solid #2c3e50; font-weight: bold; background: #ecf0f1; text-align: center;">${round}</td>`;
+            
+            const roundEntries = roundData[round];
+            
+            // Add table data
+            for (let t = 1; t <= movement.tables; t++) {
+                const entry = roundEntries.find(e => e.table === t);
+                if (entry) {
+                    const boardRange = entry.boards.length > 1 ? 
+                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
+                        entry.boards[0];
+                    html += `
+                        <td style="padding: 8px; border: 1px solid #2c3e50; text-align: center; font-size: 11px;">
+                            <div><strong>NS: ${entry.ns}</strong></div>
+                            <div><strong>EW: ${entry.ew}</strong></div>
+                            <div style="color: #666;">Boards ${boardRange}</div>
+                        </td>`;
+                } else {
+                    html += '<td style="padding: 8px; border: 1px solid #2c3e50; text-align: center;">-</td>';
+                }
+            }
+            
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+        
+        html += `
+            <div style="background: #ecf0f1; padding: 15px; border-radius: 4px; margin-top: 15px; font-size: 12px;">
+                <strong>How to use this movement:</strong>
+                <br>• Each round, pairs move to their assigned table and position (NS or EW)
+                <br>• Play the boards shown for that table in that round
+                <br>• Use this app to enter results after each session
+                <br>• Total playing time: approximately ${movement.description.split('~')[1] || '2-3 hours'}
+            </div>
+        `;
+        
+        return html;
     }
     
     /**
      * Get active buttons
      */
     getActiveButtons() {
+        // Don't update buttons when traveler popup is active
         if (this.traveler.isActive) {
-            switch (this.traveler.currentField) {
-                case 'level':
-                    return ['1','2','3','4','5','6','7'];
-                case 'suit':
-                    return ['1','2','3','4','5']; // Suits
-                case 'declarer':
-                    return ['1','2','3','4']; // N,S,E,W
-                case 'tricks':
-                    return ['6','7','8','9','0','1']; // For tricks 6-13
-                case 'complete':
-                    return ['SAVE'];
-                default:
-                    return ['NEXT', 'BACK', 'SAVE'];
-            }
+            return [];
         }
         
         switch (this.inputState) {
@@ -574,6 +664,7 @@ class DuplicateBridge extends BaseBridgeMode {
                 for (let i = 1; i <= this.session.movement.totalBoards; i++) {
                     buttons.push(i.toString());
                 }
+                buttons.push('BACK');
                 return buttons;
             default:
                 return [];
@@ -606,10 +697,12 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div><strong>How many pairs are playing?</strong></div>
                         <div style="color: #2c3e50; margin-top: 8px;">
                             Choose from available Howell movements:<br>
-                            4 pairs, 6 pairs, or 8 pairs
+                            • <strong>4 pairs:</strong> 2 tables, 12 boards, ~2 hours<br>
+                            • <strong>6 pairs:</strong> 3 tables, 10 boards, ~1.5 hours<br>
+                            • <strong>8 pairs:</strong> 4 tables, 14 boards, ~2.5 hours
                         </div>
                     </div>
-                    <div class="current-state">Select pairs (4, 6, or 8)</div>
+                    <div class="current-state">Select pairs: 4, 6, or 8</div>
                 `;
                 
             case 'movement_confirm':
@@ -625,12 +718,15 @@ class DuplicateBridge extends BaseBridgeMode {
                             • ${this.session.movement.rounds} rounds<br>
                             • ${this.session.movement.totalBoards} boards total
                         </div>
-                        <div style="background: #3498db; color: white; padding: 12px; border-radius: 4px; margin-top: 8px; text-align: center;">
-                            Press <strong>1</strong> to view movement<br>
-                            Press <strong>2</strong> to confirm
+                        <div style="background: #3498db; color: white; padding: 12px; border-radius: 4px; margin-top: 8px; text-align: center; font-weight: bold;">
+                            Press <strong>1</strong> to view MOVEMENT table<br>
+                            Press <strong>2</strong> to CONFIRM and start scoring
+                        </div>
+                        <div style="color: #666; font-size: 11px; margin-top: 8px; text-align: center;">
+                            Traveler entry uses dropdown menus for easy data input
                         </div>
                     </div>
-                    <div class="current-state">1=Movement, 2=Confirm, Back</div>
+                    <div class="current-state">1=View Movement, 2=Confirm, Back</div>
                 `;
                 
             case 'board_selection':
@@ -641,13 +737,18 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div class="score-display">${completed}/${this.session.movement.totalBoards} Done</div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Traveler Entry</strong></div>
+                        <div><strong>Traveler Entry - ${this.session.movement.description}</strong></div>
                         <div style="color: #2c3e50; margin-top: 8px;">
-                            Select board number to enter results.
+                            Select board number to enter results from travelers.<br>
+                            Use dropdown menus to enter: Bid, Suit, Declarer, Tricks.
                         </div>
                         ${this.getBoardStatusDisplay()}
+                        <div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;">
+                            <strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Tricks) and scores calculate automatically.
+                            Blue columns show the calculated NS and EW scores.
+                        </div>
                     </div>
-                    <div class="current-state">Select board number</div>
+                    <div class="current-state">Select board number to enter results</div>
                 `;
                 
             default:
@@ -661,12 +762,12 @@ class DuplicateBridge extends BaseBridgeMode {
     getBoardStatusDisplay() {
         const status = [];
         Object.values(this.session.boards).forEach(board => {
-            const icon = board.completed ? '✓' : '○';
+            const icon = board.completed ? '✅' : '⭕';
             const color = board.completed ? '#27ae60' : '#e74c3c';
-            status.push(`<span style="color: ${color};">B${board.number}:${icon}</span>`);
+            status.push(`<span style="color: ${color}; font-weight: bold;">B${board.number}${icon}</span>`);
         });
         
-        return `<div style="font-size: 11px; margin-top: 8px;">${status.join(' • ')}</div>`;
+        return `<div style="font-size: 12px; margin-top: 10px; text-align: center;">${status.join(' ')}</div>`;
     }
     
     /**
@@ -708,7 +809,7 @@ class DuplicateBridge extends BaseBridgeMode {
             content: `
                 <div class="help-section">
                     <h4>Simplified Duplicate Bridge</h4>
-                    <p>Streamlined implementation with button-based traveler entry for easy scoring.</p>
+                    <p>Easy-to-use duplicate bridge scoring with dropdown interface for entering traveler results.</p>
                 </div>
                 
                 <div class="help-section">
@@ -723,30 +824,42 @@ class DuplicateBridge extends BaseBridgeMode {
                 <div class="help-section">
                     <h4>How to Use</h4>
                     <ol>
-                        <li><strong>Setup:</strong> Choose pairs → view movement → confirm</li>
-                        <li><strong>Play:</strong> Use movement table for seating</li>
-                        <li><strong>Score:</strong> Select board → enter results with buttons</li>
-                        <li><strong>Entry:</strong> Level → Suit → Declarer → Tricks → Auto-score</li>
+                        <li><strong>Setup:</strong> Choose pairs → view movement table → confirm</li>
+                        <li><strong>Play session:</strong> Print/display movement table for seating</li>
+                        <li><strong>Score entry:</strong> Select board → traveler popup opens</li>
+                        <li><strong>Fill data:</strong> Use dropdowns for Bid, Suit, Declarer, Tricks</li>
+                        <li><strong>Calculate:</strong> Scores auto-calculate or click Calculate All</li>
+                        <li><strong>Save:</strong> Click Save & Close when complete</li>
                     </ol>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Button Guide</h4>
+                    <h4>Traveler Interface</h4>
                     <ul>
-                        <li><strong>Level:</strong> 1-7 for contract level</li>
-                        <li><strong>Suit:</strong> 1=♣, 2=♦, 3=♥, 4=♠, 5=NT</li>
-                        <li><strong>Declarer:</strong> 1=N, 2=S, 3=E, 4=W</li>
-                        <li><strong>Tricks:</strong> 6-9 direct, 1+0=10, 1+1=11, etc.</li>
+                        <li><strong>Red columns:</strong> Manual entry required (Bid, Suit, By, Tricks)</li>
+                        <li><strong>Blue columns:</strong> Auto-calculated scores (NS Score, EW Score)</li>
+                        <li><strong>Dropdown menus:</strong> No typing needed, just select from options</li>
+                        <li><strong>Vulnerability:</strong> Automatically displayed and calculated</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Features</h4>
+                    <h4>Scoring Features</h4>
                     <ul>
-                        <li><strong>Automatic scoring:</strong> Contract calculation with vulnerability</li>
-                        <li><strong>Progress tracking:</strong> Visual board completion status</li>
-                        <li><strong>Clean interface:</strong> Button-based input, no typing needed</li>
-                        <li><strong>Mobile-friendly:</strong> Works perfectly on tablets and phones</li>
+                        <li><strong>Automatic calculation:</strong> Bridge scoring with vulnerability</li>
+                        <li><strong>Progress tracking:</strong> Visual indicators for completed boards</li>
+                        <li><strong>Error prevention:</strong> Dropdown validation prevents invalid entries</li>
+                        <li><strong>Mobile friendly:</strong> Works perfectly on tablets and phones</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Perfect for Clubs & Cruises</h4>
+                    <ul>
+                        <li><strong>Easy setup:</strong> Choose movement and start playing</li>
+                        <li><strong>Director friendly:</strong> One device handles all scoring</li>
+                        <li><strong>No typing:</strong> All input via dropdown menus</li>
+                        <li><strong>Professional results:</strong> Accurate duplicate bridge scoring</li>
                     </ul>
                 </div>
             `,
@@ -765,8 +878,10 @@ class DuplicateBridge extends BaseBridgeMode {
         if (popup) popup.remove();
         
         // Clean up global functions
-        delete window.saveTraveler;
-        delete window.closeTraveler;
+        delete window.calculateAllScores;
+        delete window.saveTravelerData;
+        delete window.closeTravelerPopup;
+        delete window.duplicateBridge;
         
         console.log('🧹 Duplicate Bridge cleanup completed');
     }
