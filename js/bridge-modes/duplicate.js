@@ -144,6 +144,9 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'board_selection':
                 this.handleBoardSelection(value);
                 break;
+            case 'results':
+                this.handleResults(value);
+                break;
         }
         
         this.updateDisplay();
@@ -203,9 +206,23 @@ class DuplicateBridge extends BaseBridgeMode {
             return;
         }
         
+        if (value === 'RESULTS') {
+            this.inputState = 'results';
+            return;
+        }
+        
         const boardNum = parseInt(value);
         if (boardNum >= 1 && boardNum <= this.session.movement.totalBoards) {
             this.openTravelerPopup(boardNum);
+        }
+    }
+    
+    /**
+     * Handle results actions
+     */
+    handleResults(value) {
+        if (value === 'BACK') {
+            this.inputState = 'board_selection';
         }
     }
     
@@ -339,7 +356,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
-                    <select data-row="${index}" data-field="suit" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                    <select data-row="${index}" data-field="suit" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 14px; font-weight: bold;">
                         <option value="">-</option>
                         <option value="♣" ${row.suit === '♣' ? 'selected' : ''}>♣</option>
                         <option value="♦" ${row.suit === '♦' ? 'selected' : ''}>♦</option>
@@ -540,14 +557,26 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get board vulnerability
+     * Get board vulnerability - FIXED CYCLE
      */
     getBoardVulnerability(boardNumber) {
         const cycle = (boardNumber - 1) % 16;
-        if (cycle < 4) return 'None';
-        if (cycle < 8) return 'NS';
-        if (cycle < 12) return 'EW';
-        return 'Both';
+        if (cycle === 0) return 'None';        // Board 1, 17, 33...
+        if (cycle === 1) return 'NS';          // Board 2, 18, 34...
+        if (cycle === 2) return 'EW';          // Board 3, 19, 35...
+        if (cycle === 3) return 'Both';        // Board 4, 20, 36...
+        if (cycle === 4) return 'EW';          // Board 5, 21, 37...
+        if (cycle === 5) return 'Both';        // Board 6, 22, 38...
+        if (cycle === 6) return 'None';        // Board 7, 23, 39...
+        if (cycle === 7) return 'NS';          // Board 8, 24, 40...
+        if (cycle === 8) return 'NS';          // Board 9, 25, 41...
+        if (cycle === 9) return 'EW';          // Board 10, 26, 42...
+        if (cycle === 10) return 'Both';       // Board 11, 27, 43...
+        if (cycle === 11) return 'None';       // Board 12, 28, 44...
+        if (cycle === 12) return 'Both';       // Board 13, 29, 45...
+        if (cycle === 13) return 'None';       // Board 14, 30, 46...
+        if (cycle === 14) return 'NS';         // Board 15, 31, 47...
+        if (cycle === 15) return 'EW';         // Board 16, 32, 48...
     }
     
     /**
@@ -659,11 +688,21 @@ class DuplicateBridge extends BaseBridgeMode {
                     const boardRange = entry.boards.length > 1 ? 
                         `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
                         entry.boards[0];
+                    
+                    // Get vulnerability for boards
+                    const vulnInfo = entry.boards.map(boardNum => {
+                        const vuln = this.getBoardVulnerability(boardNum);
+                        const vulnColor = vuln === 'None' ? '#95a5a6' : 
+                                        vuln === 'NS' ? '#e74c3c' : 
+                                        vuln === 'EW' ? '#f39c12' : '#8e44ad';
+                        return `<span style="color: ${vulnColor}; font-weight: bold;">${boardNum}(${vuln})</span>`;
+                    }).join(' ');
+                    
                     html += `
                         <td style="padding: 8px; border: 1px solid #2c3e50; text-align: center; font-size: 11px;">
                             <div><strong>NS: ${entry.ns}</strong></div>
                             <div><strong>EW: ${entry.ew}</strong></div>
-                            <div style="color: #666;">Boards ${boardRange}</div>
+                            <div style="color: #666; margin-top: 4px;">${vulnInfo}</div>
                         </td>`;
                 } else {
                     html += '<td style="padding: 8px; border: 1px solid #2c3e50; text-align: center;">-</td>';
@@ -680,6 +719,7 @@ class DuplicateBridge extends BaseBridgeMode {
                 <strong>How to use this movement:</strong>
                 <br>• Each round, pairs move to their assigned table and position (NS or EW)
                 <br>• Play the boards shown for that table in that round
+                <br>• <strong>Vulnerability Legend:</strong> <span style="color: #95a5a6; font-weight: bold;">None</span>, <span style="color: #e74c3c; font-weight: bold;">NS</span>, <span style="color: #f39c12; font-weight: bold;">EW</span>, <span style="color: #8e44ad; font-weight: bold;">Both</span>
                 <br>• Use this app to enter results after each session
                 <br>• Total playing time: approximately ${movement.description.split('~')[1] || '2-3 hours'}
             </div>
@@ -707,8 +747,15 @@ class DuplicateBridge extends BaseBridgeMode {
                 for (let i = 1; i <= this.session.movement.totalBoards; i++) {
                     buttons.push(i.toString());
                 }
+                // Check if all boards are complete to show RESULTS button
+                const allComplete = this.areAllBoardsComplete();
+                if (allComplete) {
+                    buttons.push('RESULTS');
+                }
                 buttons.push('BACK');
                 return buttons;
+            case 'results':
+                return ['BACK'];
             default:
                 return [];
         }
@@ -786,13 +833,16 @@ class DuplicateBridge extends BaseBridgeMode {
                             Use dropdown menus to enter: Bid, Suit, Declarer, Tricks.
                         </div>
                         ${this.getBoardStatusDisplay()}
-                        <div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;">
-                            <strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Tricks) and scores calculate automatically.
-                            Blue columns show the calculated NS and EW scores.
-                        </div>
+                        ${this.areAllBoardsComplete() ? 
+                            '<div style="background: #27ae60; color: white; padding: 10px; border-radius: 4px; margin-top: 10px; text-align: center; font-weight: bold;">🏆 All boards complete! Press RESULTS to see final rankings.</div>' : 
+                            '<div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;"><strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Dbl, Tricks) and scores calculate automatically. Blue columns show the calculated NS and EW scores.</div>'
+                        }
                     </div>
-                    <div class="current-state">Select board number to enter results</div>
+                    <div class="current-state">Select board number${this.areAllBoardsComplete() ? ' or RESULTS for final rankings' : ''}</div>
                 `;
+                
+            case 'results':
+                return this.getResultsDisplay();
                 
             default:
                 return '<div class="current-state">Loading...</div>';
@@ -800,8 +850,111 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Get board status display
+     * Check if all boards are complete
      */
+    areAllBoardsComplete() {
+        return Object.values(this.session.boards).every(board => board.completed);
+    }
+    
+    /**
+     * Calculate final results with matchpoints
+     */
+    calculateFinalResults() {
+        const pairs = [];
+        for (let p = 1; p <= this.session.pairs; p++) {
+            pairs.push({
+                pair: p,
+                totalMatchpoints: 0,
+                maxPossible: 0,
+                percentage: 0,
+                boardResults: {}
+            });
+        }
+        
+        // Calculate matchpoints for each board
+        Object.values(this.session.boards).forEach(board => {
+            if (!board.completed || !board.results.length) return;
+            
+            const boardResults = board.results.filter(result => 
+                result.nsScore !== null && result.ewScore !== null
+            );
+            
+            if (boardResults.length === 0) return;
+            
+            // Calculate matchpoints for NS scores
+            boardResults.forEach(result => {
+                const nsPair = result.nsPair;
+                const nsScore = result.nsScore;
+                
+                let matchpoints = 0;
+                let maxPossible = (boardResults.length - 1) * 2;
+                
+                boardResults.forEach(otherResult => {
+                    if (otherResult.nsPair !== nsPair) {
+                        const otherNsScore = otherResult.nsScore;
+                        if (nsScore > otherNsScore) {
+                            matchpoints += 2;
+                        } else if (nsScore === otherNsScore) {
+                            matchpoints += 1;
+                        }
+                    }
+                });
+                
+                const pairIndex = pairs.findIndex(p => p.pair === nsPair);
+                if (pairIndex !== -1) {
+                    pairs[pairIndex].totalMatchpoints += matchpoints;
+                    pairs[pairIndex].maxPossible += maxPossible;
+                    pairs[pairIndex].boardResults[board.number] = {
+                        score: nsScore,
+                        matchpoints: matchpoints,
+                        maxPossible: maxPossible
+                    };
+                }
+            });
+            
+            // Calculate matchpoints for EW scores
+            boardResults.forEach(result => {
+                const ewPair = result.ewPair;
+                const ewScore = result.ewScore;
+                
+                let matchpoints = 0;
+                let maxPossible = (boardResults.length - 1) * 2;
+                
+                boardResults.forEach(otherResult => {
+                    if (otherResult.ewPair !== ewPair) {
+                        const otherEwScore = otherResult.ewScore;
+                        if (ewScore > otherEwScore) {
+                            matchpoints += 2;
+                        } else if (ewScore === otherEwScore) {
+                            matchpoints += 1;
+                        }
+                    }
+                });
+                
+                const pairIndex = pairs.findIndex(p => p.pair === ewPair);
+                if (pairIndex !== -1) {
+                    pairs[pairIndex].totalMatchpoints += matchpoints;
+                    pairs[pairIndex].maxPossible += maxPossible;
+                    pairs[pairIndex].boardResults[board.number] = {
+                        score: ewScore,
+                        matchpoints: matchpoints,
+                        maxPossible: maxPossible
+                    };
+                }
+            });
+        });
+        
+        // Calculate percentages and sort
+        pairs.forEach(pair => {
+            if (pair.maxPossible > 0) {
+                pair.percentage = (pair.totalMatchpoints / pair.maxPossible * 100).toFixed(1);
+            }
+        });
+        
+        pairs.sort((a, b) => b.totalMatchpoints - a.totalMatchpoints);
+        
+        return pairs;
+    }
     getBoardStatusDisplay() {
         const status = [];
         Object.values(this.session.boards).forEach(board => {
@@ -828,6 +981,9 @@ class DuplicateBridge extends BaseBridgeMode {
                 break;
             case 'board_selection':
                 this.inputState = 'movement_confirm';
+                break;
+            case 'results':
+                this.inputState = 'board_selection';
                 break;
             default:
                 return false;
