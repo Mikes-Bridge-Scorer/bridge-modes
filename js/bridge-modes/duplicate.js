@@ -540,13 +540,23 @@ class DuplicateBridge extends BaseBridgeMode {
             }
         }
         
-        // Assign scores
+        // Assign scores - NO NEGATIVE SCORES IN DUPLICATE
         if (declarerSide === 'NS') {
-            row.nsScore = score;
-            row.ewScore = score > 0 ? 0 : Math.abs(score);
+            if (score > 0) {
+                row.nsScore = score;
+                row.ewScore = 0;
+            } else {
+                row.nsScore = 0;
+                row.ewScore = Math.abs(score);
+            }
         } else {
-            row.ewScore = score;
-            row.nsScore = score > 0 ? 0 : Math.abs(score);
+            if (score > 0) {
+                row.ewScore = score;
+                row.nsScore = 0;
+            } else {
+                row.ewScore = 0;
+                row.nsScore = Math.abs(score);
+            }
         }
         
         // Update display
