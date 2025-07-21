@@ -237,6 +237,7 @@ class DuplicateBridge extends BaseBridgeMode {
             level: '',
             suit: '',
             declarer: '',
+            double: '', // Added double field
             tricks: '',
             nsScore: null,
             ewScore: null
@@ -277,10 +278,11 @@ class DuplicateBridge extends BaseBridgeMode {
                         <tr style="background: #34495e; color: white;">
                             <th style="padding: 8px; border: 1px solid #2c3e50; width: 60px;">NS</th>
                             <th style="padding: 8px; border: 1px solid #2c3e50; width: 60px;">EW</th>
-                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #e74c3c;">Bid</th>
-                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #e74c3c;">Suit</th>
-                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 60px; background: #e74c3c;">By</th>
-                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #e74c3c;">Tricks</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 70px; background: #e74c3c;">Bid</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 70px; background: #e74c3c;">Suit</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 50px; background: #e74c3c;">By</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 70px; background: #e74c3c;">Dbl</th>
+                            <th style="padding: 8px; border: 1px solid #2c3e50; width: 70px; background: #e74c3c;">Tricks</th>
                             <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #3498db;">Score NS</th>
                             <th style="padding: 8px; border: 1px solid #2c3e50; width: 80px; background: #3498db;">Score EW</th>
                         </tr>
@@ -295,7 +297,8 @@ class DuplicateBridge extends BaseBridgeMode {
                 <strong>Instructions:</strong> 
                 <br>• Fill in the <span style="color: #e74c3c; font-weight: bold;">red columns</span> with contract details
                 <br>• <span style="color: #3498db; font-weight: bold;">Blue columns</span> will calculate automatically when you click Calculate
-                <br>• Use dropdowns to select bid level, suit, declarer, and tricks taken
+                <br>• Use dropdowns: Bid (1-7), Suit (♣♦♥♠NT), By (NSEW), Dbl (X/XX), Tricks (0-13)
+                <br>• Doubling affects scoring: X = doubled, XX = redoubled
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
@@ -324,7 +327,7 @@ class DuplicateBridge extends BaseBridgeMode {
                 <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${row.nsPair}</td>
                 <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold;">${row.ewPair}</td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
-                    <select data-row="${index}" data-field="level" style="width: 60px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                    <select data-row="${index}" data-field="level" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
                         <option value="1" ${row.level === '1' ? 'selected' : ''}>1</option>
                         <option value="2" ${row.level === '2' ? 'selected' : ''}>2</option>
@@ -336,7 +339,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
-                    <select data-row="${index}" data-field="suit" style="width: 60px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                    <select data-row="${index}" data-field="suit" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
                         <option value="♣" ${row.suit === '♣' ? 'selected' : ''}>♣</option>
                         <option value="♦" ${row.suit === '♦' ? 'selected' : ''}>♦</option>
@@ -346,7 +349,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
-                    <select data-row="${index}" data-field="declarer" style="width: 45px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                    <select data-row="${index}" data-field="declarer" style="width: 40px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
                         <option value="N" ${row.declarer === 'N' ? 'selected' : ''}>N</option>
                         <option value="S" ${row.declarer === 'S' ? 'selected' : ''}>S</option>
@@ -355,7 +358,14 @@ class DuplicateBridge extends BaseBridgeMode {
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
-                    <select data-row="${index}" data-field="tricks" style="width: 60px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                    <select data-row="${index}" data-field="double" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
+                        <option value="">-</option>
+                        <option value="X" ${row.double === 'X' ? 'selected' : ''}>X</option>
+                        <option value="XX" ${row.double === 'XX' ? 'selected' : ''}>XX</option>
+                    </select>
+                </td>
+                <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
+                    <select data-row="${index}" data-field="tricks" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
                         <option value="0" ${row.tricks === '0' ? 'selected' : ''}>0</option>
                         <option value="1" ${row.tricks === '1' ? 'selected' : ''}>1</option>
@@ -444,39 +454,72 @@ class DuplicateBridge extends BaseBridgeMode {
         else if (vulnerability === 'NS' && declarerSide === 'NS') isVulnerable = true;
         else if (vulnerability === 'EW' && declarerSide === 'EW') isVulnerable = true;
         
-        // Calculate score
+        // Calculate score with double/redouble
         const level = parseInt(row.level);
         const tricks = parseInt(row.tricks);
         const needed = 6 + level;
         const result = tricks - needed;
+        const isDoubled = row.double === 'X';
+        const isRedoubled = row.double === 'XX';
+        const doubleMultiplier = isRedoubled ? 4 : (isDoubled ? 2 : 1);
         
         let score = 0;
         if (result >= 0) {
             // Contract made
             const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-            score = level * suitPoints[row.suit];
-            if (row.suit === 'NT') score += 10; // NT bonus
+            let basicScore = level * suitPoints[row.suit];
+            if (row.suit === 'NT') basicScore += 10; // NT bonus
+            
+            // Double the basic score if doubled/redoubled
+            if (isDoubled || isRedoubled) {
+                basicScore *= doubleMultiplier;
+            }
+            
+            score = basicScore;
             
             // Add overtricks
             if (result > 0) {
-                score += result * suitPoints[row.suit];
+                if (isDoubled || isRedoubled) {
+                    // Doubled overtricks: 100/200 non-vul, 200/400 vul
+                    const overtrickValue = isVulnerable ? 200 : 100;
+                    score += result * overtrickValue * (isRedoubled ? 2 : 1);
+                } else {
+                    // Normal overtricks
+                    score += result * suitPoints[row.suit];
+                }
             }
             
             // Game bonus
-            if (score >= 100) {
+            if (basicScore >= 100) {
                 score += isVulnerable ? 500 : 300;
             } else {
                 score += 50;
             }
+            
+            // Double bonus: +50 for double, +100 for redouble
+            if (isDoubled) score += 50;
+            if (isRedoubled) score += 100;
+            
         } else {
             // Contract failed
             const undertricks = Math.abs(result);
-            if (isVulnerable) {
-                // Vulnerable penalties: -100, -200, -300, etc.
-                score = -(undertricks * 100);
+            
+            if (isDoubled || isRedoubled) {
+                // Doubled penalties
+                let penalty = 0;
+                for (let i = 1; i <= undertricks; i++) {
+                    if (i === 1) {
+                        penalty += isVulnerable ? 200 : 100;
+                    } else if (i <= 3) {
+                        penalty += isVulnerable ? 300 : 200;
+                    } else {
+                        penalty += 300;
+                    }
+                }
+                score = -penalty * (isRedoubled ? 2 : 1);
             } else {
-                // Non-vulnerable penalties: -50, -100, -150, etc.
-                score = -(undertricks * 50);
+                // Normal penalties
+                score = -(undertricks * (isVulnerable ? 100 : 50));
             }
         }
         
