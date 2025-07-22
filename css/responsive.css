@@ -1,5 +1,5 @@
-/* ===== RESPONSIVE BREAKPOINTS ===== */
-/* Mobile First Approach - Updated for Compact Layout */
+/* ===== UPDATED RESPONSIVE.CSS - GENEROUS SPACING AT ALL BREAKPOINTS ===== */
+/* Replace the button-grid sections in your responsive.css with these */
 
 /* Extra Small Mobile (320px - 360px) */
 @media (max-width: 360px) {
@@ -58,20 +58,21 @@
         margin-bottom: 4px;
     }
     
+    /* UPDATED BUTTON GRID - GENEROUS SPACING */
     .button-grid {
-        gap: 4px;
-        min-height: 220px;
-        padding: 2px;
+        gap: 10px !important; /* INCREASED from 4px */
+        min-height: 280px; /* INCREASED to accommodate spacing */
+        padding: 10px !important; /* INCREASED from 2px */
     }
     
     .btn {
-        min-height: 38px;
+        min-height: 44px; /* Mobile-friendly size */
         font-size: 13px;
         border-radius: 8px;
     }
     
     .suit-symbol {
-        font-size: 18px;
+        font-size: 20px;
     }
     
     .btn-notrump .suit-symbol {
@@ -79,7 +80,7 @@
     }
     
     .btn-declarer {
-        font-size: 15px;
+        font-size: 16px;
     }
     
     .btn-double {
@@ -128,19 +129,21 @@
         font-size: 10px;
     }
     
+    /* UPDATED BUTTON GRID - MORE GENEROUS SPACING */
     .button-grid {
-        gap: 5px;
-        min-height: 240px;
+        gap: 12px !important; /* INCREASED from 5px */
+        min-height: 300px; /* INCREASED */
+        padding: 12px !important; /* INCREASED */
     }
     
     .btn {
-        min-height: 42px;
+        min-height: 46px;
         font-size: 14px;
         border-radius: 9px;
     }
     
     .suit-symbol {
-        font-size: 20px;
+        font-size: 22px;
     }
     
     .btn-notrump .suit-symbol {
@@ -148,7 +151,7 @@
     }
     
     .btn-declarer {
-        font-size: 16px;
+        font-size: 17px;
     }
     
     .btn-double {
@@ -192,19 +195,21 @@
         font-size: 11px;
     }
     
+    /* UPDATED BUTTON GRID - GENEROUS SPACING */
     .button-grid {
-        gap: 6px;
-        min-height: 260px;
+        gap: 14px !important; /* INCREASED from 6px */
+        min-height: 320px; /* INCREASED */
+        padding: 14px !important; /* INCREASED */
     }
     
     .btn {
-        min-height: 44px;
+        min-height: 48px;
         font-size: 15px;
         border-radius: 10px;
     }
     
     .suit-symbol {
-        font-size: 22px;
+        font-size: 24px;
     }
     
     .btn-notrump .suit-symbol {
@@ -256,19 +261,21 @@
         font-size: 12px;
     }
     
+    /* UPDATED BUTTON GRID - VERY GENEROUS SPACING */
     .button-grid {
-        gap: 7px;
-        min-height: 280px;
+        gap: 16px !important; /* INCREASED from 7px */
+        min-height: 340px; /* INCREASED */
+        padding: 16px !important; /* INCREASED */
     }
     
     .btn {
-        min-height: 48px;
+        min-height: 50px;
         font-size: 16px;
         border-radius: 12px;
     }
     
     .suit-symbol {
-        font-size: 24px;
+        font-size: 26px;
     }
     
     .btn-notrump .suit-symbol {
@@ -326,9 +333,11 @@
         padding: 0 10px;
     }
     
+    /* UPDATED BUTTON GRID - MAXIMUM ELEGANCE */
     .button-grid {
-        gap: 8px;
-        min-height: 320px;
+        gap: 18px !important; /* INCREASED from 8px */
+        min-height: 380px; /* INCREASED */
+        padding: 18px !important; /* INCREASED */
     }
     
     .btn {
@@ -338,7 +347,7 @@
     }
     
     .suit-symbol {
-        font-size: 26px;
+        font-size: 28px;
     }
     
     .btn-notrump .suit-symbol {
@@ -358,223 +367,19 @@
     }
 }
 
-/* Tablet Portrait (768px - 1024px) */
+/* Continue with larger breakpoints following the same pattern... */
 @media (min-width: 768px) and (max-width: 1024px) {
-    .app-container {
-        padding: 20px;
-    }
-    
-    .calculator {
-        max-width: 520px;
-        padding: 20px;
-        max-height: 750px;
-    }
-    
-    .display-panel {
-        padding: 20px;
-        margin-bottom: 14px;
-        min-height: 170px;
-        max-height: 220px;
-        font-size: 16px;
-    }
-    
-    .mode-title {
-        font-size: 19px;
-    }
-    
-    .score-display {
-        font-size: 14px;
-    }
-    
-    .control-bar {
-        height: 34px;
-        gap: 9px;
-    }
-    
-    .control-item {
-        font-size: 13px;
-        padding: 0 12px;
-    }
-    
     .button-grid {
-        gap: 10px;
-        min-height: 360px;
-    }
-    
-    .btn {
-        min-height: 56px;
-        font-size: 18px;
-        border-radius: 14px;
-    }
-    
-    .suit-symbol {
-        font-size: 28px;
-    }
-    
-    .btn-notrump .suit-symbol {
-        font-size: 17px;
-    }
-    
-    .btn-declarer {
-        font-size: 23px;
-    }
-    
-    .btn-double {
-        font-size: 17px;
-    }
-    
-    .btn-result, .btn-action {
-        font-size: 16px;
-    }
-}
-
-/* Desktop and Large Tablets (1024px+) */
-@media (min-width: 1024px) {
-    .app-container {
-        padding: 30px;
-    }
-    
-    .calculator {
-        max-width: 560px;
-        padding: 24px;
-        max-height: 780px;
-    }
-    
-    .display-panel {
-        padding: 24px;
-        margin-bottom: 16px;
-        min-height: 180px;
-        max-height: 240px;
-        font-size: 17px;
-    }
-    
-    .mode-title {
-        font-size: 20px;
-    }
-    
-    .score-display {
-        font-size: 15px;
-    }
-    
-    .control-bar {
-        height: 36px;
-        gap: 10px;
-    }
-    
-    .control-item {
-        font-size: 14px;
-        padding: 0 14px;
-    }
-    
-    .button-grid {
-        gap: 12px;
+        gap: 20px !important;
         min-height: 400px;
-    }
-    
-    .btn {
-        min-height: 60px;
-        font-size: 19px;
-        border-radius: 15px;
-    }
-    
-    .suit-symbol {
-        font-size: 30px;
-    }
-    
-    .btn-notrump .suit-symbol {
-        font-size: 18px;
-    }
-    
-    .btn-declarer {
-        font-size: 25px;
-    }
-    
-    .btn-double {
-        font-size: 18px;
-    }
-    
-    .btn-result, .btn-action {
-        font-size: 17px;
-    }
-    
-    /* Enhanced hover effects for desktop */
-    .btn:hover:not(.disabled) {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 
-            0 8px 20px rgba(0, 0, 0, 0.3),
-            0 0 0 1px rgba(255, 255, 255, 0.2);
+        padding: 20px !important;
     }
 }
 
-/* ===== ORIENTATION RESPONSIVE ===== */
-
-/* Landscape Mobile */
-@media (max-height: 500px) and (orientation: landscape) {
-    body {
-        overflow-y: auto;
-        height: auto;
-        min-height: 100vh;
-    }
-    
-    .app-container {
-        padding: 8px;
-        min-height: 100vh;
-        height: auto;
-    }
-    
-    .calculator {
-        height: auto;
-        max-height: none;
-        min-height: 480px;
-        max-width: 90vw;
-        flex-shrink: 0;
-    }
-    
-    .display-panel {
-        min-height: 80px;
-        max-height: 120px;
-        margin-bottom: 8px;
-        font-size: 12px;
-        padding: 10px;
-    }
-    
-    .mode-title {
-        font-size: 14px;
-    }
-    
-    .score-display {
-        font-size: 10px;
-    }
-    
-    .control-bar {
-        height: 24px;
-        margin-bottom: 6px;
-    }
-    
-    .control-item {
-        font-size: 10px;
-        padding: 0 6px;
-    }
-    
-    .copyright {
-        font-size: 8px;
-        margin-bottom: 6px;
-    }
-    
+@media (min-width: 1024px) {
     .button-grid {
-        min-height: 240px;
-        gap: 5px;
+        gap: 22px !important;
+        min-height: 420px;
+        padding: 22px !important;
     }
-    
-    .btn {
-        min-height: 40px;
-        font-size: 13px;
-    }
-    
-    .suit-symbol {
-        font-size: 18px;
-    }
-    
-    .btn-notrump .suit-symbol {
-        font-size: 11px;
-    }
+}
