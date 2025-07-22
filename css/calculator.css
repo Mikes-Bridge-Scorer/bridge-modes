@@ -5,10 +5,10 @@
 .button-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px; /* Generous spacing for elegance */
+    gap: 12px; /* INCREASED - More generous spacing for elegance */
     flex: 2;
     min-height: 280px; /* Accommodate larger buttons */
-    padding: 8px;
+    padding: 12px; /* INCREASED - More padding around the grid */
     background: transparent;
 }
 
@@ -221,8 +221,8 @@
 /* Small Mobile (320px - 375px) - KEEP USABLE SIZES */
 @media (max-width: 375px) {
     .button-grid {
-        gap: 6px;
-        padding: 6px;
+        gap: 8px; /* INCREASED from 6px - Still generous on small screens */
+        padding: 8px; /* INCREASED from 6px */
         min-height: 260px;
     }
     
@@ -262,9 +262,9 @@
 /* Extra Small Mobile (320px) - MINIMUM VIABLE SIZES */
 @media (max-width: 320px) {
     .button-grid {
-        gap: 4px;
+        gap: 6px; /* INCREASED from 4px - Even tiny screens get some elegance */
         min-height: 240px;
-        padding: 4px;
+        padding: 6px; /* INCREASED from 4px */
     }
     
     .btn {
@@ -313,8 +313,8 @@
 /* Tablet Portrait (480px+) - GENEROUS SIZES */
 @media (min-width: 480px) {
     .button-grid {
-        gap: 10px;
-        padding: 10px;
+        gap: 14px; /* INCREASED - Even more generous on larger screens */
+        padding: 14px; /* INCREASED */
         min-height: 320px;
     }
     
