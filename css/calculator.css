@@ -1,127 +1,128 @@
-/* ===== BUTTON GRID LAYOUT ===== */
+/* ===== MOBILE-OPTIMIZED CALCULATOR.CSS - ELEGANT BUT TOUCH-FRIENDLY ===== */
+/* This keeps the elegant look while maintaining proper mobile touch targets */
+
+/* ===== BUTTON GRID LAYOUT - MOBILE-FIRST SPACING ===== */
 .button-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    gap: 8px; /* Generous spacing for elegance */
     flex: 2;
-    min-height: 260px;
-    padding: 4px;
+    min-height: 280px; /* Accommodate larger buttons */
+    padding: 8px;
+    background: transparent;
 }
 
-/* ===== BASE BUTTON STYLES ===== */
+/* ===== BASE BUTTON STYLES - MOBILE-FRIENDLY SIZES ===== */
 .btn {
     border: none;
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
-    padding: 4px 3px;
+    height: 48px; /* Mobile-friendly 48px - KEPT LARGE */
+    min-height: 48px;
+    max-height: 48px;
+    padding: 0 8px;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.1;
     position: relative;
     overflow: hidden;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     box-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
+        0 3px 6px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     background-clip: padding-box;
 }
 
-/* ===== BUTTON INTERACTIONS ===== */
+/* ===== REFINED INTERACTIONS - SUBTLE BUT RESPONSIVE ===== */
 .btn:hover:not(.disabled) {
-    transform: translateY(-2px) scale(1.02);
+    transform: translateY(-1px); /* Subtle lift */
     box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.15);
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .btn:active:not(.disabled) {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0) scale(0.96); /* Satisfying press feedback */
     box-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 6px rgba(0, 0, 0, 0.3),
         inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .btn.active {
-    transform: scale(1.05);
+    transform: scale(1.02);
     box-shadow: 
         0 0 0 3px rgba(255, 255, 255, 0.8),
-        0 0 20px rgba(255, 255, 255, 0.4),
+        0 0 16px rgba(255, 255, 255, 0.4),
         inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     animation: activeGlow 0.3s ease-out;
 }
 
 @keyframes activeGlow {
     0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-    50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.6); }
+    50% { box-shadow: 0 0 24px rgba(255, 255, 255, 0.6); }
     100% { 
         box-shadow: 
             0 0 0 3px rgba(255, 255, 255, 0.8),
-            0 0 20px rgba(255, 255, 255, 0.4);
+            0 0 16px rgba(255, 255, 255, 0.4);
     }
 }
 
 .btn.disabled {
-    opacity: 0.3;
+    opacity: 0.25;
     cursor: not-allowed;
     transform: none !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
-.btn.disabled:hover {
-    transform: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
+/* ===== ELEGANT BUTTON STYLES - REFINED GRADIENTS ===== */
 
-/* ===== BUTTON TYPE STYLES ===== */
-
-/* Numbers (Rows 1-2) */
+/* Numbers - Rich Blue with Better Contrast */
 .btn-number {
-    font-size: 16px;
-    font-weight: 800;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #5dade2, #3498db);
+    font-size: 16px; /* Larger for readability */
+    font-weight: 700;
+    background: linear-gradient(135deg, #4a90e2, #2c5aa0);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-number:hover:not(.disabled) {
-    background: linear-gradient(135deg, #7fb3d3, #5dade2);
+    background: linear-gradient(135deg, #5ba0f2, #4a90e2);
 }
 
 .btn-number:active:not(.disabled) {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #2c5aa0, #1e3d6f);
 }
 
-/* Suits (Row 3) */
+/* Suits - Refined but Bold Colors */
 .btn-suit {
     padding: 4px;
-    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .suit-symbol {
-    font-size: 22px;
-    font-weight: 900;
+    font-size: 24px; /* Large enough for mobile visibility */
+    font-weight: 800;
     line-height: 1;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
+/* Clubs - Rich Green */
 .btn-clubs {
-    background: linear-gradient(135deg, #27ae60, #229954);
+    background: linear-gradient(135deg, #27ae60, #1e8449);
 }
 
 .btn-clubs:hover:not(.disabled) {
     background: linear-gradient(135deg, #2ecc71, #27ae60);
 }
 
-.btn-clubs:active:not(.disabled) {
-    background: linear-gradient(135deg, #229954, #1e8449);
-}
-
+/* Diamonds - Bold Red */
 .btn-diamonds {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
 }
@@ -130,10 +131,7 @@
     background: linear-gradient(135deg, #ec7063, #e74c3c);
 }
 
-.btn-diamonds:active:not(.disabled) {
-    background: linear-gradient(135deg, #c0392b, #a93226);
-}
-
+/* Hearts - Warm Red */
 .btn-hearts {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
 }
@@ -142,219 +140,97 @@
     background: linear-gradient(135deg, #ec7063, #e74c3c);
 }
 
-.btn-hearts:active:not(.disabled) {
-    background: linear-gradient(135deg, #c0392b, #a93226);
-}
-
+/* Spades - Deep Charcoal with High Contrast */
 .btn-spades {
-    background: linear-gradient(135deg, #2c3e50, #1b2631);
+    background: linear-gradient(135deg, #2c3e50, #17202a);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-spades:hover:not(.disabled) {
     background: linear-gradient(135deg, #34495e, #2c3e50);
 }
 
-.btn-spades:active:not(.disabled) {
-    background: linear-gradient(135deg, #1b2631, #17202a);
-}
-
+/* No Trump - Sophisticated Green */
 .btn-notrump {
-    background: linear-gradient(135deg, #27ae60, #229954);
+    background: linear-gradient(135deg, #27ae60, #1e8449);
 }
 
 .btn-notrump:hover:not(.disabled) {
     background: linear-gradient(135deg, #2ecc71, #27ae60);
 }
 
-.btn-notrump:active:not(.disabled) {
-    background: linear-gradient(135deg, #229954, #1e8449);
-}
-
 .btn-notrump .suit-symbol {
-    font-size: 14px;
+    font-size: 14px; /* Readable NT text */
     font-weight: 700;
     letter-spacing: 1px;
 }
 
-/* Declarer Buttons (Row 4) */
+/* Declarer Buttons - Elegant Purple */
 .btn-declarer {
-    font-size: 18px;
-    font-weight: 800;
+    font-size: 18px; /* Large enough for easy reading */
+    font-weight: 700;
     letter-spacing: 1px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    background: linear-gradient(135deg, #8e44ad, #6c3483);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-declarer:hover:not(.disabled) {
-    background: linear-gradient(135deg, #af7ac5, #9b59b6);
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
 }
 
-.btn-declarer:active:not(.disabled) {
-    background: linear-gradient(135deg, #8e44ad, #7d3c98);
-}
-
-/* Double Button */
+/* Double Button - Rich Orange */
 .btn-double {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #f39c12, #e67e22);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #f39c12, #d68910);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-double:hover:not(.disabled) {
     background: linear-gradient(135deg, #f7b84b, #f39c12);
 }
 
-.btn-double:active:not(.disabled) {
-    background: linear-gradient(135deg, #e67e22, #d68910);
-}
-
-/* Result Buttons (Row 5) */
+/* Result Buttons - Sophisticated Gray */
 .btn-result {
-    font-size: 14px;
-    font-weight: 700;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #34495e, #2c3e50);
+    font-size: 12px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #34495e, #1b2631);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-result:hover:not(.disabled) {
     background: linear-gradient(135deg, #3f5773, #34495e);
 }
 
-.btn-result:active:not(.disabled) {
-    background: linear-gradient(135deg, #2c3e50, #1b2631);
-}
-
-/* Action Buttons (Row 5) */
+/* Action Buttons - Warm Orange */
 .btn-action {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #f39c12, #e67e22);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.25px;
+    background: linear-gradient(135deg, #f39c12, #d68910);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-action:hover:not(.disabled) {
     background: linear-gradient(135deg, #f7b84b, #f39c12);
 }
 
-.btn-action:active:not(.disabled) {
-    background: linear-gradient(135deg, #e67e22, #d68910);
-}
+/* ===== MOBILE-SPECIFIC RESPONSIVE DESIGN ===== */
 
-/* ===== SPECIAL BUTTON EFFECTS ===== */
-
-/* Suit-specific active states */
-.btn-clubs.active {
-    box-shadow: 
-        0 0 0 3px #00ff00,
-        0 0 25px rgba(0, 255, 0, 0.7);
-}
-
-.btn-diamonds.active, .btn-hearts.active {
-    box-shadow: 
-        0 0 0 3px #ff0000,
-        0 0 25px rgba(255, 0, 0, 0.7);
-}
-
-.btn-spades.active {
-    box-shadow: 
-        0 0 0 3px #ffffff,
-        0 0 25px rgba(255, 255, 255, 0.8);
-}
-
-.btn-notrump.active {
-    box-shadow: 
-        0 0 0 3px #9b59b6,
-        0 0 25px rgba(155, 89, 182, 0.7);
-}
-
-/* Declarer-specific active states */
-.btn-declarer.active {
-    box-shadow: 
-        0 0 0 3px #9b59b6,
-        0 0 25px rgba(155, 89, 182, 0.7);
-}
-
-/* Mode selection highlighting */
-.btn-number.active[data-value="1"],
-.btn-number.active[data-value="2"],
-.btn-number.active[data-value="3"],
-.btn-number.active[data-value="4"],
-.btn-number.active[data-value="5"] {
-    box-shadow: 
-        0 0 0 4px #00ff00,
-        0 0 30px rgba(0, 255, 0, 0.6),
-        0 4px 20px rgba(0, 0, 0, 0.4);
-    animation: modeSelectPulse 2s infinite;
-}
-
-@keyframes modeSelectPulse {
-    0%, 100% { 
-        box-shadow: 
-            0 0 0 4px #00ff00,
-            0 0 30px rgba(0, 255, 0, 0.6),
-            0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-    50% { 
-        box-shadow: 
-            0 0 0 6px #00ff00,
-            0 0 40px rgba(0, 255, 0, 0.8),
-            0 6px 24px rgba(0, 0, 0, 0.4);
-    }
-}
-
-/* ===== BUTTON PRESS EFFECTS ===== */
-.btn:not(.disabled)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-    opacity: 0;
-    transform: scale(0);
-    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    pointer-events: none;
-    border-radius: inherit;
-}
-
-.btn:active:not(.disabled)::before {
-    opacity: 1;
-    transform: scale(1);
-    transition: all 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-/* ===== HAPTIC FEEDBACK SIMULATION ===== */
-.btn-press {
-    animation: buttonPress 0.15s ease-out;
-}
-
-@keyframes buttonPress {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
-}
-
-/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
-.btn:focus-visible {
-    outline: 3px solid rgba(52, 152, 219, 0.8);
-    outline-offset: 2px;
-}
-
-/* ===== RESPONSIVE ADJUSTMENTS ===== */
+/* Small Mobile (320px - 375px) - KEEP USABLE SIZES */
 @media (max-width: 375px) {
     .button-grid {
-        gap: 4px;
-        padding: 2px;
-        min-height: 240px;
+        gap: 6px;
+        padding: 6px;
+        min-height: 260px;
     }
     
     .btn {
-        min-height: 40px;
-        font-size: 14px;
+        height: 44px; /* Still mobile-friendly */
+        min-height: 44px;
+        max-height: 44px;
+        font-size: 13px;
         border-radius: 8px;
     }
     
@@ -363,7 +239,7 @@
     }
     
     .suit-symbol {
-        font-size: 20px;
+        font-size: 22px;
     }
     
     .btn-notrump .suit-symbol {
@@ -375,80 +251,229 @@
     }
     
     .btn-double {
-        font-size: 12px;
+        font-size: 11px;
     }
     
-    .btn-result {
-        font-size: 12px;
-    }
-    
-    .btn-action {
+    .btn-result, .btn-action {
         font-size: 11px;
     }
 }
 
+/* Extra Small Mobile (320px) - MINIMUM VIABLE SIZES */
 @media (max-width: 320px) {
     .button-grid {
-        gap: 3px;
-        min-height: 220px;
+        gap: 4px;
+        min-height: 240px;
+        padding: 4px;
     }
     
     .btn {
-        min-height: 38px;
-        font-size: 13px;
-        padding: 2px;
+        height: 42px; /* Absolute minimum for touch targets */
+        min-height: 42px;
+        max-height: 42px;
+        font-size: 12px;
+        padding: 0 4px;
     }
     
     .suit-symbol {
-        font-size: 18px;
+        font-size: 20px;
     }
     
     .btn-declarer {
         font-size: 15px;
     }
-}
-
-/* ===== REDUCED MOTION PREFERENCES ===== */
-@media (prefers-reduced-motion: reduce) {
-    .btn {
-        transition: none;
-    }
     
-    .btn:hover:not(.disabled) {
-        transform: none;
-    }
-    
-    .btn.active {
-        transform: none;
-        animation: none;
-    }
-    
-    .btn-press {
-        animation: none;
+    .btn-double, .btn-result, .btn-action {
+        font-size: 10px;
     }
 }
 
-/* ===== HIGH CONTRAST MODE ===== */
-@media (prefers-contrast: high) {
+/* Larger Mobile/Small Tablet (375px+) - COMFORTABLE SIZES */
+@media (min-width: 375px) and (max-width: 480px) {
     .btn {
-        border: 2px solid white;
-        text-shadow: none;
+        height: 50px; /* More comfortable on larger phones */
+        min-height: 50px;
+        max-height: 50px;
+        font-size: 15px;
     }
     
-    .btn.disabled {
-        border-color: #666;
-        opacity: 0.5;
+    .btn-number {
+        font-size: 17px;
     }
     
-    .btn:hover:not(.disabled) {
-        border-color: #000;
-        background: #fff !important;
-        color: #000 !important;
+    .suit-symbol {
+        font-size: 26px;
     }
     
-    .btn.active {
-        border-color: #000;
-        background: #fff !important;
-        color: #000 !important;
+    .btn-declarer {
+        font-size: 19px;
     }
+}
+
+/* Tablet Portrait (480px+) - GENEROUS SIZES */
+@media (min-width: 480px) {
+    .button-grid {
+        gap: 10px;
+        padding: 10px;
+        min-height: 320px;
+    }
+    
+    .btn {
+        height: 56px; /* Comfortable tablet sizing */
+        min-height: 56px;
+        max-height: 56px;
+        font-size: 16px;
+        border-radius: 12px;
+    }
+    
+    .btn-number {
+        font-size: 18px;
+    }
+    
+    .suit-symbol {
+        font-size: 28px;
+    }
+    
+    .btn-notrump .suit-symbol {
+        font-size: 16px;
+    }
+    
+    .btn-declarer {
+        font-size: 21px;
+    }
+    
+    .btn-double {
+        font-size: 15px;
+    }
+    
+    .btn-result, .btn-action {
+        font-size: 14px;
+    }
+}
+
+/* ===== ELEGANT ACTIVE STATES - MOBILE OPTIMIZED ===== */
+
+/* Mode Selection - Bright Green Highlight */
+.btn-number.active[data-value="1"],
+.btn-number.active[data-value="2"],
+.btn-number.active[data-value="3"],
+.btn-number.active[data-value="4"],
+.btn-number.active[data-value="5"] {
+    box-shadow: 
+        0 0 0 3px #00ff00,
+        0 0 20px rgba(0, 255, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.4);
+    animation: modeSelectPulse 1.5s infinite;
+}
+
+@keyframes modeSelectPulse {
+    0%, 100% { 
+        box-shadow: 
+            0 0 0 3px #00ff00,
+            0 0 20px rgba(0, 255, 0, 0.6),
+            0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    50% { 
+        box-shadow: 
+            0 0 0 4px #00ff00,
+            0 0 28px rgba(0, 255, 0, 0.8),
+            0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Suit-specific Active States */
+.btn-clubs.active {
+    box-shadow: 
+        0 0 0 3px #00ff00,
+        0 0 20px rgba(0, 255, 0, 0.7);
+}
+
+.btn-diamonds.active, .btn-hearts.active {
+    box-shadow: 
+        0 0 0 3px #ff4444,
+        0 0 20px rgba(255, 68, 68, 0.7);
+}
+
+.btn-spades.active {
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.btn-notrump.active {
+    box-shadow: 
+        0 0 0 3px #9b59b6,
+        0 0 20px rgba(155, 89, 182, 0.7);
+}
+
+.btn-declarer.active {
+    box-shadow: 
+        0 0 0 3px #9b59b6,
+        0 0 20px rgba(155, 89, 182, 0.7);
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Focus states for keyboard navigation */
+.btn:focus-visible {
+    outline: 3px solid rgba(52, 152, 219, 0.8);
+    outline-offset: 2px;
+}
+
+/* Ensure good contrast ratios */
+.btn.disabled {
+    opacity: 0.3; /* Better than 0.25 for accessibility */
+}
+
+/* ===== TOUCH-FRIENDLY ENHANCEMENTS ===== */
+
+/* Prevent double-tap zoom on buttons */
+.btn {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Larger hit targets on very small screens */
+@media (max-width: 320px) {
+    .btn {
+        /* Add invisible padding to increase hit target */
+        position: relative;
+    }
+    
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        pointer-events: auto;
+    }
+}
+
+/* ===== DARK THEME INTEGRATION ===== */
+body {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a1a1a 100%);
+}
+
+.calculator {
+    background: #2c3e50;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced spacing while keeping mobile-friendly */
+.display-panel {
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 12px;
+}
+
+.control-bar {
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 12px;
 }
