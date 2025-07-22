@@ -211,6 +211,16 @@ class DuplicateBridge extends BaseBridgeMode {
             return;
         }
         
+        // Handle dropdown selection (comes as string)
+        if (value === 'BOARD_SELECT') {
+            const dropdown = document.getElementById('boardDropdown');
+            if (dropdown && dropdown.value) {
+                const boardNum = parseInt(dropdown.value);
+                this.openTravelerPopup(boardNum);
+            }
+            return;
+        }
+        
         const boardNum = parseInt(value);
         if (boardNum >= 1 && boardNum <= this.session.movement.totalBoards) {
             this.openTravelerPopup(boardNum);
@@ -651,7 +661,7 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        // Store reference for button callback
+        // Store reference for dropdown callback
         window.duplicateBridge = this;
     }
     
@@ -753,17 +763,29 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'movement_confirm':
                 return ['1','2','BACK'];
             case 'board_selection':
-                const buttons = [];
-                for (let i = 1; i <= this.session.movement.totalBoards; i++) {
-                    buttons.push(i.toString());
+                // Use dropdown for 10+ boards, buttons for ≤9 boards
+                if (this.session.movement.totalBoards <= 9) {
+                    const buttons = [];
+                    for (let i = 1; i <= this.session.movement.totalBoards; i++) {
+                        buttons.push(i.toString());
+                    }
+                    // Check if all boards are complete to show RESULTS button
+                    const allComplete = this.areAllBoardsComplete();
+                    if (allComplete) {
+                        buttons.push('RESULTS');
+                    }
+                    buttons.push('BACK');
+                    return buttons;
+                } else {
+                    // For 10+ boards, only show BOARD_SELECT, RESULTS (if complete), and BACK
+                    const buttons = ['BOARD_SELECT'];
+                    const allComplete = this.areAllBoardsComplete();
+                    if (allComplete) {
+                        buttons.push('RESULTS');
+                    }
+                    buttons.push('BACK');
+                    return buttons;
                 }
-                // Check if all boards are complete to show RESULTS button
-                const allComplete = this.areAllBoardsComplete();
-                if (allComplete) {
-                    buttons.push('RESULTS');
-                }
-                buttons.push('BACK');
-                return buttons;
             case 'results':
                 return ['BACK'];
             default:
@@ -831,6 +853,8 @@ class DuplicateBridge extends BaseBridgeMode {
                 
             case 'board_selection':
                 const completed = Object.values(this.session.boards).filter(b => b.completed).length;
+                const usesDropdown = this.session.movement.totalBoards > 9;
+                
                 return `
                     <div class="title-score-row">
                         <div class="mode-title">${this.displayName}</div>
@@ -839,16 +863,20 @@ class DuplicateBridge extends BaseBridgeMode {
                     <div class="game-content">
                         <div><strong>Traveler Entry - ${this.session.movement.description}</strong></div>
                         <div style="color: #2c3e50; margin-top: 8px;">
-                            Select board number to enter results from travelers.<br>
-                            Use dropdown menus to enter: Bid, Suit, Declarer, Tricks.
+                            ${usesDropdown ? 
+                                'Select board from dropdown to enter results from travelers.' : 
+                                'Select board number to enter results from travelers.'
+                            }<br>
+                            Use dropdown menus to enter: Bid, Suit, Declarer, Double, Tricks.
                         </div>
                         ${this.getBoardStatusDisplay()}
+                        ${usesDropdown ? this.getBoardDropdownHTML() : ''}
                         ${this.areAllBoardsComplete() ? 
                             '<div style="background: #27ae60; color: white; padding: 10px; border-radius: 4px; margin-top: 10px; text-align: center; font-weight: bold;">🏆 All boards complete! Press RESULTS to see final rankings.</div>' : 
                             '<div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;"><strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Dbl, Tricks) and scores calculate automatically. Blue columns show the calculated NS and EW scores.</div>'
                         }
                     </div>
-                    <div class="current-state">Select board number${this.areAllBoardsComplete() ? ' or RESULTS for final rankings' : ''}</div>
+                    <div class="current-state">${usesDropdown ? 'Use dropdown to select board' : `Select board number${this.areAllBoardsComplete() ? ' or RESULTS for final rankings' : ''}`}</div>
                 `;
                 
             case 'results':
