@@ -15,13 +15,13 @@ class BridgeApp {
         
         // App state management
         this.appState = 'mode_selection';
-   this.availableModes = {
-    '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
-    '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
-    '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
-    '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
-    '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
-};
+        this.availableModes = {
+            '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
+            '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
+            '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
+            '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
+            '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
+        };
         
         this.init();
     }
@@ -331,7 +331,7 @@ class BridgeApp {
                     text: 'Close App', 
                     action: () => {
                         console.log('Close App clicked');
-                        this.showCloseAppInstructions(); // UPDATED - No more ugly browser popup!
+                        this.showCloseAppInstructions(); // UPDATED - Professional alert instead of modal
                     }, 
                     class: 'close-app-btn modal-button' 
                 },
@@ -347,7 +347,7 @@ class BridgeApp {
     }
     
     /**
-     * Show professional close app instructions - NEW METHOD
+     * Show professional close app instructions - SIMPLE ALERT VERSION
      */
     showCloseAppInstructions() {
         console.log('📱 Showing professional close instructions');
@@ -355,65 +355,38 @@ class BridgeApp {
         // Release wake lock before showing instructions
         this.ui.releaseWakeLock();
         
-        // Detect if it's likely a PWA or mobile device
+        // Simple alert version that definitely works
         const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
         const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        let instructions = '';
+        let message = '';
         if (isPWA || isMobile) {
-            instructions = `
-                <div style="text-align: center; line-height: 1.6;">
-                    <h4 style="color: #3498db; margin-bottom: 15px;">📱 Close Bridge Calculator</h4>
-                    <div style="margin: 20px 0;">
-                        <p><strong>📱 On Mobile/Tablet:</strong><br>
-                        Use your device's app switcher and swipe up or tap ✕ to close</p>
-                        <p><strong>🏠 Return to Home:</strong><br>
-                        Press your device's home button to minimize the app</p>
-                        <p><strong>💻 On Desktop:</strong><br>
-                        Close this browser tab or window</p>
-                    </div>
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p style="color: #3498db; margin: 0;"><strong>✅ Your scores are automatically saved!</strong><br>
-                        You can safely close the app anytime.</p>
-                    </div>
-                </div>
-            `;
+            message = `📱 Close Bridge Calculator
+
+On Mobile/Tablet:
+• Use your device's app switcher and swipe up to close
+• Press home button to minimize the app
+
+On Desktop:
+• Close this browser tab or window
+
+✅ Your scores are automatically saved!
+You can safely close the app anytime.`;
         } else {
-            instructions = `
-                <div style="text-align: center; line-height: 1.6;">
-                    <h4 style="color: #3498db; margin-bottom: 15px;">💻 Close Bridge Calculator</h4>
-                    <div style="margin: 20px 0;">
-                        <p><strong>To close the app:</strong><br>
-                        Close this browser tab or window</p>
-                        <p><strong>Or minimize:</strong><br>
-                        Switch to another browser tab or application</p>
-                    </div>
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p style="color: #3498db; margin: 0;"><strong>✅ Your progress is automatically saved!</strong><br>
-                        You can return anytime by bookmarking this page.</p>
-                    </div>
-                </div>
-            `;
+            message = `💻 Close Bridge Calculator
+
+To close the app:
+• Close this browser tab or window
+• Or switch to another browser tab
+
+✅ Your progress is automatically saved!
+You can return anytime by bookmarking this page.`;
         }
         
-        this.ui.showModal('close-instructions', {
-            title: 'Close App',
-            content: instructions,
-            buttons: [
-                { 
-                    text: 'Return to Menu', 
-                    action: () => {
-                        this.returnToModeSelection();
-                    }, 
-                    class: 'menu-btn modal-button' 
-                },
-                { 
-                    text: 'Got It', 
-                    action: 'close', 
-                    class: 'modal-button' 
-                }
-            ]
-        });
+        alert(message);
+        
+        // Close the quit modal
+        this.ui.closeModal();
     }
     
     /**
