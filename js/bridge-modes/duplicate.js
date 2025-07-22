@@ -211,20 +211,8 @@ class DuplicateBridge extends BaseBridgeMode {
             return;
         }
         
-        // Handle dropdown selection (comes as string)
-        if (value === 'BOARD_SELECT') {
-            const dropdown = document.getElementById('boardDropdown');
-            if (dropdown && dropdown.value) {
-                const boardNum = parseInt(dropdown.value);
-                this.openTravelerPopup(boardNum);
-            }
-            return;
-        }
-        
-        const boardNum = parseInt(value);
-        if (boardNum >= 1 && boardNum <= this.session.movement.totalBoards) {
-            this.openTravelerPopup(boardNum);
-        }
+        // All board selection now handled by dropdown
+        // No direct button handling needed
     }
     
     /**
@@ -272,9 +260,139 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Show traveler popup with dropdown interface
+     * Open traveler popup - now opens board selector first
      */
-    showTravelerPopup() {
+    openTravelerPopup(boardNumber = null) {
+        if (boardNumber) {
+            // Direct board access - open traveler immediately
+            this.openSpecificTraveler(boardNumber);
+        } else {
+            // Open board selector popup first
+            this.showBoardSelectorPopup();
+        }
+    }
+    
+    /**
+     * Show board selector popup
+     */
+    showBoardSelectorPopup() {
+        const popup = document.createElement('div');
+        popup.id = 'boardSelectorPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+            font-family: system-ui, -apple-system, sans-serif;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white; padding: 20px; border-radius: 8px; 
+            max-width: 95%; max-height: 90%; overflow: auto; 
+            color: #2c3e50; min-width: 320px; box-sizing: border-box;
+        `;
+        
+        content.innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #34495e; padding-bottom: 10px;">
+                <h3 style="margin: 0; color: #2c3e50;">Board Selection</h3>
+                <div style="color: #e74c3c; font-weight: bold; font-size: 14px;">Choose board to enter traveler results</div>
+            </div>
+            
+            <div style="margin-bottom: 20px; text-align: center;">
+                <select id="boardDropdown" style="
+                    width: 80%; 
+                    max-width: 300px;
+                    padding: 12px 16px; 
+                    border: 2px solid #3498db; 
+                    border-radius: 8px; 
+                    font-size: 14px; 
+                    background: white; 
+                    color: #2c3e50;
+                    cursor: pointer;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                ">
+                    <option value="">Select Board...</option>
+                    ${this.getBoardDropdownOptions()}
+                </select>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="window.selectBoardFromDropdown()" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Open Traveler</button>
+                <button onclick="window.closeBoardSelector()" style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px;">Cancel</button>
+            </div>
+        `;
+        
+        popup.appendChild(content);
+        document.body.appendChild(popup);
+        
+        // Set up global functions
+        window.selectBoardFromDropdown = () => this.selectBoardFromDropdown();
+        window.closeBoardSelector = () => this.closeBoardSelector();
+    }
+    
+    /**
+     * Get board dropdown options
+     */
+    getBoardDropdownOptions() {
+        let options = '';
+        
+        Object.values(this.session.boards).forEach(board => {
+            const status = board.completed ? '✅' : '⭕';
+            const vulnerability = this.getBoardVulnerability(board.number);
+            const vulnColor = vulnerability === 'None' ? '#95a5a6' : 
+                            vulnerability === 'NS' ? '#e74c3c' : 
+                            vulnerability === 'EW' ? '#f39c12' : '#8e44ad';
+            
+            options += `<option value="${board.number}" style="color: ${vulnColor};">
+                Board ${board.number} ${status} (${vulnerability})
+            </option>`;
+        });
+        
+        return options;
+    }
+    
+    /**
+     * Select board from dropdown
+     */
+    selectBoardFromDropdown() {
+        const dropdown = document.getElementById('boardDropdown');
+        if (dropdown && dropdown.value) {
+            const boardNum = parseInt(dropdown.value);
+            this.closeBoardSelector();
+            this.openSpecificTraveler(boardNum);
+        } else {
+            alert('Please select a board first!');
+        }
+    }
+    
+    /**
+     * Close board selector
+     */
+    closeBoardSelector() {
+        const popup = document.getElementById('boardSelectorPopup');
+        if (popup) popup.remove();
+        
+        delete window.selectBoardFromDropdown;
+        delete window.closeBoardSelector;
+    }
+    
+    /**
+     * Open specific traveler popup
+     */
+    openSpecificTraveler(boardNumber) {
+        console.log(`🎯 Opening traveler for board ${boardNumber}`);
+        
+        this.traveler.isActive = true;
+        this.traveler.boardNumber = boardNumber;
+        this.traveler.data = this.generateTravelerRows(boardNumber);
+        
+        this.showSpecificTravelerPopup();
+    }
+    
+    /**
+     * Show specific traveler popup
+     */
+    showSpecificTravelerPopup() {
         const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
         
         const popup = document.createElement('div');
@@ -338,7 +456,7 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        // Set up global functions for the popup buttons
+        // Set up global functions for the traveler popup
         this.setupTravelerGlobals();
         
         // Add change listeners to all dropdowns
@@ -763,29 +881,14 @@ class DuplicateBridge extends BaseBridgeMode {
             case 'movement_confirm':
                 return ['1','2','BACK'];
             case 'board_selection':
-                // Use dropdown for 10+ boards, buttons for ≤9 boards
-                if (this.session.movement.totalBoards <= 9) {
-                    const buttons = [];
-                    for (let i = 1; i <= this.session.movement.totalBoards; i++) {
-                        buttons.push(i.toString());
-                    }
-                    // Check if all boards are complete to show RESULTS button
-                    const allComplete = this.areAllBoardsComplete();
-                    if (allComplete) {
-                        buttons.push('RESULTS');
-                    }
-                    buttons.push('BACK');
-                    return buttons;
-                } else {
-                    // For 10+ boards, only show BOARD_SELECT, RESULTS (if complete), and BACK
-                    const buttons = ['BOARD_SELECT'];
-                    const allComplete = this.areAllBoardsComplete();
-                    if (allComplete) {
-                        buttons.push('RESULTS');
-                    }
-                    buttons.push('BACK');
-                    return buttons;
+                // Always use dropdown - simpler and scalable
+                const buttons = [];
+                const allComplete = this.areAllBoardsComplete();
+                if (allComplete) {
+                    buttons.push('RESULTS');
                 }
+                buttons.push('BACK');
+                return buttons;
             case 'results':
                 return ['BACK'];
             default:
@@ -853,7 +956,6 @@ class DuplicateBridge extends BaseBridgeMode {
                 
             case 'board_selection':
                 const completed = Object.values(this.session.boards).filter(b => b.completed).length;
-                const usesDropdown = this.session.movement.totalBoards > 9;
                 
                 return `
                     <div class="title-score-row">
@@ -863,20 +965,23 @@ class DuplicateBridge extends BaseBridgeMode {
                     <div class="game-content">
                         <div><strong>Traveler Entry - ${this.session.movement.description}</strong></div>
                         <div style="color: #2c3e50; margin-top: 8px;">
-                            ${usesDropdown ? 
-                                'Select board from dropdown to enter results from travelers.' : 
-                                'Select board number to enter results from travelers.'
-                            }<br>
+                            Select board to enter results from travelers.<br>
                             Use dropdown menus to enter: Bid, Suit, Declarer, Double, Tricks.
                         </div>
                         ${this.getBoardStatusDisplay()}
-                        ${usesDropdown ? this.getBoardDropdownHTML() : ''}
+                        
+                        <div style="text-align: center; margin: 15px 0;">
+                            <button onclick="window.duplicateBridge.openTravelerPopup()" 
+                                    style="background: #3498db; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                📋 Select Board to Enter Results
+                            </button>
+                        </div>
                         ${this.areAllBoardsComplete() ? 
                             '<div style="background: #27ae60; color: white; padding: 10px; border-radius: 4px; margin-top: 10px; text-align: center; font-weight: bold;">🏆 All boards complete! Press RESULTS to see final rankings.</div>' : 
                             '<div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;"><strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Dbl, Tricks) and scores calculate automatically. Blue columns show the calculated NS and EW scores.</div>'
                         }
                     </div>
-                    <div class="current-state">${usesDropdown ? 'Use dropdown to select board' : `Select board number${this.areAllBoardsComplete() ? ' or RESULTS for final rankings' : ''}`}</div>
+                    <div class="current-state">Use dropdown to select board${this.areAllBoardsComplete() ? ' or RESULTS for final rankings' : ''}</div>
                 `;
                 
             case 'results':
@@ -1118,6 +1223,8 @@ class DuplicateBridge extends BaseBridgeMode {
         delete window.calculateAllScores;
         delete window.saveTravelerData;
         delete window.closeTravelerPopup;
+        delete window.selectBoardFromDropdown;
+        delete window.closeBoardSelector;
         delete window.duplicateBridge;
         
         console.log('🧹 Duplicate Bridge cleanup completed');
