@@ -907,6 +907,19 @@ class DuplicateBridge extends BaseBridgeMode {
         
         const activeButtons = this.getActiveButtons();
         this.ui.updateButtonStates(activeButtons);
+        
+        // Set up board selection button if in board_selection state
+        if (this.inputState === 'board_selection') {
+            setTimeout(() => {
+                const selectBtn = document.getElementById('selectBoardBtn');
+                if (selectBtn) {
+                    selectBtn.onclick = () => {
+                        console.log('Board selection button clicked');
+                        this.openTravelerPopup();
+                    };
+                }
+            }, 100);
+        }
     }
     
     /**
@@ -978,17 +991,6 @@ class DuplicateBridge extends BaseBridgeMode {
                                 📋 Select Board to Enter Results
                             </button>
                         </div>
-                        
-                        <script>
-                            document.getElementById('selectBoardBtn').onclick = function() {
-                                if (window.duplicateBridge && window.duplicateBridge.openTravelerPopup) {
-                                    window.duplicateBridge.openTravelerPopup();
-                                } else {
-                                    console.error('duplicateBridge not available:', window.duplicateBridge);
-                                    alert('Error: Board selector not available. Please refresh the page.');
-                                }
-                            };
-                        </script>
                         ${this.areAllBoardsComplete() ? 
                             '<div style="background: #27ae60; color: white; padding: 10px; border-radius: 4px; margin-top: 10px; text-align: center; font-weight: bold;">🏆 All boards complete! Press RESULTS to see final rankings.</div>' : 
                             '<div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;"><strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Dbl, Tricks) and scores calculate automatically. Blue columns show the calculated NS and EW scores.</div>'
