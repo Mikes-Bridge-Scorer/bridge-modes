@@ -262,7 +262,7 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Open traveler popup - now opens board selector first
+     * Open board selector popup (main entry point)
      */
     openTravelerPopup(boardNumber = null) {
         if (boardNumber) {
@@ -781,7 +781,7 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        // Store reference for dropdown callback
+        // Store reference for dropdown callback and button callbacks
         window.duplicateBridge = this;
     }
     
@@ -973,11 +973,22 @@ class DuplicateBridge extends BaseBridgeMode {
                         ${this.getBoardStatusDisplay()}
                         
                         <div style="text-align: center; margin: 15px 0;">
-                            <button onclick="window.duplicateBridge.openTravelerPopup()" 
+                            <button id="selectBoardBtn" 
                                     style="background: #3498db; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                                 📋 Select Board to Enter Results
                             </button>
                         </div>
+                        
+                        <script>
+                            document.getElementById('selectBoardBtn').onclick = function() {
+                                if (window.duplicateBridge && window.duplicateBridge.openTravelerPopup) {
+                                    window.duplicateBridge.openTravelerPopup();
+                                } else {
+                                    console.error('duplicateBridge not available:', window.duplicateBridge);
+                                    alert('Error: Board selector not available. Please refresh the page.');
+                                }
+                            };
+                        </script>
                         ${this.areAllBoardsComplete() ? 
                             '<div style="background: #27ae60; color: white; padding: 10px; border-radius: 4px; margin-top: 10px; text-align: center; font-weight: bold;">🏆 All boards complete! Press RESULTS to see final rankings.</div>' : 
                             '<div style="background: #ecf0f1; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 11px; color: #2c3e50;"><strong>💡 Tip:</strong> Fill red columns (Bid, Suit, By, Dbl, Tricks) and scores calculate automatically. Blue columns show the calculated NS and EW scores.</div>'
