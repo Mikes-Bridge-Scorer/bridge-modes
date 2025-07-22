@@ -15,15 +15,13 @@ class BridgeApp {
         
         // App state management
         this.appState = 'mode_selection';
-        this.availableModes = {
+       this.availableModes = {
     '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
     '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
     '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
     '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
     '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
 };
-        this.init();
-    }
     
     /**
      * Initialize the application
@@ -302,7 +300,7 @@ class BridgeApp {
     }
     
     /**
-     * Show quit options
+     * Show quit options - UPDATED WITH IMPROVED CLOSE APP
      */
     showQuit() {
         const quitContent = {
@@ -330,7 +328,7 @@ class BridgeApp {
                     text: 'Close App', 
                     action: () => {
                         console.log('Close App clicked');
-                        this.closeApp();
+                        this.showCloseAppInstructions(); // UPDATED - No more ugly browser popup!
                     }, 
                     class: 'close-app-btn modal-button' 
                 },
@@ -343,6 +341,76 @@ class BridgeApp {
         };
         
         this.ui.showModal('quit', quitContent);
+    }
+    
+    /**
+     * Show professional close app instructions - NEW METHOD
+     */
+    showCloseAppInstructions() {
+        console.log('📱 Showing professional close instructions');
+        
+        // Release wake lock before showing instructions
+        this.ui.releaseWakeLock();
+        
+        // Detect if it's likely a PWA or mobile device
+        const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        let instructions = '';
+        if (isPWA || isMobile) {
+            instructions = `
+                <div style="text-align: center; line-height: 1.6;">
+                    <h4 style="color: #3498db; margin-bottom: 15px;">📱 Close Bridge Calculator</h4>
+                    <div style="margin: 20px 0;">
+                        <p><strong>📱 On Mobile/Tablet:</strong><br>
+                        Use your device's app switcher and swipe up or tap ✕ to close</p>
+                        <p><strong>🏠 Return to Home:</strong><br>
+                        Press your device's home button to minimize the app</p>
+                        <p><strong>💻 On Desktop:</strong><br>
+                        Close this browser tab or window</p>
+                    </div>
+                    <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="color: #3498db; margin: 0;"><strong>✅ Your scores are automatically saved!</strong><br>
+                        You can safely close the app anytime.</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            instructions = `
+                <div style="text-align: center; line-height: 1.6;">
+                    <h4 style="color: #3498db; margin-bottom: 15px;">💻 Close Bridge Calculator</h4>
+                    <div style="margin: 20px 0;">
+                        <p><strong>To close the app:</strong><br>
+                        Close this browser tab or window</p>
+                        <p><strong>Or minimize:</strong><br>
+                        Switch to another browser tab or application</p>
+                    </div>
+                    <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="color: #3498db; margin: 0;"><strong>✅ Your progress is automatically saved!</strong><br>
+                        You can return anytime by bookmarking this page.</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        this.ui.showModal('close-instructions', {
+            title: 'Close App',
+            content: instructions,
+            buttons: [
+                { 
+                    text: 'Return to Menu', 
+                    action: () => {
+                        this.returnToModeSelection();
+                    }, 
+                    class: 'menu-btn modal-button' 
+                },
+                { 
+                    text: 'Got It', 
+                    action: 'close', 
+                    class: 'modal-button' 
+                }
+            ]
+        });
     }
     
     /**
@@ -581,18 +649,6 @@ class BridgeApp {
                 { text: 'Close Help', action: 'close', class: 'close-btn' }
             ]
         };
-    }
-    
-    /**
-     * Close the application
-     */
-    closeApp() {
-        this.ui.releaseWakeLock();
-        
-        if (confirm('Really close Bridge Calculator?')) {
-            window.close();
-            alert('Please close the app manually or switch to another app.');
-        }
     }
     
     /**
