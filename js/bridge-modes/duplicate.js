@@ -120,6 +120,8 @@ class DuplicateBridge extends BaseBridgeMode {
      */
     initialize() {
         this.inputState = 'pairs_setup';
+        // Set up global reference for button callbacks
+        window.duplicateBridge = this;
         this.updateDisplay();
     }
     
