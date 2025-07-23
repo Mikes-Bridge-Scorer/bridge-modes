@@ -840,8 +840,7 @@ class BridgeApp {
         console.log('🎮 Active buttons:', activeButtons);
         this.ui.updateButtonStates(activeButtons);
     }
-    
-    /**
+/**
      * Show help modal
      */
     showHelp() {
@@ -859,89 +858,125 @@ class BridgeApp {
     }
 
     /**
-     * Show license upgrade modal - allows entering full code during trial
+     * Get main help content with embedded license status
      */
-    showLicenseUpgrade() {
+    getMainHelpContent() {
+        // Get current license status
         const licenseStatus = this.licenseManager.checkLicenseStatus();
         
-        let content = '';
-        let buttons = [];
+        // Build license status section
+        let licenseSection = '';
+        let upgradeButton = null;
         
         if (licenseStatus.status === 'trial') {
-            content = `
+            licenseSection = `
                 <div class="help-section">
-                    <h4>🔓 Upgrade to Full Version</h4>
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p><strong>Current Status:</strong> ${licenseStatus.message}</p>
+                    <h4>📅 Current License Status</h4>
+                    <div style="background: rgba(241, 196, 15, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #f1c40f;">
+                        <p><strong>Trial Version Active</strong></p>
+                        <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
+                        <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
+                        <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                            Ready to upgrade? Contact us for a full version code.
+                        </p>
                     </div>
-                    <p>Ready to upgrade to the full version?</p>
-                    <p><strong>Full version includes:</strong></p>
-                    <ul>
-                        <li>✅ Unlimited deals and time</li>
-                        <li>✅ All 5 bridge scoring modes</li>
-                        <li>✅ Complete score history</li>
-                        <li>✅ No restrictions</li>
-                    </ul>
                 </div>
             `;
             
-            buttons = [
-                { 
-                    text: 'Enter Full Code', 
-                    action: () => {
-                        this.ui.closeModal();
-                        this.enterCodeEntryMode({ message: 'Enter full version code to upgrade' });
-                    },
-                    class: 'modal-button',
-                    style: 'background: #27ae60 !important;'
-                },
-                { 
-                    text: 'Continue Trial', 
-                    action: 'close',
-                    class: 'modal-button'
-                }
-            ];
+            // Add upgrade button for trial users
+            upgradeButton = { 
+                text: 'Enter Full Code', 
+                action: () => {
+                    this.ui.closeModal();
+                    this.enterCodeEntryMode({ message: 'Enter full version code to upgrade' });
+                }, 
+                class: 'modal-button',
+                style: 'background: #27ae60 !important;'
+            };
+            
         } else if (licenseStatus.status === 'full') {
-            content = `
+            licenseSection = `
                 <div class="help-section">
-                    <h4>✅ Full Version Active</h4>
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p><strong>Status:</strong> Full version activated</p>
-                        <p><strong>License:</strong> ${this.licenseManager.getLicenseData()?.code || 'Unknown'}</p>
+                    <h4>✅ Current License Status</h4>
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #27ae60;">
+                        <p><strong>Full Version Activated</strong></p>
+                        <p>🔓 <strong>Unlimited Access</strong></p>
+                        <p>📝 License: <code>${this.licenseManager.getLicenseData()?.code || 'Unknown'}</code></p>
+                        <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                            You have access to all Bridge Calculator features!
+                        </p>
                     </div>
-                    <p>You have unlimited access to all Bridge Calculator features!</p>
                 </div>
             `;
             
-            buttons = [
-                { text: 'Close', action: 'close', class: 'modal-button' }
-            ];
         } else {
-            // Unlicensed - shouldn't happen if called from help, but just in case
-            content = `
+            // Shouldn't happen from main help, but just in case
+            licenseSection = `
                 <div class="help-section">
                     <h4>🔑 License Required</h4>
-                    <p>Bridge Calculator requires a valid license code to continue.</p>
+                    <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #e74c3c;">
+                        <p><strong>No Valid License</strong></p>
+                        <p>Bridge Calculator requires a license code to continue.</p>
+                    </div>
                 </div>
             `;
-            
-            buttons = [
-                { 
-                    text: 'Enter Code', 
-                    action: () => {
-                        this.ui.closeModal();
-                        this.enterCodeEntryMode({ message: 'Enter license code' });
-                    },
-                    class: 'modal-button'
-                }
-            ];
         }
+
+        // Build buttons array
+        const buttons = [
+            { text: 'Close Help', action: 'close', class: 'close-btn' }
+        ];
         
-        this.ui.showModal('license-upgrade', {
-            title: 'Bridge Calculator License',
-            content: content,
+        // Add upgrade button if user is on trial
+        if (upgradeButton) {
+            buttons.unshift(upgradeButton); // Add to beginning
+        }
+
+        return {
+            title: 'Bridge Modes Calculator Help',
+            content: `
+                ${licenseSection}
+                
+                <div class="help-section">
+                    <h4>Available Bridge Modes</h4>
+                    <ul>
+                        <li><strong>Kitchen Bridge (1):</strong> Simplified social scoring</li>
+                        <li><strong>Bonus Bridge (2):</strong> HCP-based bonus system</li>
+                        <li><strong>Chicago Bridge (3):</strong> 4-deal vulnerability cycle</li>
+                        <li><strong>Rubber Bridge (4):</strong> Traditional rubber scoring</li>
+                        <li><strong>Duplicate Bridge (5):</strong> Tournament-style scoring</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>How to Use</h4>
+                    <ol>
+                        <li>Select a bridge mode (1-5)</li>
+                        <li>Follow the prompts to enter contracts</li>
+                        <li>Use Back button to navigate</li>
+                        <li>Use Quit to return to menu or exit</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Controls</h4>
+                    <ul>
+                        <li><strong>Wake:</strong> Keep screen active</li>
+                        <li><strong>Vuln:</strong> Vulnerability indicator/control</li>
+                        <li><strong>Honors:</strong> Claim honor bonuses (Rubber Bridge)</li>
+                        <li><strong>Help:</strong> Context-sensitive help</li>
+                        <li><strong>Quit:</strong> Exit options</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Need Support?</h4>
+                    <p>Contact us for license codes or technical support:<br>
+                    <strong>your-email@example.com</strong></p>
+                </div>
+            `,
             buttons: buttons
-        });
+        };
     }
 
     /**
