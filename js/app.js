@@ -1,6 +1,7 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * Handles mode selection, UI coordination, bridge mode management, and licensing
+ * MOBILE FIXED VERSION - Handles mode selection, UI coordination, bridge mode management, and licensing
+ * Fixed Pixel 9a button interaction issues
  */
 
 import { UIController } from './ui-controller.js';
@@ -417,7 +418,7 @@ class LicenseManager {
 }
 
 /**
- * Main Bridge Application with Enhanced License System
+ * Main Bridge Application with Enhanced License System - MOBILE FIXED VERSION
  */
 class BridgeApp {
     constructor() {
@@ -441,19 +442,30 @@ class BridgeApp {
         this.codeEntryMode = false;
         this.enteredCode = '';
         
+        // Mobile support
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         this.init();
     }
     
     /**
-     * Initialize the application with license check
+     * MOBILE FIXED: Initialize the application with mobile detection and setup
      */
     async init() {
         console.log('🎮 Initializing Bridge Calculator App');
+        
+        // Setup mobile optimizations
+        if (this.isMobile) {
+            console.log('📱 Mobile device detected - enabling mobile optimizations');
+            document.body.classList.add('mobile-device');
+            this.addMobileCSS();
+        }
         
         // Check license status first
         const licenseStatus = this.licenseManager.checkLicenseStatus();
         
         if (licenseStatus.needsCode) {
+            await this.ui.init(); // Initialize UI first
             this.enterCodeEntryMode(licenseStatus);
             return; // Stay in code entry mode until valid license
         }
@@ -467,7 +479,7 @@ class BridgeApp {
             await this.ui.init();
             this.setupEventListeners();
             this.updateDisplay();
-            console.log('✅ Bridge Calculator App ready');
+            console.log('✅ Bridge Calculator App ready with mobile support');
         } catch (error) {
             console.error('❌ Failed to initialize Bridge Calculator:', error);
             throw error;
@@ -475,40 +487,223 @@ class BridgeApp {
     }
 
     /**
- * Enter code entry mode using existing buttons
- */
-enterCodeEntryMode(status) {
-    this.codeEntryMode = true;
-    this.enteredCode = '';
-    this.appState = 'license_entry';
-    
-    // Don't reinitialize UI - just update display and buttons
-    this.updateCodeEntryDisplay(status);
-    this.updateButtonStates();
-}
-    
-    /**
-     * Setup all event listeners
+     * MOBILE FIX: Add mobile-specific CSS
      */
-    setupEventListeners() {
-        // Button clicks
-        document.addEventListener('click', (event) => {
-            const button = event.target.closest('.btn');
-            if (button && !button.classList.contains('disabled')) {
-                this.handleButtonClick(button.dataset.value);
+    addMobileCSS() {
+        const mobileCSS = `
+        /* Mobile button enhancements */
+        .mobile-device .btn {
+            min-height: 44px !important;
+            min-width: 44px !important;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Button pressed state for mobile feedback */
+        .btn-pressed {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+            transition: all 0.1s ease !important;
+        }
+
+        /* Ensure buttons are touchable on mobile */
+        .mobile-device .calculator-buttons .btn {
+            cursor: pointer;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Improve button spacing on mobile */
+        @media (max-width: 768px) {
+            .calculator-buttons {
+                gap: 8px;
             }
             
-            // Control bar clicks
-            if (event.target.closest('#wakeControl')) this.ui.toggleKeepAwake();
-            else if (event.target.closest('#vulnControl')) this.handleVulnerabilityToggle();
-            else if (event.target.closest('#honorsControl')) this.handleHonorsClick();
-            else if (event.target.closest('#helpControl')) this.showHelp();
-            else if (event.target.closest('#quitControl')) this.showQuit();
-        });
+            .btn {
+                padding: 12px 8px !important;
+                font-size: 16px !important;
+            }
+        }
+        `;
+
+        const style = document.createElement('style');
+        style.textContent = mobileCSS;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * MOBILE FIXED: Enter code entry mode with mobile-safe UI handling
+     */
+    enterCodeEntryMode(status) {
+        this.codeEntryMode = true;
+        this.enteredCode = '';
+        this.appState = 'license_entry';
+        
+        // Update display first
+        this.updateCodeEntryDisplay(status);
+        
+        // Ensure buttons are properly initialized for mobile
+        this.initializeMobileButtons();
+        
+        // Update button states
+        this.updateButtonStates();
+        
+        console.log('🔑 Entered code entry mode with mobile support');
+    }
+
+    /**
+     * MOBILE FIX: Initialize buttons specifically for mobile devices
+     */
+    initializeMobileButtons() {
+        // Wait for next tick to ensure DOM is updated
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('.btn');
+            
+            buttons.forEach(button => {
+                // Ensure buttons have proper touch target
+                if (!button.style.minHeight) {
+                    button.style.minHeight = '44px'; // iOS minimum touch target
+                }
+                
+                // Add mobile-specific classes
+                button.classList.add('mobile-ready');
+                
+                // Ensure touch events work
+                button.style.touchAction = 'manipulation';
+                button.style.userSelect = 'none';
+            });
+            
+            console.log(`📱 Initialized ${buttons.length} buttons for mobile`);
+        }, 10);
+    }
+    
+    /**
+     * MOBILE FIXED: Setup all event listeners with proper mobile support
+     */
+    setupEventListeners() {
+        // Remove any existing listeners to prevent duplicates
+        this.removeEventListeners();
+        
+        // Store bound functions for proper removal later
+        this.boundHandlers = {
+            buttonClick: this.handleButtonClick.bind(this),
+            keyDown: this.handleKeyPress.bind(this)
+        };
+
+        // Enhanced button click handler with mobile touch support
+        this.setupButtonEventListeners();
+        
+        // Control bar clicks with mobile support
+        this.setupControlEventListeners();
         
         // Keyboard support
-        document.addEventListener('keydown', (event) => {
-            this.handleKeyPress(event);
+        document.addEventListener('keydown', this.boundHandlers.keyDown);
+        
+        console.log('✅ Event listeners setup with mobile support');
+    }
+
+    /**
+     * MOBILE FIX: Setup button event listeners with mobile touch support
+     */
+    setupButtonEventListeners() {
+        // Use event delegation on the calculator container
+        const calculator = document.querySelector('.calculator-container') || document.body;
+        
+        // Handle both click and touch events for mobile
+        const buttonHandler = (event) => {
+            // Prevent default touch behavior
+            if (event.type === 'touchend') {
+                event.preventDefault();
+            }
+            
+            const button = event.target.closest('.btn');
+            if (button && !button.classList.contains('disabled')) {
+                // Visual feedback for mobile
+                this.provideMobileButtonFeedback(button);
+                
+                // Handle the button action
+                this.handleButtonClick(button.dataset.value);
+            }
+        };
+
+        // Add both click and touch event listeners
+        calculator.addEventListener('click', buttonHandler);
+        calculator.addEventListener('touchend', buttonHandler);
+        
+        // Store references for cleanup
+        this.calculatorElement = calculator;
+        this.buttonHandler = buttonHandler;
+    }
+
+    /**
+     * MOBILE FIX: Provide visual feedback for mobile button presses
+     */
+    provideMobileButtonFeedback(button) {
+        // Add pressed class for visual feedback
+        button.classList.add('btn-pressed');
+        
+        // Remove the class after a short delay
+        setTimeout(() => {
+            button.classList.remove('btn-pressed');
+        }, 150);
+        
+        // Optional: Haptic feedback on supported devices
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+    }
+
+    /**
+     * MOBILE FIX: Setup control bar event listeners with mobile support
+     */
+    setupControlEventListeners() {
+        const controls = [
+            { id: '#wakeControl', handler: () => this.ui.toggleKeepAwake() },
+            { id: '#vulnControl', handler: () => this.handleVulnerabilityToggle() },
+            { id: '#honorsControl', handler: () => this.handleHonorsClick() },
+            { id: '#helpControl', handler: () => this.showHelp() },
+            { id: '#quitControl', handler: () => this.showQuit() }
+        ];
+
+        controls.forEach(({ id, handler }) => {
+            const element = document.querySelector(id);
+            if (element) {
+                // Add both click and touch events
+                element.addEventListener('click', handler);
+                element.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handler();
+                });
+                
+                // Store for cleanup
+                element._bridgeAppHandler = handler;
+            }
+        });
+    }
+
+    /**
+     * MOBILE FIX: Remove event listeners (for cleanup)
+     */
+    removeEventListeners() {
+        if (this.boundHandlers) {
+            document.removeEventListener('keydown', this.boundHandlers.keyDown);
+        }
+        
+        if (this.calculatorElement && this.buttonHandler) {
+            this.calculatorElement.removeEventListener('click', this.buttonHandler);
+            this.calculatorElement.removeEventListener('touchend', this.buttonHandler);
+        }
+        
+        // Clean up control listeners
+        const controls = ['#wakeControl', '#vulnControl', '#honorsControl', '#helpControl', '#quitControl'];
+        controls.forEach(id => {
+            const element = document.querySelector(id);
+            if (element && element._bridgeAppHandler) {
+                element.removeEventListener('click', element._bridgeAppHandler);
+                element.removeEventListener('touchend', element._bridgeAppHandler);
+                delete element._bridgeAppHandler;
+            }
         });
     }
     
@@ -807,7 +1002,7 @@ enterCodeEntryMode(status) {
     }
     
     /**
-     * Update button states based on current app state
+     * MOBILE ENHANCED: Update button states with mobile considerations
      */
     updateButtonStates() {
         let activeButtons = [];
@@ -836,6 +1031,35 @@ enterCodeEntryMode(status) {
         
         console.log('🎮 Active buttons:', activeButtons);
         this.ui.updateButtonStates(activeButtons);
+        
+        // Force mobile button refresh
+        this.refreshMobileButtons(activeButtons);
+    }
+
+    /**
+     * MOBILE FIX: Force refresh of mobile button states
+     */
+    refreshMobileButtons(activeButtons) {
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('.btn');
+            
+            buttons.forEach(button => {
+                const value = button.dataset.value;
+                const isActive = activeButtons.includes(value);
+                
+                if (isActive) {
+                    button.classList.remove('disabled');
+                    button.removeAttribute('disabled');
+                    button.style.opacity = '1';
+                    button.style.pointerEvents = 'auto';
+                } else {
+                    button.classList.add('disabled');
+                    button.setAttribute('disabled', 'true');
+                    button.style.opacity = '0.3';
+                    button.style.pointerEvents = 'none';
+                }
+            });
+        }, 50);
     }
     
     /**
@@ -1356,6 +1580,19 @@ You can return anytime by bookmarking this page.`;
      */
     getAppState() {
         return this.appState;
+    }
+
+    /**
+     * MOBILE FIX: Enhanced cleanup with proper event listener removal
+     */
+    cleanup() {
+        this.removeEventListeners();
+        
+        if (this.bridgeModeInstance && this.bridgeModeInstance.cleanup) {
+            this.bridgeModeInstance.cleanup();
+        }
+        
+        console.log('🧹 App cleanup completed with mobile support');
     }
 }
 
