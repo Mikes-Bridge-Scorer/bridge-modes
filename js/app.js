@@ -840,7 +840,8 @@ class BridgeApp {
         console.log('🎮 Active buttons:', activeButtons);
         this.ui.updateButtonStates(activeButtons);
     }
-/**
+    
+    /**
      * Show help modal
      */
     showHelp() {
@@ -1327,60 +1328,6 @@ You can return anytime by bookmarking this page.`;
             'duplicate': 'Duplicate Bridge'
         };
         return names[mode] || 'Bridge Calculator';
-    }
-    
-    /**
-     * Get main help content with License Status button
-     */
-    getMainHelpContent() {
-        return {
-            title: 'Bridge Modes Calculator Help',
-            content: `
-                <div class="help-section">
-                    <h4>Available Bridge Modes</h4>
-                    <ul>
-                        <li><strong>Kitchen Bridge (1):</strong> Simplified social scoring</li>
-                        <li><strong>Bonus Bridge (2):</strong> HCP-based bonus system</li>
-                        <li><strong>Chicago Bridge (3):</strong> 4-deal vulnerability cycle</li>
-                        <li><strong>Rubber Bridge (4):</strong> Traditional rubber scoring</li>
-                        <li><strong>Duplicate Bridge (5):</strong> Tournament-style scoring</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use</h4>
-                    <ol>
-                        <li>Select a bridge mode (1-5)</li>
-                        <li>Follow the prompts to enter contracts</li>
-                        <li>Use Back button to navigate</li>
-                        <li>Use Quit to return to menu or exit</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Controls</h4>
-                    <ul>
-                        <li><strong>Wake:</strong> Keep screen active</li>
-                        <li><strong>Vuln:</strong> Vulnerability indicator/control</li>
-                        <li><strong>Honors:</strong> Claim honor bonuses (Rubber Bridge)</li>
-                        <li><strong>Help:</strong> Context-sensitive help</li>
-                        <li><strong>Quit:</strong> Exit options</li>
-                    </ul>
-                </div>
-            `,
-            buttons: [
-                { 
-                    text: 'License Status', 
-                    action: () => {
-                        this.ui.closeModal();
-                        this.showLicenseUpgrade();
-                    }, 
-                    class: 'modal-button',
-                    style: 'background: #f39c12 !important;'
-                },
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
     }
 
     /**
