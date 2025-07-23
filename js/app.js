@@ -1,13 +1,13 @@
 /**
- * Complete License System with Checksum 37
- * Replace your existing app.js with this implementation
+ * Complete Enhanced Bridge Modes Calculator - Main Application Controller
+ * Handles mode selection, UI coordination, bridge mode management, and licensing
  */
 
 import { UIController } from './ui-controller.js';
 import { GameState } from './utils/game-state.js';
 
 /**
- * License Manager - Handles all license validation and management
+ * Enhanced License Manager - Option B Implementation with Testing
  */
 class LicenseManager {
     constructor() {
@@ -17,7 +17,7 @@ class LicenseManager {
         this.trialDeals = 50;
         this.checksumTarget = 37; // All valid codes must sum to 37
         
-        // Trial prefixes (first 3 digits) - these sum to various amounts
+        // Trial prefixes (first 3 digits) - these determine if it's a trial code
         this.trialPrefixes = ['111', '222', '333', '444', '555'];
     }
 
@@ -132,93 +132,6 @@ class LicenseManager {
     }
 
     /**
-     * Get valid full version codes (update this list as you sell licenses)
-     */
-    getValidFullCodes() {
-        // These are valid full codes that sum to 37
-        return [
-            '991000', // 9+9+1+0+0+0 = 19 (wait, let me recalculate)
-            '973000', // 9+7+3+0+0+0 = 19 (still wrong, fixing...)
-            '919000', // 9+1+9+0+0+0 = 19 (still wrong)
-            // Let me generate proper codes that sum to 37:
-            '991900', // 9+9+1+9+0+0 = 28 (still not 37)
-            // Correct codes that sum to 37:
-            '997300', // 9+9+7+3+0+0 = 28 (let me fix this)
-            '994300', // 9+9+4+3+0+0 = 25
-            // Actually valid codes that sum to 37:
-            '991930', // 9+9+1+9+3+0 = 31
-            '997921', // 9+9+7+9+2+1 = 37 ✅
-            '996922', // 9+9+6+9+2+2 = 37 ✅
-            '995923', // 9+9+5+9+2+3 = 37 ✅
-            '994924', // 9+9+4+9+2+4 = 37 ✅
-            '993925', // 9+9+3+9+2+5 = 37 ✅
-            '992926', // 9+9+2+9+2+6 = 37 ✅
-            '991927', // 9+9+1+9+2+7 = 37 ✅
-            '990928', // 9+9+0+9+2+8 = 37 ✅
-            '889830', // 8+8+9+8+3+0 = 36 (close but not 37)
-            '889831', // 8+8+9+8+3+1 = 37 ✅
-            '888832', // 8+8+8+8+3+2 = 37 ✅
-            '887833', // 8+8+7+8+3+3 = 37 ✅
-            '886834', // 8+8+6+8+3+4 = 37 ✅
-            '885835', // 8+8+5+8+3+5 = 37 ✅
-            '779921', // 7+7+9+9+2+1 = 35 (not 37)
-            '779922', // 7+7+9+9+2+2 = 36 (not 37)
-            '779923', // 7+7+9+9+2+3 = 37 ✅
-            '778924', // 7+7+8+9+2+4 = 37 ✅
-            '777925', // 7+7+7+9+2+5 = 37 ✅
-            '669931', // 6+6+9+9+3+1 = 34 (not 37)
-            '669940', // 6+6+9+9+4+0 = 34 (not 37)  
-            '669949', // 6+6+9+9+4+9 = 43 (not 37)
-            '667921', // 6+6+7+9+2+1 = 31 (not 37)
-            '667930', // 6+6+7+9+3+0 = 31 (not 37)
-            '667939', // 6+6+7+9+3+9 = 40 (not 37)
-            '676930', // 6+7+6+9+3+0 = 31 (not 37)
-            '676939', // 6+7+6+9+3+9 = 40 (not 37)
-            '679930', // 6+7+9+9+3+0 = 34 (not 37)
-            '679939', // 6+7+9+9+3+9 = 43 (not 37)
-            '679921', // 6+7+9+9+2+1 = 34 (not 37)
-            '679940', // 6+7+9+9+4+0 = 35 (not 37)
-            '679949', // 6+7+9+9+4+9 = 44 (not 37)
-            '679931', // 6+7+9+9+3+1 = 35 (not 37)
-            '679940', // 6+7+9+9+4+0 = 35 (not 37)
-            '679922', // 6+7+9+9+2+2 = 35 (not 37)
-            '679931', // 6+7+9+9+3+1 = 35 (not 37)
-            '679940', // 6+7+9+9+4+0 = 35 (not 37)
-            '679958', // 6+7+9+9+5+8 = 44 (not 37)
-            '679967', // 6+7+9+9+6+7 = 48 (not 37)
-            '679976', // 6+7+9+9+7+6 = 48 (not 37)
-            '679985', // 6+7+9+9+8+5 = 48 (not 37)
-            '679994', // 6+7+9+9+9+4 = 48 (not 37)
-            '679949', // 6+7+9+9+4+9 = 44 (not 37)
-            '679940', // 6+7+9+9+4+0 = 35 (not 37)
-            '679931', // 6+7+9+9+3+1 = 35 (not 37)
-            '679922', // 6+7+9+9+2+2 = 35 (not 37)
-            '679913', // 6+7+9+9+1+3 = 35 (not 37)
-            '679904', // 6+7+9+9+0+4 = 35 (not 37)
-            '679949', // 6+7+9+9+4+9 = 44 (not 37)
-            '679958', // 6+7+9+9+5+8 = 44 (not 37)
-            '679967', // 6+7+9+9+6+7 = 48 (not 37)
-            '679976', // 6+7+9+9+7+6 = 48 (not 37)
-            '679985', // 6+7+9+9+8+5 = 48 (not 37)
-            '679994', // 6+7+9+9+9+4 = 48 (not 37)
-            // Let me be more systematic and generate proper codes:
-            '679932', // 6+7+9+9+3+2 = 36 (close!)
-            '679941', // 6+7+9+9+4+1 = 36 (close!)
-            '679950', // 6+7+9+9+5+0 = 36 (close!)
-            '679923', // 6+7+9+9+2+3 = 36 (close!)
-            '679914', // 6+7+9+9+1+4 = 36 (close!)
-            '679905', // 6+7+9+9+0+5 = 36 (close!)
-            '679933', // 6+7+9+9+3+3 = 37 ✅
-            '679942', // 6+7+9+9+4+2 = 37 ✅
-            '679951', // 6+7+9+9+5+1 = 37 ✅
-            '679960', // 6+7+9+9+6+0 = 37 ✅
-            '679924', // 6+7+9+9+2+4 = 37 ✅
-            '679915', // 6+7+9+9+1+5 = 37 ✅
-            '679906', // 6+7+9+9+0+6 = 37 ✅
-        ];
-    }
-
-    /**
      * Validate trial code
      */
     validateTrialCode(code) {
@@ -233,19 +146,22 @@ class LicenseManager {
     }
 
     /**
-     * Validate full code
+     * Validate full code - ANY code that sums to 37 and doesn't start with trial prefix
      */
     validateFullCode(code) {
-        const validCodes = this.getValidFullCodes();
+        const prefix = code.substring(0, 3);
         
-        if (!validCodes.includes(code)) {
-            return { valid: false, message: 'Invalid full version code' };
+        // Check if it starts with a trial prefix
+        if (this.trialPrefixes.includes(prefix)) {
+            return { valid: false, message: 'This is a trial code, not a full version code' };
         }
 
+        // Check if already used
         if (this.isCodeUsed(code)) {
             return { valid: false, message: 'Code already used' };
         }
 
+        // If it sums to 37 and doesn't start with trial prefix, it's valid!
         return { valid: true, type: 'FULL', message: 'Full version code validated' };
     }
 
@@ -266,7 +182,7 @@ class LicenseManager {
             return this.validateTrialCode(code);
         }
 
-        // Must be a full code
+        // Everything else is a potential full code
         return this.validateFullCode(code);
     }
 
@@ -336,7 +252,7 @@ class LicenseManager {
      * Generate trial code that sums to 37
      */
     static generateTrialCode() {
-        const prefixes = ['111', '222', '333', '444', '555']; // These sum to 3, 6, 9, 12, 15
+        const prefixes = ['222', '333', '444', '555']; // Skip 111 as it's impossible
         const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
         
         // Calculate what the last 3 digits need to sum to
@@ -350,12 +266,19 @@ class LicenseManager {
     }
 
     /**
-     * Generate full code that sums to 37 (for your database)
+     * Generate full code that sums to 37 (for your Excel database)
      */
     static generateFullCode() {
-        // Generate a 6-digit code that sums to exactly 37
-        const digits = LicenseManager.generateDigitsWithSum(37, 6);
-        return digits;
+        let code;
+        do {
+            // Generate a 6-digit code that sums to exactly 37
+            code = LicenseManager.generateDigitsWithSum(37, 6);
+            
+            // Make sure it doesn't start with trial prefixes
+            const prefix = code.substring(0, 3);
+        } while (['111', '222', '333', '444', '555'].includes(prefix));
+        
+        return code;
     }
 
     /**
@@ -401,10 +324,100 @@ class LicenseManager {
     listUsedCodes() {
         return this.getUsedCodes();
     }
+
+    /**
+     * ADMIN UTILITY: Check if a code would be valid (for your Excel planning)
+     */
+    static validateCodeForExcel(code) {
+        // Check format
+        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+            return { valid: false, reason: 'Must be 6 digits', type: 'invalid' };
+        }
+
+        // Check checksum
+        const sum = LicenseManager.checksumCode(code);
+        if (sum !== 37) {
+            return { valid: false, reason: `Sums to ${sum}, not 37`, type: 'invalid' };
+        }
+
+        // Check type
+        const prefix = code.substring(0, 3);
+        const trialPrefixes = ['111', '222', '333', '444', '555'];
+        
+        if (trialPrefixes.includes(prefix)) {
+            return { valid: true, reason: 'Valid trial code', type: 'trial' };
+        } else {
+            return { valid: true, reason: 'Valid full code', type: 'full' };
+        }
+    }
+
+    /**
+     * TESTING: Simulate trial expiration (for development/testing only)
+     */
+    static simulateTrialExpiry() {
+        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
+        if (licenseData && licenseData.type === 'TRIAL') {
+            // Set activation date to 15 days ago
+            licenseData.activatedAt = Date.now() - (15 * 24 * 60 * 60 * 1000);
+            localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
+            console.log('🧪 Trial expiry simulated - reload app to test');
+            return true;
+        }
+        console.log('❌ No active trial to expire');
+        return false;
+    }
+
+    /**
+     * TESTING: Simulate deals limit reached (for development/testing only)
+     */
+    static simulateDealsLimit() {
+        localStorage.setItem('bridgeAppDealsPlayed', '51'); // Over the 50 limit
+        console.log('🧪 Deals limit simulated - complete next deal to test expiry');
+    }
+
+    /**
+     * TESTING: Reset trial to fresh state (for development/testing only)
+     */
+    static resetTrialForTesting() {
+        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
+        if (licenseData && licenseData.type === 'TRIAL') {
+            licenseData.activatedAt = Date.now(); // Reset to now
+            localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
+            localStorage.setItem('bridgeAppDealsPlayed', '0'); // Reset deals
+            console.log('🧪 Trial reset to fresh state');
+            return true;
+        }
+        console.log('❌ No active trial to reset');
+        return false;
+    }
+
+    /**
+     * TESTING: Show current license status (for development/testing only)
+     */
+    static showLicenseStatus() {
+        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
+        const dealsPlayed = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
+        const usedCodes = JSON.parse(localStorage.getItem('bridgeAppUsedCodes') || '[]');
+        
+        console.log('🔍 Current License Status:');
+        console.log('License Data:', licenseData);
+        console.log('Deals Played:', dealsPlayed);
+        console.log('Used Codes:', usedCodes);
+        
+        if (licenseData) {
+            const now = Date.now();
+            const daysElapsed = Math.floor((now - licenseData.activatedAt) / (1000 * 60 * 60 * 24));
+            const daysLeft = Math.max(0, 14 - daysElapsed);
+            const dealsLeft = Math.max(0, 50 - dealsPlayed);
+            
+            console.log(`Days elapsed: ${daysElapsed}, Days left: ${daysLeft}`);
+            console.log(`Deals left: ${dealsLeft}`);
+        }
+    }
 }
 
 /**
- * Main Bridge Application with License System
+ * Main Bridge Application with Enhanced License System
  */
 class BridgeApp {
     constructor() {
@@ -846,6 +859,92 @@ class BridgeApp {
     }
 
     /**
+     * Show license upgrade modal - allows entering full code during trial
+     */
+    showLicenseUpgrade() {
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        
+        let content = '';
+        let buttons = [];
+        
+        if (licenseStatus.status === 'trial') {
+            content = `
+                <div class="help-section">
+                    <h4>🔓 Upgrade to Full Version</h4>
+                    <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p><strong>Current Status:</strong> ${licenseStatus.message}</p>
+                    </div>
+                    <p>Ready to upgrade to the full version?</p>
+                    <p><strong>Full version includes:</strong></p>
+                    <ul>
+                        <li>✅ Unlimited deals and time</li>
+                        <li>✅ All 5 bridge scoring modes</li>
+                        <li>✅ Complete score history</li>
+                        <li>✅ No restrictions</li>
+                    </ul>
+                </div>
+            `;
+            
+            buttons = [
+                { 
+                    text: 'Enter Full Code', 
+                    action: () => {
+                        this.ui.closeModal();
+                        this.enterCodeEntryMode({ message: 'Enter full version code to upgrade' });
+                    },
+                    class: 'modal-button',
+                    style: 'background: #27ae60 !important;'
+                },
+                { 
+                    text: 'Continue Trial', 
+                    action: 'close',
+                    class: 'modal-button'
+                }
+            ];
+        } else if (licenseStatus.status === 'full') {
+            content = `
+                <div class="help-section">
+                    <h4>✅ Full Version Active</h4>
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p><strong>Status:</strong> Full version activated</p>
+                        <p><strong>License:</strong> ${this.licenseManager.getLicenseData()?.code || 'Unknown'}</p>
+                    </div>
+                    <p>You have unlimited access to all Bridge Calculator features!</p>
+                </div>
+            `;
+            
+            buttons = [
+                { text: 'Close', action: 'close', class: 'modal-button' }
+            ];
+        } else {
+            // Unlicensed - shouldn't happen if called from help, but just in case
+            content = `
+                <div class="help-section">
+                    <h4>🔑 License Required</h4>
+                    <p>Bridge Calculator requires a valid license code to continue.</p>
+                </div>
+            `;
+            
+            buttons = [
+                { 
+                    text: 'Enter Code', 
+                    action: () => {
+                        this.ui.closeModal();
+                        this.enterCodeEntryMode({ message: 'Enter license code' });
+                    },
+                    class: 'modal-button'
+                }
+            ];
+        }
+        
+        this.ui.showModal('license-upgrade', {
+            title: 'Bridge Calculator License',
+            content: content,
+            buttons: buttons
+        });
+    }
+
+    /**
      * Get license entry help content
      */
     getLicenseHelpContent() {
@@ -1196,7 +1295,7 @@ You can return anytime by bookmarking this page.`;
     }
     
     /**
-     * Get main help content
+     * Get main help content with License Status button
      */
     getMainHelpContent() {
         return {
@@ -1235,6 +1334,15 @@ You can return anytime by bookmarking this page.`;
                 </div>
             `,
             buttons: [
+                { 
+                    text: 'License Status', 
+                    action: () => {
+                        this.ui.closeModal();
+                        this.showLicenseUpgrade();
+                    }, 
+                    class: 'modal-button',
+                    style: 'background: #f39c12 !important;'
+                },
                 { text: 'Close Help', action: 'close', class: 'close-btn' }
             ]
         };
@@ -1309,10 +1417,18 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     window.generateSampleCodes = generateSampleCodes;
     window.clearTestLicense = clearTestLicense;
     window.LicenseManager = LicenseManager;
+    window.simulateTrialExpiry = () => LicenseManager.simulateTrialExpiry();
+    window.simulateDealsLimit = () => LicenseManager.simulateDealsLimit();
+    window.resetTrialForTesting = () => LicenseManager.resetTrialForTesting();
+    window.showLicenseStatus = () => LicenseManager.showLicenseStatus();
     
     generateSampleCodes();
     console.log('\n🛠️  Testing utilities:');
     console.log('• generateSampleCodes() - Generate new sample codes');
     console.log('• clearTestLicense() - Clear license for testing');
+    console.log('• simulateTrialExpiry() - Force trial to expire');
+    console.log('• simulateDealsLimit() - Force deals limit reached');
+    console.log('• resetTrialForTesting() - Reset trial to fresh state');
+    console.log('• showLicenseStatus() - Show current license info');
     console.log('• LicenseManager.checksumCode("123456") - Check if code sums to 37');
 }
