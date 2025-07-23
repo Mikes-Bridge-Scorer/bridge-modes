@@ -475,20 +475,17 @@ class BridgeApp {
     }
 
     /**
-     * Enter code entry mode using existing buttons
-     */
-    enterCodeEntryMode(status) {
-        this.codeEntryMode = true;
-        this.enteredCode = '';
-        this.appState = 'license_entry';
-        
-        // Initialize UI for code entry
-        this.ui.init().then(() => {
-            this.setupEventListeners();
-            this.updateCodeEntryDisplay(status);
-            this.updateButtonStates();
-        });
-    }
+ * Enter code entry mode using existing buttons
+ */
+enterCodeEntryMode(status) {
+    this.codeEntryMode = true;
+    this.enteredCode = '';
+    this.appState = 'license_entry';
+    
+    // Don't reinitialize UI - just update display and buttons
+    this.updateCodeEntryDisplay(status);
+    this.updateButtonStates();
+}
     
     /**
      * Setup all event listeners
