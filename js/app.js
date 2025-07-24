@@ -1,7 +1,8 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * MOBILE FIXED VERSION - Handles mode selection, UI coordination, bridge mode management, and licensing
- * Fixed Pixel 9a button interaction issues
+ * MOBILE FIXED VERSION with LICENSE ENTRY TOUCH FIX
+ * Handles mode selection, UI coordination, bridge mode management, and licensing
+ * Fixed Pixel 9a button interaction issues in license entry mode
  */
 
 import { UIController } from './ui-controller.js';
@@ -418,7 +419,7 @@ class LicenseManager {
 }
 
 /**
- * Main Bridge Application with Enhanced License System - MOBILE FIXED VERSION
+ * Main Bridge Application with Enhanced License System - MOBILE FIXED VERSION with LICENSE TOUCH FIX
  */
 class BridgeApp {
     constructor() {
@@ -487,7 +488,7 @@ class BridgeApp {
     }
 
     /**
-     * MOBILE FIX: Add mobile-specific CSS
+     * MOBILE FIX: Add mobile-specific CSS including license entry fixes
      */
     addMobileCSS() {
         const mobileCSS = `
@@ -495,9 +496,10 @@ class BridgeApp {
         .mobile-device .btn {
             min-height: 44px !important;
             min-width: 44px !important;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-user-select: none !important;
         }
 
         /* Button pressed state for mobile feedback */
@@ -510,8 +512,31 @@ class BridgeApp {
         /* Ensure buttons are touchable on mobile */
         .mobile-device .calculator-buttons .btn {
             cursor: pointer;
-            -webkit-user-select: none;
             -webkit-touch-callout: none;
+        }
+
+        /* License entry specific mobile fixes */
+        .mobile-device[data-app-state="license_entry"] .btn {
+            border: 2px solid transparent;
+            transition: all 0.1s ease;
+            background-color: var(--btn-bg, #4f46e5);
+        }
+        
+        .mobile-device[data-app-state="license_entry"] .btn:not(.disabled) {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        .mobile-device[data-app-state="license_entry"] .btn:not(.disabled):active,
+        .mobile-device[data-app-state="license_entry"] .btn.btn-pressed {
+            transform: scale(0.95) !important;
+            border-color: #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.8) !important;
+        }
+
+        .mobile-device[data-app-state="license_entry"] .btn.disabled {
+            pointer-events: none !important;
+            opacity: 0.3 !important;
         }
 
         /* Improve button spacing on mobile */
@@ -528,28 +553,185 @@ class BridgeApp {
         `;
 
         const style = document.createElement('style');
+        style.id = 'mobile-bridge-css';
         style.textContent = mobileCSS;
         document.head.appendChild(style);
     }
 
     /**
-     * MOBILE FIXED: Enter code entry mode with mobile-safe UI handling
+     * LICENSE TOUCH FIX: Enhanced enter code entry mode with mobile touch support
      */
     enterCodeEntryMode(status) {
+        console.log('🔑 Entering code entry mode with enhanced mobile touch support');
+        
         this.codeEntryMode = true;
         this.enteredCode = '';
         this.appState = 'license_entry';
         
+        // Update body data attribute for CSS targeting
+        if (this.isMobile) {
+            document.body.setAttribute('data-app-state', 'license_entry');
+        }
+        
         // Update display first
         this.updateCodeEntryDisplay(status);
         
-        // Ensure buttons are properly initialized for mobile
-        this.initializeMobileButtons();
+        // CRITICAL: Force mobile button setup after display update
+        this.forceMobileLicenseButtonSetup();
         
         // Update button states
         this.updateButtonStates();
         
-        console.log('🔑 Entered code entry mode with mobile support');
+        console.log('🔑 License entry mode ready - mobile touch optimized');
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Force mobile button setup specifically for license entry
+     */
+    forceMobileLicenseButtonSetup() {
+        console.log('📱 Setting up mobile license entry touch events');
+        
+        // Wait for DOM to be fully updated
+        setTimeout(() => {
+            // Remove any existing license event listeners
+            this.removeLicenseEventListeners();
+            
+            // Get all buttons
+            const buttons = document.querySelectorAll('.btn');
+            console.log(`📱 Found ${buttons.length} buttons for license entry`);
+            
+            buttons.forEach((button, index) => {
+                // Ensure button has proper mobile touch attributes
+                button.style.touchAction = 'manipulation';
+                button.style.userSelect = 'none';
+                button.style.webkitTapHighlightColor = 'transparent';
+                button.style.webkitUserSelect = 'none';
+                button.style.minHeight = '44px';
+                button.style.minWidth = '44px';
+                
+                // Add direct touch event listeners for license entry
+                this.addLicenseButtonEventListeners(button);
+                
+                console.log(`📱 License button ${index} setup: ${button.dataset.value}`);
+            });
+            
+            // Also setup container-level event delegation as backup
+            this.setupLicenseEventDelegation();
+            
+        }, 100); // Small delay to ensure DOM is ready
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Add event listeners specifically for license buttons
+     */
+    addLicenseButtonEventListeners(button) {
+        const handleLicenseButtonPress = (event) => {
+            // Only handle if we're in license entry mode
+            if (this.appState !== 'license_entry') return;
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const value = button.dataset.value;
+            console.log(`🎯 License button pressed: ${value}`);
+            
+            // Visual feedback
+            button.classList.add('btn-pressed');
+            setTimeout(() => button.classList.remove('btn-pressed'), 150);
+            
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            // Handle the button action
+            this.handleCodeEntryButton(value);
+            this.updateCodeEntryDisplay();
+            this.updateButtonStates();
+        };
+        
+        // Add multiple event types for maximum mobile compatibility
+        button.addEventListener('touchstart', (e) => {
+            if (this.appState === 'license_entry' && !button.classList.contains('disabled')) {
+                e.preventDefault();
+                button.style.transform = 'scale(0.95)';
+            }
+        }, { passive: false });
+        
+        button.addEventListener('touchend', handleLicenseButtonPress, { passive: false });
+        button.addEventListener('click', handleLicenseButtonPress, { passive: false });
+        
+        // Store handler reference for cleanup
+        button._licenseHandler = handleLicenseButtonPress;
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Setup container-level event delegation for license entry
+     */
+    setupLicenseEventDelegation() {
+        const container = document.querySelector('.calculator-container') || document.body;
+        
+        const licenseDelegate = (event) => {
+            // Only handle if we're in license entry mode
+            if (this.appState !== 'license_entry') return;
+            
+            const button = event.target.closest('.btn');
+            if (!button || button.classList.contains('disabled')) return;
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const value = button.dataset.value;
+            console.log(`🎯 License delegated press: ${value}`);
+            
+            // Visual feedback
+            button.classList.add('btn-pressed');
+            setTimeout(() => button.classList.remove('btn-pressed'), 150);
+            
+            // Handle action
+            this.handleCodeEntryButton(value);
+            this.updateCodeEntryDisplay();
+            this.updateButtonStates();
+        };
+        
+        // Remove existing license delegate
+        if (container._licenseDelegate) {
+            container.removeEventListener('touchend', container._licenseDelegate);
+            container.removeEventListener('click', container._licenseDelegate);
+        }
+        
+        // Add new license delegate
+        container.addEventListener('touchend', licenseDelegate, { passive: false });
+        container.addEventListener('click', licenseDelegate, { passive: false });
+        
+        // Store for cleanup
+        container._licenseDelegate = licenseDelegate;
+        
+        console.log('📱 License entry event delegation setup complete');
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Remove license-specific event listeners
+     */
+    removeLicenseEventListeners() {
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            if (button._licenseHandler) {
+                button.removeEventListener('touchend', button._licenseHandler);
+                button.removeEventListener('click', button._licenseHandler);
+                button.removeEventListener('touchstart', button._licenseHandler);
+                delete button._licenseHandler;
+            }
+        });
+        
+        const container = document.querySelector('.calculator-container') || document.body;
+        if (container._licenseDelegate) {
+            container.removeEventListener('touchend', container._licenseDelegate);
+            container.removeEventListener('click', container._licenseDelegate);
+            delete container._licenseDelegate;
+        }
+        
+        console.log('📱 License event listeners removed');
     }
 
     /**
@@ -612,6 +794,9 @@ class BridgeApp {
         
         // Handle both click and touch events for mobile
         const buttonHandler = (event) => {
+            // Skip if we're in license entry mode (handled separately)
+            if (this.appState === 'license_entry') return;
+            
             // Prevent default touch behavior
             if (event.type === 'touchend') {
                 event.preventDefault();
@@ -705,6 +890,9 @@ class BridgeApp {
                 delete element._bridgeAppHandler;
             }
         });
+        
+        // Clean up license-specific listeners
+        this.removeLicenseEventListeners();
     }
     
     /**
@@ -737,19 +925,26 @@ class BridgeApp {
      * Handle button presses during code entry
      */
     handleCodeEntryButton(value) {
+        console.log(`🔑 Code entry button: ${value}, current code: ${this.enteredCode}`);
+        
         if (value === 'BACK') {
             // Delete last character
             this.enteredCode = this.enteredCode.slice(0, -1);
+            console.log(`🔑 After BACK: ${this.enteredCode}`);
         } else if (value === 'DEAL') {
             // Submit code
+            console.log(`🔑 Submitting code: ${this.enteredCode}`);
             this.submitLicenseCode();
+            return; // Don't update display here, submitLicenseCode handles it
         } else if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(value)) {
             // Add digit to code
             if (this.enteredCode.length < 6) {
                 this.enteredCode += value;
+                console.log(`🔑 After adding ${value}: ${this.enteredCode}`);
             }
         }
         
+        // Update display and button states
         this.updateCodeEntryDisplay();
         this.updateButtonStates();
     }
@@ -775,6 +970,12 @@ class BridgeApp {
                 this.codeEntryMode = false;
                 this.enteredCode = '';
                 this.appState = 'mode_selection';
+                
+                // Update body data attribute
+                if (this.isMobile) {
+                    document.body.setAttribute('data-app-state', 'mode_selection');
+                }
+                
                 this.init(); // Restart with valid license
             }, 3000);
         } else {
@@ -866,6 +1067,11 @@ class BridgeApp {
             // Transition to bridge mode
             this.appState = 'bridge_mode';
             
+            // Update body data attribute for mobile
+            if (this.isMobile) {
+                document.body.setAttribute('data-app-state', 'bridge_mode');
+            }
+            
             console.log(`✅ ${modeConfig.display} loaded successfully`);
             
         } catch (error) {
@@ -910,6 +1116,11 @@ class BridgeApp {
         this.currentMode = null;
         this.appState = 'mode_selection';
         this.gameState.reset();
+        
+        // Update body data attribute for mobile
+        if (this.isMobile) {
+            document.body.setAttribute('data-app-state', 'mode_selection');
+        }
         
         // Reset UI
         this.ui.reset();
@@ -1002,7 +1213,7 @@ class BridgeApp {
     }
     
     /**
-     * MOBILE ENHANCED: Update button states with mobile considerations
+     * MOBILE ENHANCED: Update button states with mobile considerations and license entry support
      */
     updateButtonStates() {
         let activeButtons = [];
@@ -1029,7 +1240,7 @@ class BridgeApp {
             }
         }
         
-        console.log('🎮 Active buttons:', activeButtons);
+        console.log('🎮 Active buttons updated:', activeButtons);
         this.ui.updateButtonStates(activeButtons);
         
         // Force mobile button refresh
@@ -1037,7 +1248,7 @@ class BridgeApp {
     }
 
     /**
-     * MOBILE FIX: Force refresh of mobile button states
+     * MOBILE FIX: Force refresh of mobile button states with license entry support
      */
     refreshMobileButtons(activeButtons) {
         setTimeout(() => {
@@ -1052,6 +1263,14 @@ class BridgeApp {
                     button.removeAttribute('disabled');
                     button.style.opacity = '1';
                     button.style.pointerEvents = 'auto';
+                    
+                    // MOBILE: Ensure touch properties are set for active buttons
+                    if (this.isMobile) {
+                        button.style.touchAction = 'manipulation';
+                        button.style.webkitTapHighlightColor = 'transparent';
+                        button.style.userSelect = 'none';
+                        button.style.cursor = 'pointer';
+                    }
                 } else {
                     button.classList.add('disabled');
                     button.setAttribute('disabled', 'true');
@@ -1059,6 +1278,14 @@ class BridgeApp {
                     button.style.pointerEvents = 'none';
                 }
             });
+            
+            // LICENSE ENTRY: Ensure touch events are working
+            if (this.appState === 'license_entry' && this.isMobile) {
+                console.log('🔑 Refreshing license entry touch events');
+                this.setupLicenseEventDelegation();
+            }
+            
+            console.log('🎮 Mobile button refresh complete');
         }, 50);
     }
     
@@ -1594,12 +1821,106 @@ You can return anytime by bookmarking this page.`;
         
         console.log('🧹 App cleanup completed with mobile support');
     }
+
+    /**
+     * DEBUGGING: License entry debug method
+     */
+    debugLicenseEntry() {
+        console.log('🔍 === LICENSE ENTRY DEBUG ===');
+        console.log('App State:', this.appState);
+        console.log('Code Entry Mode:', this.codeEntryMode);
+        console.log('Is Mobile:', this.isMobile);
+        console.log('Entered Code:', this.enteredCode);
+        console.log('Code Length:', this.enteredCode.length);
+        
+        const buttons = document.querySelectorAll('.btn');
+        console.log(`Found ${buttons.length} buttons:`);
+        
+        buttons.forEach((button, index) => {
+            const value = button.dataset.value;
+            const isDisabled = button.classList.contains('disabled');
+            const hasHandler = !!button._licenseHandler;
+            const pointerEvents = button.style.pointerEvents;
+            const touchAction = button.style.touchAction;
+            
+            console.log(`Button ${index} (${value}):`, {
+                disabled: isDisabled,
+                pointerEvents,
+                touchAction,
+                hasHandler,
+                opacity: button.style.opacity
+            });
+        });
+        
+        const container = document.querySelector('.calculator-container') || document.body;
+        console.log('Container has license delegate:', !!container._licenseDelegate);
+        console.log('Body data-app-state:', document.body.getAttribute('data-app-state'));
+    }
+
+    /**
+     * EMERGENCY: Force mobile license fix (for testing)
+     */
+    emergencyMobileLicenseFix() {
+        console.log('🚨 EMERGENCY MOBILE LICENSE FIX ACTIVATED');
+        
+        // Clear all existing listeners
+        this.removeLicenseEventListeners();
+        
+        // Force setup new listeners
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('.btn');
+            console.log(`🚨 Emergency setup for ${buttons.length} buttons`);
+            
+            buttons.forEach(button => {
+                // Remove all existing listeners by cloning
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Add simple, direct event listener
+                const emergencyHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const value = newButton.dataset.value;
+                    console.log('🚨 Emergency button press:', value);
+                    
+                    if (this.appState === 'license_entry' && !newButton.classList.contains('disabled')) {
+                        // Visual feedback
+                        newButton.style.transform = 'scale(0.95)';
+                        newButton.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
+                        
+                        setTimeout(() => {
+                            newButton.style.transform = 'scale(1)';
+                            newButton.style.backgroundColor = '';
+                        }, 150);
+                        
+                        // Handle the action
+                        this.handleCodeEntryButton(value);
+                        this.updateCodeEntryDisplay();
+                        this.updateButtonStates();
+                    }
+                };
+                
+                // Add multiple event types
+                newButton.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+                newButton.addEventListener('touchend', emergencyHandler, { passive: false });
+                newButton.addEventListener('click', emergencyHandler, { passive: false });
+                
+                // Ensure mobile properties
+                newButton.style.touchAction = 'manipulation';
+                newButton.style.userSelect = 'none';
+                newButton.style.webkitTapHighlightColor = 'transparent';
+            });
+            
+            console.log('🚨 Emergency mobile license fix complete');
+        }, 100);
+    }
 }
 
 // Export the main class and make it globally accessible
 export { BridgeApp, LicenseManager };
 
-// Make BridgeApp available globally for modal buttons
+// Make BridgeApp available globally for modal buttons and debugging
 window.BridgeApp = BridgeApp;
 
 // Testing and code generation utilities (for development only)
@@ -1638,6 +1959,10 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     window.resetTrialForTesting = () => LicenseManager.resetTrialForTesting();
     window.showLicenseStatus = () => LicenseManager.showLicenseStatus();
     
+    // DEBUG UTILITIES for mobile testing
+    window.debugLicenseEntry = () => window.bridgeApp?.debugLicenseEntry();
+    window.emergencyMobileFix = () => window.bridgeApp?.emergencyMobileLicenseFix();
+    
     generateSampleCodes();
     console.log('\n🛠️  Testing utilities:');
     console.log('• generateSampleCodes() - Generate new sample codes');
@@ -1646,5 +1971,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     console.log('• simulateDealsLimit() - Force deals limit reached');
     console.log('• resetTrialForTesting() - Reset trial to fresh state');
     console.log('• showLicenseStatus() - Show current license info');
+    console.log('• debugLicenseEntry() - Debug license entry mobile issues');
+    console.log('• emergencyMobileFix() - Emergency mobile touch fix');
     console.log('• LicenseManager.checksumCode("123456") - Check if code sums to 37');
 }
