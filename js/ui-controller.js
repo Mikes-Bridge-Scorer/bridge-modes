@@ -1,6 +1,7 @@
 /**
  * UI Controller - Manages all user interface interactions and display updates
- * Handles button states, modals, display panel, and UI utilities
+ * MOBILE FIXED VERSION - Handles button states, modals, display panel, and UI utilities
+ * Fixed modal touch events for mobile devices (Pixel 9a, etc.)
  */
 
 class UIController {
@@ -21,6 +22,12 @@ class UIController {
         
         // Loading state
         this.isLoading = false;
+        
+        // Mobile detection
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Mobile CSS injected flag
+        this.mobileModalCSSInjected = false;
     }
     
     /**
@@ -33,12 +40,99 @@ class UIController {
             this.cacheElements();
             this.setupWakeLock();
             
+            // Inject mobile modal CSS if needed
+            if (this.isMobile && !this.mobileModalCSSInjected) {
+                this.injectMobileModalCSS();
+            }
+            
             console.log('✅ UI Controller ready');
             
         } catch (error) {
             console.error('❌ Failed to initialize UI Controller:', error);
             throw error;
         }
+    }
+    
+    /**
+     * MOBILE FIX: Inject CSS for mobile modal support
+     */
+    injectMobileModalCSS() {
+        const mobileModalCSS = `
+        /* Mobile modal button fixes */
+        .mobile-device .modal-overlay button,
+        .mobile-device [class*="modal"] button,
+        .mobile-device .modal-content button {
+            min-height: 44px !important;
+            min-width: 44px !important;
+            touch-action: manipulation !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-user-select: none !important;
+            cursor: pointer !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-weight: bold !important;
+            transition: all 0.1s ease !important;
+        }
+
+        /* Hand Analysis modal specific fixes */
+        .mobile-device .hcp-analysis button,
+        .mobile-device .modal-content button {
+            padding: 12px 16px !important;
+            margin: 6px !important;
+            font-size: 16px !important;
+        }
+
+        /* Increment/Decrement buttons */
+        .mobile-device .increment-btn,
+        .mobile-device .decrement-btn,
+        .mobile-device button[onclick*="increment"],
+        .mobile-device button[onclick*="decrement"],
+        .mobile-device button[onclick*="++"],
+        .mobile-device button[onclick*="--"] {
+            min-height: 48px !important;
+            min-width: 48px !important;
+            font-size: 20px !important;
+            line-height: 1 !important;
+            padding: 8px !important;
+        }
+
+        /* Modal overlay touch handling */
+        .mobile-device .modal-overlay {
+            touch-action: manipulation !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
+        /* Better button feedback on mobile */
+        .mobile-device .modal-overlay button:active,
+        .mobile-device [class*="modal"] button:active,
+        .mobile-device .modal-content button:active {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+        }
+
+        /* Modal button pressed state */
+        .mobile-device .modal-btn-pressed {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+            background-color: rgba(59, 130, 246, 0.8) !important;
+        }
+
+        /* Ensure modal content is scrollable on mobile */
+        .mobile-device .modal-content {
+            max-height: 85vh !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        `;
+
+        const style = document.createElement('style');
+        style.id = 'mobile-modal-css';
+        style.textContent = mobileModalCSS;
+        document.head.appendChild(style);
+        
+        this.mobileModalCSSInjected = true;
+        console.log('📱 Mobile modal CSS injected');
     }
     
     /**
@@ -149,42 +243,46 @@ class UIController {
         this.vulnControl.classList.remove('vulnerable-active', 'vulnerable-safe');
     }
     
-/**
- * Show the honors button when in scoring state - NEW METHOD
- */
-showHonorsButton() {
-    const honorsBtn = document.getElementById('honorsControl');
-    if (honorsBtn) {
-        honorsBtn.style.display = 'flex'; // Use flex to match other control items
-        honorsBtn.classList.add('active');
-        console.log('🏅 Honors button shown');
+    /**
+     * Show the honors button when in scoring state
+     */
+    showHonorsButton() {
+        const honorsBtn = document.getElementById('honorsControl');
+        if (honorsBtn) {
+            honorsBtn.style.display = 'flex';
+            honorsBtn.classList.add('active');
+            console.log('🏅 Honors button shown');
+        }
     }
-}
 
-/**
- * Hide the honors button when not needed - NEW METHOD
- */
-hideHonorsButton() {
-    const honorsBtn = document.getElementById('honorsControl');
-    if (honorsBtn) {
-        honorsBtn.style.display = 'none';
-        honorsBtn.classList.remove('active');
-        console.log('🏅 Honors button hidden');
+    /**
+     * Hide the honors button when not needed
+     */
+    hideHonorsButton() {
+        const honorsBtn = document.getElementById('honorsControl');
+        if (honorsBtn) {
+            honorsBtn.style.display = 'none';
+            honorsBtn.classList.remove('active');
+            console.log('🏅 Honors button hidden');
+        }
     }
-}
     
     /**
-     * Show modal dialog
+     * MOBILE FIXED: Show modal dialog with mobile touch support
      */
     showModal(type, content) {
         console.log('🖼️ Showing modal type:', type);
-        console.log('Modal content:', content);
         
         // Remove any existing modal
         this.closeModal();
         
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
+        
+        // Add mobile class if needed
+        if (this.isMobile) {
+            overlay.classList.add('mobile-modal');
+        }
         
         // Force high z-index and proper display
         overlay.style.cssText = `
@@ -204,13 +302,9 @@ hideHonorsButton() {
         let modalHTML = '';
         
         if (typeof content === 'string') {
-            // Simple content string
             modalHTML = content;
-            console.log('Using string content');
         } else if (content && typeof content === 'object') {
-            // Structured content object
             modalHTML = this.buildModalContent(content);
-            console.log('Built structured content');
         } else {
             console.error('Invalid modal content:', content);
             return;
@@ -233,12 +327,10 @@ hideHonorsButton() {
                 z-index: 10001 !important;
             `;
             
-            // Make score history modal wider
             if (type === 'history') {
                 modalContent.style.maxWidth = '95%';
                 modalContent.style.width = 'auto';
                 modalContent.style.minWidth = '600px';
-                console.log('Applied history modal sizing');
             } else {
                 modalContent.style.maxWidth = '90%';
             }
@@ -247,17 +339,101 @@ hideHonorsButton() {
         document.body.appendChild(overlay);
         this.currentModal = overlay;
         
-        console.log('Modal added to DOM with forced styling');
-        
-        // Setup modal event listeners
+        // MOBILE FIX: Setup modal events with mobile support
         this.setupModalEvents(overlay, content);
         
-        console.log('Modal setup complete');
+        // MOBILE FIX: Setup mobile touch events after DOM is ready
+        if (this.isMobile) {
+            setTimeout(() => {
+                this.setupModalTouchEvents(overlay);
+            }, 100);
+        }
         
-        // Test visibility
-        const rect = overlay.getBoundingClientRect();
-        console.log('Modal overlay position:', rect);
-        console.log('Modal overlay computed style:', window.getComputedStyle(overlay).display);
+        console.log('✅ Modal setup complete with mobile support');
+    }
+    
+    /**
+     * MOBILE FIX: Setup touch events for modal buttons
+     */
+    setupModalTouchEvents(modalElement) {
+        if (!modalElement) return;
+        
+        console.log('📱 Setting up modal touch events');
+        
+        // Get all interactive elements in the modal
+        const interactiveElements = modalElement.querySelectorAll('button, .btn, [onclick], [data-action]');
+        
+        interactiveElements.forEach((element, index) => {
+            console.log(`📱 Setting up modal element ${index}:`, element.textContent || element.innerHTML);
+            
+            // Ensure mobile touch properties
+            element.style.touchAction = 'manipulation';
+            element.style.userSelect = 'none';
+            element.style.webkitTapHighlightColor = 'transparent';
+            element.style.webkitUserSelect = 'none';
+            
+            // Ensure minimum touch target size
+            if (!element.style.minHeight) element.style.minHeight = '44px';
+            if (!element.style.minWidth) element.style.minWidth = '44px';
+            
+            // Store original handlers
+            const originalOnclick = element.onclick;
+            const originalOnclickAttr = element.getAttribute('onclick');
+            
+            // Create mobile-compatible handler
+            const mobileHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('📱 Modal element touched:', element.textContent || element.innerHTML);
+                
+                // Visual feedback
+                element.classList.add('modal-btn-pressed');
+                setTimeout(() => {
+                    element.classList.remove('modal-btn-pressed');
+                }, 150);
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+                
+                // Execute original action
+                try {
+                    if (originalOnclick) {
+                        originalOnclick.call(element, e);
+                    } else if (originalOnclickAttr) {
+                        // Create a function from the onclick attribute
+                        const func = new Function('event', originalOnclickAttr);
+                        func.call(element, e);
+                    }
+                } catch (error) {
+                    console.error('Error executing modal action:', error);
+                }
+            };
+            
+            // Remove existing listeners by cloning element
+            const newElement = element.cloneNode(true);
+            element.parentNode.replaceChild(newElement, element);
+            
+            // Add mobile touch events
+            newElement.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                newElement.style.transform = 'scale(0.95)';
+                newElement.style.opacity = '0.8';
+            }, { passive: false });
+            
+            newElement.addEventListener('touchend', mobileHandler, { passive: false });
+            newElement.addEventListener('click', mobileHandler, { passive: false });
+            
+            // Restore transform on touch cancel
+            newElement.addEventListener('touchcancel', () => {
+                newElement.style.transform = 'scale(1)';
+                newElement.style.opacity = '1';
+            }, { passive: true });
+        });
+        
+        console.log(`📱 Mobile touch events setup complete for ${interactiveElements.length} elements`);
     }
     
     /**
@@ -287,17 +463,19 @@ hideHonorsButton() {
     }
     
     /**
-     * Setup modal event listeners
+     * MOBILE ENHANCED: Setup modal event listeners with mobile support
      */
     setupModalEvents(overlay, content) {
+        // Background click to close
         overlay.addEventListener('click', (e) => {
-            // Close on background click
             if (e.target === overlay) {
                 this.closeModal();
                 return;
             }
-            
-            // Handle button clicks
+        });
+        
+        // Handle structured modal button clicks
+        overlay.addEventListener('click', (e) => {
             const button = e.target.closest('.modal-button');
             if (button) {
                 e.preventDefault();
@@ -309,9 +487,7 @@ hideHonorsButton() {
                 if (action === 'close') {
                     this.closeModal();
                 } else if (content && content.buttons) {
-                    // Find the button config and execute action
                     const btnConfig = content.buttons.find(b => {
-                        // Handle both string actions and function actions
                         return (typeof b.action === 'string' && b.action === action) ||
                                (typeof b.action === 'function' && b.text === button.textContent.trim());
                     });
@@ -336,6 +512,9 @@ hideHonorsButton() {
             }
         };
         document.addEventListener('keydown', escapeHandler);
+        
+        // Store escape handler for cleanup
+        overlay._escapeHandler = escapeHandler;
     }
     
     /**
@@ -343,8 +522,14 @@ hideHonorsButton() {
      */
     closeModal() {
         if (this.currentModal) {
+            // Clean up escape handler
+            if (this.currentModal._escapeHandler) {
+                document.removeEventListener('keydown', this.currentModal._escapeHandler);
+            }
+            
             this.currentModal.remove();
             this.currentModal = null;
+            console.log('📱 Modal closed');
         }
     }
     
@@ -356,7 +541,7 @@ hideHonorsButton() {
         
         const content = `
             <div class="title-score-row">
-                <div class="mode-title">Bridge Calculator</div>
+                <div class="mode-title">Bridge Navigator</div>
                 <div class="score-display">Loading...</div>
             </div>
             <div class="game-content">
@@ -366,7 +551,7 @@ hideHonorsButton() {
         `;
         
         this.updateDisplay(content);
-        this.updateButtonStates([]); // Disable all buttons
+        this.updateButtonStates([]);
     }
     
     /**
@@ -396,6 +581,30 @@ hideHonorsButton() {
     }
     
     /**
+     * Show success message briefly
+     */
+    showSuccess(message, duration = 2000) {
+        const originalContent = this.display.innerHTML;
+        
+        const content = `
+            <div class="title-score-row">
+                <div class="mode-title">Success</div>
+                <div class="score-display">✅</div>
+            </div>
+            <div class="game-content">
+                <div style="color: #27ae60; font-weight: 600;">${message}</div>
+            </div>
+            <div class="current-state">Continuing...</div>
+        `;
+        
+        this.updateDisplay(content);
+        
+        setTimeout(() => {
+            this.display.innerHTML = originalContent;
+        }, duration);
+    }
+    
+    /**
      * Toggle keep awake functionality
      */
     async toggleKeepAwake() {
@@ -410,7 +619,6 @@ hideHonorsButton() {
      * Setup wake lock functionality
      */
     setupWakeLock() {
-        // Handle visibility change to re-acquire wake lock
         document.addEventListener('visibilitychange', async () => {
             if (this.wakeLock !== null && document.visibilityState === 'visible') {
                 await this.requestWakeLock();
@@ -433,7 +641,6 @@ hideHonorsButton() {
                 
                 console.log('🔋 Wake lock acquired');
                 
-                // Listen for wake lock release
                 this.wakeLock.addEventListener('release', () => {
                     console.log('🔋 Wake lock released');
                 });
@@ -465,7 +672,7 @@ hideHonorsButton() {
     }
     
     /**
-     * Reset UI to initial state - UPDATED WITH HONORS BUTTON
+     * Reset UI to initial state
      */
     reset() {
         this.clearVulnerabilityHighlight();
@@ -473,34 +680,7 @@ hideHonorsButton() {
         this.updateVulnerabilityDisplay('None');
         this.closeModal();
         this.hideLoading();
-        this.hideHonorsButton(); // NEW: Hide honors button when resetting
-        
-        // Don't reset wake lock state - user preference should persist
-    }
-    
-    /**
-     * Show success message briefly
-     */
-    showSuccess(message, duration = 2000) {
-        const originalContent = this.display.innerHTML;
-        
-        const content = `
-            <div class="title-score-row">
-                <div class="mode-title">Success</div>
-                <div class="score-display">✅</div>
-            </div>
-            <div class="game-content">
-                <div style="color: #27ae60; font-weight: 600;">${message}</div>
-            </div>
-            <div class="current-state">Continuing...</div>
-        `;
-        
-        this.updateDisplay(content);
-        
-        // Restore original content after duration
-        setTimeout(() => {
-            this.display.innerHTML = originalContent;
-        }, duration);
+        this.hideHonorsButton();
     }
     
     /**
@@ -529,7 +709,28 @@ hideHonorsButton() {
     isWakeLockActive() {
         return this.isWakeActive;
     }
+    
+    /**
+     * DEBUGGING: Emergency modal fix for console testing
+     */
+    emergencyModalFix() {
+        console.log('🚨 Emergency modal touch fix activated');
+        
+        const modal = this.currentModal;
+        if (!modal) {
+            console.log('❌ No modal found');
+            return;
+        }
+        
+        this.setupModalTouchEvents(modal);
+        console.log('✅ Emergency modal fix complete');
+    }
 }
 
 // Export the UI Controller
 export { UIController };
+
+// Make available globally for debugging
+if (typeof window !== 'undefined') {
+    window.UIController = UIController;
+}
