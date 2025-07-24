@@ -1,791 +1,4 @@
 /**
- * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * MOBILE FIXED VERSION with LICENSE ENTRY TOUCH FIX
- * Handles mode selection, UI coordination, bridge mode management, and licensing
- * Fixed Pixel 9a button interaction issues in license entry mode
- */
-
-import { UIController } from './ui-controller.js';
-import { GameState } from './utils/game-state.js';
-
-/**
- * Enhanced License Manager - Option B Implementation with Testing
- */
-class LicenseManager {
-    constructor() {
-        this.storageKey = 'bridgeAppLicense';
-        this.usedCodesKey = 'bridgeAppUsedCodes';
-        this.trialDays = 14;
-        this.trialDeals = 50;
-        this.checksumTarget = 37; // All valid codes must sum to 37
-        
-        // Trial prefixes (first 3 digits) - these determine if it's a trial code
-        this.trialPrefixes = ['111', '222', '333', '444', '555'];
-    }
-
-    /**
-     * Check current license status
-     */
-    checkLicenseStatus() {
-        const license = this.getLicenseData();
-        
-        if (!license) {
-            return { 
-                status: 'unlicensed', 
-                needsCode: true,
-                message: 'Enter license code using calculator buttons'
-            };
-        }
-
-        if (license.type === 'FULL') {
-            return { 
-                status: 'full', 
-                needsCode: false,
-                message: 'Full version activated'
-            };
-        }
-
-        if (license.type === 'TRIAL') {
-            return this.checkTrialExpiry(license);
-        }
-
-        return { 
-            status: 'invalid', 
-            needsCode: true,
-            message: 'Invalid license. Enter valid code.'
-        };
-    }
-
-    /**
-     * Check if trial has expired
-     */
-    checkTrialExpiry(license) {
-        const now = Date.now();
-        const daysElapsed = Math.floor((now - license.activatedAt) / (1000 * 60 * 60 * 24));
-        const daysLeft = Math.max(0, this.trialDays - daysElapsed);
-        
-        const dealsUsed = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
-        const dealsLeft = Math.max(0, this.trialDeals - dealsUsed);
-
-        if (daysLeft <= 0 || dealsLeft <= 0) {
-            return {
-                status: 'expired',
-                needsCode: true,
-                message: 'Trial expired - Enter full version code'
-            };
-        }
-
-        return {
-            status: 'trial',
-            needsCode: false,
-            daysLeft,
-            dealsLeft,
-            message: `Trial: ${daysLeft} days, ${dealsLeft} deals left`
-        };
-    }
-
-    /**
-     * Validate code format and checksum
-     */
-    validateCodeFormat(code) {
-        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
-            return { valid: false, message: 'Code must be 6 digits' };
-        }
-
-        // Check if digits sum to 37
-        const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-        if (digitSum !== this.checksumTarget) {
-            return { valid: false, message: 'Invalid code' };
-        }
-
-        return { valid: true };
-    }
-
-    /**
-     * Check if code has been used before
-     */
-    isCodeUsed(code) {
-        const usedCodes = this.getUsedCodes();
-        return usedCodes.includes(code);
-    }
-
-    /**
-     * Mark code as used
-     */
-    markCodeAsUsed(code) {
-        const usedCodes = this.getUsedCodes();
-        if (!usedCodes.includes(code)) {
-            usedCodes.push(code);
-            localStorage.setItem(this.usedCodesKey, JSON.stringify(usedCodes));
-        }
-    }
-
-    /**
-     * Get list of used codes
-     */
-    getUsedCodes() {
-        try {
-            const data = localStorage.getItem(this.usedCodesKey);
-            return data ? JSON.parse(data) : [];
-        } catch (error) {
-            console.error('Error reading used codes:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Validate trial code
-     */
-    validateTrialCode(code) {
-        const prefix = code.substring(0, 3);
-        
-        if (!this.trialPrefixes.includes(prefix)) {
-            return { valid: false, message: 'Invalid trial code prefix' };
-        }
-
-        // Trial codes can be reused (for demo purposes)
-        return { valid: true, type: 'TRIAL', message: 'Trial code validated' };
-    }
-
-    /**
-     * Validate full code - ANY code that sums to 37 and doesn't start with trial prefix
-     */
-    validateFullCode(code) {
-        const prefix = code.substring(0, 3);
-        
-        // Check if it starts with a trial prefix
-        if (this.trialPrefixes.includes(prefix)) {
-            return { valid: false, message: 'This is a trial code, not a full version code' };
-        }
-
-        // Check if already used
-        if (this.isCodeUsed(code)) {
-            return { valid: false, message: 'Code already used' };
-        }
-
-        // If it sums to 37 and doesn't start with trial prefix, it's valid!
-        return { valid: true, type: 'FULL', message: 'Full version code validated' };
-    }
-
-    /**
-     * Main validation function
-     */
-    async validateCode(code) {
-        // First check format and checksum
-        const formatCheck = this.validateCodeFormat(code);
-        if (!formatCheck.valid) {
-            return formatCheck;
-        }
-
-        const prefix = code.substring(0, 3);
-
-        // Check if it's a trial code
-        if (this.trialPrefixes.includes(prefix)) {
-            return this.validateTrialCode(code);
-        }
-
-        // Everything else is a potential full code
-        return this.validateFullCode(code);
-    }
-
-    /**
-     * Activate license code
-     */
-    async activateLicense(code) {
-        const validation = await this.validateCode(code);
-        
-        if (!validation.valid) {
-            return { success: false, message: validation.message };
-        }
-
-        // Mark full codes as used
-        if (validation.type === 'FULL') {
-            this.markCodeAsUsed(code);
-        }
-
-        const licenseData = {
-            code: code,
-            type: validation.type,
-            activatedAt: Date.now(),
-            activatedDate: new Date().toISOString()
-        };
-
-        localStorage.setItem(this.storageKey, JSON.stringify(licenseData));
-
-        return { 
-            success: true, 
-            message: validation.type === 'FULL' 
-                ? 'Full version activated! Unlimited bridge scoring.' 
-                : `Trial activated! ${this.trialDays} days or ${this.trialDeals} deals.`
-        };
-    }
-
-    /**
-     * Get stored license data
-     */
-    getLicenseData() {
-        try {
-            const data = localStorage.getItem(this.storageKey);
-            return data ? JSON.parse(data) : null;
-        } catch (error) {
-            console.error('Error reading license data:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Clear license (for testing)
-     */
-    clearLicense() {
-        localStorage.removeItem(this.storageKey);
-        localStorage.removeItem('bridgeAppDealsPlayed');
-        // Don't clear used codes in production
-    }
-
-    /**
-     * Increment deals played counter
-     */
-    incrementDealsPlayed() {
-        const current = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
-        localStorage.setItem('bridgeAppDealsPlayed', (current + 1).toString());
-    }
-
-    /**
-     * Generate trial code that sums to 37
-     */
-    static generateTrialCode() {
-        const prefixes = ['222', '333', '444', '555']; // Skip 111 as it's impossible
-        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-        
-        // Calculate what the last 3 digits need to sum to
-        const prefixSum = prefix.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-        const remainingSum = 37 - prefixSum;
-        
-        // Generate last 3 digits that sum to remainingSum
-        const lastThree = LicenseManager.generateDigitsWithSum(remainingSum, 3);
-        
-        return prefix + lastThree;
-    }
-
-    /**
-     * Generate full code that sums to 37 (for your Excel database)
-     */
-    static generateFullCode() {
-        let code;
-        do {
-            // Generate a 6-digit code that sums to exactly 37
-            code = LicenseManager.generateDigitsWithSum(37, 6);
-            
-            // Make sure it doesn't start with trial prefixes
-            const prefix = code.substring(0, 3);
-        } while (['111', '222', '333', '444', '555'].includes(prefix));
-        
-        return code;
-    }
-
-    /**
-     * Helper: Generate digits that sum to target
-     */
-    static generateDigitsWithSum(targetSum, digitCount) {
-        if (targetSum < 0 || targetSum > 9 * digitCount) {
-            throw new Error(`Cannot generate ${digitCount} digits that sum to ${targetSum}`);
-        }
-        
-        const digits = Array(digitCount).fill(0);
-        let remainingSum = targetSum;
-        
-        // Distribute the sum randomly across digits
-        for (let i = 0; i < digitCount - 1; i++) {
-            const maxForThisDigit = Math.min(9, remainingSum);
-            const minForThisDigit = Math.max(0, remainingSum - (9 * (digitCount - i - 1)));
-            
-            if (maxForThisDigit < minForThisDigit) {
-                // Start over if we can't distribute properly
-                return LicenseManager.generateDigitsWithSum(targetSum, digitCount);
-            }
-            
-            digits[i] = minForThisDigit + Math.floor(Math.random() * (maxForThisDigit - minForThisDigit + 1));
-            remainingSum -= digits[i];
-        }
-        
-        digits[digitCount - 1] = remainingSum;
-        
-        return digits.join('');
-    }
-
-    /**
-     * Utility: Check if a code sums to 37
-     */
-    static checksumCode(code) {
-        return code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-    }
-
-    /**
-     * Utility: List all used codes (for admin)
-     */
-    listUsedCodes() {
-        return this.getUsedCodes();
-    }
-
-    /**
-     * ADMIN UTILITY: Check if a code would be valid (for your Excel planning)
-     */
-    static validateCodeForExcel(code) {
-        // Check format
-        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
-            return { valid: false, reason: 'Must be 6 digits', type: 'invalid' };
-        }
-
-        // Check checksum
-        const sum = LicenseManager.checksumCode(code);
-        if (sum !== 37) {
-            return { valid: false, reason: `Sums to ${sum}, not 37`, type: 'invalid' };
-        }
-
-        // Check type
-        const prefix = code.substring(0, 3);
-        const trialPrefixes = ['111', '222', '333', '444', '555'];
-        
-        if (trialPrefixes.includes(prefix)) {
-            return { valid: true, reason: 'Valid trial code', type: 'trial' };
-        } else {
-            return { valid: true, reason: 'Valid full code', type: 'full' };
-        }
-    }
-
-    /**
-     * TESTING: Simulate trial expiration (for development/testing only)
-     */
-    static simulateTrialExpiry() {
-        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
-        if (licenseData && licenseData.type === 'TRIAL') {
-            // Set activation date to 15 days ago
-            licenseData.activatedAt = Date.now() - (15 * 24 * 60 * 60 * 1000);
-            localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
-            console.log('🧪 Trial expiry simulated - reload app to test');
-            return true;
-        }
-        console.log('❌ No active trial to expire');
-        return false;
-    }
-
-    /**
-     * TESTING: Simulate deals limit reached (for development/testing only)
-     */
-    static simulateDealsLimit() {
-        localStorage.setItem('bridgeAppDealsPlayed', '51'); // Over the 50 limit
-        console.log('🧪 Deals limit simulated - complete next deal to test expiry');
-    }
-
-    /**
-     * TESTING: Reset trial to fresh state (for development/testing only)
-     */
-    static resetTrialForTesting() {
-        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
-        if (licenseData && licenseData.type === 'TRIAL') {
-            licenseData.activatedAt = Date.now(); // Reset to now
-            localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
-            localStorage.setItem('bridgeAppDealsPlayed', '0'); // Reset deals
-            console.log('🧪 Trial reset to fresh state');
-            return true;
-        }
-        console.log('❌ No active trial to reset');
-        return false;
-    }
-
-    /**
-     * TESTING: Show current license status (for development/testing only)
-     */
-    static showLicenseStatus() {
-        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
-        const dealsPlayed = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
-        const usedCodes = JSON.parse(localStorage.getItem('bridgeAppUsedCodes') || '[]');
-        
-        console.log('🔍 Current License Status:');
-        console.log('License Data:', licenseData);
-        console.log('Deals Played:', dealsPlayed);
-        console.log('Used Codes:', usedCodes);
-        
-        if (licenseData) {
-            const now = Date.now();
-            const daysElapsed = Math.floor((now - licenseData.activatedAt) / (1000 * 60 * 60 * 24));
-            const daysLeft = Math.max(0, 14 - daysElapsed);
-            const dealsLeft = Math.max(0, 50 - dealsPlayed);
-            
-            console.log(`Days elapsed: ${daysElapsed}, Days left: ${daysLeft}`);
-            console.log(`Deals left: ${dealsLeft}`);
-        }
-    }
-}
-
-/**
- * Main Bridge Application with Enhanced License System - MOBILE FIXED VERSION with LICENSE TOUCH FIX
- */
-class BridgeApp {
-    constructor() {
-        this.currentMode = null;
-        this.bridgeModeInstance = null;
-        this.gameState = new GameState();
-        this.ui = new UIController();
-        this.licenseManager = new LicenseManager();
-        
-        // App state management
-        this.appState = 'mode_selection';
-        this.availableModes = {
-            '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
-            '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
-            '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
-            '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
-            '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
-        };
-        
-        // License entry state
-        this.codeEntryMode = false;
-        this.enteredCode = '';
-        
-        // Mobile support
-        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        this.init();
-    }
-    
-    /**
-     * MOBILE FIXED: Initialize the application with mobile detection and setup
-     */
-    async init() {
-        console.log('🎮 Initializing Bridge Calculator App');
-        
-        // Setup mobile optimizations
-        if (this.isMobile) {
-            console.log('📱 Mobile device detected - enabling mobile optimizations');
-            document.body.classList.add('mobile-device');
-            this.addMobileCSS();
-        }
-        
-        // Check license status first
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        
-        if (licenseStatus.needsCode) {
-            await this.ui.init(); // Initialize UI first
-            this.enterCodeEntryMode(licenseStatus);
-            return; // Stay in code entry mode until valid license
-        }
-
-        if (licenseStatus.status === 'trial') {
-            console.log(`📅 Trial Status: ${licenseStatus.message}`);
-        }
-
-        try {
-            // Continue with normal initialization
-            await this.ui.init();
-            this.setupEventListeners();
-            this.updateDisplay();
-            console.log('✅ Bridge Calculator App ready with mobile support');
-        } catch (error) {
-            console.error('❌ Failed to initialize Bridge Calculator:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * MOBILE FIX: Add mobile-specific CSS including license entry fixes
-     */
-    addMobileCSS() {
-        const mobileCSS = `
-        /* Mobile button enhancements */
-        .mobile-device .btn {
-            min-height: 44px !important;
-            min-width: 44px !important;
-            touch-action: manipulation !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-            -webkit-user-select: none !important;
-        }
-
-        /* Button pressed state for mobile feedback */
-        .btn-pressed {
-            transform: scale(0.95) !important;
-            opacity: 0.8 !important;
-            transition: all 0.1s ease !important;
-        }
-
-        /* Ensure buttons are touchable on mobile */
-        .mobile-device .calculator-buttons .btn {
-            cursor: pointer;
-            -webkit-touch-callout: none;
-        }
-
-        /* License entry specific mobile fixes */
-        .mobile-device[data-app-state="license_entry"] .btn {
-            border: 2px solid transparent;
-            transition: all 0.1s ease;
-            background-color: var(--btn-bg, #4f46e5);
-        }
-        
-        .mobile-device[data-app-state="license_entry"] .btn:not(.disabled) {
-            pointer-events: auto !important;
-            cursor: pointer !important;
-        }
-        
-        .mobile-device[data-app-state="license_entry"] .btn:not(.disabled):active,
-        .mobile-device[data-app-state="license_entry"] .btn.btn-pressed {
-            transform: scale(0.95) !important;
-            border-color: #3b82f6 !important;
-            background-color: rgba(59, 130, 246, 0.8) !important;
-        }
-
-        .mobile-device[data-app-state="license_entry"] .btn.disabled {
-            pointer-events: none !important;
-            opacity: 0.3 !important;
-        }
-
-        /* Improve button spacing on mobile */
-        @media (max-width: 768px) {
-            .calculator-buttons {
-                gap: 8px;
-            }
-            
-            .btn {
-                padding: 12px 8px !important;
-                font-size: 16px !important;
-            }
-        }
-        `;
-
-        const style = document.createElement('style');
-        style.id = 'mobile-bridge-css';
-        style.textContent = mobileCSS;
-        document.head.appendChild(style);
-    }
-
-    /**
-     * LICENSE TOUCH FIX: Enhanced enter code entry mode with mobile touch support
-     */
-    enterCodeEntryMode(status) {
-        console.log('🔑 Entering code entry mode with enhanced mobile touch support');
-        
-        this.codeEntryMode = true;
-        this.enteredCode = '';
-        this.appState = 'license_entry';
-        
-        // Update body data attribute for CSS targeting
-        if (this.isMobile) {
-            document.body.setAttribute('data-app-state', 'license_entry');
-        }
-        
-        // Update display first
-        this.updateCodeEntryDisplay(status);
-        
-        // CRITICAL: Force mobile button setup after display update
-        this.forceMobileLicenseButtonSetup();
-        
-        // Update button states
-        this.updateButtonStates();
-        
-        console.log('🔑 License entry mode ready - mobile touch optimized');
-    }
-
-    /**
-     * LICENSE TOUCH FIX: Force mobile button setup specifically for license entry
-     */
-    forceMobileLicenseButtonSetup() {
-        console.log('📱 Setting up mobile license entry touch events');
-        
-        // Wait for DOM to be fully updated
-        setTimeout(() => {
-            // Remove any existing license event listeners
-            this.removeLicenseEventListeners();
-            
-            // Get all buttons
-            const buttons = document.querySelectorAll('.btn');
-            console.log(`📱 Found ${buttons.length} buttons for license entry`);
-            
-            buttons.forEach((button, index) => {
-                // Ensure button has proper mobile touch attributes
-                button.style.touchAction = 'manipulation';
-                button.style.userSelect = 'none';
-                button.style.webkitTapHighlightColor = 'transparent';
-                button.style.webkitUserSelect = 'none';
-                button.style.minHeight = '44px';
-                button.style.minWidth = '44px';
-                
-                // Add direct touch event listeners for license entry
-                this.addLicenseButtonEventListeners(button);
-                
-                console.log(`📱 License button ${index} setup: ${button.dataset.value}`);
-            });
-            
-            // Also setup container-level event delegation as backup
-            this.setupLicenseEventDelegation();
-            
-        }, 100); // Small delay to ensure DOM is ready
-    }
-
-    /**
-     * LICENSE TOUCH FIX: Add event listeners specifically for license buttons
-     */
-    addLicenseButtonEventListeners(button) {
-        const handleLicenseButtonPress = (event) => {
-            // Only handle if we're in license entry mode
-            if (this.appState !== 'license_entry') return;
-            
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const value = button.dataset.value;
-            console.log(`🎯 License button pressed: ${value}`);
-            
-            // Visual feedback
-            button.classList.add('btn-pressed');
-            setTimeout(() => button.classList.remove('btn-pressed'), 150);
-            
-            // Haptic feedback if available
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-            
-            // Handle the button action
-            this.handleCodeEntryButton(value);
-            this.updateCodeEntryDisplay();
-            this.updateButtonStates();
-        };
-        
-        // Add multiple event types for maximum mobile compatibility
-        button.addEventListener('touchstart', (e) => {
-            if (this.appState === 'license_entry' && !button.classList.contains('disabled')) {
-                e.preventDefault();
-                button.style.transform = 'scale(0.95)';
-            }
-        }, { passive: false });
-        
-        button.addEventListener('touchend', handleLicenseButtonPress, { passive: false });
-        button.addEventListener('click', handleLicenseButtonPress, { passive: false });
-        
-        // Store handler reference for cleanup
-        button._licenseHandler = handleLicenseButtonPress;
-    }
-
-    /**
-     * LICENSE TOUCH FIX: Setup container-level event delegation for license entry
-     */
-    setupLicenseEventDelegation() {
-        const container = document.querySelector('.calculator-container') || document.body;
-        
-        const licenseDelegate = (event) => {
-            // Only handle if we're in license entry mode
-            if (this.appState !== 'license_entry') return;
-            
-            const button = event.target.closest('.btn');
-            if (!button || button.classList.contains('disabled')) return;
-            
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const value = button.dataset.value;
-            console.log(`🎯 License delegated press: ${value}`);
-            
-            // Visual feedback
-            button.classList.add('btn-pressed');
-            setTimeout(() => button.classList.remove('btn-pressed'), 150);
-            
-            // Handle action
-            this.handleCodeEntryButton(value);
-            this.updateCodeEntryDisplay();
-            this.updateButtonStates();
-        };
-        
-        // Remove existing license delegate
-        if (container._licenseDelegate) {
-            container.removeEventListener('touchend', container._licenseDelegate);
-            container.removeEventListener('click', container._licenseDelegate);
-        }
-        
-        // Add new license delegate
-        container.addEventListener('touchend', licenseDelegate, { passive: false });
-        container.addEventListener('click', licenseDelegate, { passive: false });
-        
-        // Store for cleanup
-        container._licenseDelegate = licenseDelegate;
-        
-        console.log('📱 License entry event delegation setup complete');
-    }
-
-    /**
-     * LICENSE TOUCH FIX: Remove license-specific event listeners
-     */
-    removeLicenseEventListeners() {
-        const buttons = document.querySelectorAll('.btn');
-        buttons.forEach(button => {
-            if (button._licenseHandler) {
-                button.removeEventListener('touchend', button._licenseHandler);
-                button.removeEventListener('click', button._licenseHandler);
-                button.removeEventListener('touchstart', button._licenseHandler);
-                delete button._licenseHandler;
-            }
-        });
-        
-        const container = document.querySelector('.calculator-container') || document.body;
-        if (container._licenseDelegate) {
-            container.removeEventListener('touchend', container._licenseDelegate);
-            container.removeEventListener('click', container._licenseDelegate);
-            delete container._licenseDelegate;
-        }
-        
-        console.log('📱 License event listeners removed');
-    }
-
-    /**
-     * MOBILE FIX: Initialize buttons specifically for mobile devices
-     */
-    initializeMobileButtons() {
-        // Wait for next tick to ensure DOM is updated
-        setTimeout(() => {
-            const buttons = document.querySelectorAll('.btn');
-            
-            buttons.forEach(button => {
-                // Ensure buttons have proper touch target
-                if (!button.style.minHeight) {
-                    button.style.minHeight = '44px'; // iOS minimum touch target
-                }
-                
-                // Add mobile-specific classes
-                button.classList.add('mobile-ready');
-                
-                // Ensure touch events work
-                button.style.touchAction = 'manipulation';
-                button.style.userSelect = 'none';
-            });
-            
-            console.log(`📱 Initialized ${buttons.length} buttons for mobile`);
-        }, 10);
-    }
-    
-    /**
-     * MOBILE FIXED: Setup all event listeners with proper mobile support
-     */
-    setupEventListeners() {
-        // Remove any existing listeners to prevent duplicates
-        this.removeEventListeners();
-        
-        // Store bound functions for proper removal later
-        this.boundHandlers = {
-            buttonClick: this.handleButtonClick.bind(this),
-            keyDown: this.handleKeyPress.bind(this)
-        };
-
-        // Enhanced button click handler with mobile touch support
-        this.setupButtonEventListeners();
-        
-        // Control bar clicks with mobile support
-        this.setupControlEventListeners();
-        
-        // Keyboard support
-        document.addEventListener('keydown', this.boundHandlers.keyDown);
-        
-        console.log('✅ Event listeners setup with mobile support');
-    }
-
-    /**
      * MOBILE FIX: Setup button event listeners with mobile touch support
      */
     setupButtonEventListeners() {
@@ -984,43 +197,6 @@ class BridgeApp {
             this.updateCodeEntryDisplay();
         }
     }
-
-    /**
-     * Update display for code entry
-     */
-    updateCodeEntryDisplay(status = null) {
-        const statusMessage = status ? status.message : 'Enter 6-digit license code';
-        
-        // Show entered digits
-        const displayCode = this.enteredCode.padEnd(6, '_').split('').join(' ');
-        
-        const content = `
-            <div class="title-score-row">
-                <div class="mode-title">🔑 License Code</div>
-                <div class="score-display">
-                    Bridge<br>Calculator
-                </div>
-            </div>
-            <div class="game-content">
-                <div style="text-align: center; margin: 10px 0;">
-                    <div style="font-size: 18px; font-weight: bold; color: #3498db; margin-bottom: 8px; font-family: monospace;">
-                        ${displayCode}
-                    </div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                        ${statusMessage}
-                    </div>
-                    <div style="font-size: 10px; color: #999;">
-                        Digits must sum to 37
-                    </div>
-                </div>
-            </div>
-            <div class="current-state">
-                Use number buttons. BACK to delete, DEAL to submit
-            </div>
-        `;
-        
-        this.ui.updateDisplay(content);
-    }
     
     /**
      * Handle bridge mode actions
@@ -1195,7 +371,7 @@ class BridgeApp {
 
         const content = `
             <div class="title-score-row">
-                <div class="mode-title">Bridge Modes Calculator</div>
+                <div class="mode-title">Bridge Navigator</div>
                 <div class="score-display">
                     NS: ${this.gameState.getScore('NS')}<br>
                     EW: ${this.gameState.getScore('EW')}
@@ -1307,7 +483,7 @@ class BridgeApp {
     }
 
     /**
-     * Get main help content with embedded license status
+     * UPDATED: Get main help content with updated contact info and polished content
      */
     getMainHelpContent() {
         // Get current license status
@@ -1326,7 +502,7 @@ class BridgeApp {
                         <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
                         <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
                         <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                            Ready to upgrade? Contact us for a full version code.
+                            Ready to upgrade? Contact us for a full version license code.
                         </p>
                     </div>
                 </div>
@@ -1334,10 +510,10 @@ class BridgeApp {
             
             // Add upgrade button for trial users
             upgradeButton = { 
-                text: 'Enter Full Code', 
+                text: 'Enter Full License', 
                 action: () => {
                     this.ui.closeModal();
-                    this.enterCodeEntryMode({ message: 'Enter full version code to upgrade' });
+                    this.enterCodeEntryMode({ message: 'Enter full version license code' });
                 }, 
                 class: 'modal-button',
                 style: 'background: #27ae60 !important;'
@@ -1349,10 +525,10 @@ class BridgeApp {
                     <h4>✅ Current License Status</h4>
                     <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #27ae60;">
                         <p><strong>Full Version Activated</strong></p>
-                        <p>🔓 <strong>Unlimited Access</strong></p>
+                        <p>🔓 <strong>Unlimited Access to All Features</strong></p>
                         <p>📝 License: <code>${this.licenseManager.getLicenseData()?.code || 'Unknown'}</code></p>
                         <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                            You have access to all Bridge Calculator features!
+                            You have access to all Bridge Navigator features and game modes!
                         </p>
                     </div>
                 </div>
@@ -1364,8 +540,8 @@ class BridgeApp {
                 <div class="help-section">
                     <h4>🔑 License Required</h4>
                     <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #e74c3c;">
-                        <p><strong>No Valid License</strong></p>
-                        <p>Bridge Calculator requires a license code to continue.</p>
+                        <p><strong>No Valid License Found</strong></p>
+                        <p>Bridge Navigator requires a license code to continue. Contact us for assistance.</p>
                     </div>
                 </div>
             `;
@@ -1382,46 +558,78 @@ class BridgeApp {
         }
 
         return {
-            title: 'Bridge Modes Calculator Help',
+            title: 'Bridge Navigator Help',
             content: `
                 ${licenseSection}
                 
                 <div class="help-section">
-                    <h4>Available Bridge Modes</h4>
+                    <h4>🃏 Available Bridge Game Modes</h4>
                     <ul>
-                        <li><strong>Kitchen Bridge (1):</strong> Simplified social scoring</li>
-                        <li><strong>Bonus Bridge (2):</strong> HCP-based bonus system</li>
-                        <li><strong>Chicago Bridge (3):</strong> 4-deal vulnerability cycle</li>
-                        <li><strong>Rubber Bridge (4):</strong> Traditional rubber scoring</li>
-                        <li><strong>Duplicate Bridge (5):</strong> Tournament-style scoring</li>
+                        <li><strong>Kitchen Bridge (1):</strong> Simplified social scoring for casual games</li>
+                        <li><strong>Bonus Bridge (2):</strong> HCP-based bonus point system</li>
+                        <li><strong>Chicago Bridge (3):</strong> 4-deal vulnerability cycle scoring</li>
+                        <li><strong>Rubber Bridge (4):</strong> Traditional rubber bridge scoring</li>
+                        <li><strong>Duplicate Bridge (5):</strong> Tournament-style comparative scoring</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
-                    <h4>How to Use</h4>
+                    <h4>🚀 Getting Started</h4>
                     <ol>
-                        <li>Select a bridge mode (1-5)</li>
-                        <li>Follow the prompts to enter contracts</li>
-                        <li>Use Back button to navigate</li>
-                        <li>Use Quit to return to menu or exit</li>
+                        <li><strong>Select a bridge mode</strong> by pressing buttons 1-5</li>
+                        <li><strong>Follow the prompts</strong> to enter contracts and results</li>
+                        <li><strong>Use the Back button</strong> to navigate between screens</li>
+                        <li><strong>Use Quit</strong> to return to the main menu or exit</li>
                     </ol>
+                    <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">
+                        💡 Tip: Bridge Navigator works offline - perfect for cruise ships and remote locations!
+                    </p>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Controls</h4>
+                    <h4>🎮 Control Reference</h4>
                     <ul>
-                        <li><strong>Wake:</strong> Keep screen active</li>
-                        <li><strong>Vuln:</strong> Vulnerability indicator/control</li>
-                        <li><strong>Honors:</strong> Claim honor bonuses (Rubber Bridge)</li>
-                        <li><strong>Help:</strong> Context-sensitive help</li>
-                        <li><strong>Quit:</strong> Exit options</li>
+                        <li><strong>Wake:</strong> Keep screen active during long games</li>
+                        <li><strong>Vuln:</strong> Vulnerability indicator and manual control</li>
+                        <li><strong>Honors:</strong> Claim honor bonuses (Rubber Bridge only)</li>
+                        <li><strong>Help:</strong> Context-sensitive help for current mode</li>
+                        <li><strong>Quit:</strong> Access exit options and score history</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Need Support?</h4>
-                    <p>Contact us for license codes or technical support:<br>
-                    <strong>your-email@example.com</strong></p>
+                    <h4>📱 Installation & Updates</h4>
+                    <p>For the best experience, install Bridge Navigator as an app:</p>
+                    <ul>
+                        <li><strong>Chrome/Android:</strong> Look for "Add to Home Screen" prompt</li>
+                        <li><strong>iOS Safari:</strong> Tap Share → "Add to Home Screen"</li>
+                        <li><strong>Desktop:</strong> Look for install icon in address bar</li>
+                    </ul>
+                    <p style="margin-top: 8px; font-size: 12px; color: #666;">
+                        Installed apps work offline and receive automatic updates.
+                    </p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📞 Support & Contact</h4>
+                    <p>Need help, have questions, or want to purchase a license?</p>
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 10px 0;">
+                        <p style="margin: 0; font-weight: bold; color: #2c3e50;">
+                            📧 Email: <a href="mailto:mike.chris.smith@gmail.com" style="color: #3498db; text-decoration: none;">mike.chris.smith@gmail.com</a>
+                        </p>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                        • License codes and technical support<br>
+                        • Feature requests and feedback<br>
+                        • Bridge scoring questions and clarifications
+                    </p>
+                </div>
+                
+                <div class="help-section" style="border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 20px;">
+                    <p style="text-align: center; font-size: 11px; color: #9ca3af;">
+                        Bridge Navigator v2.1 - Professional Bridge Scoring Calculator<br>
+                        Designed for cruise ships, social games, and bridge enthusiasts worldwide
+                    </p>
                 </div>
             `,
             buttons: buttons
@@ -1429,35 +637,55 @@ class BridgeApp {
     }
 
     /**
-     * Get license entry help content
+     * SECURITY FIXED: License entry help content (no checksum hints)
      */
     getLicenseHelpContent() {
         return {
             title: '🔑 License Code Help',
             content: `
                 <div class="help-section">
-                    <h4>How to Enter License Code</h4>
+                    <h4>How to Enter Your License Code</h4>
                     <ul>
-                        <li><strong>Use number buttons 0-9</strong> to enter your 6-digit code</li>
-                        <li><strong>BACK button</strong> deletes the last digit</li>
-                        <li><strong>DEAL button</strong> submits the code (appears when 6 digits entered)</li>
+                        <li><strong>Use number buttons 0-9</strong> to enter your 6-digit license code</li>
+                        <li><strong>BACK button</strong> deletes the last digit entered</li>
+                        <li><strong>DEAL button</strong> submits your code (appears when 6 digits entered)</li>
                     </ul>
+                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                        💡 Your license code is case-sensitive and must be entered exactly as provided.
+                    </p>
                 </div>
                 
                 <div class="help-section">
-                    <h4>Code Requirements</h4>
+                    <h4>License Types</h4>
                     <ul>
-                        <li>Must be exactly <strong>6 digits</strong></li>
-                        <li>All digits must <strong>sum to 37</strong></li>
-                        <li>Trial codes give <strong>14 days or 50 deals</strong></li>
-                        <li>Full codes provide <strong>unlimited access</strong></li>
+                        <li><strong>Trial License:</strong> 14 days or 50 deals - perfect for testing</li>
+                        <li><strong>Full License:</strong> Unlimited access to all bridge modes</li>
+                    </ul>
+                    <p style="margin-top: 8px; font-size: 12px; color: #666;">
+                        Both license types include all 5 bridge game modes and offline capability.
+                    </p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Troubleshooting</h4>
+                    <ul>
+                        <li><strong>"Invalid license code":</strong> Double-check all 6 digits</li>
+                        <li><strong>"Code already used":</strong> Each full license can only be used once</li>
+                        <li><strong>"Trial expired":</strong> Contact us for a full license</li>
                     </ul>
                 </div>
                 
                 <div class="help-section">
                     <h4>Need a License Code?</h4>
-                    <p>Contact us for trial or full version codes:<br>
-                    <strong>your-email@example.com</strong></p>
+                    <div style="background: #e3f2fd; padding: 12px; border-radius: 6px; border-left: 4px solid #2196f3;">
+                        <p style="margin: 0; font-weight: bold;">Contact us for license codes:</p>
+                        <p style="margin: 5px 0 0 0;">
+                            📧 <a href="mailto:mike.chris.smith@gmail.com" style="color: #1976d2;">mike.chris.smith@gmail.com</a>
+                        </p>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                        We typically respond within 24 hours with your license code and setup instructions.
+                    </p>
                 </div>
             `,
             buttons: [
@@ -1477,7 +705,7 @@ class BridgeApp {
         }
 
         const quitContent = {
-            title: 'Exit Bridge Calculator',
+            title: 'Exit Bridge Navigator',
             content: 'What would you like to do?',
             buttons: [
                 { 
@@ -1522,7 +750,7 @@ class BridgeApp {
     showLicenseQuitOptions() {
         const quitContent = {
             title: 'Exit License Entry',
-            content: 'Bridge Calculator requires a valid license to continue.',
+            content: 'Bridge Navigator requires a valid license to continue.',
             buttons: [
                 { 
                     text: 'Close App', 
@@ -1557,7 +785,7 @@ class BridgeApp {
         
         let message = '';
         if (isPWA || isMobile) {
-            message = `📱 Close Bridge Calculator
+            message = `📱 Close Bridge Navigator
 
 On Mobile/Tablet:
 • Use your device's app switcher and swipe up to close
@@ -1569,7 +797,7 @@ On Desktop:
 ✅ Your progress is automatically saved!
 You can safely close the app anytime.`;
         } else {
-            message = `💻 Close Bridge Calculator
+            message = `💻 Close Bridge Navigator
 
 To close the app:
 • Close this browser tab or window
@@ -1775,7 +1003,7 @@ You can return anytime by bookmarking this page.`;
             'rubber': 'Rubber Bridge',
             'duplicate': 'Duplicate Bridge'
         };
-        return names[mode] || 'Bridge Calculator';
+        return names[mode] || 'Bridge Navigator';
     }
 
     /**
@@ -1929,16 +1157,20 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     
     // Generate sample codes for testing
     function generateSampleCodes() {
-        console.log('\n📝 Sample Trial Codes (sum to 37):');
-        for (let i = 0; i < 5; i++) {
+        console.log('\n📝 Sample Trial Codes (any sum allowed):');
+        for (let i = 0; i < 10; i++) {
             const code = LicenseManager.generateTrialCode();
-            console.log(`${code} (sum: ${LicenseManager.checksumCode(code)})`);
+            console.log(`${code} (sum: ${LicenseManager.checksumCode(code)}) - TRIAL`);
         }
         
-        console.log('\n🔐 Sample Full Codes (sum to 37):');
+        console.log('\n🔐 Sample Full Codes (must sum to 37):');
         for (let i = 0; i < 10; i++) {
-            const code = LicenseManager.generateFullCode();
-            console.log(`${code} (sum: ${LicenseManager.checksumCode(code)})`);
+            try {
+                const code = LicenseManager.generateFullCode();
+                console.log(`${code} (sum: ${LicenseManager.checksumCode(code)}) - FULL`);
+            } catch (error) {
+                console.log(`Failed to generate full code: ${error.message}`);
+            }
         }
     }
     
@@ -1950,9 +1182,36 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
         console.log('🧹 License cleared for testing');
     }
     
+    // Test code validation
+    function testCodeValidation() {
+        console.log('\n🧪 Testing Code Validation:');
+        
+        // Test trial codes (should work with any sum)
+        const trialCodes = ['111111', '222222', '333333', '444444', '555555', '666666', '777777', '888888', '999999'];
+        trialCodes.forEach(code => {
+            const result = LicenseManager.validateCodeForExcel(code);
+            console.log(`${code}: ${result.valid ? '✅' : '❌'} ${result.reason} (${result.type})`);
+        });
+        
+        // Test full codes (must sum to 37)
+        const fullCodes = ['100999', '910999', '550999']; // These sum to 37
+        fullCodes.forEach(code => {
+            const result = LicenseManager.validateCodeForExcel(code);
+            console.log(`${code}: ${result.valid ? '✅' : '❌'} ${result.reason} (${result.type})`);
+        });
+        
+        // Test invalid codes
+        const invalidCodes = ['123456', '100000', '999000']; // These don't sum to 37
+        invalidCodes.forEach(code => {
+            const result = LicenseManager.validateCodeForExcel(code);
+            console.log(`${code}: ${result.valid ? '✅' : '❌'} ${result.reason} (${result.type})`);
+        });
+    }
+    
     // Expose utilities for testing
     window.generateSampleCodes = generateSampleCodes;
     window.clearTestLicense = clearTestLicense;
+    window.testCodeValidation = testCodeValidation;
     window.LicenseManager = LicenseManager;
     window.simulateTrialExpiry = () => LicenseManager.simulateTrialExpiry();
     window.simulateDealsLimit = () => LicenseManager.simulateDealsLimit();
@@ -1964,14 +1223,855 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     window.emergencyMobileFix = () => window.bridgeApp?.emergencyMobileLicenseFix();
     
     generateSampleCodes();
+    testCodeValidation();
     console.log('\n🛠️  Testing utilities:');
     console.log('• generateSampleCodes() - Generate new sample codes');
     console.log('• clearTestLicense() - Clear license for testing');
+    console.log('• testCodeValidation() - Test code validation logic');
     console.log('• simulateTrialExpiry() - Force trial to expire');
     console.log('• simulateDealsLimit() - Force deals limit reached');
     console.log('• resetTrialForTesting() - Reset trial to fresh state');
     console.log('• showLicenseStatus() - Show current license info');
     console.log('• debugLicenseEntry() - Debug license entry mobile issues');
     console.log('• emergencyMobileFix() - Emergency mobile touch fix');
-    console.log('• LicenseManager.checksumCode("123456") - Check if code sums to 37');
+    console.log('• LicenseManager.checksumCode("123456") - Check code sum');
+    console.log('• LicenseManager.validateCodeForExcel("123456") - Check if code is valid');
+}/**
+ * Complete Enhanced Bridge Modes Calculator - Main Application Controller
+ * SECURITY FIXED VERSION with TRIAL CODE FIX
+ * - Hidden checksum logic (security)
+ * - Trial codes with any checksum (111-999 prefixes)
+ * - Full codes must sum to 37
+ * - Updated contact information
+ */
+
+import { UIController } from './ui-controller.js';
+import { GameState } from './utils/game-state.js';
+
+/**
+ * Enhanced License Manager with TRIAL CODE FIX
+ */
+class LicenseManager {
+    constructor() {
+        this.storageKey = 'bridgeAppLicense';
+        this.usedCodesKey = 'bridgeAppUsedCodes';
+        this.trialDays = 14;
+        this.trialDeals = 50;
+        this.checksumTarget = 37; // Only for FULL codes
+        
+        // UPDATED: Trial prefixes (first 3 digits) - any checksum allowed
+        this.trialPrefixes = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
+    }
+
+    /**
+     * Check current license status
+     */
+    checkLicenseStatus() {
+        const license = this.getLicenseData();
+        
+        if (!license) {
+            return { 
+                status: 'unlicensed', 
+                needsCode: true,
+                message: 'Enter license code using calculator buttons'
+            };
+        }
+
+        if (license.type === 'FULL') {
+            return { 
+                status: 'full', 
+                needsCode: false,
+                message: 'Full version activated'
+            };
+        }
+
+        if (license.type === 'TRIAL') {
+            return this.checkTrialExpiry(license);
+        }
+
+        return { 
+            status: 'invalid', 
+            needsCode: true,
+            message: 'Invalid license. Enter valid code.'
+        };
+    }
+
+    /**
+     * Check if trial has expired
+     */
+    checkTrialExpiry(license) {
+        const now = Date.now();
+        const daysElapsed = Math.floor((now - license.activatedAt) / (1000 * 60 * 60 * 24));
+        const daysLeft = Math.max(0, this.trialDays - daysElapsed);
+        
+        const dealsUsed = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
+        const dealsLeft = Math.max(0, this.trialDeals - dealsUsed);
+
+        if (daysLeft <= 0 || dealsLeft <= 0) {
+            return {
+                status: 'expired',
+                needsCode: true,
+                message: 'Trial expired - Enter full version code'
+            };
+        }
+
+        return {
+            status: 'trial',
+            needsCode: false,
+            daysLeft,
+            dealsLeft,
+            message: `Trial: ${daysLeft} days, ${dealsLeft} deals left`
+        };
+    }
+
+    /**
+     * SECURITY FIXED: Validate code format (no checksum hints in error messages)
+     */
+    validateCodeFormat(code) {
+        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+            return { valid: false, message: 'License code must be exactly 6 digits' };
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Check if code has been used before
+     */
+    isCodeUsed(code) {
+        const usedCodes = this.getUsedCodes();
+        return usedCodes.includes(code);
+    }
+
+    /**
+     * Mark code as used
+     */
+    markCodeAsUsed(code) {
+        const usedCodes = this.getUsedCodes();
+        if (!usedCodes.includes(code)) {
+            usedCodes.push(code);
+            localStorage.setItem(this.usedCodesKey, JSON.stringify(usedCodes));
+        }
+    }
+
+    /**
+     * Get list of used codes
+     */
+    getUsedCodes() {
+        try {
+            const data = localStorage.getItem(this.usedCodesKey);
+            return data ? JSON.parse(data) : [];
+        } catch (error) {
+            console.error('Error reading used codes:', error);
+            return [];
+        }
+    }
+
+    /**
+     * TRIAL CODE FIX: Validate trial code (any checksum allowed for trial prefixes)
+     */
+    validateTrialCode(code) {
+        const prefix = code.substring(0, 3);
+        
+        if (!this.trialPrefixes.includes(prefix)) {
+            return { valid: false, message: 'Invalid trial code format' };
+        }
+
+        // TRIAL CODES: Any checksum is valid - no sum-to-37 requirement
+        console.log(`🆓 Trial code detected: ${code} (prefix: ${prefix}) - checksum validation skipped`);
+        
+        // Trial codes can be reused (for demo purposes)
+        return { valid: true, type: 'TRIAL', message: 'Trial code validated' };
+    }
+
+    /**
+     * UPDATED: Validate full code - must sum to 37 AND not start with trial prefix
+     */
+    validateFullCode(code) {
+        const prefix = code.substring(0, 3);
+        
+        // Check if it starts with a trial prefix
+        if (this.trialPrefixes.includes(prefix)) {
+            return { valid: false, message: 'This is a trial code, not a full version code' };
+        }
+
+        // FULL CODES: Must sum to 37 (SECRET CHECK)
+        const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+        if (digitSum !== this.checksumTarget) {
+            console.log(`🔐 Full code checksum failed: ${code} sums to ${digitSum}, not ${this.checksumTarget}`);
+            return { valid: false, message: 'Invalid license code. Please check and try again.' };
+        }
+
+        // Check if already used
+        if (this.isCodeUsed(code)) {
+            return { valid: false, message: 'License code already used' };
+        }
+
+        console.log(`🔐 Full code validated: ${code} (sum: ${digitSum})`);
+        return { valid: true, type: 'FULL', message: 'Full version code validated' };
+    }
+
+    /**
+     * UPDATED: Main validation function with trial/full logic
+     */
+    async validateCode(code) {
+        // First check basic format
+        const formatCheck = this.validateCodeFormat(code);
+        if (!formatCheck.valid) {
+            return formatCheck;
+        }
+
+        const prefix = code.substring(0, 3);
+
+        // Check if it's a trial code (any of the trial prefixes)
+        if (this.trialPrefixes.includes(prefix)) {
+            return this.validateTrialCode(code);
+        }
+
+        // Everything else is a potential full code (must sum to 37)
+        return this.validateFullCode(code);
+    }
+
+    /**
+     * Activate license code
+     */
+    async activateLicense(code) {
+        const validation = await this.validateCode(code);
+        
+        if (!validation.valid) {
+            return { success: false, message: validation.message };
+        }
+
+        // Mark full codes as used
+        if (validation.type === 'FULL') {
+            this.markCodeAsUsed(code);
+        }
+
+        const licenseData = {
+            code: code,
+            type: validation.type,
+            activatedAt: Date.now(),
+            activatedDate: new Date().toISOString()
+        };
+
+        localStorage.setItem(this.storageKey, JSON.stringify(licenseData));
+
+        return { 
+            success: true, 
+            message: validation.type === 'FULL' 
+                ? 'Full version activated! Unlimited bridge scoring.' 
+                : `Trial activated! ${this.trialDays} days or ${this.trialDeals} deals.`
+        };
+    }
+
+    /**
+     * Get stored license data
+     */
+    getLicenseData() {
+        try {
+            const data = localStorage.getItem(this.storageKey);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Error reading license data:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Clear license (for testing)
+     */
+    clearLicense() {
+        localStorage.removeItem(this.storageKey);
+        localStorage.removeItem('bridgeAppDealsPlayed');
+        // Don't clear used codes in production
+    }
+
+    /**
+     * Increment deals played counter
+     */
+    incrementDealsPlayed() {
+        const current = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
+        localStorage.setItem('bridgeAppDealsPlayed', (current + 1).toString());
+    }
+
+    /**
+     * UPDATED: Generate trial code (any sum allowed)
+     */
+    static generateTrialCode() {
+        const prefixes = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        
+        // Generate any 3 random digits (no sum requirement)
+        const lastThree = Array(3).fill(0).map(() => Math.floor(Math.random() * 10)).join('');
+        
+        const code = prefix + lastThree;
+        console.log(`🆓 Generated trial code: ${code} (sum: ${LicenseManager.checksumCode(code)})`);
+        
+        return code;
+    }
+
+    /**
+     * Generate full code that sums to 37 (for your database)
+     */
+    static generateFullCode() {
+        let code;
+        let attempts = 0;
+        const maxAttempts = 1000;
+        
+        do {
+            attempts++;
+            if (attempts > maxAttempts) {
+                throw new Error('Could not generate valid full code');
+            }
+            
+            // Generate a 6-digit code that sums to exactly 37
+            code = LicenseManager.generateDigitsWithSum(37, 6);
+            
+            // Make sure it doesn't start with trial prefixes
+            const prefix = code.substring(0, 3);
+        } while (['111', '222', '333', '444', '555', '666', '777', '888', '999'].includes(prefix));
+        
+        console.log(`🔐 Generated full code: ${code} (sum: ${LicenseManager.checksumCode(code)})`);
+        return code;
+    }
+
+    /**
+     * Helper: Generate digits that sum to target
+     */
+    static generateDigitsWithSum(targetSum, digitCount) {
+        if (targetSum < 0 || targetSum > 9 * digitCount) {
+            throw new Error(`Cannot generate ${digitCount} digits that sum to ${targetSum}`);
+        }
+        
+        const digits = Array(digitCount).fill(0);
+        let remainingSum = targetSum;
+        
+        // Distribute the sum randomly across digits
+        for (let i = 0; i < digitCount - 1; i++) {
+            const maxForThisDigit = Math.min(9, remainingSum);
+            const minForThisDigit = Math.max(0, remainingSum - (9 * (digitCount - i - 1)));
+            
+            if (maxForThisDigit < minForThisDigit) {
+                // Start over if we can't distribute properly
+                return LicenseManager.generateDigitsWithSum(targetSum, digitCount);
+            }
+            
+            digits[i] = minForThisDigit + Math.floor(Math.random() * (maxForThisDigit - minForThisDigit + 1));
+            remainingSum -= digits[i];
+        }
+        
+        digits[digitCount - 1] = remainingSum;
+        
+        return digits.join('');
+    }
+
+    /**
+     * Utility: Check if a code sums to 37
+     */
+    static checksumCode(code) {
+        return code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+    }
+
+    /**
+     * Utility: List all used codes (for admin)
+     */
+    listUsedCodes() {
+        return this.getUsedCodes();
+    }
+
+    /**
+     * UPDATED: Check if a code would be valid (for your Excel planning)
+     */
+    static validateCodeForExcel(code) {
+        // Check format
+        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+            return { valid: false, reason: 'Must be 6 digits', type: 'invalid' };
+        }
+
+        // Check type
+        const prefix = code.substring(0, 3);
+        const trialPrefixes = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
+        
+        if (trialPrefixes.includes(prefix)) {
+            return { valid: true, reason: 'Valid trial code (any sum allowed)', type: 'trial' };
+        } else {
+            // Check checksum for full codes
+            const sum = LicenseManager.checksumCode(code);
+            if (sum !== 37) {
+                return { valid: false, reason: `Full code must sum to 37, this sums to ${sum}`, type: 'invalid' };
+            }
+            return { valid: true, reason: 'Valid full code (sums to 37)', type: 'full' };
+        }
+    }
+
+    /**
+     * TESTING: Simulate trial expiration (for development/testing only)
+     */
+    static simulateTrialExpiry() {
+        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
+        if (licenseData && licenseData.type === 'TRIAL') {
+            // Set activation date to 15 days ago
+            licenseData.activatedAt = Date.now() - (15 * 24 * 60 * 60 * 1000);
+            localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
+            console.log('🧪 Trial expiry simulated - reload app to test');
+            return true;
+        }
+        console.log('❌ No active trial to expire');
+        return false;
+    }
+
+    /**
+     * TESTING: Simulate deals limit reached (for development/testing only)
+     */
+    static simulateDealsLimit() {
+        localStorage.setItem('bridgeAppDealsPlayed', '51'); // Over the 50 limit
+        console.log('🧪 Deals limit simulated - complete next deal to test expiry');
+    }
+
+    /**
+     * TESTING: Reset trial to fresh state (for development/testing only)
+     */
+    static resetTrialForTesting() {
+        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
+        if (licenseData && licenseData.type === 'TRIAL') {
+            licenseData.activatedAt = Date.now(); // Reset to now
+            localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
+            localStorage.setItem('bridgeAppDealsPlayed', '0'); // Reset deals
+            console.log('🧪 Trial reset to fresh state');
+            return true;
+        }
+        console.log('❌ No active trial to reset');
+        return false;
+    }
+
+    /**
+     * TESTING: Show current license status (for development/testing only)
+     */
+    static showLicenseStatus() {
+        const licenseData = JSON.parse(localStorage.getItem('bridgeAppLicense') || 'null');
+        const dealsPlayed = parseInt(localStorage.getItem('bridgeAppDealsPlayed') || '0');
+        const usedCodes = JSON.parse(localStorage.getItem('bridgeAppUsedCodes') || '[]');
+        
+        console.log('🔍 Current License Status:');
+        console.log('License Data:', licenseData);
+        console.log('Deals Played:', dealsPlayed);
+        console.log('Used Codes:', usedCodes);
+        
+        if (licenseData) {
+            const now = Date.now();
+            const daysElapsed = Math.floor((now - licenseData.activatedAt) / (1000 * 60 * 60 * 24));
+            const daysLeft = Math.max(0, 14 - daysElapsed);
+            const dealsLeft = Math.max(0, 50 - dealsPlayed);
+            
+            console.log(`Days elapsed: ${daysElapsed}, Days left: ${daysLeft}`);
+            console.log(`Deals left: ${dealsLeft}`);
+        }
+    }
 }
+
+/**
+ * Main Bridge Application with Enhanced License System - COMPLETE FIXED VERSION
+ */
+class BridgeApp {
+    constructor() {
+        this.currentMode = null;
+        this.bridgeModeInstance = null;
+        this.gameState = new GameState();
+        this.ui = new UIController();
+        this.licenseManager = new LicenseManager();
+        
+        // App state management
+        this.appState = 'mode_selection';
+        this.availableModes = {
+            '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
+            '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
+            '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
+            '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
+            '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
+        };
+        
+        // License entry state
+        this.codeEntryMode = false;
+        this.enteredCode = '';
+        
+        // Mobile support
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        this.init();
+    }
+    
+    /**
+     * MOBILE FIXED: Initialize the application with mobile detection and setup
+     */
+    async init() {
+        console.log('🎮 Initializing Bridge Navigator');
+        
+        // Setup mobile optimizations
+        if (this.isMobile) {
+            console.log('📱 Mobile device detected - enabling mobile optimizations');
+            document.body.classList.add('mobile-device');
+            this.addMobileCSS();
+        }
+        
+        // Check license status first
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        
+        if (licenseStatus.needsCode) {
+            await this.ui.init(); // Initialize UI first
+            this.enterCodeEntryMode(licenseStatus);
+            return; // Stay in code entry mode until valid license
+        }
+
+        if (licenseStatus.status === 'trial') {
+            console.log(`📅 Trial Status: ${licenseStatus.message}`);
+        }
+
+        try {
+            // Continue with normal initialization
+            await this.ui.init();
+            this.setupEventListeners();
+            this.updateDisplay();
+            console.log('✅ Bridge Navigator ready with mobile support');
+        } catch (error) {
+            console.error('❌ Failed to initialize Bridge Navigator:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * MOBILE FIX: Add mobile-specific CSS including license entry fixes
+     */
+    addMobileCSS() {
+        const mobileCSS = `
+        /* Mobile button enhancements */
+        .mobile-device .btn {
+            min-height: 44px !important;
+            min-width: 44px !important;
+            touch-action: manipulation !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-user-select: none !important;
+        }
+
+        /* Button pressed state for mobile feedback */
+        .btn-pressed {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+            transition: all 0.1s ease !important;
+        }
+
+        /* Ensure buttons are touchable on mobile */
+        .mobile-device .calculator-buttons .btn {
+            cursor: pointer;
+            -webkit-touch-callout: none;
+        }
+
+        /* License entry specific mobile fixes */
+        .mobile-device[data-app-state="license_entry"] .btn {
+            border: 2px solid transparent;
+            transition: all 0.1s ease;
+            background-color: var(--btn-bg, #4f46e5);
+        }
+        
+        .mobile-device[data-app-state="license_entry"] .btn:not(.disabled) {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        .mobile-device[data-app-state="license_entry"] .btn:not(.disabled):active,
+        .mobile-device[data-app-state="license_entry"] .btn.btn-pressed {
+            transform: scale(0.95) !important;
+            border-color: #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.8) !important;
+        }
+
+        .mobile-device[data-app-state="license_entry"] .btn.disabled {
+            pointer-events: none !important;
+            opacity: 0.3 !important;
+        }
+
+        /* Improve button spacing on mobile */
+        @media (max-width: 768px) {
+            .calculator-buttons {
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 12px 8px !important;
+                font-size: 16px !important;
+            }
+        }
+        `;
+
+        const style = document.createElement('style');
+        style.id = 'mobile-bridge-css';
+        style.textContent = mobileCSS;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Enhanced enter code entry mode with mobile touch support
+     */
+    enterCodeEntryMode(status) {
+        console.log('🔑 Entering code entry mode with enhanced mobile touch support');
+        
+        this.codeEntryMode = true;
+        this.enteredCode = '';
+        this.appState = 'license_entry';
+        
+        // Update body data attribute for CSS targeting
+        if (this.isMobile) {
+            document.body.setAttribute('data-app-state', 'license_entry');
+        }
+        
+        // Update display first
+        this.updateCodeEntryDisplay(status);
+        
+        // CRITICAL: Force mobile button setup after display update
+        this.forceMobileLicenseButtonSetup();
+        
+        // Update button states
+        this.updateButtonStates();
+        
+        console.log('🔑 License entry mode ready - mobile touch optimized');
+    }
+
+    /**
+     * SECURITY FIXED: Update display for code entry (no checksum hints)
+     */
+    updateCodeEntryDisplay(status = null) {
+        const statusMessage = status ? status.message : 'Enter 6-digit license code';
+        
+        // Show entered digits
+        const displayCode = this.enteredCode.padEnd(6, '_').split('').join(' ');
+        
+        const content = `
+            <div class="title-score-row">
+                <div class="mode-title">🔑 License Code</div>
+                <div class="score-display">
+                    Bridge<br>Navigator
+                </div>
+            </div>
+            <div class="game-content">
+                <div style="text-align: center; margin: 10px 0;">
+                    <div style="font-size: 18px; font-weight: bold; color: #3498db; margin-bottom: 8px; font-family: monospace;">
+                        ${displayCode}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                        ${statusMessage}
+                    </div>
+                    <div style="font-size: 10px; color: #999;">
+                        Enter your 6-digit Bridge Navigator license code
+                    </div>
+                </div>
+            </div>
+            <div class="current-state">
+                Use number buttons. BACK to delete, DEAL to submit
+            </div>
+        `;
+        
+        this.ui.updateDisplay(content);
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Force mobile button setup specifically for license entry
+     */
+    forceMobileLicenseButtonSetup() {
+        console.log('📱 Setting up mobile license entry touch events');
+        
+        // Wait for DOM to be fully updated
+        setTimeout(() => {
+            // Remove any existing license event listeners
+            this.removeLicenseEventListeners();
+            
+            // Get all buttons
+            const buttons = document.querySelectorAll('.btn');
+            console.log(`📱 Found ${buttons.length} buttons for license entry`);
+            
+            buttons.forEach((button, index) => {
+                // Ensure button has proper mobile touch attributes
+                button.style.touchAction = 'manipulation';
+                button.style.userSelect = 'none';
+                button.style.webkitTapHighlightColor = 'transparent';
+                button.style.webkitUserSelect = 'none';
+                button.style.minHeight = '44px';
+                button.style.minWidth = '44px';
+                
+                // Add direct touch event listeners for license entry
+                this.addLicenseButtonEventListeners(button);
+                
+                console.log(`📱 License button ${index} setup: ${button.dataset.value}`);
+            });
+            
+            // Also setup container-level event delegation as backup
+            this.setupLicenseEventDelegation();
+            
+        }, 100); // Small delay to ensure DOM is ready
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Add event listeners specifically for license buttons
+     */
+    addLicenseButtonEventListeners(button) {
+        const handleLicenseButtonPress = (event) => {
+            // Only handle if we're in license entry mode
+            if (this.appState !== 'license_entry') return;
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const value = button.dataset.value;
+            console.log(`🎯 License button pressed: ${value}`);
+            
+            // Visual feedback
+            button.classList.add('btn-pressed');
+            setTimeout(() => button.classList.remove('btn-pressed'), 150);
+            
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            // Handle the button action
+            this.handleCodeEntryButton(value);
+            this.updateCodeEntryDisplay();
+            this.updateButtonStates();
+        };
+        
+        // Add multiple event types for maximum mobile compatibility
+        button.addEventListener('touchstart', (e) => {
+            if (this.appState === 'license_entry' && !button.classList.contains('disabled')) {
+                e.preventDefault();
+                button.style.transform = 'scale(0.95)';
+            }
+        }, { passive: false });
+        
+        button.addEventListener('touchend', handleLicenseButtonPress, { passive: false });
+        button.addEventListener('click', handleLicenseButtonPress, { passive: false });
+        
+        // Store handler reference for cleanup
+        button._licenseHandler = handleLicenseButtonPress;
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Setup container-level event delegation for license entry
+     */
+    setupLicenseEventDelegation() {
+        const container = document.querySelector('.calculator-container') || document.body;
+        
+        const licenseDelegate = (event) => {
+            // Only handle if we're in license entry mode
+            if (this.appState !== 'license_entry') return;
+            
+            const button = event.target.closest('.btn');
+            if (!button || button.classList.contains('disabled')) return;
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const value = button.dataset.value;
+            console.log(`🎯 License delegated press: ${value}`);
+            
+            // Visual feedback
+            button.classList.add('btn-pressed');
+            setTimeout(() => button.classList.remove('btn-pressed'), 150);
+            
+            // Handle action
+            this.handleCodeEntryButton(value);
+            this.updateCodeEntryDisplay();
+            this.updateButtonStates();
+        };
+        
+        // Remove existing license delegate
+        if (container._licenseDelegate) {
+            container.removeEventListener('touchend', container._licenseDelegate);
+            container.removeEventListener('click', container._licenseDelegate);
+        }
+        
+        // Add new license delegate
+        container.addEventListener('touchend', licenseDelegate, { passive: false });
+        container.addEventListener('click', licenseDelegate, { passive: false });
+        
+        // Store for cleanup
+        container._licenseDelegate = licenseDelegate;
+        
+        console.log('📱 License entry event delegation setup complete');
+    }
+
+    /**
+     * LICENSE TOUCH FIX: Remove license-specific event listeners
+     */
+    removeLicenseEventListeners() {
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            if (button._licenseHandler) {
+                button.removeEventListener('touchend', button._licenseHandler);
+                button.removeEventListener('click', button._licenseHandler);
+                button.removeEventListener('touchstart', button._licenseHandler);
+                delete button._licenseHandler;
+            }
+        });
+        
+        const container = document.querySelector('.calculator-container') || document.body;
+        if (container._licenseDelegate) {
+            container.removeEventListener('touchend', container._licenseDelegate);
+            container.removeEventListener('click', container._licenseDelegate);
+            delete container._licenseDelegate;
+        }
+        
+        console.log('📱 License event listeners removed');
+    }
+
+    /**
+     * MOBILE FIX: Initialize buttons specifically for mobile devices
+     */
+    initializeMobileButtons() {
+        // Wait for next tick to ensure DOM is updated
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('.btn');
+            
+            buttons.forEach(button => {
+                // Ensure buttons have proper touch target
+                if (!button.style.minHeight) {
+                    button.style.minHeight = '44px'; // iOS minimum touch target
+                }
+                
+                // Add mobile-specific classes
+                button.classList.add('mobile-ready');
+                
+                // Ensure touch events work
+                button.style.touchAction = 'manipulation';
+                button.style.userSelect = 'none';
+            });
+            
+            console.log(`📱 Initialized ${buttons.length} buttons for mobile`);
+        }, 10);
+    }
+    
+    /**
+     * MOBILE FIXED: Setup all event listeners with proper mobile support
+     */
+    setupEventListeners() {
+        // Remove any existing listeners to prevent duplicates
+        this.removeEventListeners();
+        
+        // Store bound functions for proper removal later
+        this.boundHandlers = {
+            buttonClick: this.handleButtonClick.bind(this),
+            keyDown: this.handleKeyPress.bind(this)
+        };
+
+        // Enhanced button click handler with mobile touch support
+        this.setupButtonEventListeners();
+        
+        // Control bar clicks with mobile support
+        this.setupControlEventListeners();
+        
+        // Keyboard support
+        document.addEventListener('keydown', this.boundHandlers.keyDown);
+        
+        console.log('✅ Event listeners setup with mobile support');
+    }
+
+    /**
+     * MOBILE FIX:
