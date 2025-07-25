@@ -1,11 +1,11 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * WORKING VERSION with Security Fix, Trial Code Fix, and MODAL MOBILE TOUCH FIX
+ * WORKING VERSION with Security Fix, Trial Code Fix, and ENHANCED MOBILE MODAL FIX
  * - Hidden checksum logic (security)
  * - Trial codes with any checksum (111-999 prefixes)
  * - Full codes must sum to 37
  * - Updated contact information
- * - Mobile touch support for ALL buttons including modals
+ * - Mobile touch support for ALL buttons including enhanced modal fixes
  */
 
 import { UIController } from './ui-controller.js';
@@ -221,7 +221,7 @@ class LicenseManager {
 }
 
 /**
- * Main Bridge Application - WORKING VERSION with MODAL MOBILE TOUCH FIX
+ * Main Bridge Application - WORKING VERSION with ENHANCED MOBILE MODAL FIX
  */
 class BridgeApp {
     constructor() {
@@ -705,9 +705,8 @@ class BridgeApp {
         
         // MOBILE FIX: Apply mobile touch to modal buttons after they're created
         if (this.isMobile) {
-            setTimeout(() => {
-                this.applyMobileModalButtonFixes();
-            }, 200);
+            console.log('📱 Help modal shown, applying enhanced mobile fixes...');
+            this.applyEnhancedMobileModalButtonFixes();
         }
     }
 
@@ -862,11 +861,18 @@ class BridgeApp {
         
         this.ui.showModal('quit', quitContent);
         
-        // MOBILE FIX: Apply mobile touch to modal buttons after they're created
+        // ENHANCED: Apply mobile touch fixes with immediate and delayed attempts
         if (this.isMobile) {
+            console.log('📱 Quit modal shown, applying enhanced mobile fixes...');
+            
+            // Immediate attempt
+            this.applyEnhancedMobileModalButtonFixes();
+            
+            // Additional delayed attempt as backup
             setTimeout(() => {
-                this.applyMobileModalButtonFixes();
-            }, 200);
+                console.log('📱 Backup mobile modal fix attempt...');
+                this.applyEnhancedMobileModalButtonFixes();
+            }, 100);
         }
     }
 
@@ -892,93 +898,198 @@ class BridgeApp {
         
         // MOBILE FIX: Apply mobile touch to modal buttons after they're created
         if (this.isMobile) {
-            setTimeout(() => {
-                this.applyMobileModalButtonFixes();
-            }, 200);
+            console.log('📱 License quit modal shown, applying enhanced mobile fixes...');
+            this.applyEnhancedMobileModalButtonFixes();
         }
     }
 
     /**
-     * MOBILE MODAL FIX: Apply mobile touch events to modal buttons
+     * ENHANCED MOBILE MODAL FIX: Apply mobile touch events to modal buttons with multiple retry attempts
      */
-    applyMobileModalButtonFixes() {
-        const modal = document.querySelector('.modal-overlay');
-        if (!modal) {
-            console.log('❌ Modal not found for mobile button fixes');
+    applyEnhancedMobileModalButtonFixes() {
+        if (!this.isMobile) {
+            console.log('🖥️ Desktop mode - skipping mobile modal fixes');
             return;
         }
-
-        console.log('📱 Applying mobile touch fixes to modal buttons');
-
-        // Find all buttons in the modal
-        const modalButtons = modal.querySelectorAll('button, .modal-button');
         
-        modalButtons.forEach((button, index) => {
-            console.log(`🔧 Setting up mobile button ${index + 1}:`, button.textContent);
-            
-            // Ensure mobile touch properties
-            button.style.touchAction = 'manipulation';
-            button.style.userSelect = 'none';
-            button.style.webkitTapHighlightColor = 'transparent';
-            button.style.webkitUserSelect = 'none';
-            button.style.minHeight = '44px';
-            button.style.minWidth = '44px';
-            button.style.cursor = 'pointer';
-            button.classList.add('modal-button');
-
-            // Store the original onclick handler if it exists
-            const originalOnClick = button.onclick;
-            
-            // Create mobile-compatible handler
-            const mobileHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log(`📱 Modal button pressed: ${button.textContent}`);
-                
-                // Visual feedback
-                button.classList.add('modal-button-pressed');
-                setTimeout(() => {
-                    button.classList.remove('modal-button-pressed');
-                }, 150);
-                
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(30);
+        console.log('📱 Starting enhanced mobile modal button fixes');
+        
+        // Multiple attempts with increasing delays to ensure we catch the modal
+        const retryAttempts = [50, 150, 300, 500, 1000];
+        let successfulSetup = false;
+        
+        retryAttempts.forEach((delay, attemptIndex) => {
+            setTimeout(() => {
+                // Skip if we already had a successful setup
+                if (successfulSetup) {
+                    console.log(`⏭️ Skipping attempt ${attemptIndex + 1} - already successful`);
+                    return;
                 }
                 
-                // Execute the original handler
-                try {
-                    if (originalOnClick) {
-                        originalOnClick.call(button, e);
+                const modal = document.querySelector('.modal-overlay');
+                if (!modal) {
+                    console.log(`❌ Attempt ${attemptIndex + 1}/${retryAttempts.length}: No modal found after ${delay}ms`);
+                    return;
+                }
+                
+                console.log(`📱 Attempt ${attemptIndex + 1}/${retryAttempts.length}: Modal found, setting up mobile buttons`);
+                
+                // Comprehensive button selectors to catch all possible button types
+                const allButtons = modal.querySelectorAll(`
+                    button,
+                    .modal-button,
+                    .close-btn,
+                    .menu-btn,
+                    .close-app-btn,
+                    [onclick],
+                    div[onclick],
+                    span[onclick],
+                    [role="button"],
+                    .btn
+                `);
+                
+                if (allButtons.length === 0) {
+                    console.log(`❌ Attempt ${attemptIndex + 1}: No buttons found in modal`);
+                    return;
+                }
+                
+                console.log(`🔍 Found ${allButtons.length} potential buttons in modal`);
+                let enhancedCount = 0;
+                
+                allButtons.forEach((button, buttonIndex) => {
+                    try {
+                        const buttonText = button.textContent?.trim() || 
+                                         button.innerText?.trim() || 
+                                         button.title || 
+                                         button.getAttribute('aria-label') || 
+                                         `button-${buttonIndex}`;
+                        
+                        console.log(`🔧 Setting up button ${buttonIndex + 1}: "${buttonText}"`);
+                        
+                        // Apply comprehensive mobile properties
+                        const mobileStyles = {
+                            touchAction: 'manipulation',
+                            userSelect: 'none',
+                            webkitTapHighlightColor: 'transparent',
+                            webkitUserSelect: 'none',
+                            webkitTouchCallout: 'none',
+                            cursor: 'pointer',
+                            minHeight: '44px',
+                            minWidth: '80px',
+                            display: button.style.display || 'inline-block'
+                        };
+                        
+                        Object.assign(button.style, mobileStyles);
+                        
+                        // Store the original onclick handler
+                        const originalOnClick = button.onclick;
+                        
+                        // Create enhanced mobile touch handler
+                        const enhancedTouchHandler = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            
+                            console.log(`📱 ENHANCED TOUCH: "${buttonText}" pressed`);
+                            
+                            // Immediate visual feedback
+                            button.style.transform = 'scale(0.9)';
+                            button.style.opacity = '0.7';
+                            button.style.transition = 'all 0.15s ease';
+                            
+                            // Haptic feedback
+                            if (navigator.vibrate) {
+                                navigator.vibrate([50]);
+                            }
+                            
+                            // Reset visual state after a delay
+                            setTimeout(() => {
+                                button.style.transform = 'scale(1)';
+                                button.style.opacity = '1';
+                            }, 200);
+                            
+                            // Execute the original handler after a small delay
+                            setTimeout(() => {
+                                try {
+                                    if (originalOnClick) {
+                                        console.log(`🎯 Executing original handler for: "${buttonText}"`);
+                                        originalOnClick.call(button, e);
+                                    } else {
+                                        console.log(`⚠️ No original handler found for: "${buttonText}"`);
+                                        // Try to trigger a click event as fallback
+                                        button.dispatchEvent(new Event('click', { bubbles: true }));
+                                    }
+                                } catch (error) {
+                                    console.error(`❌ Error executing handler for "${buttonText}":`, error);
+                                }
+                            }, 50);
+                        };
+                        
+                        // Clone the button to remove all existing event listeners
+                        const enhancedButton = button.cloneNode(true);
+                        
+                        // Restore the original onclick handler
+                        if (originalOnClick) {
+                            enhancedButton.onclick = originalOnClick;
+                        }
+                        
+                        // Apply the same mobile styles to the cloned button
+                        Object.assign(enhancedButton.style, mobileStyles);
+                        
+                        // Replace the original button with the enhanced one
+                        if (button.parentNode) {
+                            button.parentNode.replaceChild(enhancedButton, button);
+                            console.log(`✅ Replaced button: "${buttonText}"`);
+                        }
+                        
+                        // Add comprehensive touch event listeners
+                        enhancedButton.addEventListener('touchstart', (e) => {
+                            e.preventDefault();
+                            enhancedButton.style.transform = 'scale(0.9)';
+                            enhancedButton.style.opacity = '0.7';
+                            console.log(`👆 Touch start: "${buttonText}"`);
+                        }, { passive: false });
+                        
+                        enhancedButton.addEventListener('touchend', enhancedTouchHandler, { passive: false });
+                        
+                        enhancedButton.addEventListener('touchcancel', (e) => {
+                            e.preventDefault();
+                            enhancedButton.style.transform = 'scale(1)';
+                            enhancedButton.style.opacity = '1';
+                            console.log(`🚫 Touch cancel: "${buttonText}"`);
+                        }, { passive: false });
+                        
+                        // Also add click event as a fallback for desktop/other devices
+                        enhancedButton.addEventListener('click', enhancedTouchHandler, { passive: false });
+                        
+                        enhancedCount++;
+                        
+                    } catch (error) {
+                        console.error(`❌ Error setting up button ${buttonIndex}:`, error);
                     }
-                } catch (error) {
-                    console.error('Error executing modal button handler:', error);
+                });
+                
+                if (enhancedCount > 0) {
+                    successfulSetup = true;
+                    console.log(`✅ MOBILE MODAL SETUP COMPLETE: Enhanced ${enhancedCount}/${allButtons.length} buttons`);
+                    console.log(`🎯 Modal buttons should now work on mobile devices`);
+                } else {
+                    console.log(`❌ Attempt ${attemptIndex + 1}: Failed to enhance any buttons`);
                 }
-            };
-            
-            // Remove existing listeners by cloning the button
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
-            
-            // Restore the original onclick
-            if (originalOnClick) {
-                newButton.onclick = originalOnClick;
-            }
-            
-            // Add mobile touch events
-            newButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                newButton.classList.add('modal-button-pressed');
-            }, { passive: false });
-            
-            newButton.addEventListener('touchend', mobileHandler, { passive: false });
-            
-            // Add click event for desktop and as fallback
-            newButton.addEventListener('click', mobileHandler, { passive: false });
+                
+            }, delay);
         });
         
-        console.log(`✅ Applied mobile touch fixes to ${modalButtons.length} modal buttons`);
+        // Final check after all attempts
+        setTimeout(() => {
+            if (!successfulSetup) {
+                console.error('❌ MOBILE MODAL SETUP FAILED: All retry attempts exhausted');
+                console.log('🔍 Debugging info:');
+                console.log('- Modal present:', !!document.querySelector('.modal-overlay'));
+                console.log('- Mobile detected:', this.isMobile);
+                console.log('- User agent:', navigator.userAgent);
+            }
+        }, 1500);
     }
     
     showCloseAppInstructions() {
@@ -1084,15 +1195,26 @@ To close the app:
             
             document.body.appendChild(modal);
             
+            // Set global reference for button callbacks
+            window.bridgeApp = this;
+            
             // MOBILE FIX: Apply mobile touch to score modal buttons
             if (this.isMobile) {
                 setTimeout(() => {
                     const scoreButtons = modal.querySelectorAll('.score-modal-btn');
                     scoreButtons.forEach(button => {
+                        // Apply mobile properties
+                        button.style.touchAction = 'manipulation';
+                        button.style.userSelect = 'none';
+                        button.style.webkitTapHighlightColor = 'transparent';
+                        
                         const mobileHandler = (e) => {
                             e.preventDefault();
                             button.style.transform = 'scale(0.95)';
                             button.style.opacity = '0.8';
+                            
+                            if (navigator.vibrate) navigator.vibrate(30);
+                            
                             setTimeout(() => {
                                 button.style.transform = 'scale(1)';
                                 button.style.opacity = '1';
