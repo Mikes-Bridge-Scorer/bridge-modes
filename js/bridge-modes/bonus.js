@@ -226,7 +226,7 @@ class BonusBridge extends BaseBridgeMode {
         
         // Setup the popup after a brief delay to ensure DOM is ready
         setTimeout(() => {
-            console.log('🔧 Setting up HCP Analysis popup handlers with mobile support');
+            console.log('🔧 Setting up HCP Analysis popup handlers with ENHANCED mobile support');
             this.setupHCPAnalysisPopup();
         }, 200);
     }
@@ -316,7 +316,7 @@ class BonusBridge extends BaseBridgeMode {
     }
     
     /**
-     * MOBILE FIXED: Setup HCP Analysis popup event handlers with mobile touch support
+     * ENHANCED MOBILE FIX: Setup HCP Analysis popup event handlers with improved mobile touch support
      */
     setupHCPAnalysisPopup() {
         const modal = document.querySelector('.modal-overlay');
@@ -325,136 +325,145 @@ class BonusBridge extends BaseBridgeMode {
             return;
         }
         
-        console.log('📱 Setting up HCP Analysis popup with mobile support');
+        console.log('📱 Setting up HCP Analysis popup with ENHANCED mobile support');
         
-        // Helper function to setup mobile-compatible button
-        const setupMobileButton = (selector, handler) => {
+        // Enhanced helper function to setup mobile-compatible button
+        const setupEnhancedMobileButton = (selector, handler) => {
             const button = modal.querySelector(selector);
             if (!button) {
                 console.log(`❌ Button not found: ${selector}`);
                 return;
             }
             
-            console.log(`📱 Setting up mobile button: ${selector}`);
+            console.log(`📱 Setting up enhanced mobile button: ${selector}`);
             
-            // Ensure mobile touch properties
+            // Ensure comprehensive mobile touch properties
             button.style.touchAction = 'manipulation';
             button.style.userSelect = 'none';
             button.style.webkitTapHighlightColor = 'transparent';
             button.style.webkitUserSelect = 'none';
+            button.style.webkitTouchCallout = 'none';
             button.style.minHeight = '44px';
             button.style.minWidth = '44px';
             button.style.cursor = 'pointer';
             
-            // Create mobile-compatible handler
-            const mobileHandler = (e) => {
+            // Create enhanced mobile-compatible handler
+            const enhancedMobileHandler = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 
-                console.log(`📱 Mobile button pressed: ${selector}`);
+                console.log(`📱 Enhanced mobile button pressed: ${selector}`);
                 
-                // Visual feedback
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.8';
+                // Enhanced visual feedback
+                button.style.transform = 'scale(0.9)';
+                button.style.opacity = '0.7';
+                button.style.transition = 'all 0.1s ease';
                 
                 setTimeout(() => {
                     button.style.transform = 'scale(1)';
                     button.style.opacity = '1';
                 }, 150);
                 
-                // Haptic feedback
+                // Enhanced haptic feedback
                 if (navigator.vibrate) {
-                    navigator.vibrate(30);
+                    navigator.vibrate([30]);
                 }
                 
-                // Execute the handler
+                // Execute the handler with error catching
                 try {
                     handler();
                 } catch (error) {
-                    console.error('Error executing button handler:', error);
+                    console.error(`Error executing button handler for ${selector}:`, error);
                 }
             };
             
-            // Remove existing listeners by cloning
+            // Remove ALL existing listeners by replacing the element
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
             
-            // Add mobile touch events
+            // Add comprehensive event listeners
             if (this.isMobile) {
+                // Mobile-specific events
                 newButton.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    newButton.style.transform = 'scale(0.95)';
-                    newButton.style.opacity = '0.8';
+                    newButton.style.transform = 'scale(0.9)';
+                    newButton.style.opacity = '0.7';
                 }, { passive: false });
                 
-                newButton.addEventListener('touchend', mobileHandler, { passive: false });
+                newButton.addEventListener('touchend', enhancedMobileHandler, { passive: false });
+                newButton.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    newButton.style.transform = 'scale(1)';
+                    newButton.style.opacity = '1';
+                }, { passive: false });
             }
             
-            // Add click event for desktop and as fallback
-            newButton.addEventListener('click', mobileHandler, { passive: false });
+            // Universal click event (works on both desktop and mobile)
+            newButton.addEventListener('click', enhancedMobileHandler, { passive: false });
             
             return newButton;
         };
         
-        // Setup all HCP analysis buttons with mobile support
-        setupMobileButton('.hcp-btn-minus', () => {
+        // Setup all HCP analysis buttons with enhanced mobile support
+        setupEnhancedMobileButton('.hcp-btn-minus', () => {
             this.adjustHCP(-1);
             this.updatePopupDisplay();
         });
         
-        setupMobileButton('.hcp-btn-plus', () => {
+        setupEnhancedMobileButton('.hcp-btn-plus', () => {
             this.adjustHCP(1);
             this.updatePopupDisplay();
         });
         
         // Singleton buttons
-        setupMobileButton('.singleton-btn-minus', () => {
+        setupEnhancedMobileButton('.singleton-btn-minus', () => {
             this.adjustSingletons(-1);
             this.updatePopupDisplay();
         });
         
-        setupMobileButton('.singleton-btn-plus', () => {
+        setupEnhancedMobileButton('.singleton-btn-plus', () => {
             this.adjustSingletons(1);
             this.updatePopupDisplay();
         });
         
         // Void buttons
-        setupMobileButton('.void-btn-minus', () => {
+        setupEnhancedMobileButton('.void-btn-minus', () => {
             this.adjustVoids(-1);
             this.updatePopupDisplay();
         });
         
-        setupMobileButton('.void-btn-plus', () => {
+        setupEnhancedMobileButton('.void-btn-plus', () => {
             this.adjustVoids(1);
             this.updatePopupDisplay();
         });
         
         // Long suit buttons
-        setupMobileButton('.longsuit-btn-minus', () => {
+        setupEnhancedMobileButton('.longsuit-btn-minus', () => {
             this.adjustLongSuits(-1);
             this.updatePopupDisplay();
         });
         
-        setupMobileButton('.longsuit-btn-plus', () => {
+        setupEnhancedMobileButton('.longsuit-btn-plus', () => {
             this.adjustLongSuits(1);
             this.updatePopupDisplay();
         });
         
         // Action buttons
-        setupMobileButton('.cancel-analysis-btn', () => {
+        setupEnhancedMobileButton('.cancel-analysis-btn', () => {
             this.ui.closeModal();
             this.inputState = 'result_type_selection';
             this.updateDisplay();
         });
         
-        setupMobileButton('.calculate-score-btn', () => {
+        setupEnhancedMobileButton('.calculate-score-btn', () => {
             this.ui.closeModal();
             this.calculateBonusScore();
             this.inputState = 'scoring';
             this.updateDisplay();
         });
         
-        console.log('✅ HCP Analysis popup setup complete with mobile support');
+        console.log('✅ Enhanced HCP Analysis popup setup complete with comprehensive mobile support');
     }
     
     /**
