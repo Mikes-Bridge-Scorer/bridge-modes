@@ -1,11 +1,11 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * WORKING VERSION with Security Fix, Trial Code Fix, and WORKING MOBILE MODAL FIX
+ * WORKING VERSION with Security Fix, Trial Code Fix, and COMPLETE MOBILE MODAL FIX
  * - Hidden checksum logic (security)
  * - Trial codes with any checksum (111-999 prefixes)
  * - Full codes must sum to 37
  * - Updated contact information
- * - Mobile touch support for ALL buttons including WORKING modal fixes
+ * - Mobile touch support for ALL buttons including WORKING modal fixes for function buttons
  */
 
 import { UIController } from './ui-controller.js';
@@ -221,7 +221,7 @@ class LicenseManager {
 }
 
 /**
- * Main Bridge Application - WORKING VERSION with WORKING MOBILE MODAL FIX
+ * Main Bridge Application - WORKING VERSION with COMPLETE MOBILE MODAL FIX
  */
 class BridgeApp {
     constructor() {
@@ -243,6 +243,9 @@ class BridgeApp {
         this.codeEntryMode = false;
         this.enteredCode = '';
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // NEW: Store modal button definitions for mobile reference
+        this.lastModalButtons = [];
         
         this.init();
     }
@@ -701,9 +704,12 @@ class BridgeApp {
             helpContent = this.getMainHelpContent();
         }
         
+        // Store the button definitions for mobile reference
+        this.lastModalButtons = helpContent.buttons || [];
+        
         this.ui.showModal('help', helpContent);
         
-        // WORKING MOBILE FIX: Apply mobile touch to modal buttons after they're created
+        // Apply mobile fixes with proper timing
         if (this.isMobile) {
             console.log('📱 Help modal shown, applying working mobile fixes...');
             this.applyWorkingMobileModalFix();
@@ -731,8 +737,11 @@ class BridgeApp {
             upgradeButton = { 
                 text: 'Enter Full License', 
                 action: () => {
+                    console.log('🎯 Enter Full License button action called');
                     this.ui.closeModal();
-                    this.enterCodeEntryMode({ message: 'Enter full version license code' });
+                    setTimeout(() => {
+                        this.enterCodeEntryMode({ message: 'Enter full version license code' });
+                    }, 100);
                 }, 
                 class: 'modal-button',
                 style: 'background: #27ae60 !important;'
@@ -825,6 +834,9 @@ class BridgeApp {
         };
     }
     
+    /**
+     * UPDATED: showQuit method with enhanced mobile function button support
+     */
     showQuit() {
         if (this.appState === 'license_entry') {
             this.showLicenseQuitOptions();
@@ -838,8 +850,11 @@ class BridgeApp {
                 { 
                     text: 'Show Scores', 
                     action: () => {
+                        console.log('🎯 Show Scores button action called');
                         this.ui.closeModal();
-                        this.showScoreHistory();
+                        setTimeout(() => {
+                            this.showScoreHistory();
+                        }, 100);
                     }, 
                     class: 'modal-button',
                     style: 'background: #3498db !important;'
@@ -847,16 +862,22 @@ class BridgeApp {
                 { 
                     text: 'Return to Menu', 
                     action: () => {
+                        console.log('🎯 Return to Menu button action called');
                         this.ui.closeModal();
-                        this.returnToModeSelection();
+                        setTimeout(() => {
+                            this.returnToModeSelection();
+                        }, 100);
                     }, 
                     class: 'menu-btn modal-button' 
                 },
                 { 
                     text: 'Close App', 
                     action: () => {
+                        console.log('🎯 Close App button action called');
                         this.ui.closeModal();
-                        this.showCloseAppInstructions();
+                        setTimeout(() => {
+                            this.showCloseAppInstructions();
+                        }, 100);
                     }, 
                     class: 'close-app-btn modal-button' 
                 },
@@ -868,9 +889,12 @@ class BridgeApp {
             ]
         };
         
+        // Store the button definitions for mobile reference
+        this.lastModalButtons = quitContent.buttons;
+        
         this.ui.showModal('quit', quitContent);
         
-        // WORKING MOBILE FIX: Apply mobile touch to modal buttons after they're created
+        // Apply mobile fixes with proper timing
         if (this.isMobile) {
             console.log('📱 Quit modal shown, applying working mobile fixes...');
             this.applyWorkingMobileModalFix();
@@ -885,8 +909,11 @@ class BridgeApp {
                 { 
                     text: 'Close App', 
                     action: () => {
+                        console.log('🎯 Close App button action called');
                         this.ui.closeModal();
-                        this.showCloseAppInstructions();
+                        setTimeout(() => {
+                            this.showCloseAppInstructions();
+                        }, 100);
                     }, 
                     class: 'close-app-btn modal-button' 
                 },
@@ -898,13 +925,24 @@ class BridgeApp {
             ]
         };
         
+        // Store the button definitions for mobile reference
+        this.lastModalButtons = quitContent.buttons;
+        
         this.ui.showModal('quit', quitContent);
         
-        // WORKING MOBILE FIX: Apply mobile touch to modal buttons after they're created
+        // Apply mobile fixes with proper timing
         if (this.isMobile) {
             console.log('📱 License quit modal shown, applying working mobile fixes...');
             this.applyWorkingMobileModalFix();
         }
+    }
+
+    /**
+     * NEW: Helper method to get current modal button definitions
+     */
+    getCurrentModalButtons() {
+        // Return the buttons from the most recent modal call
+        return this.lastModalButtons || [];
     }
 
     /**
@@ -947,7 +985,7 @@ class BridgeApp {
     }
 
     /**
-     * Setup mobile touch events for modal buttons - WORKING VERSION
+     * ENHANCED: Setup mobile touch events for modal buttons with function support
      */
     setupMobileModalButtons(modal) {
         // Find all clickable elements in the modal
@@ -976,9 +1014,16 @@ class BridgeApp {
             
             console.log(`🔧 Setting up mobile touch for: "${buttonText}"`);
             
-            // Store original handlers
+            // Store original handlers - Check for function in onclick
             const originalOnClick = button.onclick;
             const originalDataAction = button.getAttribute('data-action');
+            
+            // NEW: Check if onclick contains a function reference
+            let actionFunction = null;
+            if (originalOnClick && typeof originalOnClick === 'function') {
+                console.log(`📋 Found function for "${buttonText}":`, originalOnClick.toString().substring(0, 100));
+                actionFunction = originalOnClick;
+            }
             
             // Remove existing event listeners by cloning
             const newButton = button.cloneNode(true);
@@ -993,7 +1038,7 @@ class BridgeApp {
                 minWidth: '60px'
             });
             
-            // Create the mobile touch handler
+            // Create the mobile touch handler with ENHANCED function execution
             const mobileClickHandler = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1018,10 +1063,18 @@ class BridgeApp {
                 // Execute the action after a small delay
                 setTimeout(() => {
                     try {
-                        // Try original onclick first
+                        // ENHANCED: Try the stored function first
+                        if (actionFunction) {
+                            console.log(`🎯 Executing stored function for: "${buttonText}"`);
+                            // Execute the function with proper binding
+                            actionFunction.call(this, e);
+                            return;
+                        }
+                        
+                        // Try original onclick
                         if (originalOnClick) {
                             console.log(`🎯 Executing onclick for: "${buttonText}"`);
-                            originalOnClick.call(newButton, e);
+                            originalOnClick.call(this, e);
                             return;
                         }
                         
@@ -1040,50 +1093,82 @@ class BridgeApp {
                             return;
                         }
                         
-                        // Check for specific button text actions
+                        // ENHANCED: Better text-based action detection with explicit method calls
                         const lowerText = buttonText.toLowerCase();
+                        
                         if (lowerText.includes('close') || lowerText.includes('cancel')) {
                             console.log(`🎯 Closing modal for: "${buttonText}"`);
                             this.ui.closeModal();
-                        } else if (lowerText.includes('menu')) {
+                            
+                        } else if (lowerText.includes('return to menu') || lowerText.includes('menu')) {
                             console.log(`🎯 Returning to menu for: "${buttonText}"`);
                             this.ui.closeModal();
-                            this.returnToModeSelection();
-                        } else if (lowerText.includes('score')) {
+                            // Use setTimeout to ensure modal closes first
+                            setTimeout(() => {
+                                this.returnToModeSelection();
+                            }, 100);
+                            
+                        } else if (lowerText.includes('show scores') || lowerText.includes('scores')) {
                             console.log(`🎯 Showing scores for: "${buttonText}"`);
                             this.ui.closeModal();
-                            this.showScoreHistory();
+                            // Use setTimeout to ensure modal closes first
+                            setTimeout(() => {
+                                this.showScoreHistory();
+                            }, 100);
+                            
                         } else if (lowerText.includes('close app')) {
                             console.log(`🎯 Showing close instructions for: "${buttonText}"`);
                             this.ui.closeModal();
-                            this.showCloseAppInstructions();
+                            // Use setTimeout to ensure modal closes first
+                            setTimeout(() => {
+                                this.showCloseAppInstructions();
+                            }, 100);
+                            
                         } else if (lowerText.includes('full license') || lowerText.includes('enter full')) {
                             console.log(`🎯 Entering license mode for: "${buttonText}"`);
                             this.ui.closeModal();
-                            this.enterCodeEntryMode({ message: 'Enter full version license code' });
+                            setTimeout(() => {
+                                this.enterCodeEntryMode({ message: 'Enter full version license code' });
+                            }, 100);
+                            
                         } else {
-                            console.log(`⚠️ No specific action found for: "${buttonText}" - trying generic click`);
-                            // Fallback: dispatch a click event
-                            newButton.dispatchEvent(new MouseEvent('click', {
-                                bubbles: true,
-                                cancelable: true,
-                                view: window
-                            }));
+                            console.log(`⚠️ No specific action found for: "${buttonText}" - trying direct modal button match`);
+                            
+                            // NEW: Try to find the button in the modal content definition
+                            // and execute its action directly
+                            const modalButtons = this.getCurrentModalButtons();
+                            const matchingButton = modalButtons.find(btn => 
+                                btn.text && btn.text.toLowerCase() === lowerText
+                            );
+                            
+                            if (matchingButton && matchingButton.action && typeof matchingButton.action === 'function') {
+                                console.log(`🎯 Found matching modal button action for: "${buttonText}"`);
+                                matchingButton.action.call(this);
+                            } else {
+                                // Final fallback: dispatch a click event
+                                console.log(`🔄 Final fallback - dispatching click event for: "${buttonText}"`);
+                                newButton.dispatchEvent(new MouseEvent('click', {
+                                    bubbles: true,
+                                    cancelable: true,
+                                    view: window
+                                }));
+                            }
                         }
                         
                     } catch (error) {
                         console.error(`❌ Error executing action for "${buttonText}":`, error);
+                        console.error('Stack trace:', error.stack);
                     }
                 }, 100);
             };
             
-            // Add touch and click event listeners
-            newButton.addEventListener('touchend', mobileClickHandler, { passive: false });
-            newButton.addEventListener('click', mobileClickHandler, { passive: false });
+            // Add touch and click event listeners with PROPER BINDING
+            newButton.addEventListener('touchend', mobileClickHandler.bind(this), { passive: false });
+            newButton.addEventListener('click', mobileClickHandler.bind(this), { passive: false });
             
             // Restore original onclick if it exists
             if (originalOnClick) {
-                newButton.onclick = originalOnClick;
+                newButton.onclick = originalOnClick.bind(this);
             }
             
             // Replace the button in the DOM
