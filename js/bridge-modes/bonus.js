@@ -1,5 +1,6 @@
 /**
  * Bonus Bridge Mode - HCP-Based Enhanced Scoring System (Enhanced)
+ * MOBILE FIXED VERSION - Touch events work on all devices
  * 
  * An enhanced scoring system that rewards both declarers and defenders
  * based on hand strength and performance versus expectations.
@@ -37,7 +38,10 @@ class BonusBridge extends BaseBridgeMode {
             longSuits: 0
         };
         
-        console.log('⭐ Bonus Bridge mode initialized');
+        // Mobile detection
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        console.log('⭐ Bonus Bridge mode initialized with mobile support');
     }
     
     /**
@@ -222,7 +226,7 @@ class BonusBridge extends BaseBridgeMode {
         
         // Setup the popup after a brief delay to ensure DOM is ready
         setTimeout(() => {
-            console.log('🔧 Setting up HCP Analysis popup handlers');
+            console.log('🔧 Setting up HCP Analysis popup handlers with mobile support');
             this.setupHCPAnalysisPopup();
         }, 200);
     }
@@ -312,65 +316,145 @@ class BonusBridge extends BaseBridgeMode {
     }
     
     /**
-     * Setup HCP Analysis popup event handlers
+     * MOBILE FIXED: Setup HCP Analysis popup event handlers with mobile touch support
      */
     setupHCPAnalysisPopup() {
         const modal = document.querySelector('.modal-overlay');
-        if (!modal) return;
+        if (!modal) {
+            console.log('❌ Modal not found for HCP analysis setup');
+            return;
+        }
         
-        // HCP buttons
-        modal.querySelector('.hcp-btn-minus')?.addEventListener('click', () => {
+        console.log('📱 Setting up HCP Analysis popup with mobile support');
+        
+        // Helper function to setup mobile-compatible button
+        const setupMobileButton = (selector, handler) => {
+            const button = modal.querySelector(selector);
+            if (!button) {
+                console.log(`❌ Button not found: ${selector}`);
+                return;
+            }
+            
+            console.log(`📱 Setting up mobile button: ${selector}`);
+            
+            // Ensure mobile touch properties
+            button.style.touchAction = 'manipulation';
+            button.style.userSelect = 'none';
+            button.style.webkitTapHighlightColor = 'transparent';
+            button.style.webkitUserSelect = 'none';
+            button.style.minHeight = '44px';
+            button.style.minWidth = '44px';
+            button.style.cursor = 'pointer';
+            
+            // Create mobile-compatible handler
+            const mobileHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log(`📱 Mobile button pressed: ${selector}`);
+                
+                // Visual feedback
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+                
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                    button.style.opacity = '1';
+                }, 150);
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+                
+                // Execute the handler
+                try {
+                    handler();
+                } catch (error) {
+                    console.error('Error executing button handler:', error);
+                }
+            };
+            
+            // Remove existing listeners by cloning
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Add mobile touch events
+            if (this.isMobile) {
+                newButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    newButton.style.transform = 'scale(0.95)';
+                    newButton.style.opacity = '0.8';
+                }, { passive: false });
+                
+                newButton.addEventListener('touchend', mobileHandler, { passive: false });
+            }
+            
+            // Add click event for desktop and as fallback
+            newButton.addEventListener('click', mobileHandler, { passive: false });
+            
+            return newButton;
+        };
+        
+        // Setup all HCP analysis buttons with mobile support
+        setupMobileButton('.hcp-btn-minus', () => {
             this.adjustHCP(-1);
             this.updatePopupDisplay();
         });
-        modal.querySelector('.hcp-btn-plus')?.addEventListener('click', () => {
+        
+        setupMobileButton('.hcp-btn-plus', () => {
             this.adjustHCP(1);
             this.updatePopupDisplay();
         });
         
         // Singleton buttons
-        modal.querySelector('.singleton-btn-minus')?.addEventListener('click', () => {
+        setupMobileButton('.singleton-btn-minus', () => {
             this.adjustSingletons(-1);
             this.updatePopupDisplay();
         });
-        modal.querySelector('.singleton-btn-plus')?.addEventListener('click', () => {
+        
+        setupMobileButton('.singleton-btn-plus', () => {
             this.adjustSingletons(1);
             this.updatePopupDisplay();
         });
         
         // Void buttons
-        modal.querySelector('.void-btn-minus')?.addEventListener('click', () => {
+        setupMobileButton('.void-btn-minus', () => {
             this.adjustVoids(-1);
             this.updatePopupDisplay();
         });
-        modal.querySelector('.void-btn-plus')?.addEventListener('click', () => {
+        
+        setupMobileButton('.void-btn-plus', () => {
             this.adjustVoids(1);
             this.updatePopupDisplay();
         });
         
         // Long suit buttons
-        modal.querySelector('.longsuit-btn-minus')?.addEventListener('click', () => {
+        setupMobileButton('.longsuit-btn-minus', () => {
             this.adjustLongSuits(-1);
             this.updatePopupDisplay();
         });
-        modal.querySelector('.longsuit-btn-plus')?.addEventListener('click', () => {
+        
+        setupMobileButton('.longsuit-btn-plus', () => {
             this.adjustLongSuits(1);
             this.updatePopupDisplay();
         });
         
         // Action buttons
-        modal.querySelector('.cancel-analysis-btn')?.addEventListener('click', () => {
+        setupMobileButton('.cancel-analysis-btn', () => {
             this.ui.closeModal();
             this.inputState = 'result_type_selection';
             this.updateDisplay();
         });
         
-        modal.querySelector('.calculate-score-btn')?.addEventListener('click', () => {
+        setupMobileButton('.calculate-score-btn', () => {
             this.ui.closeModal();
             this.calculateBonusScore();
             this.inputState = 'scoring';
             this.updateDisplay();
         });
+        
+        console.log('✅ HCP Analysis popup setup complete with mobile support');
     }
     
     /**
