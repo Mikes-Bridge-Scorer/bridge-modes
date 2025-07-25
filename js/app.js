@@ -1,11 +1,11 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * WORKING VERSION with Security Fix, Trial Code Fix, and COMPLETE MOBILE MODAL FIX
+ * WORKING VERSION with Security Fix, Trial Code Fix, and TARGETED MOBILE MODAL PATCH
  * - Hidden checksum logic (security)
  * - Trial codes with any checksum (111-999 prefixes)
  * - Full codes must sum to 37
  * - Updated contact information
- * - Mobile touch support for ALL buttons including WORKING modal fixes for function buttons
+ * - Mobile touch support for ALL buttons including TARGETED modal button patch
  */
 
 import { UIController } from './ui-controller.js';
@@ -221,7 +221,7 @@ class LicenseManager {
 }
 
 /**
- * Main Bridge Application - WORKING VERSION with COMPLETE MOBILE MODAL FIX
+ * Main Bridge Application - WORKING VERSION with TARGETED MOBILE MODAL PATCH
  */
 class BridgeApp {
     constructor() {
@@ -244,9 +244,6 @@ class BridgeApp {
         this.enteredCode = '';
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        // NEW: Store modal button definitions for mobile reference
-        this.lastModalButtons = [];
-        
         this.init();
     }
     
@@ -257,6 +254,7 @@ class BridgeApp {
             console.log('📱 Mobile device detected');
             document.body.classList.add('mobile-device');
             this.addMobileCSS();
+            this.initModalButtonPatch(); // TARGETED MOBILE MODAL PATCH
         }
         
         const licenseStatus = this.licenseManager.checkLicenseStatus();
@@ -280,6 +278,245 @@ class BridgeApp {
             console.error('❌ Failed to initialize Bridge Navigator:', error);
             throw error;
         }
+    }
+
+    /**
+     * TARGETED MOBILE MODAL PATCH: Initialize modal button patch for mobile devices
+     */
+    initModalButtonPatch() {
+        if (!this.isMobile) return;
+        
+        console.log('📱 Initializing modal button patch for mobile');
+        
+        // Store the original showModal method
+        const originalShowModal = this.ui.showModal.bind(this.ui);
+        
+        // Patch the showModal method to fix mobile buttons
+        this.ui.showModal = (type, content) => {
+            console.log(`📱 PATCH: showModal called with type: ${type}`);
+            
+            // Call the original method first
+            const result = originalShowModal(type, content);
+            
+            // Apply our mobile fix after the modal is created
+            setTimeout(() => {
+                this.patchModalButtons(content);
+            }, 150);
+            
+            return result;
+        };
+        
+        console.log('✅ Modal button patch initialized');
+    }
+
+    /**
+     * TARGETED MOBILE MODAL PATCH: Fix modal buttons for mobile touch
+     */
+    patchModalButtons(content) {
+        if (!this.isMobile) return;
+        
+        console.log('📱 PATCH: Applying mobile button fixes');
+        
+        const modal = document.querySelector('.modal-overlay');
+        if (!modal) {
+            console.log('❌ PATCH: No modal found');
+            return;
+        }
+        
+        // Find all modal buttons
+        const buttons = modal.querySelectorAll('.modal-button, button');
+        console.log(`🔍 PATCH: Found ${buttons.length} buttons to fix`);
+        
+        buttons.forEach((button, index) => {
+            const buttonText = button.textContent?.trim() || `Button ${index + 1}`;
+            console.log(`🔧 PATCH: Fixing button: "${buttonText}"`);
+            
+            // Get the data-action attribute (this is how UI Controller identifies buttons)
+            const dataAction = button.getAttribute('data-action');
+            
+            // Apply mobile touch properties
+            Object.assign(button.style, {
+                touchAction: 'manipulation',
+                userSelect: 'none',
+                webkitTapHighlightColor: 'transparent',
+                cursor: 'pointer',
+                minHeight: '44px',
+                minWidth: '60px'
+            });
+            
+            // Create the mobile touch handler
+            const mobileTouchHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log(`📱 PATCH: Button touched: "${buttonText}" (action: ${dataAction})`);
+                
+                // Visual feedback
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+                
+                // Haptic feedback
+                if (navigator.vibrate) navigator.vibrate(50);
+                
+                // Reset visual state
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                    button.style.opacity = '1';
+                }, 150);
+                
+                // Execute the action after a small delay
+                setTimeout(() => {
+                    this.executeModalButtonAction(dataAction, buttonText, content);
+                }, 100);
+            };
+            
+            // Remove existing event listeners by cloning the button
+            const newButton = button.cloneNode(true);
+            
+            // Copy all attributes including data-action
+            Array.from(button.attributes).forEach(attr => {
+                newButton.setAttribute(attr.name, attr.value);
+            });
+            
+            // Apply mobile styles to the new button
+            Object.assign(newButton.style, {
+                touchAction: 'manipulation',
+                userSelect: 'none',
+                webkitTapHighlightColor: 'transparent',
+                cursor: 'pointer',
+                minHeight: '44px',
+                minWidth: '60px'
+            });
+            
+            // Add the mobile touch handler
+            newButton.addEventListener('touchend', mobileTouchHandler, { passive: false });
+            newButton.addEventListener('click', mobileTouchHandler, { passive: false });
+            
+            // Replace the button in the DOM
+            if (button.parentNode) {
+                button.parentNode.replaceChild(newButton, button);
+                console.log(`✅ PATCH: Button replaced: "${buttonText}"`);
+            }
+        });
+        
+        console.log(`🎯 PATCH: Mobile button fixes complete for ${buttons.length} buttons`);
+    }
+
+    /**
+     * TARGETED MOBILE MODAL PATCH: Execute modal button actions based on data-action and content
+     */
+    executeModalButtonAction(dataAction, buttonText, content) {
+        console.log(`🎯 PATCH: Executing action for "${buttonText}" (${dataAction})`);
+        
+        try {
+            // Handle simple close action
+            if (dataAction === 'close') {
+                console.log('🎯 PATCH: Closing modal');
+                this.ui.closeModal();
+                return;
+            }
+            
+            // Handle numbered actions (action-0, action-1, etc.)
+            if (dataAction && dataAction.startsWith('action-')) {
+                const actionIndex = parseInt(dataAction.split('-')[1]);
+                
+                if (content && content.buttons && content.buttons[actionIndex]) {
+                    const buttonConfig = content.buttons[actionIndex];
+                    
+                    if (typeof buttonConfig.action === 'function') {
+                        console.log(`🎯 PATCH: Executing function action for "${buttonText}"`);
+                        buttonConfig.action.call(this);
+                        return;
+                    } else if (buttonConfig.action === 'close') {
+                        console.log(`🎯 PATCH: Closing modal via button config for "${buttonText}"`);
+                        this.ui.closeModal();
+                        return;
+                    }
+                }
+            }
+            
+            // Fallback: Direct action mapping based on button text
+            const lowerText = buttonText.toLowerCase();
+            
+            if (lowerText.includes('show scores') || lowerText.includes('scores')) {
+                console.log(`🎯 PATCH: Showing scores for "${buttonText}"`);
+                this.ui.closeModal();
+                setTimeout(() => this.showScoreHistory(), 50);
+                
+            } else if (lowerText.includes('return to menu') || lowerText.includes('menu')) {
+                console.log(`🎯 PATCH: Returning to menu for "${buttonText}"`);
+                this.ui.closeModal();
+                setTimeout(() => this.returnToModeSelection(), 50);
+                
+            } else if (lowerText.includes('close app')) {
+                console.log(`🎯 PATCH: Showing close instructions for "${buttonText}"`);
+                this.ui.closeModal();
+                setTimeout(() => this.showCloseAppInstructions(), 50);
+                
+            } else if (lowerText.includes('enter full') || lowerText.includes('full license')) {
+                console.log(`🎯 PATCH: Entering license mode for "${buttonText}"`);
+                this.ui.closeModal();
+                setTimeout(() => this.enterCodeEntryMode({ message: 'Enter full version license code' }), 50);
+                
+            } else if (lowerText.includes('close') || lowerText.includes('cancel')) {
+                console.log(`🎯 PATCH: Closing modal for "${buttonText}"`);
+                this.ui.closeModal();
+                
+            } else {
+                console.log(`⚠️ PATCH: No specific action found for "${buttonText}", trying to close modal`);
+                this.ui.closeModal();
+            }
+            
+        } catch (error) {
+            console.error(`❌ PATCH: Error executing action for "${buttonText}":`, error);
+        }
+    }
+
+    /**
+     * TARGETED MOBILE MODAL PATCH: Emergency modal button fix (for console testing)
+     */
+    emergencyModalButtonFix() {
+        console.log('🚨 EMERGENCY: Manual modal button fix');
+        
+        const modal = document.querySelector('.modal-overlay');
+        if (!modal) {
+            console.log('❌ EMERGENCY: No modal found');
+            return;
+        }
+        
+        // Get the last modal content from the quit modal
+        const lastContent = {
+            buttons: [
+                { 
+                    text: 'Show Scores', 
+                    action: () => {
+                        this.ui.closeModal();
+                        setTimeout(() => this.showScoreHistory(), 50);
+                    }
+                },
+                { 
+                    text: 'Return to Menu', 
+                    action: () => {
+                        this.ui.closeModal();
+                        setTimeout(() => this.returnToModeSelection(), 50);
+                    }
+                },
+                { 
+                    text: 'Close App', 
+                    action: () => {
+                        this.ui.closeModal();
+                        setTimeout(() => this.showCloseAppInstructions(), 50);
+                    }
+                },
+                { 
+                    text: 'Cancel', 
+                    action: 'close'
+                }
+            ]
+        };
+        
+        this.patchModalButtons(lastContent);
+        console.log('✅ EMERGENCY: Modal button fix complete');
     }
 
     addMobileCSS() {
@@ -704,16 +941,7 @@ class BridgeApp {
             helpContent = this.getMainHelpContent();
         }
         
-        // Store the button definitions for mobile reference
-        this.lastModalButtons = helpContent.buttons || [];
-        
         this.ui.showModal('help', helpContent);
-        
-        // Apply mobile fixes with proper timing
-        if (this.isMobile) {
-            console.log('📱 Help modal shown, applying working mobile fixes...');
-            this.applyWorkingMobileModalFix();
-        }
     }
 
     // UPDATED: Main help with your email
@@ -834,9 +1062,6 @@ class BridgeApp {
         };
     }
     
-    /**
-     * UPDATED: showQuit method with enhanced mobile function button support
-     */
     showQuit() {
         if (this.appState === 'license_entry') {
             this.showLicenseQuitOptions();
@@ -852,9 +1077,7 @@ class BridgeApp {
                     action: () => {
                         console.log('🎯 Show Scores button action called');
                         this.ui.closeModal();
-                        setTimeout(() => {
-                            this.showScoreHistory();
-                        }, 100);
+                        setTimeout(() => this.showScoreHistory(), 50);
                     }, 
                     class: 'modal-button',
                     style: 'background: #3498db !important;'
@@ -864,9 +1087,7 @@ class BridgeApp {
                     action: () => {
                         console.log('🎯 Return to Menu button action called');
                         this.ui.closeModal();
-                        setTimeout(() => {
-                            this.returnToModeSelection();
-                        }, 100);
+                        setTimeout(() => this.returnToModeSelection(), 50);
                     }, 
                     class: 'menu-btn modal-button' 
                 },
@@ -875,9 +1096,7 @@ class BridgeApp {
                     action: () => {
                         console.log('🎯 Close App button action called');
                         this.ui.closeModal();
-                        setTimeout(() => {
-                            this.showCloseAppInstructions();
-                        }, 100);
+                        setTimeout(() => this.showCloseAppInstructions(), 50);
                     }, 
                     class: 'close-app-btn modal-button' 
                 },
@@ -889,16 +1108,8 @@ class BridgeApp {
             ]
         };
         
-        // Store the button definitions for mobile reference
-        this.lastModalButtons = quitContent.buttons;
-        
+        console.log('📱 Showing quit modal with targeted mobile patch');
         this.ui.showModal('quit', quitContent);
-        
-        // Apply mobile fixes with proper timing
-        if (this.isMobile) {
-            console.log('📱 Quit modal shown, applying working mobile fixes...');
-            this.applyWorkingMobileModalFix();
-        }
     }
 
     showLicenseQuitOptions() {
@@ -911,9 +1122,7 @@ class BridgeApp {
                     action: () => {
                         console.log('🎯 Close App button action called');
                         this.ui.closeModal();
-                        setTimeout(() => {
-                            this.showCloseAppInstructions();
-                        }, 100);
+                        setTimeout(() => this.showCloseAppInstructions(), 50);
                     }, 
                     class: 'close-app-btn modal-button' 
                 },
@@ -925,260 +1134,7 @@ class BridgeApp {
             ]
         };
         
-        // Store the button definitions for mobile reference
-        this.lastModalButtons = quitContent.buttons;
-        
         this.ui.showModal('quit', quitContent);
-        
-        // Apply mobile fixes with proper timing
-        if (this.isMobile) {
-            console.log('📱 License quit modal shown, applying working mobile fixes...');
-            this.applyWorkingMobileModalFix();
-        }
-    }
-
-    /**
-     * NEW: Helper method to get current modal button definitions
-     */
-    getCurrentModalButtons() {
-        // Return the buttons from the most recent modal call
-        return this.lastModalButtons || [];
-    }
-
-    /**
-     * WORKING MOBILE MODAL FIX: Apply mobile touch events to modal buttons
-     * This is the simplified, working version that properly handles mobile touch
-     */
-    applyWorkingMobileModalFix() {
-        if (!this.isMobile) {
-            console.log('🖥️ Desktop mode - skipping mobile modal fixes');
-            return;
-        }
-        
-        console.log('📱 Starting working mobile modal button fixes');
-        
-        // Single attempt with proper timing
-        setTimeout(() => {
-            const modal = document.querySelector('.modal-overlay');
-            if (!modal) {
-                console.log('❌ No modal found - trying alternative selectors');
-                
-                // Try alternative modal selectors
-                const alternativeModal = document.querySelector('.modal') || 
-                                       document.querySelector('[class*="modal"]') ||
-                                       document.querySelector('.popup');
-                
-                if (!alternativeModal) {
-                    console.log('❌ No modal found with any selector');
-                    return;
-                }
-                
-                console.log('✅ Found modal with alternative selector');
-                this.setupMobileModalButtons(alternativeModal);
-                return;
-            }
-            
-            console.log('✅ Modal found, setting up mobile buttons');
-            this.setupMobileModalButtons(modal);
-            
-        }, 200); // Single 200ms delay should be sufficient
-    }
-
-    /**
-     * ENHANCED: Setup mobile touch events for modal buttons with function support
-     */
-    setupMobileModalButtons(modal) {
-        // Find all clickable elements in the modal
-        const buttons = modal.querySelectorAll(`
-            button,
-            .modal-button,
-            .close-btn,
-            .menu-btn,
-            .close-app-btn,
-            [onclick],
-            [data-action],
-            .btn
-        `.split(',').map(s => s.trim()).join(','));
-        
-        console.log(`🔍 Found ${buttons.length} buttons in modal`);
-        
-        if (buttons.length === 0) {
-            console.log('❌ No buttons found in modal');
-            return;
-        }
-        
-        buttons.forEach((button, index) => {
-            const buttonText = button.textContent?.trim() || 
-                              button.innerText?.trim() || 
-                              `Button ${index + 1}`;
-            
-            console.log(`🔧 Setting up mobile touch for: "${buttonText}"`);
-            
-            // Store original handlers - Check for function in onclick
-            const originalOnClick = button.onclick;
-            const originalDataAction = button.getAttribute('data-action');
-            
-            // NEW: Check if onclick contains a function reference
-            let actionFunction = null;
-            if (originalOnClick && typeof originalOnClick === 'function') {
-                console.log(`📋 Found function for "${buttonText}":`, originalOnClick.toString().substring(0, 100));
-                actionFunction = originalOnClick;
-            }
-            
-            // Remove existing event listeners by cloning
-            const newButton = button.cloneNode(true);
-            
-            // Apply mobile-friendly styles
-            Object.assign(newButton.style, {
-                touchAction: 'manipulation',
-                userSelect: 'none',
-                webkitTapHighlightColor: 'transparent',
-                cursor: 'pointer',
-                minHeight: '44px',
-                minWidth: '60px'
-            });
-            
-            // Create the mobile touch handler with ENHANCED function execution
-            const mobileClickHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log(`📱 Mobile touch activated: "${buttonText}"`);
-                
-                // Visual feedback
-                newButton.style.transform = 'scale(0.95)';
-                newButton.style.opacity = '0.8';
-                
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-                
-                // Reset visual state
-                setTimeout(() => {
-                    newButton.style.transform = 'scale(1)';
-                    newButton.style.opacity = '1';
-                }, 150);
-                
-                // Execute the action after a small delay
-                setTimeout(() => {
-                    try {
-                        // ENHANCED: Try the stored function first
-                        if (actionFunction) {
-                            console.log(`🎯 Executing stored function for: "${buttonText}"`);
-                            // Execute the function with proper binding
-                            actionFunction.call(this, e);
-                            return;
-                        }
-                        
-                        // Try original onclick
-                        if (originalOnClick) {
-                            console.log(`🎯 Executing onclick for: "${buttonText}"`);
-                            originalOnClick.call(this, e);
-                            return;
-                        }
-                        
-                        // Try data-action attribute
-                        if (originalDataAction) {
-                            console.log(`🎯 Executing data-action: "${originalDataAction}"`);
-                            
-                            if (originalDataAction === 'close') {
-                                this.ui.closeModal();
-                            } else {
-                                // Try to find the action in the UI controller
-                                if (this.ui[originalDataAction]) {
-                                    this.ui[originalDataAction]();
-                                }
-                            }
-                            return;
-                        }
-                        
-                        // ENHANCED: Better text-based action detection with explicit method calls
-                        const lowerText = buttonText.toLowerCase();
-                        
-                        if (lowerText.includes('close') || lowerText.includes('cancel')) {
-                            console.log(`🎯 Closing modal for: "${buttonText}"`);
-                            this.ui.closeModal();
-                            
-                        } else if (lowerText.includes('return to menu') || lowerText.includes('menu')) {
-                            console.log(`🎯 Returning to menu for: "${buttonText}"`);
-                            this.ui.closeModal();
-                            // Use setTimeout to ensure modal closes first
-                            setTimeout(() => {
-                                this.returnToModeSelection();
-                            }, 100);
-                            
-                        } else if (lowerText.includes('show scores') || lowerText.includes('scores')) {
-                            console.log(`🎯 Showing scores for: "${buttonText}"`);
-                            this.ui.closeModal();
-                            // Use setTimeout to ensure modal closes first
-                            setTimeout(() => {
-                                this.showScoreHistory();
-                            }, 100);
-                            
-                        } else if (lowerText.includes('close app')) {
-                            console.log(`🎯 Showing close instructions for: "${buttonText}"`);
-                            this.ui.closeModal();
-                            // Use setTimeout to ensure modal closes first
-                            setTimeout(() => {
-                                this.showCloseAppInstructions();
-                            }, 100);
-                            
-                        } else if (lowerText.includes('full license') || lowerText.includes('enter full')) {
-                            console.log(`🎯 Entering license mode for: "${buttonText}"`);
-                            this.ui.closeModal();
-                            setTimeout(() => {
-                                this.enterCodeEntryMode({ message: 'Enter full version license code' });
-                            }, 100);
-                            
-                        } else {
-                            console.log(`⚠️ No specific action found for: "${buttonText}" - trying direct modal button match`);
-                            
-                            // NEW: Try to find the button in the modal content definition
-                            // and execute its action directly
-                            const modalButtons = this.getCurrentModalButtons();
-                            const matchingButton = modalButtons.find(btn => 
-                                btn.text && btn.text.toLowerCase() === lowerText
-                            );
-                            
-                            if (matchingButton && matchingButton.action && typeof matchingButton.action === 'function') {
-                                console.log(`🎯 Found matching modal button action for: "${buttonText}"`);
-                                matchingButton.action.call(this);
-                            } else {
-                                // Final fallback: dispatch a click event
-                                console.log(`🔄 Final fallback - dispatching click event for: "${buttonText}"`);
-                                newButton.dispatchEvent(new MouseEvent('click', {
-                                    bubbles: true,
-                                    cancelable: true,
-                                    view: window
-                                }));
-                            }
-                        }
-                        
-                    } catch (error) {
-                        console.error(`❌ Error executing action for "${buttonText}":`, error);
-                        console.error('Stack trace:', error.stack);
-                    }
-                }, 100);
-            };
-            
-            // Add touch and click event listeners with PROPER BINDING
-            newButton.addEventListener('touchend', mobileClickHandler.bind(this), { passive: false });
-            newButton.addEventListener('click', mobileClickHandler.bind(this), { passive: false });
-            
-            // Restore original onclick if it exists
-            if (originalOnClick) {
-                newButton.onclick = originalOnClick.bind(this);
-            }
-            
-            // Replace the button in the DOM
-            if (button.parentNode) {
-                button.parentNode.replaceChild(newButton, button);
-                console.log(`✅ Mobile button setup complete: "${buttonText}"`);
-            }
-        });
-        
-        console.log(`🎯 Mobile modal setup complete - ${buttons.length} buttons enhanced`);
     }
     
     showCloseAppInstructions() {
