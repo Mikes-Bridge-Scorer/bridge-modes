@@ -1,11 +1,11 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * WORKING VERSION with Security Fix and Trial Code Fix
+ * WORKING VERSION with Security Fix, Trial Code Fix, and MODAL MOBILE TOUCH FIX
  * - Hidden checksum logic (security)
  * - Trial codes with any checksum (111-999 prefixes)
  * - Full codes must sum to 37
  * - Updated contact information
- * - Mobile touch support
+ * - Mobile touch support for ALL buttons including modals
  */
 
 import { UIController } from './ui-controller.js';
@@ -221,7 +221,7 @@ class LicenseManager {
 }
 
 /**
- * Main Bridge Application - WORKING VERSION
+ * Main Bridge Application - WORKING VERSION with MODAL MOBILE TOUCH FIX
  */
 class BridgeApp {
     constructor() {
@@ -300,9 +300,26 @@ class BridgeApp {
             -webkit-touch-callout: none;
         }
 
+        /* MODAL BUTTON MOBILE FIXES */
+        .mobile-device .modal-button {
+            min-height: 44px !important;
+            min-width: 44px !important;
+            touch-action: manipulation !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            cursor: pointer !important;
+        }
+
+        .modal-button-pressed {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+            transition: all 0.1s ease !important;
+        }
+
         @media (max-width: 768px) {
             .calculator-buttons { gap: 8px; }
             .btn { padding: 12px 8px !important; font-size: 16px !important; }
+            .modal-button { padding: 12px 16px !important; font-size: 16px !important; }
         }
         `;
 
@@ -685,6 +702,13 @@ class BridgeApp {
         }
         
         this.ui.showModal('help', helpContent);
+        
+        // MOBILE FIX: Apply mobile touch to modal buttons after they're created
+        if (this.isMobile) {
+            setTimeout(() => {
+                this.applyMobileModalButtonFixes();
+            }, 200);
+        }
     }
 
     // UPDATED: Main help with your email
@@ -750,293 +774,4 @@ class BridgeApp {
                     <ul>
                         <li><strong>Wake:</strong> Keep screen active</li>
                         <li><strong>Vuln:</strong> Vulnerability control</li>
-                        <li><strong>Honors:</strong> Honor bonuses (Rubber only)</li>
-                        <li><strong>Help:</strong> Context help</li>
-                        <li><strong>Quit:</strong> Exit options</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>📞 Support & Contact</h4>
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 10px 0;">
-                        <p style="margin: 0; font-weight: bold;">
-                            📧 Email: <a href="mailto:mike.chris.smith@gmail.com" style="color: #3498db;">mike.chris.smith@gmail.com</a>
-                        </p>
-                    </div>
-                    <p style="font-size: 12px; color: #666;">
-                        • License codes and technical support<br>
-                        • Feature requests and feedback
-                    </p>
-                </div>
-            `,
-            buttons: buttons
-        };
-    }
-
-    getLicenseHelpContent() {
-        return {
-            title: '🔑 License Code Help',
-            content: `
-                <div class="help-section">
-                    <h4>How to Enter License Code</h4>
-                    <ul>
-                        <li><strong>Use number buttons 0-9</strong> to enter your code</li>
-                        <li><strong>BACK button</strong> deletes last digit</li>
-                        <li><strong>DEAL button</strong> submits code</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Need a License Code?</h4>
-                    <div style="background: #e3f2fd; padding: 12px; border-radius: 6px;">
-                        <p style="margin: 0; font-weight: bold;">Contact us:</p>
-                        <p style="margin: 5px 0 0 0;">
-                            📧 <a href="mailto:mike.chris.smith@gmail.com" style="color: #1976d2;">mike.chris.smith@gmail.com</a>
-                        </p>
-                    </div>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    showQuit() {
-        if (this.appState === 'license_entry') {
-            this.showLicenseQuitOptions();
-            return;
-        }
-
-        const quitContent = {
-            title: 'Exit Bridge Navigator',
-            content: 'What would you like to do?',
-            buttons: [
-                { 
-                    text: 'Show Scores', 
-                    action: () => this.showScoreHistory(), 
-                    class: 'modal-button',
-                    style: 'background: #3498db !important;'
-                },
-                { 
-                    text: 'Return to Menu', 
-                    action: () => this.returnToModeSelection(), 
-                    class: 'menu-btn modal-button' 
-                },
-                { 
-                    text: 'Close App', 
-                    action: () => this.showCloseAppInstructions(), 
-                    class: 'close-app-btn modal-button' 
-                },
-                { 
-                    text: 'Cancel', 
-                    action: 'close', 
-                    class: 'close-btn modal-button' 
-                }
-            ]
-        };
-        
-        this.ui.showModal('quit', quitContent);
-    }
-
-    showLicenseQuitOptions() {
-        const quitContent = {
-            title: 'Exit License Entry',
-            content: 'Bridge Navigator requires a valid license to continue.',
-            buttons: [
-                { 
-                    text: 'Close App', 
-                    action: () => this.showCloseAppInstructions(), 
-                    class: 'close-app-btn modal-button' 
-                },
-                { 
-                    text: 'Continue Entry', 
-                    action: 'close', 
-                    class: 'modal-button' 
-                }
-            ]
-        };
-        
-        this.ui.showModal('quit', quitContent);
-    }
-    
-    showCloseAppInstructions() {
-        this.ui.releaseWakeLock();
-        
-        const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        let message = '';
-        if (isPWA || isMobile) {
-            message = `📱 Close Bridge Navigator
-
-On Mobile/Tablet:
-• Use your device's app switcher and swipe up to close
-• Press home button to minimize the app
-
-✅ Your progress is automatically saved!`;
-        } else {
-            message = `💻 Close Bridge Navigator
-
-To close the app:
-• Close this browser tab or window
-
-✅ Your progress is automatically saved!`;
-        }
-        
-        alert(message);
-        this.ui.closeModal();
-    }
-    
-    showScoreHistory() {
-        try {
-            const existingModals = document.querySelectorAll('.modal-overlay, .score-modal');
-            existingModals.forEach(modal => modal.remove());
-            
-            const modal = document.createElement('div');
-            modal.className = 'score-modal';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(0, 0, 0, 0.9); z-index: 999999;
-                display: flex; justify-content: center; align-items: center;
-                font-family: Arial, sans-serif;
-            `;
-            
-            const history = this.gameState.getHistory();
-            const scores = this.gameState.getScores();
-            
-            let content = `
-                <div style="background: white; color: black; padding: 30px; border-radius: 10px;
-                           max-width: 80vw; max-height: 80vh; overflow-y: auto;
-                           box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                    <h2 style="color: #e74c3c; margin-bottom: 20px; text-align: center;">
-                        🃏 Score History - ${this.getModeDisplayName(this.currentMode)}
-                    </h2>
-                    
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Current Scores</h3>
-                        <div style="display: flex; justify-content: space-between;">
-                            <div><strong>North-South: ${scores.NS} points</strong></div>
-                            <div><strong>East-West: ${scores.EW} points</strong></div>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #27ae60;">
-                            Total Deals Played: ${history.length}
-                        </div>
-                    </div>
-            `;
-            
-            if (history.length > 0) {
-                content += `<div style="text-align: center; padding: 20px; color: #666;">
-                    <p>Score history available in bridge mode display</p>
-                </div>`;
-            } else {
-                content += `<div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                    <h3>No deals completed yet</h3>
-                    <p>Start playing to see your score history!</p>
-                </div>`;
-            }
-            
-            content += `
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button onclick="this.closest('.score-modal').remove(); window.bridgeApp.showQuit();" 
-                                style="background: #3498db; color: white; border: none; padding: 12px 24px; 
-                                       border-radius: 5px; font-size: 16px; margin-right: 10px; cursor: pointer;">
-                            Back to Quit Menu
-                        </button>
-                        <button onclick="this.closest('.score-modal').remove();" 
-                                style="background: #95a5a6; color: white; border: none; padding: 12px 24px; 
-                                       border-radius: 5px; font-size: 16px; cursor: pointer;">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            modal.innerHTML = content;
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.remove();
-            });
-            
-            document.body.appendChild(modal);
-            
-        } catch (error) {
-            console.error('Error creating score history:', error);
-            alert('Error showing score history.');
-        }
-    }
-    
-    getModeDisplayName(mode) {
-        const names = {
-            'kitchen': 'Kitchen Bridge',
-            'bonus': 'Bonus Bridge', 
-            'chicago': 'Chicago Bridge',
-            'rubber': 'Rubber Bridge',
-            'duplicate': 'Duplicate Bridge'
-        };
-        return names[mode] || 'Bridge Navigator';
-    }
-
-    onDealCompleted() {
-        this.licenseManager.incrementDealsPlayed();
-        
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        if (licenseStatus.needsCode) {
-            this.ui.showError('Trial expired! Enter full version code.');
-            setTimeout(() => {
-                this.enterCodeEntryMode(licenseStatus);
-            }, 2000);
-        }
-    }
-    
-    getCurrentMode() {
-        return this.currentMode;
-    }
-    
-    getAppState() {
-        return this.appState;
-    }
-
-    cleanup() {
-        this.removeEventListeners();
-        if (this.bridgeModeInstance && this.bridgeModeInstance.cleanup) {
-            this.bridgeModeInstance.cleanup();
-        }
-    }
-}
-
-// Export and make globally accessible
-export { BridgeApp, LicenseManager };
-window.BridgeApp = BridgeApp;
-
-// Development utilities
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    function generateSampleCodes() {
-        console.log('\n📝 Sample Trial Codes (any sum allowed):');
-        for (let i = 0; i < 5; i++) {
-            const code = LicenseManager.generateTrialCode();
-            console.log(`${code} (sum: ${LicenseManager.checksumCode(code)}) - TRIAL`);
-        }
-        
-        console.log('\n🔐 Sample Full Codes for testing:');
-        console.log('730999 (7+3+0+9+9+9 = 37) - FULL');
-        console.log('775558 (7+7+5+5+5+8 = 37) - FULL');
-        console.log('109999 (1+0+9+9+9+9 = 37) - FULL');
-    }
-    
-    function clearTestLicense() {
-        localStorage.removeItem('bridgeAppLicense');
-        localStorage.removeItem('bridgeAppDealsPlayed');
-        localStorage.removeItem('bridgeAppUsedCodes');
-        console.log('🧹 License cleared for testing');
-    }
-    
-    window.generateSampleCodes = generateSampleCodes;
-    window.clearTestLicense = clearTestLicense;
-    window.LicenseManager = LicenseManager;
-    
-    generateSampleCodes();
-    console.log('\n🛠️ Testing utilities:');
-    console.log('• clearTestLicense() - Clear license for testing');
-    console.log('• generateSampleCodes() - Generate sample codes');
-    console.log('• LicenseManager.checksumCode("123456") - Check code sum');
-}
+                        <li><strong>Honors
