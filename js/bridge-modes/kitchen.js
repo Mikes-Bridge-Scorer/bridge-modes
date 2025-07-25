@@ -1,11 +1,12 @@
 /**
  * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
+ * MOBILE ENHANCED VERSION - Full touch support for all devices
  * 
  * Kitchen Bridge is a casual, social form of bridge that removes the complexity
  * of rubber bridge while maintaining the essence of bridge scoring. Perfect for
  * home games where you want proper scoring without the full complexity.
  * 
- * Enhanced with dealer rotation display and consistent vulnerability info.
+ * Enhanced with dealer rotation display, consistent vulnerability info, and mobile support.
  */
 
 import { BaseBridgeMode } from './base-mode.js';
@@ -29,7 +30,7 @@ class KitchenBridge extends BaseBridgeMode {
         this.inputState = 'level_selection';
         this.resultMode = null; // 'down', 'plus'
         
-        console.log('🏠 Kitchen Bridge mode initialized');
+        console.log('🏠 Kitchen Bridge mode initialized with enhanced mobile support');
     }
     
     /**
@@ -46,13 +47,26 @@ class KitchenBridge extends BaseBridgeMode {
         this.resetContract();
         
         this.updateDisplay();
+        
+        // Debug mobile setup if needed
+        if (this.isMobile) {
+            setTimeout(() => this.debugMobileSetup(), 1000);
+        }
     }
     
     /**
-     * Handle user actions
+     * Handle user actions with enhanced mobile support
      */
     handleAction(value) {
         console.log(`🎮 Kitchen Bridge action: ${value} in state: ${this.inputState}`);
+        
+        // Provide mobile feedback for the action
+        if (this.isMobile) {
+            const activeButton = document.querySelector(`[data-value="${value}"]:not(.disabled)`);
+            if (activeButton) {
+                this.provideMobileButtonFeedback(activeButton);
+            }
+        }
         
         switch (this.inputState) {
             case 'level_selection':
@@ -496,7 +510,7 @@ class KitchenBridge extends BaseBridgeMode {
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
                         <div style="color: #3498db; font-size: 12px; margin-top: 4px;">
-                            Traditional bridge scoring • Manual vulnerability control
+                            Traditional bridge scoring • Manual vulnerability control • Enhanced mobile support
                         </div>
                     </div>
                     <div class="current-state">Select bid level (1-7)</div>
@@ -629,6 +643,7 @@ class KitchenBridge extends BaseBridgeMode {
                         <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
                         <li><strong>Deal Tracking:</strong> Clear display of current deal, dealer, and vulnerability</li>
                         <li><strong>Traditional Scoring:</strong> Standard bridge point values</li>
+                        <li><strong>Mobile Support:</strong> Enhanced touch support for all devices</li>
                     </ul>
                 </div>
                 
@@ -664,6 +679,16 @@ class KitchenBridge extends BaseBridgeMode {
                 </div>
                 
                 <div class="help-section">
+                    <h4>Mobile & Touch Support</h4>
+                    <ul>
+                        <li><strong>Touch Optimized:</strong> All buttons work perfectly on mobile devices</li>
+                        <li><strong>Visual Feedback:</strong> Buttons provide haptic and visual feedback</li>
+                        <li><strong>Proper Sizing:</strong> Buttons sized for easy touch interaction</li>
+                        <li><strong>Universal Support:</strong> Works on phones, tablets, and desktops</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
                     <h4>How to Use</h4>
                     <ol>
                         <li><strong>Set Vulnerability:</strong> Use Vuln button before each deal</li>
@@ -681,12 +706,15 @@ class KitchenBridge extends BaseBridgeMode {
     }
     
     /**
-     * Cleanup when switching modes
+     * Enhanced cleanup for Kitchen Bridge
      */
     cleanup() {
         this.ui.clearVulnerabilityHighlight();
         this.ui.updateDoubleButton('');
         console.log('🧹 Kitchen Bridge cleanup completed');
+        
+        // Call parent cleanup
+        super.cleanup();
     }
 }
 
