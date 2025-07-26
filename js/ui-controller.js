@@ -1,7 +1,6 @@
 /**
- * UI Controller - Manages all user interface interactions and display updates
- * MOBILE FIXED VERSION - Handles button states, modals, display panel, and UI utilities
- * Fixed modal touch events for mobile devices (Pixel 9a, etc.)
+ * UI Controller - FIXED VERSION - No interference with duplicate.js popups
+ * Only handles app modals, not bridge mode popups
  */
 
 class UIController {
@@ -58,10 +57,9 @@ class UIController {
      */
     injectMobileModalCSS() {
         const mobileModalCSS = `
-        /* Mobile modal button fixes */
-        .mobile-device .modal-overlay button,
-        .mobile-device [class*="modal"] button,
-        .mobile-device .modal-content button {
+        /* Mobile modal button fixes - ONLY for app modals */
+        .mobile-device .modal-overlay:not([id*="Popup"]) button,
+        .mobile-device .modal-content:not([id*="Popup"]) button {
             min-height: 44px !important;
             min-width: 44px !important;
             touch-action: manipulation !important;
@@ -76,37 +74,20 @@ class UIController {
         }
 
         /* Hand Analysis modal specific fixes */
-        .mobile-device .hcp-analysis button,
-        .mobile-device .modal-content button {
+        .mobile-device .hcp-analysis button {
             padding: 12px 16px !important;
             margin: 6px !important;
             font-size: 16px !important;
         }
 
-        /* Increment/Decrement buttons */
-        .mobile-device .increment-btn,
-        .mobile-device .decrement-btn,
-        .mobile-device button[onclick*="increment"],
-        .mobile-device button[onclick*="decrement"],
-        .mobile-device button[onclick*="++"],
-        .mobile-device button[onclick*="--"] {
-            min-height: 48px !important;
-            min-width: 48px !important;
-            font-size: 20px !important;
-            line-height: 1 !important;
-            padding: 8px !important;
-        }
-
-        /* Modal overlay touch handling */
-        .mobile-device .modal-overlay {
+        /* Modal overlay touch handling - ONLY for app modals */
+        .mobile-device .modal-overlay:not([id*="Popup"]) {
             touch-action: manipulation !important;
             -webkit-overflow-scrolling: touch !important;
         }
 
-        /* Better button feedback on mobile */
-        .mobile-device .modal-overlay button:active,
-        .mobile-device [class*="modal"] button:active,
-        .mobile-device .modal-content button:active {
+        /* Better button feedback on mobile - ONLY for app modals */
+        .mobile-device .modal-overlay:not([id*="Popup"]) button:active {
             transform: scale(0.95) !important;
             opacity: 0.8 !important;
         }
@@ -118,11 +99,16 @@ class UIController {
             background-color: rgba(59, 130, 246, 0.8) !important;
         }
 
-        /* Ensure modal content is scrollable on mobile */
-        .mobile-device .modal-content {
+        /* Ensure modal content is scrollable on mobile - ONLY for app modals */
+        .mobile-device .modal-content:not([id*="Popup"]) {
             max-height: 85vh !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch !important;
+        }
+
+        /* EXCLUDE bridge mode popups from UI controller styling */
+        #travelerPopup, #boardSelectorPopup, #movementPopup {
+            /* Let duplicate.js handle these completely */
         }
         `;
 
@@ -132,7 +118,7 @@ class UIController {
         document.head.appendChild(style);
         
         this.mobileModalCSSInjected = true;
-        console.log('📱 Mobile modal CSS injected');
+        console.log('📱 Mobile modal CSS injected (app modals only)');
     }
     
     /**
@@ -268,7 +254,7 @@ class UIController {
     }
     
     /**
-     * MOBILE FIXED: Show modal dialog with mobile touch support
+     * FIXED: Show modal dialog - ONLY handles app modals, not bridge mode popups
      */
     showModal(type, content) {
         console.log('🖼️ Showing modal type:', type);
@@ -339,11 +325,11 @@ class UIController {
         document.body.appendChild(overlay);
         this.currentModal = overlay;
         
-        // MOBILE FIX: Setup modal events with mobile support
+        // FIXED: Setup modal events - ONLY for app modals
         this.setupModalEvents(overlay, content);
         
-        // MOBILE FIX: Setup mobile touch events after DOM is ready
-        if (this.isMobile) {
+        // FIXED: ONLY setup mobile touch for app modals (not bridge mode popups)
+        if (this.isMobile && this.isAppModal(overlay)) {
             setTimeout(() => {
                 this.setupModalTouchEvents(overlay);
             }, 100);
@@ -353,18 +339,42 @@ class UIController {
     }
     
     /**
-     * MOBILE FIX: Setup touch events for modal buttons
+     * FIXED: Check if this is an app modal (not a bridge mode popup)
+     */
+    isAppModal(modalElement) {
+        // Don't interfere with bridge mode popups
+        const bridgePopupIds = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
+        const modalId = modalElement.id;
+        
+        if (bridgePopupIds.includes(modalId)) {
+            console.log('📱 Skipping mobile touch setup - bridge mode popup detected');
+            return false;
+        }
+        
+        // Check if any child has bridge popup indicators
+        const hasBridgeContent = modalElement.querySelector('#travelerTableBody, #boardDropdown, table[style*="border-collapse"]');
+        if (hasBridgeContent) {
+            console.log('📱 Skipping mobile touch setup - bridge content detected');
+            return false;
+        }
+        
+        console.log('📱 App modal detected - applying mobile touch events');
+        return true;
+    }
+    
+    /**
+     * FIXED: Setup touch events ONLY for app modal buttons
      */
     setupModalTouchEvents(modalElement) {
-        if (!modalElement) return;
+        if (!modalElement || !this.isAppModal(modalElement)) return;
         
-        console.log('📱 Setting up modal touch events');
+        console.log('📱 Setting up app modal touch events');
         
-        // Get all interactive elements in the modal
-        const interactiveElements = modalElement.querySelectorAll('button, .btn, [onclick], [data-action]');
+        // ONLY get app modal buttons (exclude bridge mode buttons)
+        const interactiveElements = modalElement.querySelectorAll('.modal-button[data-action], button.close-btn, button[class*="modal"]');
         
         interactiveElements.forEach((element, index) => {
-            console.log(`📱 Setting up modal element ${index}:`, element.textContent || element.innerHTML);
+            console.log(`📱 Setting up app modal element ${index}:`, element.textContent || element.innerHTML);
             
             // Ensure mobile touch properties
             element.style.touchAction = 'manipulation';
@@ -385,7 +395,7 @@ class UIController {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('📱 Modal element touched:', element.textContent || element.innerHTML);
+                console.log('📱 App modal element touched:', element.textContent || element.innerHTML);
                 
                 // Visual feedback
                 element.classList.add('modal-btn-pressed');
@@ -408,32 +418,28 @@ class UIController {
                         func.call(element, e);
                     }
                 } catch (error) {
-                    console.error('Error executing modal action:', error);
+                    console.error('Error executing app modal action:', error);
                 }
             };
             
-            // Remove existing listeners by cloning element
-            const newElement = element.cloneNode(true);
-            element.parentNode.replaceChild(newElement, element);
-            
-            // Add mobile touch events
-            newElement.addEventListener('touchstart', (e) => {
+            // FIXED: Don't clone elements - just add event listeners
+            element.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                newElement.style.transform = 'scale(0.95)';
-                newElement.style.opacity = '0.8';
+                element.style.transform = 'scale(0.95)';
+                element.style.opacity = '0.8';
             }, { passive: false });
             
-            newElement.addEventListener('touchend', mobileHandler, { passive: false });
-            newElement.addEventListener('click', mobileHandler, { passive: false });
+            element.addEventListener('touchend', mobileHandler, { passive: false });
+            element.addEventListener('click', mobileHandler, { passive: false });
             
             // Restore transform on touch cancel
-            newElement.addEventListener('touchcancel', () => {
-                newElement.style.transform = 'scale(1)';
-                newElement.style.opacity = '1';
+            element.addEventListener('touchcancel', () => {
+                element.style.transform = 'scale(1)';
+                element.style.opacity = '1';
             }, { passive: true });
         });
         
-        console.log(`📱 Mobile touch events setup complete for ${interactiveElements.length} elements`);
+        console.log(`📱 App modal touch events setup complete for ${interactiveElements.length} elements`);
     }
     
     /**
@@ -463,7 +469,7 @@ class UIController {
     }
     
     /**
-     * MOBILE ENHANCED: Setup modal event listeners with mobile support
+     * Setup modal event listeners with mobile support
      */
     setupModalEvents(overlay, content) {
         // Background click to close
@@ -482,7 +488,7 @@ class UIController {
                 e.stopPropagation();
                 
                 const action = button.dataset.action;
-                console.log('Modal button clicked:', action);
+                console.log('App modal button clicked:', action);
                 
                 if (action === 'close') {
                     this.closeModal();
@@ -497,7 +503,7 @@ class UIController {
                             btnConfig.action();
                             this.closeModal();
                         } catch (error) {
-                            console.error('Error executing modal action:', error);
+                            console.error('Error executing app modal action:', error);
                         }
                     }
                 }
@@ -722,8 +728,12 @@ class UIController {
             return;
         }
         
-        this.setupModalTouchEvents(modal);
-        console.log('✅ Emergency modal fix complete');
+        if (this.isAppModal(modal)) {
+            this.setupModalTouchEvents(modal);
+            console.log('✅ Emergency modal fix complete');
+        } else {
+            console.log('❌ Bridge mode popup detected - not applying fix');
+        }
     }
 }
 
