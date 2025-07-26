@@ -383,3 +383,268 @@
         padding: 22px !important;
     }
 }
+/* ===== VIEWPORT AND SCALING FIX FOR OLDER ANDROID DEVICES =====
+ * Fixes issues with Pixel 3a and similar devices where UI appears too small
+ * and can be moved around the screen instead of being fixed in position
+ */
+
+/* Force proper viewport sizing */
+html {
+    /* Prevent zoom and fix viewport */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    
+    /* Lock the viewport size */
+    height: 100vh;
+    height: 100svh; /* Small viewport height for modern browsers */
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100svh;
+    
+    /* Prevent user scaling and movement */
+    touch-action: manipulation;
+    overflow: hidden;
+    
+    /* Fix for Android viewport issues */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+body {
+    /* Match HTML sizing exactly */
+    height: 100vh;
+    height: 100svh;
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100svh;
+    
+    /* Prevent movement and scaling */
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    
+    /* Prevent user interaction with page itself */
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    
+    /* Ensure proper rendering on old Android */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* Main app container - this should scroll, not the page */
+.app-container,
+#app,
+.bridge-calculator {
+    height: 100vh;
+    height: 100svh;
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100svh;
+    
+    /* Allow scrolling within the app */
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    /* Smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    
+    /* Position properly */
+    position: relative;
+    margin: 0;
+    padding: 0;
+    
+    /* Fix for rendering issues */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* Specific fixes for older Android devices */
+@media screen and (max-width: 768px) {
+    /* Force minimum font size to prevent tiny text */
+    html {
+        font-size: 16px !important;
+        min-zoom: 1.0;
+        max-zoom: 1.0;
+        zoom: 1.0;
+    }
+    
+    body {
+        font-size: 16px !important;
+        min-zoom: 1.0;
+        max-zoom: 1.0;
+        zoom: 1.0;
+    }
+    
+    /* Ensure buttons are properly sized */
+    .btn, button, input, select {
+        min-height: 44px !important;
+        font-size: 16px !important;
+        zoom: 1.0;
+    }
+    
+    /* Fix for calculator display */
+    #display {
+        font-size: 14px !important;
+        min-height: 120px !important;
+    }
+    
+    /* Calculator buttons grid */
+    .calculator-buttons {
+        font-size: 16px !important;
+        zoom: 1.0;
+    }
+    
+    .calculator-buttons .btn {
+        font-size: 16px !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+}
+
+/* Specific fixes for very old Android (like Pixel 3a) */
+@media screen and (max-device-width: 450px) and (-webkit-device-pixel-ratio: 2) {
+    html {
+        /* Force proper scaling */
+        font-size: 18px !important;
+        zoom: 1.25 !important;
+        transform: scale(1.25);
+        transform-origin: 0 0;
+        width: 80vw;
+        height: 80vh;
+    }
+    
+    body {
+        font-size: 18px !important;
+        zoom: 1.25 !important;
+    }
+    
+    /* Make text and buttons larger */
+    .btn, button {
+        font-size: 18px !important;
+        min-height: 48px !important;
+        padding: 12px !important;
+    }
+    
+    #display {
+        font-size: 16px !important;
+        min-height: 140px !important;
+    }
+    
+    .calculator-buttons .btn {
+        font-size: 18px !important;
+        min-height: 48px !important;
+    }
+    
+    /* Larger control buttons */
+    .control-btn {
+        font-size: 16px !important;
+        min-height: 40px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+/* Prevent the page from being draggable/movable */
+* {
+    /* Prevent text selection that can cause dragging */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* Prevent touch callouts */
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow text selection only where needed */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+}
+
+/* Prevent zoom on input focus (common cause of viewport issues) */
+input, select, textarea {
+    font-size: 16px !important;
+    zoom: 1.0;
+    transform: scale(1);
+}
+
+/* Fix for Android Chrome viewport height issues */
+@supports (-webkit-touch-callout: none) {
+    .app-container,
+    #app,
+    .bridge-calculator {
+        height: -webkit-fill-available;
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* PWA specific fixes */
+@media (display-mode: standalone) {
+    html, body {
+        /* Extra security for PWA mode */
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    /* Allow the app content to scroll */
+    .app-container,
+    #app,
+    .bridge-calculator {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* Emergency fallback for really problematic devices */
+@media screen and (max-width: 400px) and (max-height: 700px) {
+    html {
+        /* Force larger base size */
+        font-size: 20px !important;
+        min-height: 100vh !important;
+        min-width: 100vw !important;
+    }
+    
+    body {
+        font-size: 20px !important;
+        min-height: 100vh !important;
+        min-width: 100vw !important;
+    }
+    
+    /* Make everything bigger */
+    .btn, button {
+        font-size: 20px !important;
+        min-height: 52px !important;
+        padding: 14px !important;
+    }
+    
+    .calculator-buttons .btn {
+        font-size: 20px !important;
+        min-height: 52px !important;
+    }
+    
+    #display {
+        font-size: 18px !important;
+        min-height: 160px !important;
+        padding: 20px !important;
+    }
+}
