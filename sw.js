@@ -1,7 +1,7 @@
 // ===== BRIDGE MODES - SERVICE WORKER =====
 // Provides offline functionality and caching for PWA
 
-const CACHE_NAME = 'bridge-modes-v1.0.0';
+const CACHE_NAME = 'bridge-modes-v1.0.1';
 const STATIC_CACHE = 'bridge-modes-static-v1';
 const DYNAMIC_CACHE = 'bridge-modes-dynamic-v1';
 
@@ -339,22 +339,22 @@ self.addEventListener('push', event => {
     console.log('📱 Push notification received');
     
     const options = {
-        body: 'Bridge Modes has been updated!',
-        icon: './assets/icons/icon-192x192.png',
-        badge: './assets/icons/icon-72x72.png',
-        tag: 'bridge-modes-update',
+        body: 'Bridge Scorer has been updated!',
+        icon: './assets/icon-192.png',
+        badge: './assets/icon-192.png',
+        tag: 'bridge-scorer-update',
         requireInteraction: false,
         actions: [
             {
                 action: 'open',
                 title: 'Open App',
-                icon: './assets/icons/icon-72x72.png'
+                icon: './assets/icon-192.png'
             }
         ]
     };
     
     event.waitUntil(
-        self.registration.showNotification('Bridge Modes', options)
+        self.registration.showNotification('Bridge Scorer', options)
     );
 });
 
@@ -440,7 +440,7 @@ async function sendCacheInfo(client) {
 
 // ===== DEBUGGING =====
 
-console.log('🚀 Bridge Modes Service Worker loaded');
+console.log('🚀 Bridge Scorer Service Worker loaded');
 
 // Global error handler
 self.addEventListener('error', event => {

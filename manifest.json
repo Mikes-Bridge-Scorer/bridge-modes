@@ -1,6 +1,6 @@
 {
-  "name": "Bridge Modes Calculator",
-  "short_name": "Bridge Modes",
+  "name": "Bridge Scorer",
+  "short_name": "Bridge Scorer",
   "description": "Professional bridge scoring calculator supporting multiple game variants including Kitchen Bridge, Bonus Bridge, Chicago Bridge, Rubber Bridge, and Duplicate Bridge.",
   "start_url": "./",
   "display": "standalone",
@@ -11,12 +11,6 @@
   "lang": "en",
   "categories": ["games", "utilities", "productivity"],
   "icons": [
-    {
-      "src": "assets/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png", 
-      "purpose": "any maskable"
-    },
     {
       "src": "assets/icon-192.png",
       "sizes": "192x192",
