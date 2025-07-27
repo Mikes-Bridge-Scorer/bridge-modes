@@ -1,5 +1,5 @@
 /**
- * Simplified Duplicate Bridge Mode - Fixed with Dropdown Interface
+ * Simplified Duplicate Bridge Mode - Fixed with Dropdown Interface and MOBILE POPUP FIXES
  * Uses dropdown fields in popup for easy data entry
  */
 
@@ -275,7 +275,7 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Show board selector popup
+     * Show board selector popup - MOBILE FIXED
      */
     showBoardSelectorPopup() {
         const popup = document.createElement('div');
@@ -330,6 +330,110 @@ class DuplicateBridge extends BaseBridgeMode {
         // Set up global functions
         window.selectBoardFromDropdown = () => this.selectBoardFromDropdown();
         window.closeBoardSelector = () => this.closeBoardSelector();
+        
+        // MOBILE FIX: Add touch events to popup buttons
+        this.setupMobilePopupButtons();
+    }
+    
+    /**
+     * MOBILE FIX: Setup touch events for popup buttons
+     */
+    setupMobilePopupButtons() {
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) return;
+        
+        console.log('📱 Setting up mobile touch for duplicate popup buttons');
+        
+        // Find all buttons in the current popup (try both popup types)
+        const popup = document.getElementById('travelerPopup') || 
+                     document.getElementById('boardSelectorPopup') || 
+                     document.getElementById('movementPopup');
+        if (!popup) return;
+        
+        const buttons = popup.querySelectorAll('button');
+        
+        buttons.forEach((button, index) => {
+            console.log(`📱 Setting up mobile touch for button ${index}:`, button.textContent.trim());
+            
+            // Ensure mobile properties
+            button.style.touchAction = 'manipulation';
+            button.style.userSelect = 'none';
+            button.style.webkitTapHighlightColor = 'transparent';
+            button.style.webkitUserSelect = 'none';
+            button.style.minHeight = '44px';
+            button.style.cursor = 'pointer';
+            
+            // Store original onclick handlers
+            const originalOnclick = button.onclick;
+            const onclickAttr = button.getAttribute('onclick');
+            
+            // Create comprehensive mobile touch handler
+            const mobileHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('📱 Duplicate popup button touched:', button.textContent.trim());
+                
+                // Immediate visual feedback
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+                button.style.transition = 'all 0.1s ease';
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+                
+                // Execute after visual feedback delay
+                setTimeout(() => {
+                    // Reset visual state
+                    button.style.transform = '';
+                    button.style.opacity = '';
+                    
+                    // Execute original onclick handler
+                    try {
+                        if (originalOnclick) {
+                            console.log('📱 Executing original onclick function');
+                            originalOnclick.call(button, e);
+                        } else if (onclickAttr) {
+                            console.log('📱 Executing onclick attribute:', onclickAttr);
+                            // Create and execute function from onclick attribute
+                            const func = new Function('event', onclickAttr);
+                            func.call(button, e);
+                        } else {
+                            console.log('📱 No onclick handler found');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error executing popup button action:', error);
+                    }
+                }, 100);
+            };
+            
+            // Remove existing event listeners to avoid duplicates
+            button.removeEventListener('touchend', button._mobileHandler);
+            button.removeEventListener('click', button._mobileHandler);
+            
+            // Store handler reference for cleanup
+            button._mobileHandler = mobileHandler;
+            
+            // Add comprehensive touch events
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+            }, { passive: false });
+            
+            button.addEventListener('touchend', mobileHandler, { passive: false });
+            button.addEventListener('click', mobileHandler, { passive: false });
+            
+            // Reset on touch cancel
+            button.addEventListener('touchcancel', () => {
+                button.style.transform = '';
+                button.style.opacity = '';
+            }, { passive: true });
+        });
+        
+        console.log(`✅ Mobile touch setup complete for ${buttons.length} popup buttons`);
     }
     
     /**
@@ -392,7 +496,7 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Show specific traveler popup
+     * Show specific traveler popup - MOBILE FIXED
      */
     showSpecificTravelerPopup() {
         const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
@@ -463,6 +567,9 @@ class DuplicateBridge extends BaseBridgeMode {
         
         // Add change listeners to all dropdowns
         this.setupDropdownListeners();
+        
+        // MOBILE FIX: Add touch events to popup buttons
+        this.setupMobilePopupButtons();
     }
     
     /**
@@ -748,12 +855,13 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Show movement popup - FIXED
+     * Show movement popup - MOBILE FIXED
      */
     showMovementPopup() {
         const movement = this.session.movement;
         
         const popup = document.createElement('div');
+        popup.id = 'movementPopup';
         popup.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.8); z-index: 1000; 
@@ -783,6 +891,9 @@ class DuplicateBridge extends BaseBridgeMode {
         
         // Store reference for dropdown callback and button callbacks
         window.duplicateBridge = this;
+        
+        // MOBILE FIX: Add touch events to popup buttons
+        this.setupMobilePopupButtons();
     }
     
     /**
@@ -1008,6 +1119,72 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
+     * Get results display with matchpoint calculations
+     */
+    getResultsDisplay() {
+        const finalResults = this.calculateFinalResults();
+        
+        let resultHTML = `
+            <div class="title-score-row">
+                <div class="mode-title">Final Results</div>
+                <div class="score-display">${this.session.pairs} Pairs</div>
+            </div>
+            <div class="game-content">
+                <div><strong>Final Rankings - ${this.session.movement.description}</strong></div>
+                
+                <div style="overflow-x: auto; margin: 15px 0;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: white; color: #2c3e50;">
+                        <thead>
+                            <tr style="background: #34495e; color: white;">
+                                <th style="padding: 8px; border: 1px solid #2c3e50;">Rank</th>
+                                <th style="padding: 8px; border: 1px solid #2c3e50;">Pair</th>
+                                <th style="padding: 8px; border: 1px solid #2c3e50;">Matchpoints</th>
+                                <th style="padding: 8px; border: 1px solid #2c3e50;">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        finalResults.forEach((pair, index) => {
+            const rankColor = index === 0 ? '#f1c40f' : index === 1 ? '#95a5a6' : index === 2 ? '#cd7f32' : '#ecf0f1';
+            const textColor = index < 3 ? '#2c3e50' : '#666';
+            
+            resultHTML += `
+                <tr style="background: ${rankColor};">
+                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold; color: ${textColor};">
+                        ${index + 1}${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''}
+                    </td>
+                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold; color: ${textColor};">
+                        ${pair.pair}
+                    </td>
+                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; color: ${textColor};">
+                        ${pair.totalMatchpoints}/${pair.maxPossible}
+                    </td>
+                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold; color: ${textColor};">
+                        ${pair.percentage}%
+                    </td>
+                </tr>
+            `;
+        });
+        
+        resultHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="background: #e8f6f3; padding: 15px; border-radius: 4px; margin-top: 15px; font-size: 11px; color: #2c3e50;">
+                    <strong>🏆 Congratulations to Pair ${finalResults[0]?.pair} - ${finalResults[0]?.percentage}%!</strong><br>
+                    <br><strong>Matchpoint Scoring:</strong> Each board result is compared with other pairs. Beat a result = 2 points, tie = 1 point, lose = 0 points.
+                    <br><strong>Percentage:</strong> (Matchpoints earned ÷ Maximum possible) × 100
+                </div>
+            </div>
+            <div class="current-state">BACK to continue scoring more boards</div>
+        `;
+        
+        return resultHTML;
+    }
+    
+    /**
      * Check if all boards are complete
      */
     areAllBoardsComplete() {
@@ -1036,214 +1213,3 @@ class DuplicateBridge extends BaseBridgeMode {
             const boardResults = board.results.filter(result => 
                 result.nsScore !== null && result.ewScore !== null
             );
-            
-            if (boardResults.length === 0) return;
-            
-            // Calculate matchpoints for NS scores
-            boardResults.forEach(result => {
-                const nsPair = result.nsPair;
-                const nsScore = result.nsScore;
-                
-                let matchpoints = 0;
-                let maxPossible = (boardResults.length - 1) * 2;
-                
-                boardResults.forEach(otherResult => {
-                    if (otherResult.nsPair !== nsPair) {
-                        const otherNsScore = otherResult.nsScore;
-                        if (nsScore > otherNsScore) {
-                            matchpoints += 2;
-                        } else if (nsScore === otherNsScore) {
-                            matchpoints += 1;
-                        }
-                    }
-                });
-                
-                const pairIndex = pairs.findIndex(p => p.pair === nsPair);
-                if (pairIndex !== -1) {
-                    pairs[pairIndex].totalMatchpoints += matchpoints;
-                    pairs[pairIndex].maxPossible += maxPossible;
-                    pairs[pairIndex].boardResults[board.number] = {
-                        score: nsScore,
-                        matchpoints: matchpoints,
-                        maxPossible: maxPossible
-                    };
-                }
-            });
-            
-            // Calculate matchpoints for EW scores
-            boardResults.forEach(result => {
-                const ewPair = result.ewPair;
-                const ewScore = result.ewScore;
-                
-                let matchpoints = 0;
-                let maxPossible = (boardResults.length - 1) * 2;
-                
-                boardResults.forEach(otherResult => {
-                    if (otherResult.ewPair !== ewPair) {
-                        const otherEwScore = otherResult.ewScore;
-                        if (ewScore > otherEwScore) {
-                            matchpoints += 2;
-                        } else if (ewScore === otherEwScore) {
-                            matchpoints += 1;
-                        }
-                    }
-                });
-                
-                const pairIndex = pairs.findIndex(p => p.pair === ewPair);
-                if (pairIndex !== -1) {
-                    pairs[pairIndex].totalMatchpoints += matchpoints;
-                    pairs[pairIndex].maxPossible += maxPossible;
-                    pairs[pairIndex].boardResults[board.number] = {
-                        score: ewScore,
-                        matchpoints: matchpoints,
-                        maxPossible: maxPossible
-                    };
-                }
-            });
-        });
-        
-        // Calculate percentages and sort
-        pairs.forEach(pair => {
-            if (pair.maxPossible > 0) {
-                pair.percentage = (pair.totalMatchpoints / pair.maxPossible * 100).toFixed(1);
-            }
-        });
-        
-        pairs.sort((a, b) => b.totalMatchpoints - a.totalMatchpoints);
-        
-        return pairs;
-    }
-    getBoardStatusDisplay() {
-        const status = [];
-        Object.values(this.session.boards).forEach(board => {
-            const icon = board.completed ? '✅' : '⭕';
-            const color = board.completed ? '#27ae60' : '#e74c3c';
-            status.push(`<span style="color: ${color}; font-weight: bold;">B${board.number}${icon}</span>`);
-        });
-        
-        return `<div style="font-size: 12px; margin-top: 10px; text-align: center;">${status.join(' ')}</div>`;
-    }
-    
-    /**
-     * Handle back navigation
-     */
-    handleBack() {
-        if (this.traveler.isActive) {
-            this.closeTravelerPopup();
-            return true;
-        }
-        
-        switch (this.inputState) {
-            case 'movement_confirm':
-                this.inputState = 'pairs_setup';
-                break;
-            case 'board_selection':
-                this.inputState = 'movement_confirm';
-                break;
-            case 'results':
-                this.inputState = 'board_selection';
-                break;
-            default:
-                return false;
-        }
-        this.updateDisplay();
-        return true;
-    }
-    
-    /**
-     * Check if back is possible
-     */
-    canGoBack() {
-        return this.inputState !== 'pairs_setup' || this.traveler.isActive;
-    }
-    
-    /**
-     * Get help content
-     */
-    getHelpContent() {
-        return {
-            title: 'Duplicate Bridge Help',
-            content: `
-                <div class="help-section">
-                    <h4>Simplified Duplicate Bridge</h4>
-                    <p>Easy-to-use duplicate bridge scoring with dropdown interface for entering traveler results.</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Available Movements</h4>
-                    <ul>
-                        <li><strong>4 pairs:</strong> 2-table Howell, 12 boards, ~2 hours</li>
-                        <li><strong>6 pairs:</strong> 3-table Howell, 10 boards, ~1.5 hours</li>
-                        <li><strong>8 pairs:</strong> 4-table Howell, 14 boards, ~2.5 hours</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use</h4>
-                    <ol>
-                        <li><strong>Setup:</strong> Choose pairs → view movement table → confirm</li>
-                        <li><strong>Play session:</strong> Print/display movement table for seating</li>
-                        <li><strong>Score entry:</strong> Select board → traveler popup opens</li>
-                        <li><strong>Fill data:</strong> Use dropdowns for Bid, Suit, Declarer, Tricks</li>
-                        <li><strong>Calculate:</strong> Scores auto-calculate or click Calculate All</li>
-                        <li><strong>Save:</strong> Click Save & Close when complete</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Traveler Interface</h4>
-                    <ul>
-                        <li><strong>Red columns:</strong> Manual entry required (Bid, Suit, By, Tricks)</li>
-                        <li><strong>Blue columns:</strong> Auto-calculated scores (NS Score, EW Score)</li>
-                        <li><strong>Dropdown menus:</strong> No typing needed, just select from options</li>
-                        <li><strong>Vulnerability:</strong> Automatically displayed and calculated</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Scoring Features</h4>
-                    <ul>
-                        <li><strong>Automatic calculation:</strong> Bridge scoring with vulnerability</li>
-                        <li><strong>Progress tracking:</strong> Visual indicators for completed boards</li>
-                        <li><strong>Error prevention:</strong> Dropdown validation prevents invalid entries</li>
-                        <li><strong>Mobile friendly:</strong> Works perfectly on tablets and phones</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Perfect for Clubs & Cruises</h4>
-                    <ul>
-                        <li><strong>Easy setup:</strong> Choose movement and start playing</li>
-                        <li><strong>Director friendly:</strong> One device handles all scoring</li>
-                        <li><strong>No typing:</strong> All input via dropdown menus</li>
-                        <li><strong>Professional results:</strong> Accurate duplicate bridge scoring</li>
-                    </ul>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    /**
-     * Cleanup when switching modes
-     */
-    cleanup() {
-        // Close any open popups
-        const popup = document.getElementById('travelerPopup');
-        if (popup) popup.remove();
-        
-        // Clean up global functions
-        delete window.calculateAllScores;
-        delete window.saveTravelerData;
-        delete window.closeTravelerPopup;
-        delete window.selectBoardFromDropdown;
-        delete window.closeBoardSelector;
-        delete window.duplicateBridge;
-        
-        console.log('🧹 Duplicate Bridge cleanup completed');
-    }
-}
-
-export default DuplicateBridge;
