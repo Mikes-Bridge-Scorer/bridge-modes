@@ -253,24 +253,40 @@ class DuplicateBridge extends BaseBridgeMode {
                 <h3 style="text-align: center; margin-bottom: 20px;">Board Selection</h3>
                 
                 <div style="text-align: center; margin: 20px 0;">
-                    <select id="boardDropdown" style="padding: 12px; border: 2px solid #3498db; border-radius: 8px; font-size: 14px; min-width: 200px;">
+                    <select id="boardDropdown" style="padding: 15px; border: 2px solid #3498db; border-radius: 8px; font-size: 18px; min-width: 250px; background: white;">
                         <option value="">Select Board...</option>
-                        ${this.getBoardDropdownOptions()}
+                        <option value="1">Board 1 (None)</option>
+                        <option value="2">Board 2 (NS)</option>
+                        <option value="3">Board 3 (EW)</option>
+                        <option value="4">Board 4 (Both)</option>
+                        <option value="5">Board 5 (EW)</option>
+                        <option value="6">Board 6 (Both)</option>
+                        <option value="7">Board 7 (None)</option>
+                        <option value="8">Board 8 (NS)</option>
+                        <option value="9">Board 9 (NS)</option>
+                        <option value="10">Board 10 (EW)</option>
+                        <option value="11">Board 11 (Both)</option>
+                        <option value="12">Board 12 (None)</option>
                     </select>
                 </div>
                 
                 <div style="text-align: center;">
-                    <button id="openTravelerBtn" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; margin-right: 8px; min-height: 44px;">Open Traveler</button>
-                    <button id="cancelBoardBtn" style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; min-height: 44px;">Cancel</button>
+                    <button onclick="
+                        var d = document.getElementById('boardDropdown');
+                        if (d.value) {
+                            document.getElementById('boardSelectorPopup').remove();
+                            window.duplicateBridge.openSpecificTraveler(parseInt(d.value));
+                        } else {
+                            alert('Please select a board first!');
+                        }
+                    " style="background: #27ae60; color: white; border: none; padding: 15px 25px; border-radius: 4px; margin-right: 8px; min-height: 50px; font-size: 18px; cursor: pointer;">Open Traveler</button>
+                    
+                    <button onclick="document.getElementById('boardSelectorPopup').remove();" style="background: #e74c3c; color: white; border: none; padding: 15px 25px; border-radius: 4px; min-height: 50px; font-size: 18px; cursor: pointer;">Cancel</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
-        
-        // MOBILE FIX: Setup mobile-friendly event handlers
-        this.setupBoardSelectorEvents();
-        this.setupMobilePopupButtons();
     }
     
     // MOBILE FIX: Setup board selector events with enhanced dropdown support
