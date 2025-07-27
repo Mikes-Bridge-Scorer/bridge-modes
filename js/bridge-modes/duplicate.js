@@ -273,11 +273,40 @@ class DuplicateBridge extends BaseBridgeMode {
         this.setupMobilePopupButtons();
     }
     
-    // MOBILE FIX: Setup board selector events
+    // MOBILE FIX: Setup board selector events with enhanced dropdown support
     setupBoardSelectorEvents() {
         const openBtn = document.getElementById('openTravelerBtn');
         const cancelBtn = document.getElementById('cancelBoardBtn');
         const dropdown = document.getElementById('boardDropdown');
+        
+        // ENHANCED MOBILE DROPDOWN FIX
+        if (dropdown) {
+            console.log('📱 Setting up enhanced dropdown for mobile');
+            
+            dropdown.style.touchAction = 'manipulation';
+            dropdown.style.userSelect = 'none';
+            dropdown.style.webkitUserSelect = 'none';
+            dropdown.style.webkitTapHighlightColor = 'transparent';
+            dropdown.style.fontSize = '16px'; // Prevents zoom on iOS
+            dropdown.style.minHeight = '44px';
+            
+            // Multiple event types for maximum compatibility
+            dropdown.addEventListener('change', (e) => {
+                console.log('📱 Dropdown changed to:', e.target.value);
+            });
+            
+            dropdown.addEventListener('touchstart', (e) => {
+                console.log('📱 Dropdown touched');
+            }, { passive: true });
+            
+            dropdown.addEventListener('click', (e) => {
+                console.log('📱 Dropdown clicked');
+                // Force focus for mobile
+                setTimeout(() => {
+                    dropdown.focus();
+                }, 50);
+            });
+        }
         
         if (openBtn) {
             const openHandler = (e) => {
@@ -287,17 +316,24 @@ class DuplicateBridge extends BaseBridgeMode {
                 console.log('📱 Open Traveler button pressed');
                 
                 const dropdown = document.getElementById('boardDropdown');
-                if (dropdown && dropdown.value) {
-                    const boardNum = parseInt(dropdown.value);
+                const selectedValue = dropdown ? dropdown.value : '';
+                
+                console.log('📱 Dropdown value:', selectedValue);
+                
+                if (selectedValue) {
+                    const boardNum = parseInt(selectedValue);
                     console.log('📱 Selected board:', boardNum);
                     this.closeBoardSelector();
                     this.openSpecificTraveler(boardNum);
                 } else {
+                    console.log('📱 No board selected');
                     alert('Please select a board first!');
                 }
             };
             
             openBtn.style.touchAction = 'manipulation';
+            openBtn.style.userSelect = 'none';
+            openBtn.style.webkitTapHighlightColor = 'transparent';
             openBtn.addEventListener('click', openHandler);
             openBtn.addEventListener('touchend', openHandler, { passive: false });
         }
@@ -311,16 +347,10 @@ class DuplicateBridge extends BaseBridgeMode {
             };
             
             cancelBtn.style.touchAction = 'manipulation';
+            cancelBtn.style.userSelect = 'none';
+            cancelBtn.style.webkitTapHighlightColor = 'transparent';
             cancelBtn.addEventListener('click', cancelHandler);
             cancelBtn.addEventListener('touchend', cancelHandler, { passive: false });
-        }
-        
-        // MOBILE FIX: Make dropdown work on mobile
-        if (dropdown) {
-            dropdown.style.touchAction = 'manipulation';
-            dropdown.addEventListener('change', (e) => {
-                console.log('📱 Dropdown changed to:', e.target.value);
-            });
         }
     }
     
@@ -472,7 +502,7 @@ class DuplicateBridge extends BaseBridgeMode {
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7;">
-                    <select data-row="${index}" data-field="double" style="width: 50px;">
+                    <select data-row="${index}" data-field="double" style="width: 40px;">
                         <option value="">-</option>
                         <option value="X">X</option>
                         <option value="XX">XX</option>
