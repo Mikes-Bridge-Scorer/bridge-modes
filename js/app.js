@@ -318,38 +318,42 @@ class BridgeApp {
         this.updateButtonStates();
     }
 
-    setupMobileLicenseButtons() {
-        if (!this.isMobile) return;
+setupMobileLicenseButtons() {
+    if (!this.isMobile) return;
+    
+    console.log('📱 Setting up ULTRA-SIMPLE mobile license buttons');
+    
+    // Remove any existing handlers
+    if (this._simpleMobileHandler) {
+        document.removeEventListener('touchend', this._simpleMobileHandler);
+        document.removeEventListener('click', this._simpleMobileHandler);
+    }
+    
+    // ULTRA-SIMPLE: Just handle any button press during license entry
+    this._simpleMobileHandler = (e) => {
+        if (this.appState !== 'license_entry') return;
         
-        console.log('📱 Setting up SIMPLIFIED mobile license buttons');
+        // Find ANY button
+        const button = e.target.closest('button, .btn, [data-value]');
+        if (!button) return;
         
-        if (this._mobileHandler) {
-            document.removeEventListener('touchend', this._mobileHandler);
-            document.removeEventListener('click', this._mobileHandler);
-            this._mobileHandler = null;
-        }
+        e.preventDefault();
+        e.stopPropagation();
         
-        this._mobileHandler = (e) => {
-            if (this.appState !== 'license_entry') return;
-            
-            const button = e.target.closest('.btn');
-            if (!button || button.classList.contains('disabled')) return;
-            
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const value = button.dataset.value;
-            console.log('📱 Mobile license button pressed:', value);
-            
-            button.style.transform = 'scale(0.95)';
-            button.style.opacity = '0.8';
-            setTimeout(() => {
-                button.style.transform = '';
-                button.style.opacity = '';
-            }, 150);
-            
-            this.handleCodeEntryButton(value);
-        };
+        const value = button.dataset.value || button.textContent.trim();
+        console.log('📱 ULTRA-SIMPLE button press:', value);
+        
+        // Visual feedback
+        button.style.transform = 'scale(0.9)';
+        setTimeout(() => button.style.transform = '', 100);
+        
+        this.handleCodeEntryButton(value);
+    };
+    
+    // Add to document (broadest possible capture)
+    document.addEventListener('touchend', this._simpleMobileHandler, { passive: false });
+    document.addEventListener('click', this._simpleMobileHandler);
+}
         
         document.addEventListener('touchend', this._mobileHandler, { passive: false });
         document.addEventListener('click', this._mobileHandler);
