@@ -1,11 +1,11 @@
 /**
  * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * WORKING VERSION with Security Fix, Trial Code Fix, and ENHANCED MOBILE MODAL FIX
+ * FIXED VERSION - Mobile Touch Events Simplified
  * - Hidden checksum logic (security)
  * - Trial codes with any checksum (111-999 prefixes)
  * - Full codes must sum to 37
  * - Updated contact information
- * - Mobile touch support for ALL buttons including enhanced modal fixes
+ * - SIMPLIFIED mobile touch support for reliable mobile operation
  */
 
 import { UIController } from './ui-controller.js';
@@ -219,9 +219,8 @@ class LicenseManager {
         return prefix + lastThree;
     }
 }
-
 /**
- * Main Bridge Application - WORKING VERSION with ENHANCED MOBILE MODAL FIX
+ * Main Bridge Application - FIXED VERSION with SIMPLIFIED Mobile Touch
  */
 class BridgeApp {
     constructor() {
@@ -243,6 +242,9 @@ class BridgeApp {
         this.codeEntryMode = false;
         this.enteredCode = '';
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // SIMPLIFIED: Remove complex mobile handler tracking
+        this._mobileHandler = null;
         
         this.init();
     }
@@ -300,26 +302,10 @@ class BridgeApp {
             -webkit-touch-callout: none;
         }
 
-        /* MODAL BUTTON MOBILE FIXES */
-        .mobile-device .modal-button {
-            min-height: 44px !important;
-            min-width: 44px !important;
-            touch-action: manipulation !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-            cursor: pointer !important;
-        }
-
-        .modal-button-pressed {
-            transform: scale(0.95) !important;
-            opacity: 0.8 !important;
-            transition: all 0.1s ease !important;
-        }
-
+        /* SIMPLIFIED: Remove complex modal CSS - let UI controller handle it */
         @media (max-width: 768px) {
             .calculator-buttons { gap: 8px; }
             .btn { padding: 12px 8px !important; font-size: 16px !important; }
-            .modal-button { padding: 12px 16px !important; font-size: 16px !important; }
         }
         `;
 
@@ -334,35 +320,53 @@ class BridgeApp {
         this.enteredCode = '';
         this.appState = 'license_entry';
         this.updateCodeEntryDisplay(status);
-        this.setupMobileLicenseButtons();
+        this.setupMobileLicenseButtons(); // FIXED: Simplified version
         this.updateButtonStates();
     }
 
+    // FIXED: Completely simplified mobile license button setup
     setupMobileLicenseButtons() {
         if (!this.isMobile) return;
         
-        setTimeout(() => {
-            const buttons = document.querySelectorAll('.btn');
-            buttons.forEach(button => {
-                button.style.touchAction = 'manipulation';
-                button.style.userSelect = 'none';
-                
-                const handler = (e) => {
-                    if (this.appState !== 'license_entry') return;
-                    e.preventDefault();
-                    
-                    const value = button.dataset.value;
-                    if (!button.classList.contains('disabled')) {
-                        button.classList.add('btn-pressed');
-                        setTimeout(() => button.classList.remove('btn-pressed'), 150);
-                        this.handleCodeEntryButton(value);
-                    }
-                };
-                
-                button.addEventListener('touchend', handler, { passive: false });
-                button.addEventListener('click', handler);
-            });
-        }, 100);
+        console.log('📱 Setting up SIMPLIFIED mobile license buttons');
+        
+        // Remove any existing handler to avoid conflicts
+        if (this._mobileHandler) {
+            document.removeEventListener('touchend', this._mobileHandler);
+            document.removeEventListener('click', this._mobileHandler);
+            this._mobileHandler = null;
+        }
+        
+        // SIMPLIFIED: Single event handler for all buttons
+        this._mobileHandler = (e) => {
+            if (this.appState !== 'license_entry') return;
+            
+            const button = e.target.closest('.btn');
+            if (!button || button.classList.contains('disabled')) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const value = button.dataset.value;
+            console.log('📱 Mobile license button pressed:', value);
+            
+            // Simple visual feedback
+            button.style.transform = 'scale(0.95)';
+            button.style.opacity = '0.8';
+            setTimeout(() => {
+                button.style.transform = '';
+                button.style.opacity = '';
+            }, 150);
+            
+            // Handle the button press
+            this.handleCodeEntryButton(value);
+        };
+        
+        // Single event listeners - much simpler than before
+        document.addEventListener('touchend', this._mobileHandler, { passive: false });
+        document.addEventListener('click', this._mobileHandler);
+        
+        console.log('✅ Simplified mobile license buttons ready');
     }
 
     // SECURITY FIXED: No checksum hints in display
@@ -395,234 +399,10 @@ class BridgeApp {
         
         this.ui.updateDisplay(content);
     }
+// ===================================================================
+// SECTION 4: DISPLAY UPDATES AND UI MANAGEMENT
+// ===================================================================
 
-    setupEventListeners() {
-        this.removeEventListeners();
-        
-        this.boundHandlers = {
-            buttonClick: this.handleButtonClick.bind(this),
-            keyDown: this.handleKeyPress.bind(this)
-        };
-
-        this.setupButtonEventListeners();
-        this.setupControlEventListeners();
-        document.addEventListener('keydown', this.boundHandlers.keyDown);
-    }
-
-    setupButtonEventListeners() {
-        const calculator = document.querySelector('.calculator-container') || document.body;
-        
-        const buttonHandler = (event) => {
-            if (this.appState === 'license_entry') return;
-            
-            if (event.type === 'touchend') {
-                event.preventDefault();
-            }
-            
-            const button = event.target.closest('.btn');
-            if (button && !button.classList.contains('disabled')) {
-                this.provideMobileButtonFeedback(button);
-                this.handleButtonClick(button.dataset.value);
-            }
-        };
-
-        calculator.addEventListener('click', buttonHandler);
-        calculator.addEventListener('touchend', buttonHandler);
-        
-        this.calculatorElement = calculator;
-        this.buttonHandler = buttonHandler;
-    }
-
-    provideMobileButtonFeedback(button) {
-        button.classList.add('btn-pressed');
-        setTimeout(() => button.classList.remove('btn-pressed'), 150);
-        if (navigator.vibrate) navigator.vibrate(50);
-    }
-
-    setupControlEventListeners() {
-        const controls = [
-            { id: '#wakeControl', handler: () => this.ui.toggleKeepAwake() },
-            { id: '#vulnControl', handler: () => this.handleVulnerabilityToggle() },
-            { id: '#honorsControl', handler: () => this.handleHonorsClick() },
-            { id: '#helpControl', handler: () => this.showHelp() },
-            { id: '#quitControl', handler: () => this.showQuit() }
-        ];
-
-        controls.forEach(({ id, handler }) => {
-            const element = document.querySelector(id);
-            if (element) {
-                element.addEventListener('click', handler);
-                element.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    handler();
-                });
-                element._bridgeAppHandler = handler;
-            }
-        });
-    }
-
-    removeEventListeners() {
-        if (this.boundHandlers) {
-            document.removeEventListener('keydown', this.boundHandlers.keyDown);
-        }
-        
-        if (this.calculatorElement && this.buttonHandler) {
-            this.calculatorElement.removeEventListener('click', this.buttonHandler);
-            this.calculatorElement.removeEventListener('touchend', this.buttonHandler);
-        }
-        
-        const controls = ['#wakeControl', '#vulnControl', '#honorsControl', '#helpControl', '#quitControl'];
-        controls.forEach(id => {
-            const element = document.querySelector(id);
-            if (element && element._bridgeAppHandler) {
-                element.removeEventListener('click', element._bridgeAppHandler);
-                element.removeEventListener('touchend', element._bridgeAppHandler);
-                delete element._bridgeAppHandler;
-            }
-        });
-    }
-    
-    async handleButtonClick(value) {
-        console.log(`🎯 Button pressed: ${value} in state: ${this.appState}`);
-        
-        try {
-            if (this.appState === 'license_entry') {
-                this.handleCodeEntryButton(value);
-            } else if (this.appState === 'mode_selection') {
-                await this.handleModeSelection(value);
-            } else if (value === 'BACK') {
-                this.handleBack();
-            } else {
-                await this.handleBridgeModeAction(value);
-            }
-            
-            this.updateDisplay();
-            
-        } catch (error) {
-            console.error('Error handling button click:', error);
-            this.ui.showError(`Error: ${error.message}`);
-        }
-    }
-
-    handleCodeEntryButton(value) {
-        if (value === 'BACK') {
-            this.enteredCode = this.enteredCode.slice(0, -1);
-        } else if (value === 'DEAL') {
-            this.submitLicenseCode();
-            return;
-        } else if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(value)) {
-            if (this.enteredCode.length < 6) {
-                this.enteredCode += value;
-            }
-        }
-        
-        this.updateCodeEntryDisplay();
-        this.updateButtonStates();
-    }
-
-    async submitLicenseCode() {
-        if (this.enteredCode.length !== 6) {
-            this.ui.showError('Code must be 6 digits');
-            return;
-        }
-
-        const result = await this.licenseManager.activateLicense(this.enteredCode);
-
-        if (result.success) {
-            this.ui.showSuccess(result.message, 3000);
-            setTimeout(() => {
-                this.codeEntryMode = false;
-                this.enteredCode = '';
-                this.appState = 'mode_selection';
-                this.init();
-            }, 3000);
-        } else {
-            this.ui.showError(result.message);
-            this.enteredCode = '';
-            this.updateCodeEntryDisplay();
-        }
-    }
-    
-    async handleBridgeModeAction(value) {
-        if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.handleAction(value);
-        }
-    }
-    
-    handleHonorsClick() {
-        if (this.bridgeModeInstance && this.currentMode === 'rubber') {
-            this.bridgeModeInstance.handleAction('HONORS');
-        }
-    }
-    
-    async handleModeSelection(value) {
-        const modeConfig = this.availableModes[value];
-        if (!modeConfig) return;
-        
-        try {
-            this.ui.showLoading(`Loading ${modeConfig.display}...`);
-            const { default: BridgeMode } = await import(modeConfig.module);
-            this.bridgeModeInstance = new BridgeMode(this.gameState, this.ui);
-            this.currentMode = modeConfig.name;
-            this.gameState.setMode(modeConfig.name);
-            this.appState = 'bridge_mode';
-        } catch (error) {
-            console.error(`Failed to load ${modeConfig.display}:`, error);
-            if (value !== '1') {
-                this.ui.showError(`${modeConfig.display} not available yet. Loading Kitchen Bridge...`);
-                setTimeout(() => this.handleModeSelection('1'), 2000);
-            } else {
-                throw new Error(`Kitchen Bridge failed to load: ${error.message}`);
-            }
-        }
-    }
-    
-    handleBack() {
-        if (this.bridgeModeInstance && this.bridgeModeInstance.canGoBack()) {
-            this.bridgeModeInstance.handleBack();
-        } else {
-            this.returnToModeSelection();
-        }
-    }
-    
-    returnToModeSelection() {
-        if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.cleanup?.();
-            this.bridgeModeInstance = null;
-        }
-        
-        this.currentMode = null;
-        this.appState = 'mode_selection';
-        this.gameState.reset();
-        this.ui.reset();
-        this.updateDisplay();
-    }
-    
-    handleVulnerabilityToggle() {
-        if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.toggleVulnerability();
-        }
-    }
-    
-    handleKeyPress(event) {
-        const key = event.key;
-        
-        if (['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(key)) {
-            event.preventDefault();
-            this.handleButtonClick(key);
-        } else if (key === 'Backspace' || key === 'Escape') {
-            event.preventDefault();
-            this.handleButtonClick('BACK');
-        } else if (key === 'Enter' || key === ' ') {
-            event.preventDefault();
-            if (this.appState === 'license_entry') {
-                this.handleButtonClick('DEAL');
-            } else if (this.appState === 'mode_selection') {
-                this.handleButtonClick('1');
-            }
-        }
-    }
-    
     updateDisplay() {
         if (this.appState === 'license_entry') {
             return;
@@ -689,7 +469,10 @@ class BridgeApp {
         
         this.ui.updateButtonStates(activeButtons);
     }
-    
+// ===================================================================
+// SECTION 5: HELP AND MODAL MANAGEMENT
+// ===================================================================
+
     showHelp() {
         let helpContent;
         
@@ -703,11 +486,8 @@ class BridgeApp {
         
         this.ui.showModal('help', helpContent);
         
-        // MOBILE FIX: Apply mobile touch to modal buttons after they're created
-        if (this.isMobile) {
-            console.log('📱 Help modal shown, applying enhanced mobile fixes...');
-            this.applyEnhancedMobileModalButtonFixes();
-        }
+        // SIMPLIFIED: Let UI controller handle mobile modal fixes
+        console.log('📱 Help modal shown - UI controller will handle mobile touch');
     }
 
     // UPDATED: Main help with your email
@@ -861,19 +641,8 @@ class BridgeApp {
         
         this.ui.showModal('quit', quitContent);
         
-        // ENHANCED: Apply mobile touch fixes with immediate and delayed attempts
-        if (this.isMobile) {
-            console.log('📱 Quit modal shown, applying enhanced mobile fixes...');
-            
-            // Immediate attempt
-            this.applyEnhancedMobileModalButtonFixes();
-            
-            // Additional delayed attempt as backup
-            setTimeout(() => {
-                console.log('📱 Backup mobile modal fix attempt...');
-                this.applyEnhancedMobileModalButtonFixes();
-            }, 100);
-        }
+        // SIMPLIFIED: Let UI controller handle mobile modal fixes
+        console.log('📱 Quit modal shown - UI controller will handle mobile touch');
     }
 
     showLicenseQuitOptions() {
@@ -896,200 +665,8 @@ class BridgeApp {
         
         this.ui.showModal('quit', quitContent);
         
-        // MOBILE FIX: Apply mobile touch to modal buttons after they're created
-        if (this.isMobile) {
-            console.log('📱 License quit modal shown, applying enhanced mobile fixes...');
-            this.applyEnhancedMobileModalButtonFixes();
-        }
-    }
-
-    /**
-     * ENHANCED MOBILE MODAL FIX: Apply mobile touch events to modal buttons with multiple retry attempts
-     */
-    applyEnhancedMobileModalButtonFixes() {
-        if (!this.isMobile) {
-            console.log('🖥️ Desktop mode - skipping mobile modal fixes');
-            return;
-        }
-        
-        console.log('📱 Starting enhanced mobile modal button fixes');
-        
-        // Multiple attempts with increasing delays to ensure we catch the modal
-        const retryAttempts = [50, 150, 300, 500, 1000];
-        let successfulSetup = false;
-        
-        retryAttempts.forEach((delay, attemptIndex) => {
-            setTimeout(() => {
-                // Skip if we already had a successful setup
-                if (successfulSetup) {
-                    console.log(`⏭️ Skipping attempt ${attemptIndex + 1} - already successful`);
-                    return;
-                }
-                
-                const modal = document.querySelector('.modal-overlay');
-                if (!modal) {
-                    console.log(`❌ Attempt ${attemptIndex + 1}/${retryAttempts.length}: No modal found after ${delay}ms`);
-                    return;
-                }
-                
-                console.log(`📱 Attempt ${attemptIndex + 1}/${retryAttempts.length}: Modal found, setting up mobile buttons`);
-                
-                // Comprehensive button selectors to catch all possible button types
-                const allButtons = modal.querySelectorAll(`
-                    button,
-                    .modal-button,
-                    .close-btn,
-                    .menu-btn,
-                    .close-app-btn,
-                    [onclick],
-                    div[onclick],
-                    span[onclick],
-                    [role="button"],
-                    .btn
-                `);
-                
-                if (allButtons.length === 0) {
-                    console.log(`❌ Attempt ${attemptIndex + 1}: No buttons found in modal`);
-                    return;
-                }
-                
-                console.log(`🔍 Found ${allButtons.length} potential buttons in modal`);
-                let enhancedCount = 0;
-                
-                allButtons.forEach((button, buttonIndex) => {
-                    try {
-                        const buttonText = button.textContent?.trim() || 
-                                         button.innerText?.trim() || 
-                                         button.title || 
-                                         button.getAttribute('aria-label') || 
-                                         `button-${buttonIndex}`;
-                        
-                        console.log(`🔧 Setting up button ${buttonIndex + 1}: "${buttonText}"`);
-                        
-                        // Apply comprehensive mobile properties
-                        const mobileStyles = {
-                            touchAction: 'manipulation',
-                            userSelect: 'none',
-                            webkitTapHighlightColor: 'transparent',
-                            webkitUserSelect: 'none',
-                            webkitTouchCallout: 'none',
-                            cursor: 'pointer',
-                            minHeight: '44px',
-                            minWidth: '80px',
-                            display: button.style.display || 'inline-block'
-                        };
-                        
-                        Object.assign(button.style, mobileStyles);
-                        
-                        // Store the original onclick handler
-                        const originalOnClick = button.onclick;
-                        
-                        // Create enhanced mobile touch handler
-                        const enhancedTouchHandler = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.stopImmediatePropagation();
-                            
-                            console.log(`📱 ENHANCED TOUCH: "${buttonText}" pressed`);
-                            
-                            // Immediate visual feedback
-                            button.style.transform = 'scale(0.9)';
-                            button.style.opacity = '0.7';
-                            button.style.transition = 'all 0.15s ease';
-                            
-                            // Haptic feedback
-                            if (navigator.vibrate) {
-                                navigator.vibrate([50]);
-                            }
-                            
-                            // Reset visual state after a delay
-                            setTimeout(() => {
-                                button.style.transform = 'scale(1)';
-                                button.style.opacity = '1';
-                            }, 200);
-                            
-                            // Execute the original handler after a small delay
-                            setTimeout(() => {
-                                try {
-                                    if (originalOnClick) {
-                                        console.log(`🎯 Executing original handler for: "${buttonText}"`);
-                                        originalOnClick.call(button, e);
-                                    } else {
-                                        console.log(`⚠️ No original handler found for: "${buttonText}"`);
-                                        // Try to trigger a click event as fallback
-                                        button.dispatchEvent(new Event('click', { bubbles: true }));
-                                    }
-                                } catch (error) {
-                                    console.error(`❌ Error executing handler for "${buttonText}":`, error);
-                                }
-                            }, 50);
-                        };
-                        
-                        // Clone the button to remove all existing event listeners
-                        const enhancedButton = button.cloneNode(true);
-                        
-                        // Restore the original onclick handler
-                        if (originalOnClick) {
-                            enhancedButton.onclick = originalOnClick;
-                        }
-                        
-                        // Apply the same mobile styles to the cloned button
-                        Object.assign(enhancedButton.style, mobileStyles);
-                        
-                        // Replace the original button with the enhanced one
-                        if (button.parentNode) {
-                            button.parentNode.replaceChild(enhancedButton, button);
-                            console.log(`✅ Replaced button: "${buttonText}"`);
-                        }
-                        
-                        // Add comprehensive touch event listeners
-                        enhancedButton.addEventListener('touchstart', (e) => {
-                            e.preventDefault();
-                            enhancedButton.style.transform = 'scale(0.9)';
-                            enhancedButton.style.opacity = '0.7';
-                            console.log(`👆 Touch start: "${buttonText}"`);
-                        }, { passive: false });
-                        
-                        enhancedButton.addEventListener('touchend', enhancedTouchHandler, { passive: false });
-                        
-                        enhancedButton.addEventListener('touchcancel', (e) => {
-                            e.preventDefault();
-                            enhancedButton.style.transform = 'scale(1)';
-                            enhancedButton.style.opacity = '1';
-                            console.log(`🚫 Touch cancel: "${buttonText}"`);
-                        }, { passive: false });
-                        
-                        // Also add click event as a fallback for desktop/other devices
-                        enhancedButton.addEventListener('click', enhancedTouchHandler, { passive: false });
-                        
-                        enhancedCount++;
-                        
-                    } catch (error) {
-                        console.error(`❌ Error setting up button ${buttonIndex}:`, error);
-                    }
-                });
-                
-                if (enhancedCount > 0) {
-                    successfulSetup = true;
-                    console.log(`✅ MOBILE MODAL SETUP COMPLETE: Enhanced ${enhancedCount}/${allButtons.length} buttons`);
-                    console.log(`🎯 Modal buttons should now work on mobile devices`);
-                } else {
-                    console.log(`❌ Attempt ${attemptIndex + 1}: Failed to enhance any buttons`);
-                }
-                
-            }, delay);
-        });
-        
-        // Final check after all attempts
-        setTimeout(() => {
-            if (!successfulSetup) {
-                console.error('❌ MOBILE MODAL SETUP FAILED: All retry attempts exhausted');
-                console.log('🔍 Debugging info:');
-                console.log('- Modal present:', !!document.querySelector('.modal-overlay'));
-                console.log('- Mobile detected:', this.isMobile);
-                console.log('- User agent:', navigator.userAgent);
-            }
-        }, 1500);
+        // SIMPLIFIED: Let UI controller handle mobile modal fixes
+        console.log('📱 License quit modal shown - UI controller will handle mobile touch');
     }
     
     showCloseAppInstructions() {
@@ -1119,7 +696,10 @@ To close the app:
         alert(message);
         this.ui.closeModal();
     }
-    
+// ===================================================================
+// SECTION 6: SCORE HISTORY AND UTILITY FUNCTIONS (FINAL SECTION)
+// ===================================================================
+
     showScoreHistory() {
         try {
             const existingModals = document.querySelectorAll('.modal-overlay, .score-modal');
@@ -1198,12 +778,11 @@ To close the app:
             // Set global reference for button callbacks
             window.bridgeApp = this;
             
-            // MOBILE FIX: Apply mobile touch to score modal buttons
+            // SIMPLIFIED: Basic mobile touch for score modal buttons
             if (this.isMobile) {
                 setTimeout(() => {
                     const scoreButtons = modal.querySelectorAll('.score-modal-btn');
                     scoreButtons.forEach(button => {
-                        // Apply mobile properties
                         button.style.touchAction = 'manipulation';
                         button.style.userSelect = 'none';
                         button.style.webkitTapHighlightColor = 'transparent';
@@ -1271,6 +850,10 @@ To close the app:
         }
     }
 }
+
+// ===================================================================
+// EXPORTS AND GLOBAL SETUP
+// ===================================================================
 
 // Export and make globally accessible
 export { BridgeApp, LicenseManager };
