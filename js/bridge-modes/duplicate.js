@@ -313,29 +313,44 @@ class DuplicateBridge extends BaseBridgeMode {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('📱 Open Traveler button pressed');
+                console.log('📱 Open Traveler button pressed - FIXED VERSION');
                 
                 const dropdown = document.getElementById('boardDropdown');
                 const selectedValue = dropdown ? dropdown.value : '';
                 
                 console.log('📱 Dropdown value:', selectedValue);
                 
-                if (selectedValue) {
+                if (selectedValue && selectedValue !== '') {
                     const boardNum = parseInt(selectedValue);
-                    console.log('📱 Selected board:', boardNum);
+                    console.log('📱 Opening board:', boardNum);
                     this.closeBoardSelector();
-                    this.openSpecificTraveler(boardNum);
+                    setTimeout(() => {
+                        this.openSpecificTraveler(boardNum);
+                    }, 100);
                 } else {
-                    console.log('📱 No board selected');
+                    console.log('📱 No board selected - showing alert');
                     alert('Please select a board first!');
                 }
             };
             
-            openBtn.style.touchAction = 'manipulation';
-            openBtn.style.userSelect = 'none';
-            openBtn.style.webkitTapHighlightColor = 'transparent';
-            openBtn.addEventListener('click', openHandler);
-            openBtn.addEventListener('touchend', openHandler, { passive: false });
+            // EMERGENCY FIX: Remove ALL existing handlers and add fresh ones
+            openBtn.replaceWith(openBtn.cloneNode(true));
+            const freshOpenBtn = document.getElementById('openTravelerBtn');
+            
+            freshOpenBtn.style.touchAction = 'manipulation';
+            freshOpenBtn.style.userSelect = 'none';
+            freshOpenBtn.style.webkitTapHighlightColor = 'transparent';
+            freshOpenBtn.style.cursor = 'pointer';
+            
+            freshOpenBtn.addEventListener('click', openHandler);
+            freshOpenBtn.addEventListener('touchend', openHandler, { passive: false });
+            freshOpenBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                freshOpenBtn.style.transform = 'scale(0.95)';
+                freshOpenBtn.style.opacity = '0.8';
+            }, { passive: false });
+            
+            console.log('📱 Fresh Open Traveler button setup complete');
         }
         
         if (cancelBtn) {
