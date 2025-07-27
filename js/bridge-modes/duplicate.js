@@ -253,25 +253,75 @@ class DuplicateBridge extends BaseBridgeMode {
                 <h3 style="text-align: center; margin-bottom: 20px;">Board Selection</h3>
                 
                 <div style="text-align: center; margin: 20px 0;">
-                    <select id="boardDropdown" style="padding: 12px; border: 2px solid #3498db; border-radius: 8px; font-size: 14px;">
+                    <select id="boardDropdown" style="padding: 12px; border: 2px solid #3498db; border-radius: 8px; font-size: 14px; min-width: 200px;">
                         <option value="">Select Board...</option>
                         ${this.getBoardDropdownOptions()}
                     </select>
                 </div>
                 
                 <div style="text-align: center;">
-                    <button onclick="window.selectBoardFromDropdown()" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; margin-right: 8px;">Open Traveler</button>
-                    <button onclick="window.closeBoardSelector()" style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px;">Cancel</button>
+                    <button id="openTravelerBtn" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; margin-right: 8px; min-height: 44px;">Open Traveler</button>
+                    <button id="cancelBoardBtn" style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; min-height: 44px;">Cancel</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
         
-        window.selectBoardFromDropdown = () => this.selectBoardFromDropdown();
-        window.closeBoardSelector = () => this.closeBoardSelector();
-        
+        // MOBILE FIX: Setup mobile-friendly event handlers
+        this.setupBoardSelectorEvents();
         this.setupMobilePopupButtons();
+    }
+    
+    // MOBILE FIX: Setup board selector events
+    setupBoardSelectorEvents() {
+        const openBtn = document.getElementById('openTravelerBtn');
+        const cancelBtn = document.getElementById('cancelBoardBtn');
+        const dropdown = document.getElementById('boardDropdown');
+        
+        if (openBtn) {
+            const openHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('📱 Open Traveler button pressed');
+                
+                const dropdown = document.getElementById('boardDropdown');
+                if (dropdown && dropdown.value) {
+                    const boardNum = parseInt(dropdown.value);
+                    console.log('📱 Selected board:', boardNum);
+                    this.closeBoardSelector();
+                    this.openSpecificTraveler(boardNum);
+                } else {
+                    alert('Please select a board first!');
+                }
+            };
+            
+            openBtn.style.touchAction = 'manipulation';
+            openBtn.addEventListener('click', openHandler);
+            openBtn.addEventListener('touchend', openHandler, { passive: false });
+        }
+        
+        if (cancelBtn) {
+            const cancelHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Cancel button pressed');
+                this.closeBoardSelector();
+            };
+            
+            cancelBtn.style.touchAction = 'manipulation';
+            cancelBtn.addEventListener('click', cancelHandler);
+            cancelBtn.addEventListener('touchend', cancelHandler, { passive: false });
+        }
+        
+        // MOBILE FIX: Make dropdown work on mobile
+        if (dropdown) {
+            dropdown.style.touchAction = 'manipulation';
+            dropdown.addEventListener('change', (e) => {
+                console.log('📱 Dropdown changed to:', e.target.value);
+            });
+        }
     }
     
     getBoardDropdownOptions() {
@@ -381,6 +431,7 @@ class DuplicateBridge extends BaseBridgeMode {
         document.body.appendChild(popup);
         
         this.setupTravelerGlobals();
+        this.setupDropdownListeners(); // Add this for auto-calculation
         this.setupMobilePopupButtons();
     }
     
@@ -421,6 +472,13 @@ class DuplicateBridge extends BaseBridgeMode {
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7;">
+                    <select data-row="${index}" data-field="double" style="width: 50px;">
+                        <option value="">-</option>
+                        <option value="X">X</option>
+                        <option value="XX">XX</option>
+                    </select>
+                </td>
+                <td style="padding: 4px; border: 1px solid #bdc3c7;">
                     <select data-row="${index}" data-field="tricks" style="width: 50px;">
                         <option value="">-</option>
                         ${Array.from({length: 14}, (_, i) => `<option value="${i}">${i}</option>`).join('')}
@@ -434,6 +492,134 @@ class DuplicateBridge extends BaseBridgeMode {
                 </td>
             </tr>
         `).join('');
+    }
+    
+    setupDropdownListeners() {
+        const selects = document.querySelectorAll('#travelerPopup select');
+        selects.forEach(select => {
+            select.addEventListener('change', (e) => {
+                const rowIndex = parseInt(e.target.dataset.row);
+                const field = e.target.dataset.field;
+                const value = e.target.value;
+                
+                console.log(`📱 Dropdown changed: row ${rowIndex}, field ${field}, value ${value}`);
+                
+                this.traveler.data[rowIndex][field] = value;
+                
+                // AUTO-CALCULATE when row is complete
+                const row = this.traveler.data[rowIndex];
+                if (row.level && row.suit && row.declarer && row.tricks) {
+                    console.log(`📱 Auto-calculating score for row ${rowIndex}`);
+                    this.calculateScore(rowIndex);
+                }
+            });
+        });
+    }
+    
+    calculateScore(rowIndex) {
+        const row = this.traveler.data[rowIndex];
+        if (!row.level || !row.suit || !row.declarer || !row.tricks) return;
+        
+        console.log(`📱 Calculating score for row ${rowIndex}:`, row);
+        
+        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
+        const declarerSide = ['N', 'S'].includes(row.declarer) ? 'NS' : 'EW';
+        
+        // Determine if declarer's side is vulnerable
+        let isVulnerable = false;
+        if (vulnerability === 'Both') isVulnerable = true;
+        else if (vulnerability === 'NS' && declarerSide === 'NS') isVulnerable = true;
+        else if (vulnerability === 'EW' && declarerSide === 'EW') isVulnerable = true;
+        
+        const level = parseInt(row.level);
+        const tricks = parseInt(row.tricks);
+        const needed = 6 + level;
+        const result = tricks - needed;
+        const isDoubled = row.double === 'X';
+        const isRedoubled = row.double === 'XX';
+        
+        let score = 0;
+        
+        if (result >= 0) {
+            // Contract made
+            const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+            let basicScore = level * suitPoints[row.suit];
+            if (row.suit === 'NT') basicScore += 10; // NT bonus
+            
+            if (isDoubled || isRedoubled) {
+                basicScore *= (isRedoubled ? 4 : 2);
+            }
+            
+            score = basicScore;
+            
+            // Add overtricks
+            if (result > 0) {
+                if (isDoubled || isRedoubled) {
+                    const overtrickValue = isVulnerable ? 200 : 100;
+                    score += result * overtrickValue * (isRedoubled ? 2 : 1);
+                } else {
+                    score += result * suitPoints[row.suit];
+                }
+            }
+            
+            // Game bonus
+            if (basicScore >= 100) {
+                score += isVulnerable ? 500 : 300;
+            } else {
+                score += 50;
+            }
+            
+            // Double bonus
+            if (isDoubled) score += 50;
+            if (isRedoubled) score += 100;
+            
+        } else {
+            // Contract failed
+            const undertricks = Math.abs(result);
+            
+            if (isDoubled || isRedoubled) {
+                let penalty = 0;
+                for (let i = 1; i <= undertricks; i++) {
+                    if (i === 1) {
+                        penalty += isVulnerable ? 200 : 100;
+                    } else if (i <= 3) {
+                        penalty += isVulnerable ? 300 : 200;
+                    } else {
+                        penalty += 300;
+                    }
+                }
+                score = -penalty * (isRedoubled ? 2 : 1);
+            } else {
+                score = -(undertricks * (isVulnerable ? 100 : 50));
+            }
+        }
+        
+        // Assign scores (no negative scores in duplicate)
+        if (declarerSide === 'NS') {
+            if (score > 0) {
+                row.nsScore = score;
+                row.ewScore = 0;
+            } else {
+                row.nsScore = 0;
+                row.ewScore = Math.abs(score);
+            }
+        } else {
+            if (score > 0) {
+                row.ewScore = score;
+                row.nsScore = 0;
+            } else {
+                row.ewScore = 0;
+                row.nsScore = Math.abs(score);
+            }
+        }
+        
+        console.log(`📱 Calculated scores: NS=${row.nsScore}, EW=${row.ewScore}`);
+        
+        // Update display
+        const nsSpan = document.getElementById(`nsScore_${rowIndex}`);
+        const ewSpan = document.getElementById(`ewScore_${rowIndex}`);
+        if (nsSpan) nsSpan.textContent = row.nsScore;
+        if (ewSpan) ewSpan.textContent = row.ewScore;
     }
     
     setupTravelerGlobals() {
