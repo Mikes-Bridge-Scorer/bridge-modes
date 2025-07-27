@@ -481,9 +481,9 @@ class DuplicateBridge extends BaseBridgeMode {
         `;
         
         popup.innerHTML = `
-            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 90%; color: #2c3e50;">
+            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80%; overflow: auto; color: #2c3e50;">
                 <h3 style="text-align: center;">${movement.description}</h3>
-                <p style="text-align: center;">Movement details would be shown here</p>
+                ${this.getMovementTableHTML()}
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 4px; margin-right: 10px;">Close</button>
                     <button onclick="this.parentElement.parentElement.parentElement.remove(); window.duplicateBridge.handleAction('2');" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px;">Confirm</button>
@@ -495,6 +495,66 @@ class DuplicateBridge extends BaseBridgeMode {
         
         window.duplicateBridge = this;
         this.setupMobilePopupButtons();
+    }
+    
+    getMovementTableHTML() {
+        const movement = this.session.movement;
+        if (!movement || !movement.movement) return '<p>Movement data not available</p>';
+        
+        // Group by rounds
+        const roundData = {};
+        movement.movement.forEach(entry => {
+            if (!roundData[entry.round]) {
+                roundData[entry.round] = [];
+            }
+            roundData[entry.round].push(entry);
+        });
+        
+        let html = `
+            <div style="overflow-x: auto; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 300px;">
+                    <thead>
+                        <tr style="background: #34495e; color: white;">
+                            <th style="padding: 8px; border: 1px solid #2c3e50;">Round</th>
+        `;
+        
+        // Add table headers
+        for (let t = 1; t <= movement.tables; t++) {
+            html += `<th style="padding: 8px; border: 1px solid #2c3e50;">Table ${t}</th>`;
+        }
+        html += '</tr></thead><tbody>';
+        
+        // Add round data
+        Object.keys(roundData).sort((a,b) => parseInt(a) - parseInt(b)).forEach(round => {
+            html += `<tr><td style="padding: 8px; border: 1px solid #2c3e50; font-weight: bold; background: #ecf0f1; text-align: center;">${round}</td>`;
+            
+            const roundEntries = roundData[round];
+            
+            // Add table data
+            for (let t = 1; t <= movement.tables; t++) {
+                const entry = roundEntries.find(e => e.table === t);
+                if (entry) {
+                    const boardRange = entry.boards.length > 1 ? 
+                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
+                        entry.boards[0];
+                    
+                    html += `
+                        <td style="padding: 8px; border: 1px solid #2c3e50; text-align: center; font-size: 11px;">
+                            <div><strong>NS: ${entry.ns}</strong></div>
+                            <div><strong>EW: ${entry.ew}</strong></div>
+                            <div style="color: #666; margin-top: 4px;">Boards: ${boardRange}</div>
+                        </td>`;
+                } else {
+                    html += '<td style="padding: 8px; border: 1px solid #2c3e50; text-align: center;">-</td>';
+                }
+            }
+            
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+        
+        return html;
     }
     
     getBoardVulnerability(boardNumber) {
@@ -534,13 +594,44 @@ class DuplicateBridge extends BaseBridgeMode {
         const activeButtons = this.getActiveButtons();
         this.ui.updateButtonStates(activeButtons);
         
+        // MOBILE FIX: Enhanced board selection button setup
         if (this.inputState === 'board_selection') {
             setTimeout(() => {
                 const selectBtn = document.getElementById('selectBoardBtn');
                 if (selectBtn) {
-                    selectBtn.onclick = () => {
-                        this.openTravelerPopup();
+                    console.log('📱 Setting up board selection button');
+                    
+                    // Remove any existing handlers
+                    selectBtn.onclick = null;
+                    
+                    // MOBILE FIX: Add both click and touch handlers
+                    const boardSelectHandler = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('📱 Board selection button pressed');
+                        
+                        // Visual feedback
+                        selectBtn.style.transform = 'scale(0.95)';
+                        selectBtn.style.opacity = '0.8';
+                        
+                        setTimeout(() => {
+                            selectBtn.style.transform = '';
+                            selectBtn.style.opacity = '';
+                            this.openTravelerPopup();
+                        }, 100);
                     };
+                    
+                    // Add mobile properties
+                    selectBtn.style.touchAction = 'manipulation';
+                    selectBtn.style.userSelect = 'none';
+                    selectBtn.style.webkitTapHighlightColor = 'transparent';
+                    selectBtn.style.cursor = 'pointer';
+                    
+                    // Add both event types
+                    selectBtn.addEventListener('click', boardSelectHandler);
+                    selectBtn.addEventListener('touchend', boardSelectHandler, { passive: false });
+                    
+                    console.log('✅ Board selection button mobile touch setup complete');
                 }
             }, 100);
         }
