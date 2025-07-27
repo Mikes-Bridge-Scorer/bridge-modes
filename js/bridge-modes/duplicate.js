@@ -1,5 +1,5 @@
 /**
- * Simplified Duplicate Bridge Mode - Fixed with Dropdown Interface and MOBILE POPUP FIXES
+ * Simplified Duplicate Bridge Mode - Fixed with Mobile Popup Support
  * Uses dropdown fields in popup for easy data entry
  */
 
@@ -33,7 +33,7 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Initialize movement data - FIXED structure
+     * Initialize movement data
      */
     initializeMovements() {
         this.movements = {
@@ -115,23 +115,15 @@ class DuplicateBridge extends BaseBridgeMode {
         console.log('🏆 Movements initialized:', Object.keys(this.movements));
     }
     
-    /**
-     * Initialize mode
-     */
     initialize() {
         this.inputState = 'pairs_setup';
-        // Set up global reference for button callbacks
         window.duplicateBridge = this;
         this.updateDisplay();
     }
     
-    /**
-     * Handle user actions
-     */
     handleAction(value) {
         console.log(`🎮 Duplicate action: ${value} in state: ${this.inputState}`);
         
-        // Don't handle buttons when traveler popup is active
         if (this.traveler.isActive) {
             return;
         }
@@ -154,9 +146,6 @@ class DuplicateBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Handle pairs setup
-     */
     handlePairsSetup(value) {
         const pairCount = value === '0' ? 10 : parseInt(value);
         
@@ -170,9 +159,6 @@ class DuplicateBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Handle movement confirmation
-     */
     handleMovementConfirm(value) {
         if (value === '1') {
             this.showMovementPopup();
@@ -184,9 +170,6 @@ class DuplicateBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Setup boards array
-     */
     setupBoards() {
         this.session.boards = {};
         for (let i = 1; i <= this.session.movement.totalBoards; i++) {
@@ -199,9 +182,6 @@ class DuplicateBridge extends BaseBridgeMode {
         this.session.isSetup = true;
     }
     
-    /**
-     * Handle board selection
-     */
     handleBoardSelection(value) {
         if (value === 'BACK') {
             this.inputState = 'movement_confirm';
@@ -212,36 +192,22 @@ class DuplicateBridge extends BaseBridgeMode {
             this.inputState = 'results';
             return;
         }
-        
-        // All board selection now handled by dropdown
-        // No direct button handling needed
     }
     
-    /**
-     * Handle results actions
-     */
     handleResults(value) {
         if (value === 'BACK') {
             this.inputState = 'board_selection';
         }
     }
     
-    /**
-     * Open traveler popup
-     */
-    openTravelerPopup(boardNumber) {
-        console.log(`🎯 Opening traveler for board ${boardNumber}`);
-        
-        this.traveler.isActive = true;
-        this.traveler.boardNumber = boardNumber;
-        this.traveler.data = this.generateTravelerRows(boardNumber);
-        
-        this.showTravelerPopup();
+    openTravelerPopup(boardNumber = null) {
+        if (boardNumber) {
+            this.openSpecificTraveler(boardNumber);
+        } else {
+            this.showBoardSelectorPopup();
+        }
     }
     
-    /**
-     * Generate traveler rows for a board
-     */
     generateTravelerRows(boardNumber) {
         const instances = this.session.movement.movement.filter(entry => 
             entry.boards && entry.boards.includes(boardNumber)
@@ -254,7 +220,7 @@ class DuplicateBridge extends BaseBridgeMode {
             level: '',
             suit: '',
             declarer: '',
-            double: '', // Added double field
+            double: '',
             tricks: '',
             nsScore: null,
             ewScore: null
@@ -262,21 +228,70 @@ class DuplicateBridge extends BaseBridgeMode {
     }
     
     /**
-     * Open board selector popup (main entry point)
+     * MOBILE FIXED: Setup touch events for popup buttons
      */
-    openTravelerPopup(boardNumber = null) {
-        if (boardNumber) {
-            // Direct board access - open traveler immediately
-            this.openSpecificTraveler(boardNumber);
-        } else {
-            // Open board selector popup first
-            this.showBoardSelectorPopup();
-        }
+    setupMobilePopupButtons() {
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) return;
+        
+        console.log('📱 Setting up mobile touch for duplicate popup buttons');
+        
+        const popup = document.getElementById('travelerPopup') || 
+                     document.getElementById('boardSelectorPopup') || 
+                     document.getElementById('movementPopup');
+        if (!popup) return;
+        
+        const buttons = popup.querySelectorAll('button');
+        
+        buttons.forEach((button, index) => {
+            console.log(`📱 Setting up mobile touch for button ${index}:`, button.textContent.trim());
+            
+            button.style.touchAction = 'manipulation';
+            button.style.userSelect = 'none';
+            button.style.webkitTapHighlightColor = 'transparent';
+            button.style.minHeight = '44px';
+            button.style.cursor = 'pointer';
+            
+            const originalOnclick = button.onclick;
+            const onclickAttr = button.getAttribute('onclick');
+            
+            const mobileHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('📱 Duplicate popup button touched:', button.textContent.trim());
+                
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+                
+                setTimeout(() => {
+                    button.style.transform = '';
+                    button.style.opacity = '';
+                    
+                    try {
+                        if (originalOnclick) {
+                            originalOnclick.call(button, e);
+                        } else if (onclickAttr) {
+                            const func = new Function('event', onclickAttr);
+                            func.call(button, e);
+                        }
+                    } catch (error) {
+                        console.error('Error executing popup button action:', error);
+                    }
+                }, 100);
+            };
+            
+            button.addEventListener('touchend', mobileHandler, { passive: false });
+            button.addEventListener('click', mobileHandler);
+        });
+        
+        console.log(`✅ Mobile touch setup complete for ${buttons.length} popup buttons`);
     }
     
-    /**
-     * Show board selector popup - MOBILE FIXED
-     */
     showBoardSelectorPopup() {
         const popup = document.createElement('div');
         popup.id = 'boardSelectorPopup';
@@ -327,129 +342,20 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        // Set up global functions
         window.selectBoardFromDropdown = () => this.selectBoardFromDropdown();
         window.closeBoardSelector = () => this.closeBoardSelector();
         
-        // MOBILE FIX: Add touch events to popup buttons
         this.setupMobilePopupButtons();
     }
     
-    /**
-     * MOBILE FIX: Setup touch events for popup buttons
-     */
-    setupMobilePopupButtons() {
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (!isMobile) return;
-        
-        console.log('📱 Setting up mobile touch for duplicate popup buttons');
-        
-        // Find all buttons in the current popup (try both popup types)
-        const popup = document.getElementById('travelerPopup') || 
-                     document.getElementById('boardSelectorPopup') || 
-                     document.getElementById('movementPopup');
-        if (!popup) return;
-        
-        const buttons = popup.querySelectorAll('button');
-        
-        buttons.forEach((button, index) => {
-            console.log(`📱 Setting up mobile touch for button ${index}:`, button.textContent.trim());
-            
-            // Ensure mobile properties
-            button.style.touchAction = 'manipulation';
-            button.style.userSelect = 'none';
-            button.style.webkitTapHighlightColor = 'transparent';
-            button.style.webkitUserSelect = 'none';
-            button.style.minHeight = '44px';
-            button.style.cursor = 'pointer';
-            
-            // Store original onclick handlers
-            const originalOnclick = button.onclick;
-            const onclickAttr = button.getAttribute('onclick');
-            
-            // Create comprehensive mobile touch handler
-            const mobileHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('📱 Duplicate popup button touched:', button.textContent.trim());
-                
-                // Immediate visual feedback
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.8';
-                button.style.transition = 'all 0.1s ease';
-                
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(30);
-                }
-                
-                // Execute after visual feedback delay
-                setTimeout(() => {
-                    // Reset visual state
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                    
-                    // Execute original onclick handler
-                    try {
-                        if (originalOnclick) {
-                            console.log('📱 Executing original onclick function');
-                            originalOnclick.call(button, e);
-                        } else if (onclickAttr) {
-                            console.log('📱 Executing onclick attribute:', onclickAttr);
-                            // Create and execute function from onclick attribute
-                            const func = new Function('event', onclickAttr);
-                            func.call(button, e);
-                        } else {
-                            console.log('📱 No onclick handler found');
-                        }
-                    } catch (error) {
-                        console.error('❌ Error executing popup button action:', error);
-                    }
-                }, 100);
-            };
-            
-            // Remove existing event listeners to avoid duplicates
-            button.removeEventListener('touchend', button._mobileHandler);
-            button.removeEventListener('click', button._mobileHandler);
-            
-            // Store handler reference for cleanup
-            button._mobileHandler = mobileHandler;
-            
-            // Add comprehensive touch events
-            button.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.8';
-            }, { passive: false });
-            
-            button.addEventListener('touchend', mobileHandler, { passive: false });
-            button.addEventListener('click', mobileHandler, { passive: false });
-            
-            // Reset on touch cancel
-            button.addEventListener('touchcancel', () => {
-                button.style.transform = '';
-                button.style.opacity = '';
-            }, { passive: true });
-        });
-        
-        console.log(`✅ Mobile touch setup complete for ${buttons.length} popup buttons`);
-    }
-    
-    /**
-     * Get board dropdown options
-     */
     getBoardDropdownOptions() {
         let options = '';
         
         Object.values(this.session.boards).forEach(board => {
             const status = board.completed ? '✅' : '⭕';
             const vulnerability = this.getBoardVulnerability(board.number);
-            const vulnColor = vulnerability === 'None' ? '#95a5a6' : 
-                            vulnerability === 'NS' ? '#e74c3c' : 
-                            vulnerability === 'EW' ? '#f39c12' : '#8e44ad';
             
-            options += `<option value="${board.number}" style="color: ${vulnColor};">
+            options += `<option value="${board.number}">
                 Board ${board.number} ${status} (${vulnerability})
             </option>`;
         });
@@ -457,9 +363,6 @@ class DuplicateBridge extends BaseBridgeMode {
         return options;
     }
     
-    /**
-     * Select board from dropdown
-     */
     selectBoardFromDropdown() {
         const dropdown = document.getElementById('boardDropdown');
         if (dropdown && dropdown.value) {
@@ -471,9 +374,6 @@ class DuplicateBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Close board selector
-     */
     closeBoardSelector() {
         const popup = document.getElementById('boardSelectorPopup');
         if (popup) popup.remove();
@@ -482,9 +382,6 @@ class DuplicateBridge extends BaseBridgeMode {
         delete window.closeBoardSelector;
     }
     
-    /**
-     * Open specific traveler popup
-     */
     openSpecificTraveler(boardNumber) {
         console.log(`🎯 Opening traveler for board ${boardNumber}`);
         
@@ -495,9 +392,6 @@ class DuplicateBridge extends BaseBridgeMode {
         this.showSpecificTravelerPopup();
     }
     
-    /**
-     * Show specific traveler popup - MOBILE FIXED
-     */
     showSpecificTravelerPopup() {
         const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
         
@@ -544,14 +438,6 @@ class DuplicateBridge extends BaseBridgeMode {
                 </table>
             </div>
             
-            <div style="margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 4px; font-size: 12px;">
-                <strong>Instructions:</strong> 
-                <br>• Fill in the <span style="color: #e74c3c; font-weight: bold;">red columns</span> with contract details
-                <br>• <span style="color: #3498db; font-weight: bold;">Blue columns</span> will calculate automatically when you click Calculate
-                <br>• Use dropdowns: Bid (1-7), Suit (♣♦♥♠NT), By (NSEW), Dbl (X/XX), Tricks (0-13)
-                <br>• Doubling affects scoring: X = doubled, XX = redoubled
-            </div>
-            
             <div style="text-align: center; margin-top: 20px;">
                 <button onclick="window.calculateAllScores()" style="background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Calculate All Scores</button>
                 <button onclick="window.saveTravelerData()" style="background: #3498db; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;">Save & Close</button>
@@ -562,19 +448,11 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        // Set up global functions for the traveler popup
         this.setupTravelerGlobals();
-        
-        // Add change listeners to all dropdowns
         this.setupDropdownListeners();
-        
-        // MOBILE FIX: Add touch events to popup buttons
         this.setupMobilePopupButtons();
     }
     
-    /**
-     * Get traveler rows HTML with dropdowns
-     */
     getTravelerRowsHTML() {
         return this.traveler.data.map((row, index) => `
             <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
@@ -583,58 +461,45 @@ class DuplicateBridge extends BaseBridgeMode {
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                     <select data-row="${index}" data-field="level" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
-                        <option value="1" ${row.level === '1' ? 'selected' : ''}>1</option>
-                        <option value="2" ${row.level === '2' ? 'selected' : ''}>2</option>
-                        <option value="3" ${row.level === '3' ? 'selected' : ''}>3</option>
-                        <option value="4" ${row.level === '4' ? 'selected' : ''}>4</option>
-                        <option value="5" ${row.level === '5' ? 'selected' : ''}>5</option>
-                        <option value="6" ${row.level === '6' ? 'selected' : ''}>6</option>
-                        <option value="7" ${row.level === '7' ? 'selected' : ''}>7</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                     <select data-row="${index}" data-field="suit" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 14px; font-weight: bold;">
                         <option value="">-</option>
-                        <option value="♣" ${row.suit === '♣' ? 'selected' : ''}>♣</option>
-                        <option value="♦" ${row.suit === '♦' ? 'selected' : ''}>♦</option>
-                        <option value="♥" ${row.suit === '♥' ? 'selected' : ''}>♥</option>
-                        <option value="♠" ${row.suit === '♠' ? 'selected' : ''}>♠</option>
-                        <option value="NT" ${row.suit === 'NT' ? 'selected' : ''}>NT</option>
+                        <option value="♣">♣</option>
+                        <option value="♦">♦</option>
+                        <option value="♥">♥</option>
+                        <option value="♠">♠</option>
+                        <option value="NT">NT</option>
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                     <select data-row="${index}" data-field="declarer" style="width: 40px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
-                        <option value="N" ${row.declarer === 'N' ? 'selected' : ''}>N</option>
-                        <option value="S" ${row.declarer === 'S' ? 'selected' : ''}>S</option>
-                        <option value="E" ${row.declarer === 'E' ? 'selected' : ''}>E</option>
-                        <option value="W" ${row.declarer === 'W' ? 'selected' : ''}>W</option>
+                        <option value="N">N</option>
+                        <option value="S">S</option>
+                        <option value="E">E</option>
+                        <option value="W">W</option>
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                     <select data-row="${index}" data-field="double" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
-                        <option value="X" ${row.double === 'X' ? 'selected' : ''}>X</option>
-                        <option value="XX" ${row.double === 'XX' ? 'selected' : ''}>XX</option>
+                        <option value="X">X</option>
+                        <option value="XX">XX</option>
                     </select>
                 </td>
                 <td style="padding: 4px; border: 1px solid #bdc3c7; text-align: center;">
                     <select data-row="${index}" data-field="tricks" style="width: 55px; padding: 2px; border: 1px solid #ccc; font-size: 11px;">
                         <option value="">-</option>
-                        <option value="0" ${row.tricks === '0' ? 'selected' : ''}>0</option>
-                        <option value="1" ${row.tricks === '1' ? 'selected' : ''}>1</option>
-                        <option value="2" ${row.tricks === '2' ? 'selected' : ''}>2</option>
-                        <option value="3" ${row.tricks === '3' ? 'selected' : ''}>3</option>
-                        <option value="4" ${row.tricks === '4' ? 'selected' : ''}>4</option>
-                        <option value="5" ${row.tricks === '5' ? 'selected' : ''}>5</option>
-                        <option value="6" ${row.tricks === '6' ? 'selected' : ''}>6</option>
-                        <option value="7" ${row.tricks === '7' ? 'selected' : ''}>7</option>
-                        <option value="8" ${row.tricks === '8' ? 'selected' : ''}>8</option>
-                        <option value="9" ${row.tricks === '9' ? 'selected' : ''}>9</option>
-                        <option value="10" ${row.tricks === '10' ? 'selected' : ''}>10</option>
-                        <option value="11" ${row.tricks === '11' ? 'selected' : ''}>11</option>
-                        <option value="12" ${row.tricks === '12' ? 'selected' : ''}>12</option>
-                        <option value="13" ${row.tricks === '13' ? 'selected' : ''}>13</option>
+                        ${Array.from({length: 14}, (_, i) => `<option value="${i}">${i}</option>`).join('')}
                     </select>
                 </td>
                 <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; background: #ecf0f1;">
@@ -651,9 +516,6 @@ class DuplicateBridge extends BaseBridgeMode {
         `).join('');
     }
     
-    /**
-     * Setup dropdown change listeners
-     */
     setupDropdownListeners() {
         const selects = document.querySelectorAll('#travelerPopup select');
         selects.forEach(select => {
@@ -664,7 +526,6 @@ class DuplicateBridge extends BaseBridgeMode {
                 
                 this.traveler.data[rowIndex][field] = value;
                 
-                // Auto-calculate if row is complete
                 const row = this.traveler.data[rowIndex];
                 if (row.level && row.suit && row.declarer && row.tricks) {
                     this.calculateScore(rowIndex);
@@ -673,9 +534,6 @@ class DuplicateBridge extends BaseBridgeMode {
         });
     }
     
-    /**
-     * Setup global functions for popup buttons
-     */
     setupTravelerGlobals() {
         window.calculateAllScores = () => {
             this.traveler.data.forEach((_, index) => {
@@ -692,9 +550,6 @@ class DuplicateBridge extends BaseBridgeMode {
         };
     }
     
-    /**
-     * Calculate score for a row
-     */
     calculateScore(rowIndex) {
         const row = this.traveler.data[rowIndex];
         if (!row.level || !row.suit || !row.declarer || !row.tricks) return;
@@ -702,64 +557,52 @@ class DuplicateBridge extends BaseBridgeMode {
         const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
         const declarerSide = ['N', 'S'].includes(row.declarer) ? 'NS' : 'EW';
         
-        // Determine if declarer's side is vulnerable
         let isVulnerable = false;
         if (vulnerability === 'Both') isVulnerable = true;
         else if (vulnerability === 'NS' && declarerSide === 'NS') isVulnerable = true;
         else if (vulnerability === 'EW' && declarerSide === 'EW') isVulnerable = true;
         
-        // Calculate score with double/redouble
         const level = parseInt(row.level);
         const tricks = parseInt(row.tricks);
         const needed = 6 + level;
         const result = tricks - needed;
         const isDoubled = row.double === 'X';
         const isRedoubled = row.double === 'XX';
-        const doubleMultiplier = isRedoubled ? 4 : (isDoubled ? 2 : 1);
         
         let score = 0;
         if (result >= 0) {
-            // Contract made
             const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
             let basicScore = level * suitPoints[row.suit];
-            if (row.suit === 'NT') basicScore += 10; // NT bonus
+            if (row.suit === 'NT') basicScore += 10;
             
-            // Double the basic score if doubled/redoubled
             if (isDoubled || isRedoubled) {
-                basicScore *= doubleMultiplier;
+                basicScore *= (isRedoubled ? 4 : 2);
             }
             
             score = basicScore;
             
-            // Add overtricks
             if (result > 0) {
                 if (isDoubled || isRedoubled) {
-                    // Doubled overtricks: 100/200 non-vul, 200/400 vul
                     const overtrickValue = isVulnerable ? 200 : 100;
                     score += result * overtrickValue * (isRedoubled ? 2 : 1);
                 } else {
-                    // Normal overtricks
                     score += result * suitPoints[row.suit];
                 }
             }
             
-            // Game bonus
             if (basicScore >= 100) {
                 score += isVulnerable ? 500 : 300;
             } else {
                 score += 50;
             }
             
-            // Double bonus: +50 for double, +100 for redouble
             if (isDoubled) score += 50;
             if (isRedoubled) score += 100;
             
         } else {
-            // Contract failed
             const undertricks = Math.abs(result);
             
             if (isDoubled || isRedoubled) {
-                // Doubled penalties
                 let penalty = 0;
                 for (let i = 1; i <= undertricks; i++) {
                     if (i === 1) {
@@ -772,12 +615,10 @@ class DuplicateBridge extends BaseBridgeMode {
                 }
                 score = -penalty * (isRedoubled ? 2 : 1);
             } else {
-                // Normal penalties
                 score = -(undertricks * (isVulnerable ? 100 : 50));
             }
         }
         
-        // Assign scores - NO NEGATIVE SCORES IN DUPLICATE
         if (declarerSide === 'NS') {
             if (score > 0) {
                 row.nsScore = score;
@@ -796,39 +637,32 @@ class DuplicateBridge extends BaseBridgeMode {
             }
         }
         
-        // Update display
         const nsSpan = document.getElementById(`nsScore_${rowIndex}`);
         const ewSpan = document.getElementById(`ewScore_${rowIndex}`);
         if (nsSpan) nsSpan.textContent = row.nsScore;
         if (ewSpan) ewSpan.textContent = row.ewScore;
     }
     
-    /**
-     * Get board vulnerability - FIXED CYCLE
-     */
     getBoardVulnerability(boardNumber) {
         const cycle = (boardNumber - 1) % 16;
-        if (cycle === 0) return 'None';        // Board 1, 17, 33...
-        if (cycle === 1) return 'NS';          // Board 2, 18, 34...
-        if (cycle === 2) return 'EW';          // Board 3, 19, 35...
-        if (cycle === 3) return 'Both';        // Board 4, 20, 36...
-        if (cycle === 4) return 'EW';          // Board 5, 21, 37...
-        if (cycle === 5) return 'Both';        // Board 6, 22, 38...
-        if (cycle === 6) return 'None';        // Board 7, 23, 39...
-        if (cycle === 7) return 'NS';          // Board 8, 24, 40...
-        if (cycle === 8) return 'NS';          // Board 9, 25, 41...
-        if (cycle === 9) return 'EW';          // Board 10, 26, 42...
-        if (cycle === 10) return 'Both';       // Board 11, 27, 43...
-        if (cycle === 11) return 'None';       // Board 12, 28, 44...
-        if (cycle === 12) return 'Both';       // Board 13, 29, 45...
-        if (cycle === 13) return 'None';       // Board 14, 30, 46...
-        if (cycle === 14) return 'NS';         // Board 15, 31, 47...
-        if (cycle === 15) return 'EW';         // Board 16, 32, 48...
+        if (cycle === 0) return 'None';
+        if (cycle === 1) return 'NS';
+        if (cycle === 2) return 'EW';
+        if (cycle === 3) return 'Both';
+        if (cycle === 4) return 'EW';
+        if (cycle === 5) return 'Both';
+        if (cycle === 6) return 'None';
+        if (cycle === 7) return 'NS';
+        if (cycle === 8) return 'NS';
+        if (cycle === 9) return 'EW';
+        if (cycle === 10) return 'Both';
+        if (cycle === 11) return 'None';
+        if (cycle === 12) return 'Both';
+        if (cycle === 13) return 'None';
+        if (cycle === 14) return 'NS';
+        if (cycle === 15) return 'EW';
     }
     
-    /**
-     * Save traveler data
-     */
     saveTravelerData() {
         this.session.boards[this.traveler.boardNumber].results = [...this.traveler.data];
         this.session.boards[this.traveler.boardNumber].completed = true;
@@ -837,16 +671,12 @@ class DuplicateBridge extends BaseBridgeMode {
         this.closeTravelerPopup();
     }
     
-    /**
-     * Close traveler popup
-     */
     closeTravelerPopup() {
         const popup = document.getElementById('travelerPopup');
         if (popup) popup.remove();
         
         this.traveler.isActive = false;
         
-        // Clean up global functions
         delete window.calculateAllScores;
         delete window.saveTravelerData;
         delete window.closeTravelerPopup;
@@ -854,9 +684,6 @@ class DuplicateBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    /**
-     * Show movement popup - MOBILE FIXED
-     */
     showMovementPopup() {
         const movement = this.session.movement;
         
@@ -889,21 +716,14 @@ class DuplicateBridge extends BaseBridgeMode {
         popup.appendChild(content);
         document.body.appendChild(popup);
         
-        // Store reference for dropdown callback and button callbacks
         window.duplicateBridge = this;
-        
-        // MOBILE FIX: Add touch events to popup buttons
         this.setupMobilePopupButtons();
     }
     
-    /**
-     * Get movement table HTML
-     */
     getMovementTableHTML() {
         const movement = this.session.movement;
         if (!movement || !movement.movement) return '<p>Movement data not available</p>';
         
-        // Group by rounds
         const roundData = {};
         movement.movement.forEach(entry => {
             if (!roundData[entry.round]) {
@@ -920,27 +740,19 @@ class DuplicateBridge extends BaseBridgeMode {
                             <th style="padding: 8px; border: 1px solid #2c3e50;">Round</th>
         `;
         
-        // Add table headers
         for (let t = 1; t <= movement.tables; t++) {
             html += `<th style="padding: 8px; border: 1px solid #2c3e50;">Table ${t}</th>`;
         }
         html += '</tr></thead><tbody>';
         
-        // Add round data
         Object.keys(roundData).sort((a,b) => parseInt(a) - parseInt(b)).forEach(round => {
             html += `<tr><td style="padding: 8px; border: 1px solid #2c3e50; font-weight: bold; background: #ecf0f1; text-align: center;">${round}</td>`;
             
             const roundEntries = roundData[round];
             
-            // Add table data
             for (let t = 1; t <= movement.tables; t++) {
                 const entry = roundEntries.find(e => e.table === t);
                 if (entry) {
-                    const boardRange = entry.boards.length > 1 ? 
-                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
-                        entry.boards[0];
-                    
-                    // Get vulnerability for boards
                     const vulnInfo = entry.boards.map(boardNum => {
                         const vuln = this.getBoardVulnerability(boardNum);
                         const vulnColor = vuln === 'None' ? '#95a5a6' : 
@@ -965,39 +777,22 @@ class DuplicateBridge extends BaseBridgeMode {
         
         html += '</tbody></table></div>';
         
-        html += `
-            <div style="background: #ecf0f1; padding: 15px; border-radius: 4px; margin-top: 15px; font-size: 12px;">
-                <strong>How to use this movement:</strong>
-                <br>• Each round, pairs move to their assigned table and position (NS or EW)
-                <br>• Play the boards shown for that table in that round
-                <br>• <strong>Vulnerability Legend:</strong> <span style="color: #95a5a6; font-weight: bold;">None</span>, <span style="color: #e74c3c; font-weight: bold;">NS</span>, <span style="color: #f39c12; font-weight: bold;">EW</span>, <span style="color: #8e44ad; font-weight: bold;">Both</span>
-                <br>• Use this app to enter results after each session
-                <br>• Total playing time: approximately ${movement.description.split('~')[1] || '2-3 hours'}
-            </div>
-        `;
-        
         return html;
     }
     
-    /**
-     * Get active buttons
-     */
     getActiveButtons() {
-        // Don't update buttons when traveler popup is active
         if (this.traveler.isActive) {
             return [];
         }
         
         switch (this.inputState) {
             case 'pairs_setup':
-                return ['4','6','8']; // Available movements
+                return ['4','6','8'];
             case 'movement_confirm':
                 return ['1','2','BACK'];
             case 'board_selection':
-                // Always use dropdown - simpler and scalable
                 const buttons = [];
-                const allComplete = this.areAllBoardsComplete();
-                if (allComplete) {
+                if (this.areAllBoardsComplete()) {
                     buttons.push('RESULTS');
                 }
                 buttons.push('BACK');
@@ -1009,9 +804,6 @@ class DuplicateBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Update display
-     */
     updateDisplay() {
         const content = this.getDisplayContent();
         this.ui.updateDisplay(content);
@@ -1019,7 +811,6 @@ class DuplicateBridge extends BaseBridgeMode {
         const activeButtons = this.getActiveButtons();
         this.ui.updateButtonStates(activeButtons);
         
-        // Set up board selection button if in board_selection state
         if (this.inputState === 'board_selection') {
             setTimeout(() => {
                 const selectBtn = document.getElementById('selectBoardBtn');
@@ -1033,9 +824,6 @@ class DuplicateBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Get display content
-     */
     getDisplayContent() {
         switch (this.inputState) {
             case 'pairs_setup':
@@ -1072,9 +860,6 @@ class DuplicateBridge extends BaseBridgeMode {
                         <div style="background: #3498db; color: white; padding: 12px; border-radius: 4px; margin-top: 8px; text-align: center; font-weight: bold;">
                             Press <strong>1</strong> to view MOVEMENT table<br>
                             Press <strong>2</strong> to CONFIRM and start scoring
-                        </div>
-                        <div style="color: #666; font-size: 11px; margin-top: 8px; text-align: center;">
-                            Traveler entry uses dropdown menus for easy data input
                         </div>
                     </div>
                     <div class="current-state">1=View Movement, 2=Confirm, Back</div>
@@ -1118,98 +903,114 @@ class DuplicateBridge extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Get results display with matchpoint calculations
-     */
     getResultsDisplay() {
-        const finalResults = this.calculateFinalResults();
-        
-        let resultHTML = `
+        return `
             <div class="title-score-row">
-                <div class="mode-title">Final Results</div>
+                <div class="mode-title">Results</div>
                 <div class="score-display">${this.session.pairs} Pairs</div>
             </div>
             <div class="game-content">
-                <div><strong>Final Rankings - ${this.session.movement.description}</strong></div>
-                
-                <div style="overflow-x: auto; margin: 15px 0;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: white; color: #2c3e50;">
-                        <thead>
-                            <tr style="background: #34495e; color: white;">
-                                <th style="padding: 8px; border: 1px solid #2c3e50;">Rank</th>
-                                <th style="padding: 8px; border: 1px solid #2c3e50;">Pair</th>
-                                <th style="padding: 8px; border: 1px solid #2c3e50;">Matchpoints</th>
-                                <th style="padding: 8px; border: 1px solid #2c3e50;">Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-        `;
-        
-        finalResults.forEach((pair, index) => {
-            const rankColor = index === 0 ? '#f1c40f' : index === 1 ? '#95a5a6' : index === 2 ? '#cd7f32' : '#ecf0f1';
-            const textColor = index < 3 ? '#2c3e50' : '#666';
-            
-            resultHTML += `
-                <tr style="background: ${rankColor};">
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold; color: ${textColor};">
-                        ${index + 1}${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''}
-                    </td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold; color: ${textColor};">
-                        ${pair.pair}
-                    </td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; color: ${textColor};">
-                        ${pair.totalMatchpoints}/${pair.maxPossible}
-                    </td>
-                    <td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-weight: bold; color: ${textColor};">
-                        ${pair.percentage}%
-                    </td>
-                </tr>
-            `;
-        });
-        
-        resultHTML += `
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div style="background: #e8f6f3; padding: 15px; border-radius: 4px; margin-top: 15px; font-size: 11px; color: #2c3e50;">
-                    <strong>🏆 Congratulations to Pair ${finalResults[0]?.pair} - ${finalResults[0]?.percentage}%!</strong><br>
-                    <br><strong>Matchpoint Scoring:</strong> Each board result is compared with other pairs. Beat a result = 2 points, tie = 1 point, lose = 0 points.
-                    <br><strong>Percentage:</strong> (Matchpoints earned ÷ Maximum possible) × 100
+                <div><strong>Final Results - ${this.session.movement.description}</strong></div>
+                <div style="text-align: center; margin: 20px 0;">
+                    Results calculation would appear here
                 </div>
             </div>
-            <div class="current-state">BACK to continue scoring more boards</div>
+            <div class="current-state">BACK to continue scoring</div>
         `;
-        
-        return resultHTML;
     }
     
-    /**
-     * Check if all boards are complete
-     */
     areAllBoardsComplete() {
         return Object.values(this.session.boards).every(board => board.completed);
     }
     
-    /**
-     * Calculate final results with matchpoints
-     */
-    calculateFinalResults() {
-        const pairs = [];
-        for (let p = 1; p <= this.session.pairs; p++) {
-            pairs.push({
-                pair: p,
-                totalMatchpoints: 0,
-                maxPossible: 0,
-                percentage: 0,
-                boardResults: {}
-            });
+    getBoardStatusDisplay() {
+        const status = [];
+        Object.values(this.session.boards).forEach(board => {
+            const icon = board.completed ? '✅' : '⭕';
+            const color = board.completed ? '#27ae60' : '#e74c3c';
+            status.push(`<span style="color: ${color}; font-weight: bold;">B${board.number}${icon}</span>`);
+        });
+        
+        return `<div style="font-size: 12px; margin-top: 10px; text-align: center;">${status.join(' ')}</div>`;
+    }
+    
+    handleBack() {
+        if (this.traveler.isActive) {
+            this.closeTravelerPopup();
+            return true;
         }
         
-        // Calculate matchpoints for each board
-        Object.values(this.session.boards).forEach(board => {
-            if (!board.completed || !board.results.length) return;
-            
-            const boardResults = board.results.filter(result => 
-                result.nsScore !== null && result.ewScore !== null
-            );
+        switch (this.inputState) {
+            case 'movement_confirm':
+                this.inputState = 'pairs_setup';
+                break;
+            case 'board_selection':
+                this.inputState = 'movement_confirm';
+                break;
+            case 'results':
+                this.inputState = 'board_selection';
+                break;
+            default:
+                return false;
+        }
+        this.updateDisplay();
+        return true;
+    }
+    
+    canGoBack() {
+        return this.inputState !== 'pairs_setup' || this.traveler.isActive;
+    }
+    
+    getHelpContent() {
+        return {
+            title: 'Duplicate Bridge Help',
+            content: `
+                <div class="help-section">
+                    <h4>Simplified Duplicate Bridge</h4>
+                    <p>Easy-to-use duplicate bridge scoring with dropdown interface.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Available Movements</h4>
+                    <ul>
+                        <li><strong>4 pairs:</strong> 2-table Howell, 12 boards, ~2 hours</li>
+                        <li><strong>6 pairs:</strong> 3-table Howell, 10 boards, ~1.5 hours</li>
+                        <li><strong>8 pairs:</strong> 4-table Howell, 14 boards, ~2.5 hours</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>How to Use</h4>
+                    <ol>
+                        <li><strong>Setup:</strong> Choose pairs → view movement → confirm</li>
+                        <li><strong>Score entry:</strong> Select board → fill traveler data</li>
+                        <li><strong>Calculate:</strong> Scores auto-calculate</li>
+                        <li><strong>Save:</strong> Click Save & Close when complete</li>
+                    </ol>
+                </div>
+            `,
+            buttons: [
+                { text: 'Close Help', action: 'close', class: 'close-btn' }
+            ]
+        };
+    }
+    
+    cleanup() {
+        const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
+        popups.forEach(id => {
+            const popup = document.getElementById(id);
+            if (popup) popup.remove();
+        });
+        
+        delete window.calculateAllScores;
+        delete window.saveTravelerData;
+        delete window.closeTravelerPopup;
+        delete window.selectBoardFromDropdown;
+        delete window.closeBoardSelector;
+        delete window.duplicateBridge;
+        
+        console.log('🧹 Duplicate Bridge cleanup completed');
+    }
+}
+
+export default DuplicateBridge;
