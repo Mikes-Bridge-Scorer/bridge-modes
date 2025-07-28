@@ -252,7 +252,6 @@ class BridgeApp {
             </div>
             <div class="game-content">
                 <div class="mode-selection">
-                    <h3>🃏 Bridge Scoring Modes</h3>
                     ${statusBadge}
                     <div class="mode-list">
                         <p><strong>1</strong> - Kitchen Bridge (Simple social scoring)</p>
@@ -490,6 +489,15 @@ class BridgeApp {
                             contact: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a>
                         </p>
                     </div>
+                    
+                    <div style="text-align: center; margin: 15px 0;">
+                        <button onclick="window.bridgeApp.enterFullLicenseFromHelp()" 
+                                style="background: #28a745; color: white; border: none; padding: 10px 20px; 
+                                       border-radius: 6px; font-size: 14px; cursor: pointer; 
+                                       min-height: 44px; touch-action: manipulation;">
+                            Enter Full License Code
+                        </button>
+                    </div>
                 `;
             } else if (licenseStatus.status === 'full') {
                 licenseSection = `
@@ -522,6 +530,19 @@ class BridgeApp {
         }
         
         this.showModal(title, content);
+    }
+
+    // Method to enter full license from help popup
+    enterFullLicenseFromHelp() {
+        // Close any open modal first
+        const existingModal = document.querySelector('.modal-overlay');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        setTimeout(() => {
+            this.showLicenseEntry({ message: 'Enter your full version license code' });
+        }, 100);
     }
 
     showQuit() {
