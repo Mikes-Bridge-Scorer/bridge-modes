@@ -1,327 +1,469 @@
 /**
- * Base Bridge Mode - Enhanced with Universal Mobile Touch Support
- * 
- * This base class provides common functionality for all bridge modes
- * with comprehensive mobile touch support for all buttons and modals.
+ * Base Bridge Mode Class
+ * Common functionality for all bridge scoring modules
  */
 
 class BaseBridgeMode {
-    constructor(gameState, ui) {
-        this.gameState = gameState;
-        this.ui = ui;
-        this.modeName = 'base';
-        this.displayName = 'Base Bridge Mode';
+    constructor(bridgeApp) {
+        this.bridgeApp = bridgeApp;
+        this.licenseManager = bridgeApp.licenseManager;
+        this.gameState = new GameState();
+        this.modeName = 'Base Bridge Mode';
+        this.currentDeal = 1;
+        this.vulnerability = 'NV'; // NV, NS, EW, Both
         
-        // Mobile detection
-        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        // UI state management
+        this.currentStep = 'level'; // level, suit, declarer, double, result, tricks
+        this.contract = {
+            level: null,
+            suit: null,
+            declarer: null,
+            doubled: 0, // 0 = no, 1 = doubled, 2 = redoubled
+            made: null,
+            tricks: null
+        };
         
-        if (this.isMobile) {
-            console.log('📱 Mobile device detected in', this.displayName);
-            this.addUniversalMobileCSS();
-        }
-        
-        console.log('🎯 Base bridge mode constructor called for', this.constructor.name);
+        console.log(`🎮 ${this.modeName} initialized`);
     }
-    
-    /**
-     * Add universal mobile CSS for all bridge modes
-     */
-    addUniversalMobileCSS() {
-        const existingStyle = document.getElementById('bridge-mode-mobile-css');
-        if (existingStyle) return; // Already added
-        
-        const universalMobileCSS = `
-        /* Universal Mobile Touch Support for All Bridge Modes */
-        .mobile-device .btn,
-        .mobile-device button,
-        .mobile-device .modal-button {
-            min-height: 44px !important;
-            min-width: 44px !important;
-            touch-action: manipulation !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            cursor: pointer !important;
-        }
 
-        .btn-pressed,
-        .button-pressed,
-        .modal-button-pressed {
-            transform: scale(0.9) !important;
-            opacity: 0.7 !important;
-            transition: all 0.1s ease !important;
-        }
+    // Abstract methods - must be implemented by subclasses
+    getModeName() {
+        throw new Error('getModeName() must be implemented by subclass');
+    }
 
-        /* Enhanced touch feedback */
-        .mobile-device .btn:active,
-        .mobile-device button:active {
-            transform: scale(0.9) !important;
-            opacity: 0.7 !important;
-        }
+    calculateScore(contract, vulnerability) {
+        throw new Error('calculateScore() must be implemented by subclass');
+    }
 
-        @media (max-width: 768px) {
-            .btn, button { 
-                padding: 12px 8px !important; 
-                font-size: 16px !important; 
-                line-height: 1.2 !important;
-            }
-        }
+    // Common UI methods
+    getDisplayContent() {
+        return `
+            <div class="title-score-row">
+                <div class="mode-title">${this.getModeName()}</div>
+                <div class="score-display">${this.getScoreDisplay()}</div>
+            </div>
+            <div class="game-content">
+                ${this.getGameContent()}
+            </div>
+            <div class="current-state">${this.getCurrentStateText()}</div>
+            ${this.getLicenseStatus()}
         `;
+    }
 
-        const style = document.createElement('style');
-        style.id = 'bridge-mode-mobile-css';
-        style.textContent = universalMobileCSS;
-        document.head.appendChild(style);
+    getScoreDisplay() {
+        return `NS: ${this.gameState.scores.NS}<br>EW: ${this.gameState.scores.EW}`;
+    }
+
+    getGameContent() {
+        const contractDisplay = this.getContractDisplay();
+        const dealInfo = `<div class="deal-info">Deal ${this.currentDeal} - ${this.vulnerability}</div>`;
         
-        console.log('✅ Universal mobile CSS added for bridge modes');
+        return `
+            ${dealInfo}
+            ${contractDisplay}
+            ${this.getAdditionalContent()}
+        `;
     }
-    
-    /**
-     * Enhanced mobile button setup - works for ANY button
-     */
-    setupEnhancedMobileButton(buttonElement, handler, context = 'button') {
-        if (!this.isMobile || !buttonElement) return buttonElement;
+
+    getContractDisplay() {
+        const level = this.contract.level || '_';
+        const suit = this.contract.suit || '_';
+        const declarer = this.contract.declarer || '_';
+        const doubleText = this.contract.doubled === 0 ? '' : 
+                          this.contract.doubled === 1 ? ' X' : ' XX';
         
-        console.log(`📱 Setting up enhanced mobile button: ${context}`);
+        return `
+            <div class="contract-display">
+                <strong>Contract:</strong> ${level}${suit} ${declarer}${doubleText}
+                ${this.contract.made !== null ? 
+                    `<br><strong>Result:</strong> ${this.getResultText()}` : ''}
+            </div>
+        `;
+    }
+
+    getResultText() {
+        if (this.contract.made === null) return '';
         
-        // Ensure comprehensive mobile touch properties
-        buttonElement.style.touchAction = 'manipulation';
-        buttonElement.style.userSelect = 'none';
-        buttonElement.style.webkitTapHighlightColor = 'transparent';
-        buttonElement.style.webkitUserSelect = 'none';
-        buttonElement.style.webkitTouchCallout = 'none';
-        buttonElement.style.minHeight = '44px';
-        buttonElement.style.minWidth = '44px';
-        buttonElement.style.cursor = 'pointer';
-        
-        // Create enhanced mobile-compatible handler
-        const enhancedMobileHandler = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            console.log(`📱 Enhanced mobile button pressed: ${context}`);
-            
-            // Enhanced visual feedback
-            buttonElement.classList.add('button-pressed');
-            buttonElement.style.transform = 'scale(0.9)';
-            buttonElement.style.opacity = '0.7';
-            buttonElement.style.transition = 'all 0.1s ease';
-            
-            setTimeout(() => {
-                buttonElement.classList.remove('button-pressed');
-                buttonElement.style.transform = 'scale(1)';
-                buttonElement.style.opacity = '1';
-            }, 150);
-            
-            // Enhanced haptic feedback
-            if (navigator.vibrate) {
-                navigator.vibrate([30]);
-            }
-            
-            // Execute the handler with error catching
-            try {
-                if (typeof handler === 'function') {
-                    handler(e);
-                } else {
-                    console.warn('Handler is not a function for', context);
-                }
-            } catch (error) {
-                console.error(`Error executing button handler for ${context}:`, error);
-            }
-        };
-        
-        // Remove ALL existing listeners by replacing the element
-        const newButton = buttonElement.cloneNode(true);
-        if (buttonElement.parentNode) {
-            buttonElement.parentNode.replaceChild(newButton, buttonElement);
-        }
-        
-        // Add comprehensive event listeners
-        if (this.isMobile) {
-            // Mobile-specific events
-            newButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                newButton.style.transform = 'scale(0.9)';
-                newButton.style.opacity = '0.7';
-            }, { passive: false });
-            
-            newButton.addEventListener('touchend', enhancedMobileHandler, { passive: false });
-            
-            newButton.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                newButton.style.transform = 'scale(1)';
-                newButton.style.opacity = '1';
-            }, { passive: false });
-        }
-        
-        // Universal click event (works on both desktop and mobile)
-        newButton.addEventListener('click', enhancedMobileHandler, { passive: false });
-        
-        return newButton;
-    }
-    
-    /**
-     * Enhanced mobile modal setup - applies to ANY modal created by bridge modes
-     */
-    setupEnhancedMobileModal(modalSelector = '.modal-overlay', delay = 200) {
-        if (!this.isMobile) return;
-        
-        setTimeout(() => {
-            const modal = document.querySelector(modalSelector);
-            if (!modal) {
-                console.log('❌ Modal not found for mobile setup:', modalSelector);
-                return;
-            }
-            
-            console.log('📱 Setting up enhanced mobile modal support');
-            
-            // Find all buttons in the modal
-            const modalButtons = modal.querySelectorAll('button, .btn, .modal-button, [onclick]');
-            
-            modalButtons.forEach((button, index) => {
-                const buttonText = button.textContent?.trim() || button.className || `button-${index}`;
-                console.log(`🔧 Setting up modal button: ${buttonText}`);
-                
-                // Store original onclick if exists
-                const originalOnClick = button.onclick;
-                
-                // Setup enhanced mobile button
-                const enhancedButton = this.setupEnhancedMobileButton(
-                    button, 
-                    originalOnClick || (() => button.click()), 
-                    `modal-${buttonText}`
-                );
-                
-                // Restore original onclick if it existed
-                if (originalOnClick && enhancedButton) {
-                    enhancedButton.onclick = originalOnClick;
-                }
-            });
-            
-            console.log(`✅ Enhanced mobile setup complete for ${modalButtons.length} modal buttons`);
-        }, delay);
-    }
-    
-    // Abstract methods that child classes should implement
-    initialize() {
-        console.log(`🎯 Initializing ${this.displayName}`);
-    }
-    
-    handleAction(value) {
-        console.log(`🎮 ${this.displayName} action: ${value}`);
-    }
-    
-    getActiveButtons() {
-        return [];
-    }
-    
-    updateDisplay() {
-        console.log(`🖼️ Updating ${this.displayName} display`);
-    }
-    
-    getHelpContent() {
-        return {
-            title: `${this.displayName} Help`,
-            content: `<p>Help content for ${this.displayName} not implemented yet.</p>`,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    // Optional methods with default implementations
-    handleBack() {
-        return false; // Cannot go back by default
-    }
-    
-    canGoBack() {
-        return false;
-    }
-    
-    toggleVulnerability() {
-        console.log(`🎯 ${this.displayName} vulnerability toggle`);
-    }
-    
-    /**
-     * Enhanced showModal method with automatic mobile support
-     */
-    showEnhancedModal(type, content) {
-        // Show the modal using the UI controller
-        this.ui.showModal(type, content);
-        
-        // Apply mobile enhancements automatically
-        this.setupEnhancedMobileModal();
-    }
-    
-    /**
-     * Utility method to create mobile-enhanced buttons programmatically
-     */
-    createEnhancedButton(text, handler, className = 'btn') {
-        const button = document.createElement('button');
-        button.textContent = text;
-        button.className = className;
-        
-        if (this.isMobile) {
-            return this.setupEnhancedMobileButton(button, handler, `created-${text}`);
+        if (this.contract.made) {
+            const overtricks = this.contract.tricks - (6 + parseInt(this.contract.level));
+            return overtricks > 0 ? `Made +${overtricks}` : 'Made exactly';
         } else {
-            button.addEventListener('click', handler);
-            return button;
+            const undertricks = (6 + parseInt(this.contract.level)) - this.contract.tricks;
+            return `Down ${undertricks}`;
         }
     }
-    
-    /**
-     * Utility method for enhanced button feedback
-     */
-    provideMobileButtonFeedback(button, duration = 150) {
-        if (!this.isMobile || !button) return;
-        
-        button.classList.add('button-pressed');
-        if (navigator.vibrate) navigator.vibrate(30);
-        
-        setTimeout(() => {
-            button.classList.remove('button-pressed');
-        }, duration);
+
+    getAdditionalContent() {
+        // Override in subclasses for mode-specific content
+        return '';
     }
-    
-    /**
-     * Enhanced cleanup method
-     */
-    cleanup() {
-        console.log(`🧹 Cleaning up ${this.displayName}`);
-        
-        // Remove mobile CSS if this is the last bridge mode
-        const mobileStyle = document.getElementById('bridge-mode-mobile-css');
-        if (mobileStyle && this.constructor.name === 'BaseBridgeMode') {
-            mobileStyle.remove();
+
+    getCurrentStateText() {
+        switch (this.currentStep) {
+            case 'level':
+                return 'Select contract level (1-7)';
+            case 'suit':
+                return 'Select suit (♣♦♥♠ NT)';
+            case 'declarer':
+                return 'Select declarer (N S E W)';
+            case 'double':
+                return 'Double? Press X/XX or continue to result';
+            case 'result':
+                return 'Made/Down? Press MADE or DOWN';
+            case 'tricks':
+                return this.contract.made ? 
+                    'How many tricks taken? (6-13)' : 
+                    'How many tricks taken? (0-12)';
+            default:
+                return 'Press BACK to return or DEAL for next hand';
         }
     }
-    
-    /**
-     * Debug method to test mobile button setup
-     */
-    debugMobileSetup() {
-        if (!this.isMobile) {
-            console.log('🖥️ Desktop mode - no mobile debugging needed');
+
+    getLicenseStatus() {
+        const status = this.licenseManager.checkLicenseStatus();
+        let text = '';
+        
+        if (status.status === 'trial') {
+            text = `Trial: ${status.daysLeft} days, ${status.dealsLeft} deals left`;
+        } else if (status.status === 'full') {
+            text = 'Full Version Activated';
+        }
+        
+        return text ? `<div class="license-status">${text}</div>` : '';
+    }
+
+    // Get buttons that should be active/highlighted
+    getActiveButtons() {
+        switch (this.currentStep) {
+            case 'level':
+                return ['1', '2', '3', '4', '5', '6', '7'];
+            case 'suit':
+                return ['♣', '♦', '♥', '♠', 'NT'];
+            case 'declarer':
+                return ['N', 'S', 'E', 'W'];
+            case 'double':
+                return ['X', 'MADE', 'DOWN']; // Can skip doubling
+            case 'result':
+                return ['MADE', 'DOWN'];
+            case 'tricks':
+                return this.contract.made ? 
+                    ['6', '7', '8', '9', '0'] : // 6-10, then 11(1), 12(2), 13(3)
+                    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']; // 0-12
+            default:
+                return ['BACK', 'DEAL'];
+        }
+    }
+
+    // Handle button input
+    handleInput(value) {
+        console.log(`🎯 ${this.modeName} input:`, value, 'Step:', this.currentStep);
+        
+        if (value === 'BACK') {
+            this.handleBack();
             return;
         }
         
-        console.log('🔍 Mobile Debug Info:');
-        console.log('- User Agent:', navigator.userAgent);
-        console.log('- Touch Support:', 'ontouchstart' in window);
-        console.log('- Vibration Support:', !!navigator.vibrate);
-        console.log('- Mobile CSS Added:', !!document.getElementById('bridge-mode-mobile-css'));
+        if (value === 'DEAL') {
+            this.handleDeal();
+            return;
+        }
         
-        // Test button setup
-        const testButtons = document.querySelectorAll('.btn, button');
-        console.log(`- Found ${testButtons.length} buttons to enhance`);
+        switch (this.currentStep) {
+            case 'level':
+                this.handleLevelInput(value);
+                break;
+            case 'suit':
+                this.handleSuitInput(value);
+                break;
+            case 'declarer':
+                this.handleDeclarerInput(value);
+                break;
+            case 'double':
+                this.handleDoubleInput(value);
+                break;
+            case 'result':
+                this.handleResultInput(value);
+                break;
+            case 'tricks':
+                this.handleTricksInput(value);
+                break;
+        }
         
-        testButtons.forEach((button, index) => {
-            const hasTouch = button.style.touchAction === 'manipulation';
-            console.log(`  Button ${index}: ${button.textContent?.trim() || 'unnamed'} - Touch: ${hasTouch}`);
+        this.updateDisplay();
+    }
+
+    handleLevelInput(value) {
+        if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
+            this.contract.level = value;
+            this.currentStep = 'suit';
+        }
+    }
+
+    handleSuitInput(value) {
+        if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
+            this.contract.suit = value;
+            this.currentStep = 'declarer';
+        }
+    }
+
+    handleDeclarerInput(value) {
+        if (['N', 'S', 'E', 'W'].includes(value)) {
+            this.contract.declarer = value;
+            this.currentStep = 'double';
+        }
+    }
+
+    handleDoubleInput(value) {
+        if (value === 'X') {
+            this.contract.doubled = this.contract.doubled === 0 ? 1 : 2;
+            this.updateDisplay(); // Show updated double state
+        } else if (['MADE', 'DOWN'].includes(value)) {
+            this.handleResultInput(value);
+        }
+    }
+
+    handleResultInput(value) {
+        if (value === 'MADE') {
+            this.contract.made = true;
+            this.currentStep = 'tricks';
+        } else if (value === 'DOWN') {
+            this.contract.made = false;
+            this.currentStep = 'tricks';
+        }
+    }
+
+    handleTricksInput(value) {
+        let tricks = parseInt(value);
+        
+        // Handle 10, 11, 12, 13 when made (using 0, 1, 2, 3)
+        if (this.contract.made && ['0', '1', '2', '3'].includes(value)) {
+            tricks = parseInt(value) + 10;
+        }
+        
+        // Validate trick count
+        const minTricks = this.contract.made ? 6 + parseInt(this.contract.level) : 0;
+        const maxTricks = this.contract.made ? 13 : 6 + parseInt(this.contract.level) - 1;
+        
+        if (tricks >= minTricks && tricks <= maxTricks) {
+            this.contract.tricks = tricks;
+            this.processContract();
+        }
+    }
+
+    handleBack() {
+        switch (this.currentStep) {
+            case 'suit':
+                this.contract.level = null;
+                this.currentStep = 'level';
+                break;
+            case 'declarer':
+                this.contract.suit = null;
+                this.currentStep = 'suit';
+                break;
+            case 'double':
+                this.contract.declarer = null;
+                this.currentStep = 'declarer';
+                break;
+            case 'result':
+                this.contract.doubled = 0;
+                this.currentStep = 'double';
+                break;
+            case 'tricks':
+                this.contract.made = null;
+                this.currentStep = 'result';
+                break;
+            default:
+                // Return to main menu
+                this.bridgeApp.showLicensedMode({ 
+                    type: this.licenseManager.getLicenseData()?.type || 'FULL' 
+                });
+                return;
+        }
+        
+        this.updateDisplay();
+    }
+
+    handleDeal() {
+        if (this.currentStep === 'level') {
+            // Start new deal
+            this.newDeal();
+        } else if (this.isContractComplete()) {
+            // Process current contract and start new deal
+            this.processContract();
+        }
+    }
+
+    processContract() {
+        if (!this.isContractComplete()) {
+            console.warn('⚠️ Contract incomplete, cannot process');
+            return;
+        }
+        
+        console.log('📊 Processing contract:', this.contract);
+        
+        // Calculate score using subclass implementation
+        const score = this.calculateScore(this.contract, this.vulnerability);
+        
+        // Update game state
+        this.gameState.addScore(this.contract.declarer, score);
+        this.gameState.addDeal({
+            deal: this.currentDeal,
+            contract: { ...this.contract },
+            vulnerability: this.vulnerability,
+            score: score
         });
+        
+        // Increment deals played for license tracking
+        this.licenseManager.incrementDealsPlayed();
+        
+        // Check if trial expired
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        if (licenseStatus.needsCode) {
+            this.bridgeApp.showMessage('Trial expired - Enter full version code', 'error');
+            setTimeout(() => {
+                this.bridgeApp.showLicenseEntry(licenseStatus);
+            }, 2000);
+            return;
+        }
+        
+        // Prepare for next deal
+        this.newDeal();
+        this.bridgeApp.showMessage(`Deal ${this.currentDeal - 1} scored: ${score.NS ? '+' : ''}${score.NS || score.EW}`, 'success');
+    }
+
+    isContractComplete() {
+        return this.contract.level && this.contract.suit && 
+               this.contract.declarer && this.contract.made !== null && 
+               this.contract.tricks !== null;
+    }
+
+    newDeal() {
+        this.currentDeal++;
+        this.contract = {
+            level: null,
+            suit: null,
+            declarer: null,
+            doubled: 0,
+            made: null,
+            tricks: null
+        };
+        this.currentStep = 'level';
+        
+        // Update vulnerability (mode-specific implementation can override)
+        this.updateVulnerability();
+        this.updateDisplay();
+    }
+
+    updateVulnerability() {
+        // Default implementation - subclasses can override
+        // For now, keep manual control
+    }
+
+    updateDisplay() {
+        const display = document.getElementById('display');
+        if (display) {
+            display.innerHTML = this.getDisplayContent();
+        }
+        
+        // Update button states
+        const activeButtons = this.getActiveButtons();
+        activeButtons.push('BACK'); // Always allow going back
+        
+        if (this.isContractComplete()) {
+            activeButtons.push('DEAL');
+        }
+        
+        this.bridgeApp.updateButtonStates(activeButtons);
+    }
+
+    // Utility methods
+    isNorthSouth(declarer) {
+        return ['N', 'S'].includes(declarer);
+    }
+
+    isEastWest(declarer) {
+        return ['E', 'W'].includes(declarer);
+    }
+
+    isVulnerable(declarer) {
+        if (this.vulnerability === 'NV') return false;
+        if (this.vulnerability === 'Both') return true;
+        if (this.vulnerability === 'NS') return this.isNorthSouth(declarer);
+        if (this.vulnerability === 'EW') return this.isEastWest(declarer);
+        return false;
+    }
+
+    getSuitPoints(suit) {
+        const points = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        return points[suit] || 0;
+    }
+
+    // Cleanup method
+    destroy() {
+        console.log(`🧹 ${this.modeName} destroyed`);
     }
 }
 
-export { BaseBridgeMode };
+/**
+ * Game State Management
+ * Tracks scores, history, and game progress
+ */
+class GameState {
+    constructor() {
+        this.scores = { NS: 0, EW: 0 };
+        this.history = [];
+        this.currentGame = 1;
+    }
+
+    addScore(declarer, score) {
+        if (['N', 'S'].includes(declarer)) {
+            this.scores.NS += score.NS || 0;
+            this.scores.EW += score.EW || 0;
+        } else {
+            this.scores.EW += score.EW || score.NS || 0;
+            this.scores.NS += score.NS || 0;
+        }
+    }
+
+    addDeal(dealData) {
+        this.history.push({
+            ...dealData,
+            timestamp: Date.now()
+        });
+    }
+
+    getLastDeal() {
+        return this.history[this.history.length - 1] || null;
+    }
+
+    undoLastDeal() {
+        const lastDeal = this.history.pop();
+        if (lastDeal) {
+            // Subtract the score
+            this.scores.NS -= lastDeal.score.NS || 0;
+            this.scores.EW -= lastDeal.score.EW || 0;
+            return lastDeal;
+        }
+        return null;
+    }
+
+    reset() {
+        this.scores = { NS: 0, EW: 0 };
+        this.history = [];
+        this.currentGame++;
+    }
+
+    getGameSummary() {
+        return {
+            scores: { ...this.scores },
+            deals: this.history.length,
+            winner: this.scores.NS > this.scores.EW ? 'NS' : 
+                    this.scores.EW > this.scores.NS ? 'EW' : 'Tie'
+        };
+    }
+}
+
+// Export for module loading
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { BaseBridgeMode, GameState };
+}
