@@ -248,6 +248,8 @@ class BridgeApp {
                         <div class="mode-row">
                             <span><strong>1</strong> - Kitchen Bridge</span>
                             <span><strong>2</strong> - Bonus Bridge</span>
+                        </div>
+                        <div class="mode-row">
                             <span><strong>3</strong> - Chicago Bridge</span>
                         </div>
                         <div class="mode-row">
