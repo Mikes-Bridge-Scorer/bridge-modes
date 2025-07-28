@@ -1,9 +1,9 @@
 /**
- * Bridge Navigator - Clean License-Only Version
+ * Bridge Modes Calculator - Clean License-Only Version
  * Mobile-first touch handling with robust license system
  */
 
-class BridgeNavigator {
+class BridgeApp {
     constructor() {
         this.enteredCode = '';
         this.isLicensed = false;
@@ -24,7 +24,7 @@ class BridgeNavigator {
     }
 
     async init() {
-        console.log('🎮 Initializing Bridge Navigator');
+        console.log('🎮 Initializing Bridge Modes Calculator');
         console.log('📱 Mobile device detected:', this.isMobile);
         
         // Check existing license first
@@ -41,7 +41,7 @@ class BridgeNavigator {
         }
         
         this.setupEventListeners();
-        console.log('✅ Bridge Navigator ready');
+        console.log('✅ Bridge Modes Calculator ready');
     }
 
     setupEventListeners() {
@@ -210,7 +210,7 @@ class BridgeNavigator {
         display.innerHTML = `
             <div class="title-score-row">
                 <div class="mode-title">🔑 License Code</div>
-                <div class="score-display">Bridge<br>Navigator</div>
+                <div class="score-display">Bridge<br>Modes</div>
             </div>
             <div class="game-content">
                 <div class="code-display" id="codeDisplay">_ _ _ _ _ _</div>
@@ -247,7 +247,7 @@ class BridgeNavigator {
         const display = document.getElementById('display');
         display.innerHTML = `
             <div class="title-score-row">
-                <div class="mode-title">Bridge Navigator</div>
+                <div class="mode-title">Bridge Modes Calculator</div>
                 <div class="score-display">NS: 0<br>EW: 0</div>
             </div>
             <div class="game-content">
@@ -457,7 +457,7 @@ class BridgeNavigator {
 
     showHelp() {
         const isLicenseMode = this.appState === 'license_entry';
-        const title = isLicenseMode ? '🔑 License Help' : '🃏 Bridge Navigator Help';
+        const title = isLicenseMode ? '🔑 License Help' : '🃏 Bridge Modes Calculator Help';
         
         let content = '';
         if (isLicenseMode) {
@@ -515,7 +515,7 @@ class BridgeNavigator {
             { text: 'Cancel', action: null }
         );
         
-        this.showModal('Bridge Navigator Options', 'What would you like to do?', buttons);
+        this.showModal('Bridge Modes Calculator Options', 'What would you like to do?', buttons);
     }
 
     showLicenseInfo() {
@@ -549,8 +549,8 @@ class BridgeNavigator {
 
     closeApp() {
         const message = this.isMobile ? 
-            'Use your device\'s app switcher to close Bridge Navigator' :
-            'Close this browser tab to exit Bridge Navigator';
+            'Use your device\'s app switcher to close Bridge Modes Calculator' :
+            'Close this browser tab to exit Bridge Modes Calculator';
         alert(message);
     }
 
