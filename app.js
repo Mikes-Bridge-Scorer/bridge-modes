@@ -244,12 +244,16 @@ class BridgeApp {
             </div>
             <div class="game-content">
                 <div class="mode-selection">
-                    <div class="mode-list">
-                        <p><strong>1</strong> - Kitchen Bridge</p>
-                        <p><strong>2</strong> - Bonus Bridge</p>
-                        <p><strong>3</strong> - Chicago Bridge</p>
-                        <p><strong>4</strong> - Rubber Bridge</p>
-                        <p><strong>5</strong> - Duplicate Bridge</p>
+                    <div class="mode-grid">
+                        <div class="mode-row">
+                            <span><strong>1</strong> - Kitchen Bridge</span>
+                            <span><strong>2</strong> - Bonus Bridge</span>
+                            <span><strong>3</strong> - Chicago Bridge</span>
+                        </div>
+                        <div class="mode-row">
+                            <span><strong>4</strong> - Rubber Bridge</span>
+                            <span><strong>5</strong> - Duplicate Bridge</span>
+                        </div>
                     </div>
                 </div>
             </div>
