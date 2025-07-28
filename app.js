@@ -1,14 +1,15 @@
 /**
- * Bridge Modes Calculator - Clean License-Only Version
- * Mobile-first touch handling with robust license system
+ * Bridge Modes Calculator - Updated with Module Loading
+ * Mobile-first touch handling with robust license system and modular architecture
  */
 
 class BridgeApp {
     constructor() {
         this.enteredCode = '';
         this.isLicensed = false;
-        this.appState = 'license_entry'; // 'license_entry' or 'licensed_mode'
+        this.appState = 'license_entry'; // 'license_entry', 'licensed_mode', or 'bridge_mode'
         this.maxCodeLength = 6;
+        this.currentBridgeMode = null;
         
         // Mobile detection
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -20,6 +21,9 @@ class BridgeApp {
         this.wakeLock = null;
         this.isWakeActive = false;
         
+        // Module loading cache
+        this.loadedModules = new Map();
+        
         this.init();
     }
 
@@ -27,7 +31,10 @@ class BridgeApp {
         console.log('🎮 Initializing Bridge Modes Calculator');
         console.log('📱 Mobile device detected:', this.isMobile);
         
-        // Check existing license first
+        // Load base mode class first
+        await this.loadBaseMode();
+        
+        // Check existing license
         const licenseStatus = this.licenseManager.checkLicenseStatus();
         
         if (!licenseStatus.needsCode) {
@@ -42,6 +49,143 @@ class BridgeApp {
         
         this.setupEventListeners();
         console.log('✅ Bridge Modes Calculator ready');
+    }
+
+    async loadBaseMode() {
+        try {
+            if (!this.loadedModules.has('base-mode')) {
+                console.log('📦 Loading base mode class...');
+                await this.loadScript('./js/bridge-modes/base-mode.js');
+                this.loadedModules.set('base-mode', true);
+                console.log('✅ Base mode class loaded');
+            }
+        } catch (error) {
+            console.error('❌ Failed to load base mode:', error);
+            throw new Error('Failed to load required base mode class');
+        }
+    }
+
+    async loadBridgeModule(moduleId) {
+        const moduleMap = {
+            '1': { file: './js/bridge-modes/kitchen.js', class: 'KitchenBridgeMode', name: 'Kitchen Bridge' },
+            '2': { file: './js/bridge-modes/bonus.js', class: 'BonusBridgeMode', name: 'Bonus Bridge' },
+            '3': { file: './js/bridge-modes/chicago.js', class: 'ChicagoBridgeMode', name: 'Chicago Bridge' },
+            '4': { file: './js/bridge-modes/rubber.js', class: 'RubberBridgeMode', name: 'Rubber Bridge' },
+            '5': { file: './js/bridge-modes/duplicate.js', class: 'DuplicateBridgeMode', name: 'Duplicate Bridge' }
+        };
+
+        const module = moduleMap[moduleId];
+        if (!module) {
+            throw new Error(`Unknown module ID: ${moduleId}`);
+        }
+
+        try {
+            console.log(`📦 Loading ${module.name}...`);
+            
+            if (!this.loadedModules.has(module.file)) {
+                await this.loadScript(module.file);
+                this.loadedModules.set(module.file, true);
+            }
+
+            // Verify the class is available
+            const ModuleClass = window[module.class];
+            if (!ModuleClass) {
+                throw new Error(`Module class ${module.class} not found`);
+            }
+
+            console.log(`✅ ${module.name} loaded successfully`);
+            return ModuleClass;
+
+        } catch (error) {
+            console.error(`❌ Failed to load ${module.name}:`, error);
+            
+            // Show fallback message if module fails to load
+            if (moduleId === '1') {
+                // Kitchen Bridge fallback - use embedded version
+                console.log('🔄 Using embedded Kitchen Bridge fallback');
+                return this.getEmbeddedKitchenBridge();
+            }
+            
+            throw error;
+        }
+    }
+
+    async loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    getEmbeddedKitchenBridge() {
+        // Embedded fallback version of Kitchen Bridge
+        return class EmbeddedKitchenBridge extends BaseBridgeMode {
+            constructor(bridgeApp) {
+                super(bridgeApp);
+                this.modeName = '🍳 Kitchen Bridge (Embedded)';
+            }
+
+            getModeName() {
+                return '🍳 Kitchen Bridge';
+            }
+
+            calculateScore(contract, vulnerability) {
+                // Simple kitchen bridge scoring
+                const level = parseInt(contract.level);
+                const made = contract.made;
+                const tricks = contract.tricks;
+                const doubled = contract.doubled;
+                
+                let nsScore = 0;
+                let ewScore = 0;
+                
+                if (made) {
+                    let score = (tricks - 6) * 10; // 10 points per trick
+                    
+                    // Game bonus
+                    if (this.isGameContract(level, contract.suit)) {
+                        score += this.isVulnerable(contract.declarer) ? 500 : 300;
+                    } else {
+                        score += 50;
+                    }
+                    
+                    // Double bonus
+                    if (doubled > 0) {
+                        score *= (doubled === 1 ? 2 : 4);
+                        score += 50 * doubled;
+                    }
+                    
+                    if (this.isNorthSouth(contract.declarer)) {
+                        nsScore = score;
+                    } else {
+                        ewScore = score;
+                    }
+                } else {
+                    // Simple penalty
+                    const undertricks = (6 + level) - tricks;
+                    const penalty = this.isVulnerable(contract.declarer) ? 
+                        undertricks * 100 : undertricks * 50;
+                    
+                    if (this.isNorthSouth(contract.declarer)) {
+                        ewScore = penalty;
+                    } else {
+                        nsScore = penalty;
+                    }
+                }
+                
+                return { NS: nsScore, EW: ewScore };
+            }
+
+            isGameContract(level, suit) {
+                if (suit === 'NT' && level >= 3) return true;
+                if ((suit === '♥' || suit === '♠') && level >= 4) return true;
+                if ((suit === '♣' || suit === '♦') && level >= 5) return true;
+                return false;
+            }
+        };
     }
 
     setupEventListeners() {
@@ -111,6 +255,8 @@ class BridgeApp {
             this.handleLicenseInput(value);
         } else if (this.appState === 'licensed_mode') {
             this.handleLicensedInput(value);
+        } else if (this.appState === 'bridge_mode' && this.currentBridgeMode) {
+            this.currentBridgeMode.handleInput(value);
         }
     }
 
@@ -124,6 +270,53 @@ class BridgeApp {
         }
     }
 
+    handleLicensedInput(value) {
+        if (['1', '2', '3', '4', '5'].includes(value)) {
+            this.selectBridgeMode(value);
+        } else if (value === 'BACK') {
+            // Return to mode selection
+            this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
+        }
+    }
+
+    async selectBridgeMode(mode) {
+        const modeNames = {
+            '1': 'Kitchen Bridge',
+            '2': 'Bonus Bridge', 
+            '3': 'Chicago Bridge',
+            '4': 'Rubber Bridge',
+            '5': 'Duplicate Bridge'
+        };
+        
+        const modeName = modeNames[mode];
+        console.log(`🎮 Loading: ${modeName}`);
+        
+        try {
+            this.showMessage(`Loading ${modeName}...`, 'info');
+            
+            const ModuleClass = await this.loadBridgeModule(mode);
+            
+            // Create new bridge mode instance
+            this.currentBridgeMode = new ModuleClass(this);
+            this.appState = 'bridge_mode';
+            
+            // Initialize the mode display
+            this.currentBridgeMode.updateDisplay();
+            
+            this.showMessage(`${modeName} loaded! 🎉`, 'success');
+            
+        } catch (error) {
+            console.error(`Failed to load ${modeName}:`, error);
+            this.showMessage(`Failed to load ${modeName}. Please try again.`, 'error');
+            
+            // Return to mode selection after error
+            setTimeout(() => {
+                this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
+            }, 3000);
+        }
+    }
+
+    // License handling methods (unchanged from your original)
     addDigit(digit) {
         if (this.enteredCode.length < this.maxCodeLength) {
             this.enteredCode += digit;
@@ -206,6 +399,12 @@ class BridgeApp {
         this.appState = 'license_entry';
         this.enteredCode = '';
         
+        // Clean up any active bridge mode
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy();
+            this.currentBridgeMode = null;
+        }
+        
         const display = document.getElementById('display');
         display.innerHTML = `
             <div class="title-score-row">
@@ -225,6 +424,13 @@ class BridgeApp {
 
     showLicensedMode(licenseInfo) {
         this.appState = 'licensed_mode';
+        
+        // Clean up any active bridge mode
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy();
+            this.currentBridgeMode = null;
+        }
+        
         const licenseType = licenseInfo.type || 'FULL';
         const isTrialMode = licenseType === 'TRIAL';
         
@@ -266,68 +472,6 @@ class BridgeApp {
         // Enable mode selection buttons and controls
         this.updateButtonStates(['1', '2', '3', '4', '5']);
         this.enableControls();
-    }
-
-    handleLicensedInput(value) {
-        if (['1', '2', '3', '4', '5'].includes(value)) {
-            this.selectBridgeMode(value);
-        } else if (value === 'BACK') {
-            // Return to mode selection from demo mode
-            this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
-        } else {
-            // For now, just show demo message for other buttons
-            this.showMessage(`Bridge mode active - ${value} button pressed`, 'info');
-        }
-    }
-
-    selectBridgeMode(mode) {
-        const modeNames = {
-            '1': 'Kitchen Bridge',
-            '2': 'Bonus Bridge', 
-            '3': 'Chicago Bridge',
-            '4': 'Rubber Bridge',
-            '5': 'Duplicate Bridge'
-        };
-        
-        const modeName = modeNames[mode];
-        console.log(`🎮 Selected: ${modeName}`);
-        
-        this.showMessage(`${modeName} selected! 🎉`, 'success');
-        
-        // Here you would load the specific bridge mode
-        setTimeout(() => {
-            this.showBridgeModeDemo(mode, modeName);
-        }, 1500);
-    }
-
-    showBridgeModeDemo(mode, modeName) {
-        const display = document.getElementById('display');
-        
-        display.innerHTML = `
-            <div class="title-score-row">
-                <div class="mode-title">${modeName}</div>
-                <div class="score-display">NS: 0<br>EW: 0</div>
-            </div>
-            <div class="game-content">
-                <div class="demo-content">
-                    <h3>🎯 Demo Mode</h3>
-                    <p>This is where ${modeName} would load.</p>
-                    <div class="demo-info">
-                        <p>Your bridge scoring system would handle:</p>
-                        <ul>
-                            <li>Contract input (level + suit + declarer)</li>
-                            <li>Result tracking (made/down/overtricks)</li>
-                            <li>Vulnerability management</li>
-                            <li>Score calculation & history</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="current-state">Press BACK to return to mode selection</div>
-        `;
-
-        // Example: Enable bidding buttons (1-7 would be highlighted for contract level)
-        this.updateButtonStates(['1', '2', '3', '4', '5', '6', '7', '♣', '♦', '♥', '♠', 'NT', 'BACK']);
     }
 
     updateButtonStates(activeButtons) {
@@ -406,6 +550,13 @@ class BridgeApp {
         const nextIndex = (currentIndex + 1) % states.length;
         
         vulnText.textContent = states[nextIndex];
+        
+        // Update bridge mode vulnerability if active
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.vulnerability = states[nextIndex];
+            this.currentBridgeMode.updateDisplay();
+        }
+        
         this.showMessage(`Vulnerability: ${states[nextIndex]}`, 'info');
     }
 
@@ -459,6 +610,7 @@ class BridgeApp {
         }
     }
 
+    // Help and Quit methods (keep your existing implementations)
     showHelp() {
         const isLicenseMode = this.appState === 'license_entry';
         const title = isLicenseMode ? '🔑 License Help' : '🃏 Bridge Modes Calculator Help';
@@ -486,8 +638,8 @@ class BridgeApp {
                         <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
                         <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
                         <p style="margin-top: 10px; font-size: 12px;">
-                            To upgrade to the full version with unlimited access, 
-                            contact: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a>
+                            To upgrade to the full version, contact: 
+                            <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a>
                         </p>
                     </div>
                     
@@ -520,10 +672,10 @@ class BridgeApp {
                 
                 <h4>🃏 Available Modes</h4>
                 <div style="margin: 10px 0; font-size: 13px; line-height: 1.5;">
-                    <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring for casual games</p>
-                    <p><strong>2 - Bonus Bridge:</strong> HCP-based bonus system with extra points</p>
-                    <p><strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle format</p>
-                    <p><strong>4 - Rubber Bridge:</strong> Traditional rubber scoring with honors</p>
+                    <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring</p>
+                    <p><strong>2 - Bonus Bridge:</strong> HCP-based bonus system</p>
+                    <p><strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle</p>
+                    <p><strong>4 - Rubber Bridge:</strong> Traditional rubber scoring</p>
                     <p><strong>5 - Duplicate Bridge:</strong> Tournament-style pairs scoring</p>
                 </div>
                 
@@ -552,7 +704,9 @@ class BridgeApp {
         const licenseStatus = this.licenseManager.checkLicenseStatus();
         let buttons = [];
         
-        if (this.appState === 'licensed_mode') {
+        if (this.appState === 'bridge_mode') {
+            buttons.push({ text: 'Return to Modes', action: () => this.showLicensedMode(licenseStatus) });
+        } else if (this.appState === 'licensed_mode') {
             buttons.push({ text: 'Return to Menu', action: () => this.showLicensedMode(licenseStatus) });
         }
         
@@ -693,6 +847,15 @@ class BridgeApp {
         }, 500);
     }
 
+    closeApp() {
+        if (window.close) {
+            window.close();
+        } else {
+            // For PWA/mobile, show instructions
+            alert('To close this app:\n\n• On mobile: Use your device\'s home button or recent apps\n• On desktop: Close this browser tab');
+        }
+    }
+
     showModal(title, content, buttons = null) {
         // Create modal overlay
         const modal = document.createElement('div');
@@ -753,6 +916,7 @@ class BridgeApp {
 
 /**
  * License Manager - Handles license validation and storage
+ * (Keep your existing LicenseManager class unchanged)
  */
 class LicenseManager {
     constructor() {
