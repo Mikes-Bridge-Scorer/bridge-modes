@@ -271,8 +271,11 @@ class BridgeApp {
     handleLicensedInput(value) {
         if (['1', '2', '3', '4', '5'].includes(value)) {
             this.selectBridgeMode(value);
+        } else if (value === 'BACK') {
+            // Return to mode selection from demo mode
+            this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
         } else {
-            // For now, just show demo message
+            // For now, just show demo message for other buttons
             this.showMessage(`Bridge mode active - ${value} button pressed`, 'info');
         }
     }
@@ -559,6 +562,7 @@ class BridgeApp {
         
         buttons.push(
             { text: 'License Info', action: () => this.showLicenseInfo() },
+            { text: 'Clear License Data', action: () => this.showClearLicenseWarning() },
             { text: 'Close App', action: () => this.closeApp() },
             { text: 'Cancel', action: null }
         );
@@ -595,11 +599,98 @@ class BridgeApp {
         this.showModal('📄 License Information', content);
     }
 
-    closeApp() {
-        const message = this.isMobile ? 
-            'Use your device\'s app switcher to close Bridge Modes Calculator' :
-            'Close this browser tab to exit Bridge Modes Calculator';
-        alert(message);
+    showClearLicenseWarning() {
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        const isFullLicense = licenseStatus.status === 'full';
+        
+        let warningContent = '';
+        let warningTitle = '';
+        
+        if (isFullLicense) {
+            warningTitle = '⚠️ Clear Full License Warning';
+            warningContent = `
+                <div style="background: rgba(220, 53, 69, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #dc3545;">
+                    <h4 style="color: #dc3545; margin-bottom: 10px;">🚨 DANGER: You have a FULL LICENSE active!</h4>
+                    <p style="margin: 8px 0;"><strong>If you clear your license data:</strong></p>
+                    <ul style="margin: 8px 0 8px 20px; text-align: left;">
+                        <li>Your <strong>PAID FULL LICENSE</strong> will be removed</li>
+                        <li>You will need to <strong>re-enter your license code</strong></li>
+                        <li>If you've lost your code, <strong>contact support</strong></li>
+                        <li>This action <strong>CANNOT BE UNDONE</strong></li>
+                    </ul>
+                    <p style="margin: 8px 0; font-weight: bold; color: #dc3545;">
+                        Only proceed if you're absolutely sure!
+                    </p>
+                </div>
+                
+                <h4>📞 Support Contact</h4>
+                <p style="margin: 8px 0;">
+                    If you've lost your license code:<br>
+                    📧 <a href="mailto:mike.chris.smith@gmail.com" style="color: #007bff;">mike.chris.smith@gmail.com</a>
+                </p>
+            `;
+        } else {
+            warningTitle = '⚠️ Clear License Data';
+            warningContent = `
+                <div style="background: rgba(255, 193, 7, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ffc107;">
+                    <h4 style="color: #856404; margin-bottom: 10px;">Clear License Data</h4>
+                    <p style="margin: 8px 0;">This will remove:</p>
+                    <ul style="margin: 8px 0 8px 20px; text-align: left;">
+                        <li>Current trial license (if any)</li>
+                        <li>Used license codes history</li>
+                        <li>Deal counter</li>
+                    </ul>
+                    <p style="margin: 8px 0;">
+                        You will need to enter a new license code to continue using the app.
+                    </p>
+                </div>
+            `;
+        }
+        
+        const buttons = [
+            { 
+                text: isFullLicense ? 'YES - Clear Full License' : 'YES - Clear Data', 
+                action: () => this.confirmClearLicense(),
+                style: 'background: #dc3545 !important;'
+            },
+            { 
+                text: 'Cancel - Keep License', 
+                action: 'close',
+                style: 'background: #28a745 !important;'
+            }
+        ];
+        
+        this.showModal(warningTitle, warningContent, buttons);
+    }
+
+    confirmClearLicense() {
+        // Final confirmation for full licenses
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        
+        if (licenseStatus.status === 'full') {
+            const confirmed = confirm(
+                '🚨 FINAL WARNING 🚨\n\n' +
+                'You are about to delete your PAID FULL LICENSE!\n\n' +
+                'This will remove your license permanently from this device.\n\n' +
+                'Click OK only if you are absolutely certain.\n' +
+                'Click Cancel to keep your license safe.'
+            );
+            
+            if (!confirmed) {
+                return;
+            }
+        }
+        
+        // Clear all license data
+        this.licenseManager.clearLicense();
+        localStorage.removeItem('bridgeAppUsedCodes'); // Also clear used codes for complete reset
+        
+        // Show confirmation and reload
+        alert('License data cleared successfully.\n\nThe app will now restart and ask for a new license code.');
+        
+        setTimeout(() => {
+            location.reload();
+        }, 500);
     }
 
     showModal(title, content, buttons = null) {
@@ -1012,12 +1103,20 @@ if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         localStorage.removeItem('bridgeAppLicense');
         localStorage.removeItem('bridgeAppDealsPlayed');
         localStorage.removeItem('bridgeAppUsedCodes');
-        console.log('🧹 Test data cleared');
+        console.log('🧹 All license data cleared for testing');
         location.reload();
+    };
+    
+    window.showLicenseDebug = function() {
+        console.log('\n🔍 License Debug Info:');
+        console.log('License:', localStorage.getItem('bridgeAppLicense'));
+        console.log('Used Codes:', localStorage.getItem('bridgeAppUsedCodes'));
+        console.log('Deals Played:', localStorage.getItem('bridgeAppDealsPlayed'));
     };
     
     console.log('🛠️ Development mode detected');
     console.log('• generateTestCodes() - Show sample codes');
-    console.log('• clearTestData() - Reset license state');
+    console.log('• clearTestData() - Reset all license data');
+    console.log('• showLicenseDebug() - Show current license state');
     window.generateTestCodes();
 }
