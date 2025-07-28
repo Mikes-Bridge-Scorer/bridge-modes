@@ -1,18 +1,619 @@
 /**
- * Complete Enhanced Bridge Modes Calculator - Main Application Controller
- * FIXED VERSION - Mobile Touch Events Simplified
- * - Hidden checksum logic (security)
- * - Trial codes with any checksum (111-999 prefixes)
- * - Full codes must sum to 37
- * - Updated contact information
- * - SIMPLIFIED mobile touch support for reliable mobile operation
+ * Bridge Navigator - Clean License-Only Version
+ * Mobile-first touch handling with robust license system
  */
 
-import { UIController } from './ui-controller.js';
-import { GameState } from './utils/game-state.js';
+class BridgeNavigator {
+    constructor() {
+        this.enteredCode = '';
+        this.isLicensed = false;
+        this.appState = 'license_entry'; // 'license_entry' or 'licensed_mode'
+        this.maxCodeLength = 6;
+        
+        // Mobile detection
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Initialize license manager
+        this.licenseManager = new LicenseManager();
+        
+        // Wake lock for screen management
+        this.wakeLock = null;
+        this.isWakeActive = false;
+        
+        this.init();
+    }
+
+    async init() {
+        console.log('🎮 Initializing Bridge Navigator');
+        console.log('📱 Mobile device detected:', this.isMobile);
+        
+        // Check existing license first
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        
+        if (!licenseStatus.needsCode) {
+            console.log('📄 Valid license found, entering licensed mode');
+            this.isLicensed = true;
+            this.appState = 'licensed_mode';
+            this.showLicensedMode(licenseStatus);
+        } else {
+            console.log('🔑 No valid license, showing license entry');
+            this.showLicenseEntry(licenseStatus);
+        }
+        
+        this.setupEventListeners();
+        console.log('✅ Bridge Navigator ready');
+    }
+
+    setupEventListeners() {
+        // Primary button handler - works on all devices
+        document.addEventListener('click', (e) => {
+            this.handleClick(e);
+        });
+
+        // Mobile-specific touch handling
+        if (this.isMobile) {
+            document.addEventListener('touchend', (e) => {
+                e.preventDefault(); // Prevent double-tap and click events
+                this.handleClick(e);
+            }, { passive: false });
+            
+            // Prevent scroll on button grid
+            const buttonGrid = document.querySelector('.button-grid');
+            if (buttonGrid) {
+                buttonGrid.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                }, { passive: false });
+            }
+        }
+        
+        // Keyboard support for desktop
+        document.addEventListener('keydown', (e) => {
+            this.handleKeyboard(e);
+        });
+    }
+
+    handleClick(e) {
+        // Handle regular buttons
+        const btn = e.target.closest('.btn');
+        if (btn && !btn.classList.contains('disabled')) {
+            this.provideFeedback(btn);
+            this.handleButtonPress(btn.dataset.value);
+            return;
+        }
+        
+        // Handle control buttons
+        const controlBtn = e.target.closest('.control-item');
+        if (controlBtn) {
+            this.handleControlButton(controlBtn.id);
+            return;
+        }
+    }
+
+    provideFeedback(button) {
+        // Visual feedback
+        button.classList.add('pressed');
+        
+        // Haptic feedback on mobile
+        if (this.isMobile && navigator.vibrate) {
+            navigator.vibrate(30);
+        }
+        
+        // Remove pressed state
+        setTimeout(() => {
+            button.classList.remove('pressed');
+        }, 150);
+    }
+
+    handleButtonPress(value) {
+        console.log('🔢 Button pressed:', value);
+        
+        if (this.appState === 'license_entry') {
+            this.handleLicenseInput(value);
+        } else if (this.appState === 'licensed_mode') {
+            this.handleLicensedInput(value);
+        }
+    }
+
+    handleLicenseInput(value) {
+        if (value >= '0' && value <= '9') {
+            this.addDigit(value);
+        } else if (value === 'BACK') {
+            this.removeDigit();
+        } else if (value === 'DEAL') {
+            this.submitLicenseCode();
+        }
+    }
+
+    addDigit(digit) {
+        if (this.enteredCode.length < this.maxCodeLength) {
+            this.enteredCode += digit;
+            this.updateLicenseDisplay();
+        }
+    }
+
+    removeDigit() {
+        if (this.enteredCode.length > 0) {
+            this.enteredCode = this.enteredCode.slice(0, -1);
+            this.updateLicenseDisplay();
+        }
+    }
+
+    updateLicenseDisplay() {
+        const codeDisplay = document.getElementById('codeDisplay');
+        const statusMessage = document.getElementById('statusMessage');
+        const dealBtn = document.getElementById('dealBtn');
+        
+        // Update code display
+        const displayCode = this.enteredCode.padEnd(this.maxCodeLength, '_').split('').join(' ');
+        codeDisplay.textContent = displayCode;
+        
+        // Update deal button and status
+        if (this.enteredCode.length === this.maxCodeLength) {
+            dealBtn.classList.remove('disabled');
+            statusMessage.textContent = 'Code complete - press DEAL to submit';
+        } else {
+            dealBtn.classList.add('disabled');
+            const remaining = this.maxCodeLength - this.enteredCode.length;
+            statusMessage.textContent = `Enter ${remaining} more digit${remaining !== 1 ? 's' : ''}`;
+        }
+    }
+
+    async submitLicenseCode() {
+        if (this.enteredCode.length !== this.maxCodeLength) {
+            this.showMessage('Code must be exactly 6 digits', 'error');
+            return;
+        }
+
+        console.log('📤 Submitting license code:', this.enteredCode);
+        
+        // Show loading state
+        this.showLoadingState('Validating license code...');
+        
+        try {
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate validation delay
+            
+            const result = await this.licenseManager.activateLicense(this.enteredCode);
+            
+            if (result.success) {
+                this.showMessage(result.message, 'success');
+                this.isLicensed = true;
+                this.appState = 'licensed_mode';
+                
+                // Transition to licensed mode
+                setTimeout(() => {
+                    this.showLicensedMode(result);
+                }, 2000);
+                
+            } else {
+                this.showMessage(result.message, 'error');
+                
+                // Clear code after error
+                setTimeout(() => {
+                    this.enteredCode = '';
+                    this.updateLicenseDisplay();
+                }, 2500);
+            }
+            
+        } catch (error) {
+            console.error('License validation error:', error);
+            this.showMessage('Validation failed. Please try again.', 'error');
+        } finally {
+            this.hideLoadingState();
+        }
+    }
+
+    showLicenseEntry(licenseStatus) {
+        this.appState = 'license_entry';
+        this.enteredCode = '';
+        
+        const display = document.getElementById('display');
+        display.innerHTML = `
+            <div class="title-score-row">
+                <div class="mode-title">🔑 License Code</div>
+                <div class="score-display">Bridge<br>Navigator</div>
+            </div>
+            <div class="game-content">
+                <div class="code-display" id="codeDisplay">_ _ _ _ _ _</div>
+                <div class="status-message" id="statusMessage">${licenseStatus.message}</div>
+            </div>
+            <div class="current-state">Use number buttons. BACK to delete, DEAL to submit</div>
+        `;
+        
+        this.updateButtonStates(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK']);
+        this.updateLicenseDisplay();
+    }
+
+    showLicensedMode(licenseInfo) {
+        this.appState = 'licensed_mode';
+        const licenseType = licenseInfo.type || 'FULL';
+        const isTrialMode = licenseType === 'TRIAL';
+        
+        let statusBadge = '';
+        if (isTrialMode) {
+            const status = this.licenseManager.checkLicenseStatus();
+            statusBadge = `
+                <div class="trial-badge">
+                    📅 Trial: ${status.daysLeft || 0} days, ${status.dealsLeft || 0} deals left
+                </div>
+            `;
+        } else {
+            statusBadge = `
+                <div class="full-badge">
+                    ✅ Full Version Activated
+                </div>
+            `;
+        }
+        
+        const display = document.getElementById('display');
+        display.innerHTML = `
+            <div class="title-score-row">
+                <div class="mode-title">Bridge Navigator</div>
+                <div class="score-display">NS: 0<br>EW: 0</div>
+            </div>
+            <div class="game-content">
+                <div class="mode-selection">
+                    <h3>🃏 Bridge Scoring Modes</h3>
+                    ${statusBadge}
+                    <div class="mode-list">
+                        <p><strong>1</strong> - Kitchen Bridge (Simple social scoring)</p>
+                        <p><strong>2</strong> - Bonus Bridge (HCP bonus system)</p>
+                        <p><strong>3</strong> - Chicago Bridge (4-deal vulnerability)</p>
+                        <p><strong>4</strong> - Rubber Bridge (Traditional rubber)</p>
+                        <p><strong>5</strong> - Duplicate Bridge (Tournament style)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="current-state">Press 1-5 to select bridge scoring mode</div>
+        `;
+
+        // Enable mode selection buttons and controls
+        this.updateButtonStates(['1', '2', '3', '4', '5']);
+        this.enableControls();
+    }
+
+    handleLicensedInput(value) {
+        if (['1', '2', '3', '4', '5'].includes(value)) {
+            this.selectBridgeMode(value);
+        } else {
+            // For now, just show demo message
+            this.showMessage(`Bridge mode active - ${value} button pressed`, 'info');
+        }
+    }
+
+    selectBridgeMode(mode) {
+        const modeNames = {
+            '1': 'Kitchen Bridge',
+            '2': 'Bonus Bridge', 
+            '3': 'Chicago Bridge',
+            '4': 'Rubber Bridge',
+            '5': 'Duplicate Bridge'
+        };
+        
+        const modeName = modeNames[mode];
+        console.log(`🎮 Selected: ${modeName}`);
+        
+        this.showMessage(`${modeName} selected! 🎉`, 'success');
+        
+        // Here you would load the specific bridge mode
+        setTimeout(() => {
+            this.showBridgeModeDemo(mode, modeName);
+        }, 1500);
+    }
+
+    showBridgeModeDemo(mode, modeName) {
+        const display = document.getElementById('display');
+        
+        display.innerHTML = `
+            <div class="title-score-row">
+                <div class="mode-title">${modeName}</div>
+                <div class="score-display">NS: 0<br>EW: 0</div>
+            </div>
+            <div class="game-content">
+                <div class="demo-content">
+                    <h3>🎯 Demo Mode</h3>
+                    <p>This is where ${modeName} would load.</p>
+                    <div class="demo-info">
+                        <p>Your bridge scoring system would handle:</p>
+                        <ul>
+                            <li>Contract input (level + suit + declarer)</li>
+                            <li>Result tracking (made/down/overtricks)</li>
+                            <li>Vulnerability management</li>
+                            <li>Score calculation & history</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="current-state">Press BACK to return to mode selection</div>
+        `;
+
+        // Enable relevant buttons for demo
+        this.updateButtonStates(['♣', '♦', '♥', '♠', 'NT', 'N', 'S', 'E', 'W', 'BACK']);
+    }
+
+    updateButtonStates(activeButtons) {
+        const allButtons = document.querySelectorAll('.btn');
+        
+        allButtons.forEach(btn => {
+            const value = btn.dataset.value;
+            
+            if (activeButtons.includes(value)) {
+                btn.classList.remove('disabled');
+            } else {
+                btn.classList.add('disabled');
+            }
+        });
+    }
+
+    enableControls() {
+        const vulnControl = document.getElementById('vulnControl');
+        if (vulnControl) {
+            vulnControl.classList.remove('disabled');
+        }
+    }
+
+    handleControlButton(controlId) {
+        switch (controlId) {
+            case 'wakeControl':
+                this.toggleWakeLock();
+                break;
+            case 'vulnControl':
+                this.toggleVulnerability();
+                break;
+            case 'helpControl':
+                this.showHelp();
+                break;
+            case 'quitControl':
+                this.showQuit();
+                break;
+        }
+    }
+
+    async toggleWakeLock() {
+        const wakeToggle = document.getElementById('wakeToggle');
+        
+        try {
+            if ('wakeLock' in navigator) {
+                if (this.wakeLock) {
+                    await this.wakeLock.release();
+                    this.wakeLock = null;
+                    this.isWakeActive = false;
+                    wakeToggle.classList.remove('active');
+                    this.showMessage('Screen sleep enabled', 'info');
+                } else {
+                    this.wakeLock = await navigator.wakeLock.request('screen');
+                    this.isWakeActive = true;
+                    wakeToggle.classList.add('active');
+                    this.showMessage('Screen will stay awake', 'success');
+                }
+            } else {
+                this.showMessage('Wake lock not supported', 'error');
+            }
+        } catch (error) {
+            console.error('Wake lock error:', error);
+            this.showMessage('Wake lock unavailable', 'error');
+        }
+    }
+
+    toggleVulnerability() {
+        const vulnText = document.getElementById('vulnText');
+        const states = ['NV', 'NS', 'EW', 'Both'];
+        const current = vulnText.textContent;
+        const currentIndex = states.indexOf(current);
+        const nextIndex = (currentIndex + 1) % states.length;
+        
+        vulnText.textContent = states[nextIndex];
+        this.showMessage(`Vulnerability: ${states[nextIndex]}`, 'info');
+    }
+
+    handleKeyboard(e) {
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            this.handleButtonPress(e.key);
+        } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            this.handleButtonPress('BACK');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (this.appState === 'license_entry') {
+                this.handleButtonPress('DEAL');
+            }
+        }
+    }
+
+    showLoadingState(message = 'Loading...') {
+        const statusMessage = document.getElementById('statusMessage');
+        if (statusMessage) {
+            statusMessage.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div>${message}</div>
+            `;
+        }
+    }
+
+    hideLoadingState() {
+        if (this.appState === 'license_entry') {
+            this.updateLicenseDisplay();
+        }
+    }
+
+    showMessage(text, type = 'info') {
+        const statusMessage = document.getElementById('statusMessage');
+        if (!statusMessage) return;
+        
+        const messageClass = type === 'error' ? 'error-message' : 
+                           type === 'success' ? 'success-message' : 'info-message';
+        
+        statusMessage.innerHTML = `<div class="${messageClass}">${text}</div>`;
+        
+        // Auto-clear messages after delay
+        if (type !== 'error') {
+            setTimeout(() => {
+                if (this.appState === 'license_entry') {
+                    this.updateLicenseDisplay();
+                }
+            }, 3000);
+        }
+    }
+
+    showHelp() {
+        const isLicenseMode = this.appState === 'license_entry';
+        const title = isLicenseMode ? '🔑 License Help' : '🃏 Bridge Navigator Help';
+        
+        let content = '';
+        if (isLicenseMode) {
+            content = `
+                <h4>How to Enter License Code</h4>
+                <p>• Use number buttons <strong>0-9</strong> to enter digits<br>
+                • <strong>BACK</strong> button removes last digit<br>
+                • <strong>DEAL</strong> button submits complete code</p>
+                
+                <h4>📧 Need a License?</h4>
+                <p><strong>Email:</strong> <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+                
+                <h4>🧪 Test Codes</h4>
+                <p style="font-family: monospace; font-size: 12px;">
+                Trial: 111000, 222111, 333222<br>
+                Full: 730999, 775558 (sum = 37)</p>
+            `;
+        } else {
+            content = `
+                <h4>🎮 Bridge Game Controls</h4>
+                <p><strong>Mode Selection:</strong> Press 1-5 to choose scoring mode<br>
+                <strong>Wake:</strong> Keep screen active during play<br>
+                <strong>Vuln:</strong> Cycle vulnerability states</p>
+                
+                <h4>🃏 Available Modes</h4>
+                <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring<br>
+                <strong>2 - Bonus Bridge:</strong> HCP-based bonuses<br>
+                <strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle<br>
+                <strong>4 - Rubber Bridge:</strong> Traditional rubber scoring<br>
+                <strong>5 - Duplicate Bridge:</strong> Tournament-style pairs</p>
+                
+                <h4>📞 Support</h4>
+                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+            `;
+        }
+        
+        this.showModal(title, content);
+    }
+
+    showQuit() {
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        let buttons = [];
+        
+        if (this.appState === 'licensed_mode') {
+            buttons.push({ text: 'Return to Menu', action: () => this.showLicensedMode(licenseStatus) });
+        }
+        
+        if (licenseStatus.status === 'trial' || licenseStatus.status === 'expired') {
+            buttons.push({ text: 'Enter Full License', action: () => this.showLicenseEntry({ message: 'Enter full version license code' }) });
+        }
+        
+        buttons.push(
+            { text: 'License Info', action: () => this.showLicenseInfo() },
+            { text: 'Close App', action: () => this.closeApp() },
+            { text: 'Cancel', action: null }
+        );
+        
+        this.showModal('Bridge Navigator Options', 'What would you like to do?', buttons);
+    }
+
+    showLicenseInfo() {
+        const license = this.licenseManager.getLicenseData();
+        const status = this.licenseManager.checkLicenseStatus();
+        
+        let content = '';
+        if (license) {
+            content = `
+                <h4>📄 License Information</h4>
+                <p><strong>Type:</strong> ${license.type === 'FULL' ? 'Full Version' : 'Trial Version'}<br>
+                <strong>Activated:</strong> ${new Date(license.activatedAt).toLocaleDateString()}<br>
+                <strong>Status:</strong> ${status.message}</p>
+            `;
+            
+            if (license.type === 'TRIAL') {
+                content += `
+                    <h4>⏰ Trial Status</h4>
+                    <p>Days remaining: <strong>${status.daysLeft || 0}</strong><br>
+                    Deals remaining: <strong>${status.dealsLeft || 0}</strong></p>
+                `;
+            }
+        } else {
+            content = '<p>No license is currently active.</p>';
+        }
+        
+        content += '<h4>📞 Support</h4><p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>';
+        
+        this.showModal('📄 License Information', content);
+    }
+
+    closeApp() {
+        const message = this.isMobile ? 
+            'Use your device\'s app switcher to close Bridge Navigator' :
+            'Close this browser tab to exit Bridge Navigator';
+        alert(message);
+    }
+
+    showModal(title, content, buttons = null) {
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        
+        const defaultButtons = [{ text: 'Close', action: null }];
+        const modalButtons = buttons || defaultButtons;
+        
+        let buttonsHTML = '';
+        modalButtons.forEach(btn => {
+            const closeClass = (btn.text === 'Close' || btn.text === 'Cancel') ? ' close' : '';
+            buttonsHTML += `<button class="modal-btn${closeClass}" data-action="${btn.text}">${btn.text}</button>`;
+        });
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>${title}</h3>
+                <div class="modal-body">${content}</div>
+                <div class="modal-buttons">${buttonsHTML}</div>
+            </div>
+        `;
+        
+        // Event handling
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                return;
+            }
+            
+            const btn = e.target.closest('.modal-btn');
+            if (btn) {
+                const buttonConfig = modalButtons.find(b => b.text === btn.dataset.action);
+                if (buttonConfig && buttonConfig.action) {
+                    buttonConfig.action();
+                }
+                modal.remove();
+            }
+        });
+        
+        // Mobile touch handling
+        if (this.isMobile) {
+            modal.addEventListener('touchend', (e) => {
+                const btn = e.target.closest('.modal-btn');
+                if (btn) {
+                    e.preventDefault();
+                    const buttonConfig = modalButtons.find(b => b.text === btn.dataset.action);
+                    if (buttonConfig && buttonConfig.action) {
+                        buttonConfig.action();
+                    }
+                    modal.remove();
+                }
+            }, { passive: false });
+        }
+        
+        document.body.appendChild(modal);
+    }
+}
 
 /**
- * Enhanced License Manager with TRIAL CODE FIX
+ * License Manager - Handles license validation and storage
  */
 class LicenseManager {
     constructor() {
@@ -20,9 +621,7 @@ class LicenseManager {
         this.usedCodesKey = 'bridgeAppUsedCodes';
         this.trialDays = 14;
         this.trialDeals = 50;
-        this.checksumTarget = 37; // Only for FULL codes
-        
-        // UPDATED: Trial prefixes - any checksum allowed
+        this.checksumTarget = 37;
         this.trialPrefixes = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
     }
 
@@ -33,7 +632,7 @@ class LicenseManager {
             return { 
                 status: 'unlicensed', 
                 needsCode: true,
-                message: 'Enter license code using calculator buttons'
+                message: 'Enter license code to continue'
             };
         }
 
@@ -52,7 +651,7 @@ class LicenseManager {
         return { 
             status: 'invalid', 
             needsCode: true,
-            message: 'Invalid license. Enter valid code.'
+            message: 'Invalid license detected. Please re-enter code.'
         };
     }
 
@@ -81,11 +680,78 @@ class LicenseManager {
         };
     }
 
-    validateCodeFormat(code) {
+    async validateCode(code) {
         if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
             return { valid: false, message: 'License code must be exactly 6 digits' };
         }
-        return { valid: true };
+
+        const prefix = code.substring(0, 3);
+
+        // Check trial codes
+        if (this.trialPrefixes.includes(prefix)) {
+            return { 
+                valid: true, 
+                type: 'TRIAL', 
+                message: '🎉 Trial activated! 14 days or 50 deals remaining.' 
+            };
+        }
+
+        // Check full license codes
+        const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+        if (digitSum !== this.checksumTarget) {
+            return { 
+                valid: false, 
+                message: 'Invalid license code. Please check and try again.' 
+            };
+        }
+
+        // Check if already used
+        if (this.isCodeUsed(code)) {
+            return { 
+                valid: false, 
+                message: 'License code already used on another device' 
+            };
+        }
+
+        return { 
+            valid: true, 
+            type: 'FULL', 
+            message: '🎉 Full version activated! Unlimited bridge scoring.' 
+        };
+    }
+
+    async activateLicense(code) {
+        // Clear any existing license first to prevent conflicts
+        this.clearLicense();
+        
+        const validation = await this.validateCode(code);
+        
+        if (!validation.valid) {
+            return { success: false, message: validation.message };
+        }
+
+        // Mark full codes as used
+        if (validation.type === 'FULL') {
+            this.markCodeAsUsed(code);
+        }
+
+        const licenseData = {
+            code: code,
+            type: validation.type,
+            activatedAt: Date.now(),
+            activatedDate: new Date().toISOString()
+        };
+
+        localStorage.setItem(this.storageKey, JSON.stringify(licenseData));
+        
+        // Reset deals counter for new license
+        localStorage.setItem('bridgeAppDealsPlayed', '0');
+
+        return { 
+            success: true, 
+            message: validation.message,
+            type: validation.type
+        };
     }
 
     isCodeUsed(code) {
@@ -111,79 +777,6 @@ class LicenseManager {
         }
     }
 
-    validateTrialCode(code) {
-        const prefix = code.substring(0, 3);
-        
-        if (!this.trialPrefixes.includes(prefix)) {
-            return { valid: false, message: 'Invalid trial code format' };
-        }
-
-        console.log(`🆓 Trial code validated: ${code}`);
-        return { valid: true, type: 'TRIAL', message: 'Trial code validated' };
-    }
-
-    validateFullCode(code) {
-        const prefix = code.substring(0, 3);
-        
-        if (this.trialPrefixes.includes(prefix)) {
-            return { valid: false, message: 'This is a trial code, not a full version code' };
-        }
-
-        const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-        if (digitSum !== this.checksumTarget) {
-            return { valid: false, message: 'Invalid license code. Please check and try again.' };
-        }
-
-        if (this.isCodeUsed(code)) {
-            return { valid: false, message: 'License code already used' };
-        }
-
-        return { valid: true, type: 'FULL', message: 'Full version code validated' };
-    }
-
-    async validateCode(code) {
-        const formatCheck = this.validateCodeFormat(code);
-        if (!formatCheck.valid) {
-            return formatCheck;
-        }
-
-        const prefix = code.substring(0, 3);
-
-        if (this.trialPrefixes.includes(prefix)) {
-            return this.validateTrialCode(code);
-        }
-
-        return this.validateFullCode(code);
-    }
-
-    async activateLicense(code) {
-        const validation = await this.validateCode(code);
-        
-        if (!validation.valid) {
-            return { success: false, message: validation.message };
-        }
-
-        if (validation.type === 'FULL') {
-            this.markCodeAsUsed(code);
-        }
-
-        const licenseData = {
-            code: code,
-            type: validation.type,
-            activatedAt: Date.now(),
-            activatedDate: new Date().toISOString()
-        };
-
-        localStorage.setItem(this.storageKey, JSON.stringify(licenseData));
-
-        return { 
-            success: true, 
-            message: validation.type === 'FULL' 
-                ? 'Full version activated! Unlimited bridge scoring.' 
-                : `Trial activated! ${this.trialDays} days or ${this.trialDeals} deals.`
-        };
-    }
-
     getLicenseData() {
         try {
             const data = localStorage.getItem(this.storageKey);
@@ -197,6 +790,7 @@ class LicenseManager {
     clearLicense() {
         localStorage.removeItem(this.storageKey);
         localStorage.removeItem('bridgeAppDealsPlayed');
+        console.log('🧹 License cleared');
     }
 
     incrementDealsPlayed() {
@@ -204,891 +798,57 @@ class LicenseManager {
         localStorage.setItem('bridgeAppDealsPlayed', (current + 1).toString());
     }
 
-    static checksumCode(code) {
-        return code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-    }
-
+    // Static helper methods for development
     static generateTrialCode() {
         const prefixes = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
         const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
         const lastThree = Array(3).fill(0).map(() => Math.floor(Math.random() * 10)).join('');
         return prefix + lastThree;
     }
-}
 
-/**
- * Main Bridge Application - FIXED VERSION with SIMPLIFIED Mobile Touch
- */
-class BridgeApp {
-    constructor() {
-        this.currentMode = null;
-        this.bridgeModeInstance = null;
-        this.gameState = new GameState();
-        this.ui = new UIController();
-        this.licenseManager = new LicenseManager();
-        
-        this.appState = 'mode_selection';
-        this.availableModes = {
-            '1': { name: 'kitchen', display: 'Kitchen Bridge', module: './bridge-modes/kitchen.js' },
-            '2': { name: 'bonus', display: 'Bonus Bridge', module: './bridge-modes/bonus.js' },
-            '3': { name: 'chicago', display: 'Chicago Bridge', module: './bridge-modes/chicago.js' },
-            '4': { name: 'rubber', display: 'Rubber Bridge', module: './bridge-modes/rubber.js' },
-            '5': { name: 'duplicate', display: 'Duplicate Bridge', module: './bridge-modes/duplicate.js' }
-        };
-        
-        this.codeEntryMode = false;
-        this.enteredCode = '';
-        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        this._mobileHandler = null;
-        
-        this.init();
-    }
-    
-    async init() {
-        console.log('🎮 Initializing Bridge Navigator');
-        
-        if (this.isMobile) {
-            console.log('📱 Mobile device detected');
-            document.body.classList.add('mobile-device');
-            this.addMobileCSS();
+    static generateFullCode() {
+        // Generate a valid full license code that sums to 37
+        const baseDigits = [7, 3, 0, 9, 9, 9]; // Sum = 37
+        // Shuffle for randomness
+        for (let i = baseDigits.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [baseDigits[i], baseDigits[j]] = [baseDigits[j], baseDigits[i]];
         }
-        
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        
-        if (licenseStatus.needsCode) {
-            await this.ui.init();
-            this.enterCodeEntryMode(licenseStatus);
-            return;
-        }
-
-        if (licenseStatus.status === 'trial') {
-            console.log(`📅 Trial Status: ${licenseStatus.message}`);
-        }
-
-        try {
-            await this.ui.init();
-            this.setupEventListeners();
-            this.updateDisplay();
-            console.log('✅ Bridge Navigator ready');
-        } catch (error) {
-            console.error('❌ Failed to initialize Bridge Navigator:', error);
-            throw error;
-        }
+        return baseDigits.join('');
     }
 
-    addMobileCSS() {
-        const mobileCSS = `
-        .mobile-device .btn {
-            min-height: 44px !important;
-            min-width: 44px !important;
-            touch-action: manipulation !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-        }
-
-        .btn-pressed {
-            transform: scale(0.95) !important;
-            opacity: 0.8 !important;
-            transition: all 0.1s ease !important;
-        }
-
-        .mobile-device .calculator-buttons .btn {
-            cursor: pointer;
-            -webkit-touch-callout: none;
-        }
-
-        @media (max-width: 768px) {
-            .calculator-buttons { gap: 8px; }
-            .btn { padding: 12px 8px !important; font-size: 16px !important; }
-        }
-        `;
-
-        const style = document.createElement('style');
-        style.textContent = mobileCSS;
-        document.head.appendChild(style);
-    }
-
-    enterCodeEntryMode(status) {
-        console.log('🔑 Entering code entry mode');
-        this.codeEntryMode = true;
-        this.enteredCode = '';
-        this.appState = 'license_entry';
-        this.updateCodeEntryDisplay(status);
-        this.setupMobileLicenseButtons();
-        this.updateButtonStates();
-    }
-
-setupMobileLicenseButtons() {
-    if (!this.isMobile) return;
-    
-    console.log('📱 Setting up ULTRA-SIMPLE mobile license buttons');
-    
-    // Remove any existing handlers
-    if (this._simpleMobileHandler) {
-        document.removeEventListener('touchend', this._simpleMobileHandler);
-        document.removeEventListener('click', this._simpleMobileHandler);
-    }
-    
-    // ULTRA-SIMPLE: Just handle any button press during license entry
-    this._simpleMobileHandler = (e) => {
-        if (this.appState !== 'license_entry') return;
-        
-        // Find ANY button
-        const button = e.target.closest('button, .btn, [data-value]');
-        if (!button) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const value = button.dataset.value || button.textContent.trim();
-        console.log('📱 ULTRA-SIMPLE button press:', value);
-        
-        // Visual feedback
-        button.style.transform = 'scale(0.9)';
-        setTimeout(() => button.style.transform = '', 100);
-        
-        this.handleCodeEntryButton(value);
-    };
-    
-    // Add to document (broadest possible capture)
-    document.addEventListener('touchend', this._simpleMobileHandler, { passive: false });
-    document.addEventListener('click', this._simpleMobileHandler);
-}
-        
-        document.addEventListener('touchend', this._mobileHandler, { passive: false });
-        document.addEventListener('click', this._mobileHandler);
-        
-        console.log('✅ Simplified mobile license buttons ready');
-    }
-
-    updateCodeEntryDisplay(status = null) {
-        const statusMessage = status ? status.message : 'Enter 6-digit license code';
-        const displayCode = this.enteredCode.padEnd(6, '_').split('').join(' ');
-        
-        const content = `
-            <div class="title-score-row">
-                <div class="mode-title">🔑 License Code</div>
-                <div class="score-display">Bridge<br>Navigator</div>
-            </div>
-            <div class="game-content">
-                <div style="text-align: center; margin: 10px 0;">
-                    <div style="font-size: 18px; font-weight: bold; color: #3498db; margin-bottom: 8px; font-family: monospace;">
-                        ${displayCode}
-                    </div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                        ${statusMessage}
-                    </div>
-                    <div style="font-size: 10px; color: #999;">
-                        Enter your 6-digit Bridge Navigator license code
-                    </div>
-                </div>
-            </div>
-            <div class="current-state">
-                Use number buttons. BACK to delete, DEAL to submit
-            </div>
-        `;
-        
-        this.ui.updateDisplay(content);
-    }
-
-    setupEventListeners() {
-        this.removeEventListeners();
-        
-        this.boundHandlers = {
-            buttonClick: this.handleButtonClick.bind(this),
-            keyDown: this.handleKeyPress.bind(this)
-        };
-
-        this.setupButtonEventListeners();
-        this.setupControlEventListeners();
-        document.addEventListener('keydown', this.boundHandlers.keyDown);
-    }
-
-    setupButtonEventListeners() {
-        const calculator = document.querySelector('.calculator-container') || document.body;
-        
-        const buttonHandler = (event) => {
-            if (this.appState === 'license_entry') return;
-            
-            if (event.type === 'touchend') {
-                event.preventDefault();
-            }
-            
-            const button = event.target.closest('.btn');
-            if (button && !button.classList.contains('disabled')) {
-                this.provideMobileButtonFeedback(button);
-                this.handleButtonClick(button.dataset.value);
-            }
-        };
-
-        calculator.addEventListener('click', buttonHandler);
-        calculator.addEventListener('touchend', buttonHandler);
-        
-        this.calculatorElement = calculator;
-        this.buttonHandler = buttonHandler;
-    }
-
-    provideMobileButtonFeedback(button) {
-        button.classList.add('btn-pressed');
-        setTimeout(() => button.classList.remove('btn-pressed'), 150);
-        if (navigator.vibrate) navigator.vibrate(50);
-    }
-
-    setupControlEventListeners() {
-        const controls = [
-            { id: '#wakeControl', handler: () => this.ui.toggleKeepAwake() },
-            { id: '#vulnControl', handler: () => this.handleVulnerabilityToggle() },
-            { id: '#honorsControl', handler: () => this.handleHonorsClick() },
-            { id: '#helpControl', handler: () => this.showHelp() },
-            { id: '#quitControl', handler: () => this.showQuit() }
-        ];
-
-        controls.forEach(({ id, handler }) => {
-            const element = document.querySelector(id);
-            if (element) {
-                element.addEventListener('click', handler);
-                element.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    handler();
-                });
-                element._bridgeAppHandler = handler;
-            }
-        });
-    }
-
-    removeEventListeners() {
-        if (this.boundHandlers) {
-            document.removeEventListener('keydown', this.boundHandlers.keyDown);
-        }
-        
-        if (this.calculatorElement && this.buttonHandler) {
-            this.calculatorElement.removeEventListener('click', this.buttonHandler);
-            this.calculatorElement.removeEventListener('touchend', this.buttonHandler);
-        }
-        
-        if (this._mobileHandler) {
-            document.removeEventListener('touchend', this._mobileHandler);
-            document.removeEventListener('click', this._mobileHandler);
-            this._mobileHandler = null;
-        }
-        
-        const controls = ['#wakeControl', '#vulnControl', '#honorsControl', '#helpControl', '#quitControl'];
-        controls.forEach(id => {
-            const element = document.querySelector(id);
-            if (element && element._bridgeAppHandler) {
-                element.removeEventListener('click', element._bridgeAppHandler);
-                element.removeEventListener('touchend', element._bridgeAppHandler);
-                delete element._bridgeAppHandler;
-            }
-        });
-    }
-    
-    async handleButtonClick(value) {
-        console.log(`🎯 Button pressed: ${value} in state: ${this.appState}`);
-        
-        try {
-            if (this.appState === 'license_entry') {
-                this.handleCodeEntryButton(value);
-            } else if (this.appState === 'mode_selection') {
-                await this.handleModeSelection(value);
-            } else if (value === 'BACK') {
-                this.handleBack();
-            } else {
-                await this.handleBridgeModeAction(value);
-            }
-            
-            this.updateDisplay();
-            
-        } catch (error) {
-            console.error('Error handling button click:', error);
-            this.ui.showError(`Error: ${error.message}`);
-        }
-    }
-
-    handleCodeEntryButton(value) {
-        if (value === 'BACK') {
-            this.enteredCode = this.enteredCode.slice(0, -1);
-        } else if (value === 'DEAL') {
-            this.submitLicenseCode();
-            return;
-        } else if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(value)) {
-            if (this.enteredCode.length < 6) {
-                this.enteredCode += value;
-            }
-        }
-        
-        this.updateCodeEntryDisplay();
-        this.updateButtonStates();
-    }
-
-    async submitLicenseCode() {
-        if (this.enteredCode.length !== 6) {
-            this.ui.showError('Code must be 6 digits');
-            return;
-        }
-
-        const result = await this.licenseManager.activateLicense(this.enteredCode);
-
-        if (result.success) {
-            this.ui.showSuccess(result.message, 3000);
-            setTimeout(() => {
-                this.codeEntryMode = false;
-                this.enteredCode = '';
-                this.appState = 'mode_selection';
-                this.init();
-            }, 3000);
-        } else {
-            this.ui.showError(result.message);
-            this.enteredCode = '';
-            this.updateCodeEntryDisplay();
-        }
-    }
-    
-    async handleBridgeModeAction(value) {
-        if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.handleAction(value);
-        }
-    }
-    
-    handleHonorsClick() {
-        if (this.bridgeModeInstance && this.currentMode === 'rubber') {
-            this.bridgeModeInstance.handleAction('HONORS');
-        }
-    }
-    
-    async handleModeSelection(value) {
-        const modeConfig = this.availableModes[value];
-        if (!modeConfig) return;
-        
-        try {
-            this.ui.showLoading(`Loading ${modeConfig.display}...`);
-            const { default: BridgeMode } = await import(modeConfig.module);
-            this.bridgeModeInstance = new BridgeMode(this.gameState, this.ui);
-            this.currentMode = modeConfig.name;
-            this.gameState.setMode(modeConfig.name);
-            this.appState = 'bridge_mode';
-        } catch (error) {
-            console.error(`Failed to load ${modeConfig.display}:`, error);
-            if (value !== '1') {
-                this.ui.showError(`${modeConfig.display} not available yet. Loading Kitchen Bridge...`);
-                setTimeout(() => this.handleModeSelection('1'), 2000);
-            } else {
-                throw new Error(`Kitchen Bridge failed to load: ${error.message}`);
-            }
-        }
-    }
-    
-    handleBack() {
-        if (this.bridgeModeInstance && this.bridgeModeInstance.canGoBack()) {
-            this.bridgeModeInstance.handleBack();
-        } else {
-            this.returnToModeSelection();
-        }
-    }
-    
-    returnToModeSelection() {
-        if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.cleanup?.();
-            this.bridgeModeInstance = null;
-        }
-        
-        this.currentMode = null;
-        this.appState = 'mode_selection';
-        this.gameState.reset();
-        this.ui.reset();
-        this.updateDisplay();
-    }
-    
-    handleVulnerabilityToggle() {
-        if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.toggleVulnerability();
-        }
-    }
-    
-    handleKeyPress(event) {
-        const key = event.key;
-        
-        if (['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(key)) {
-            event.preventDefault();
-            this.handleButtonClick(key);
-        } else if (key === 'Backspace' || key === 'Escape') {
-            event.preventDefault();
-            this.handleButtonClick('BACK');
-        } else if (key === 'Enter' || key === ' ') {
-            event.preventDefault();
-            if (this.appState === 'license_entry') {
-                this.handleButtonClick('DEAL');
-            } else if (this.appState === 'mode_selection') {
-                this.handleButtonClick('1');
-            }
-        }
-    }
-
-    updateDisplay() {
-        if (this.appState === 'license_entry') {
-            return;
-        } else if (this.appState === 'mode_selection') {
-            this.updateModeSelectionDisplay();
-        } else if (this.bridgeModeInstance) {
-            this.bridgeModeInstance.updateDisplay();
-        }
-        
-        this.updateButtonStates();
-    }
-    
-    updateModeSelectionDisplay() {
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        let trialInfo = '';
-        
-        if (licenseStatus.status === 'trial') {
-            trialInfo = `<div style="color: #f39c12; font-size: 11px; margin-top: 5px;">
-                Trial: ${licenseStatus.daysLeft}d / ${licenseStatus.dealsLeft} deals left
-            </div>`;
-        } else if (licenseStatus.status === 'full') {
-            trialInfo = `<div style="color: #27ae60; font-size: 11px; margin-top: 5px;">
-                ✅ Full Version Activated
-            </div>`;
-        }
-
-        const content = `
-            <div class="title-score-row">
-                <div class="mode-title">Bridge Navigator</div>
-                <div class="score-display">
-                    NS: ${this.gameState.getScore('NS')}<br>
-                    EW: ${this.gameState.getScore('EW')}
-                </div>
-            </div>
-            <div class="game-content">
-                <div>Select scoring mode:<br>
-                1-Kitchen  2-Bonus  3-Chicago  4-Rubber  5-Duplicate</div>
-                ${trialInfo}
-            </div>
-            <div class="current-state">Press 1-5 to select mode</div>
-        `;
-        
-        this.ui.updateDisplay(content);
-    }
-    
-    updateButtonStates() {
-        let activeButtons = [];
-        
-        if (this.appState === 'license_entry') {
-            activeButtons = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK'];
-            if (this.enteredCode.length === 6) {
-                activeButtons.push('DEAL');
-            }
-        } else if (this.appState === 'mode_selection') {
-            activeButtons = ['1', '2', '3', '4', '5'];
-        } else if (this.bridgeModeInstance) {
-            activeButtons = this.bridgeModeInstance.getActiveButtons();
-            if (this.bridgeModeInstance.canGoBack && this.bridgeModeInstance.canGoBack()) {
-                if (!activeButtons.includes('BACK')) {
-                    activeButtons.push('BACK');
-                }
-            }
-        }
-        
-        this.ui.updateButtonStates(activeButtons);
-    }
-
-    showHelp() {
-        let helpContent;
-        
-        if (this.bridgeModeInstance) {
-            helpContent = this.bridgeModeInstance.getHelpContent();
-        } else if (this.appState === 'license_entry') {
-            helpContent = this.getLicenseHelpContent();
-        } else {
-            helpContent = this.getMainHelpContent();
-        }
-        
-        this.ui.showModal('help', helpContent);
-        console.log('📱 Help modal shown - UI controller will handle mobile touch');
-    }
-
-    getMainHelpContent() {
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        let licenseSection = '';
-        let upgradeButton = null;
-        
-        if (licenseStatus.status === 'trial') {
-            licenseSection = `
-                <div class="help-section">
-                    <h4>📅 Current License Status</h4>
-                    <div style="background: rgba(241, 196, 15, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #f1c40f;">
-                        <p><strong>Trial Version Active</strong></p>
-                        <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
-                        <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
-                    </div>
-                </div>
-            `;
-            
-            upgradeButton = { 
-                text: 'Enter Full License', 
-                action: () => {
-                    this.ui.closeModal();
-                    this.enterCodeEntryMode({ message: 'Enter full version license code' });
-                }, 
-                class: 'modal-button',
-                style: 'background: #27ae60 !important;'
-            };
-        } else if (licenseStatus.status === 'full') {
-            licenseSection = `
-                <div class="help-section">
-                    <h4>✅ Current License Status</h4>
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #27ae60;">
-                        <p><strong>Full Version Activated</strong></p>
-                        <p>🔓 <strong>Unlimited Access</strong></p>
-                    </div>
-                </div>
-            `;
-        }
-
-        const buttons = [{ text: 'Close Help', action: 'close', class: 'close-btn' }];
-        if (upgradeButton) buttons.unshift(upgradeButton);
-
-        return {
-            title: 'Bridge Navigator Help',
-            content: `
-                ${licenseSection}
-                
-                <div class="help-section">
-                    <h4>🃏 Available Bridge Game Modes</h4>
-                    <ul>
-                        <li><strong>Kitchen Bridge (1):</strong> Simplified social scoring</li>
-                        <li><strong>Bonus Bridge (2):</strong> HCP-based bonus system</li>
-                        <li><strong>Chicago Bridge (3):</strong> 4-deal vulnerability cycle</li>
-                        <li><strong>Rubber Bridge (4):</strong> Traditional rubber scoring</li>
-                        <li><strong>Duplicate Bridge (5):</strong> Tournament-style scoring</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎮 Controls</h4>
-                    <ul>
-                        <li><strong>Wake:</strong> Keep screen active</li>
-                        <li><strong>Vuln:</strong> Vulnerability control</li>
-                        <li><strong>Honors:</strong> Honor bonuses (Rubber only)</li>
-                        <li><strong>Help:</strong> Context help</li>
-                        <li><strong>Quit:</strong> Exit options</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>📞 Support & Contact</h4>
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin: 10px 0;">
-                        <p style="margin: 0; font-weight: bold;">
-                            📧 Email: <a href="mailto:mike.chris.smith@gmail.com" style="color: #3498db;">mike.chris.smith@gmail.com</a>
-                        </p>
-                    </div>
-                    <p style="font-size: 12px; color: #666;">
-                        • License codes and technical support<br>
-                        • Feature requests and feedback
-                    </p>
-                </div>
-            `,
-            buttons: buttons
-        };
-    }
-
-    getLicenseHelpContent() {
-        return {
-            title: '🔑 License Code Help',
-            content: `
-                <div class="help-section">
-                    <h4>How to Enter License Code</h4>
-                    <ul>
-                        <li><strong>Use number buttons 0-9</strong> to enter your code</li>
-                        <li><strong>BACK button</strong> deletes last digit</li>
-                        <li><strong>DEAL button</strong> submits code</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Need a License Code?</h4>
-                    <div style="background: #e3f2fd; padding: 12px; border-radius: 6px;">
-                        <p style="margin: 0; font-weight: bold;">Contact us:</p>
-                        <p style="margin: 5px 0 0 0;">
-                            📧 <a href="mailto:mike.chris.smith@gmail.com" style="color: #1976d2;">mike.chris.smith@gmail.com</a>
-                        </p>
-                    </div>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    showQuit() {
-        if (this.appState === 'license_entry') {
-            this.showLicenseQuitOptions();
-            return;
-        }
-
-        const quitContent = {
-            title: 'Exit Bridge Navigator',
-            content: 'What would you like to do?',
-            buttons: [
-                { 
-                    text: 'Show Scores', 
-                    action: () => this.showScoreHistory(), 
-                    class: 'modal-button',
-                    style: 'background: #3498db !important;'
-                },
-                { 
-                    text: 'Return to Menu', 
-                    action: () => this.returnToModeSelection(), 
-                    class: 'menu-btn modal-button' 
-                },
-                { 
-                    text: 'Close App', 
-                    action: () => this.showCloseAppInstructions(), 
-                    class: 'close-app-btn modal-button' 
-                },
-                { 
-                    text: 'Cancel', 
-                    action: 'close', 
-                    class: 'close-btn modal-button' 
-                }
-            ]
-        };
-        
-        this.ui.showModal('quit', quitContent);
-        console.log('📱 Quit modal shown - UI controller will handle mobile touch');
-    }
-
-    showLicenseQuitOptions() {
-        const quitContent = {
-            title: 'Exit License Entry',
-            content: 'Bridge Navigator requires a valid license to continue.',
-            buttons: [
-                { 
-                    text: 'Close App', 
-                    action: () => this.showCloseAppInstructions(), 
-                    class: 'close-app-btn modal-button' 
-                },
-                { 
-                    text: 'Continue Entry', 
-                    action: 'close', 
-                    class: 'modal-button' 
-                }
-            ]
-        };
-        
-        this.ui.showModal('quit', quitContent);
-        console.log('📱 License quit modal shown - UI controller will handle mobile touch');
-    }
-    
-    showCloseAppInstructions() {
-        this.ui.releaseWakeLock();
-        
-        const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        let message = '';
-        if (isPWA || isMobile) {
-            message = `📱 Close Bridge Navigator
-
-On Mobile/Tablet:
-• Use your device's app switcher and swipe up to close
-• Press home button to minimize the app
-
-✅ Your progress is automatically saved!`;
-        } else {
-            message = `💻 Close Bridge Navigator
-
-To close the app:
-• Close this browser tab or window
-
-✅ Your progress is automatically saved!`;
-        }
-        
-        alert(message);
-        this.ui.closeModal();
-    }
-
-    showScoreHistory() {
-        try {
-            const existingModals = document.querySelectorAll('.modal-overlay, .score-modal');
-            existingModals.forEach(modal => modal.remove());
-            
-            const modal = document.createElement('div');
-            modal.className = 'score-modal';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(0, 0, 0, 0.9); z-index: 999999;
-                display: flex; justify-content: center; align-items: center;
-                font-family: Arial, sans-serif;
-            `;
-            
-            const history = this.gameState.getHistory();
-            const scores = this.gameState.getScores();
-            
-            let content = `
-                <div style="background: white; color: black; padding: 30px; border-radius: 10px;
-                           max-width: 80vw; max-height: 80vh; overflow-y: auto;
-                           box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                    <h2 style="color: #e74c3c; margin-bottom: 20px; text-align: center;">
-                        🃏 Score History - ${this.getModeDisplayName(this.currentMode)}
-                    </h2>
-                    
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Current Scores</h3>
-                        <div style="display: flex; justify-content: space-between;">
-                            <div><strong>North-South: ${scores.NS} points</strong></div>
-                            <div><strong>East-West: ${scores.EW} points</strong></div>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #27ae60;">
-                            Total Deals Played: ${history.length}
-                        </div>
-                    </div>
-            `;
-            
-            if (history.length > 0) {
-                content += `<div style="text-align: center; padding: 20px; color: #666;">
-                    <p>Score history available in bridge mode display</p>
-                </div>`;
-            } else {
-                content += `<div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                    <h3>No deals completed yet</h3>
-                    <p>Start playing to see your score history!</p>
-                </div>`;
-            }
-            
-            content += `
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button onclick="this.closest('.score-modal').remove(); window.bridgeApp.showQuit();" 
-                                class="score-modal-btn"
-                                style="background: #3498db; color: white; border: none; padding: 12px 24px; 
-                                       border-radius: 5px; font-size: 16px; margin-right: 10px; cursor: pointer;
-                                       min-height: 44px; touch-action: manipulation;">
-                            Back to Quit Menu
-                        </button>
-                        <button onclick="this.closest('.score-modal').remove();" 
-                                class="score-modal-btn"
-                                style="background: #95a5a6; color: white; border: none; padding: 12px 24px; 
-                                       border-radius: 5px; font-size: 16px; cursor: pointer;
-                                       min-height: 44px; touch-action: manipulation;">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            modal.innerHTML = content;
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.remove();
-            });
-            
-            document.body.appendChild(modal);
-            window.bridgeApp = this;
-            
-            if (this.isMobile) {
-                setTimeout(() => {
-                    const scoreButtons = modal.querySelectorAll('.score-modal-btn');
-                    scoreButtons.forEach(button => {
-                        button.style.touchAction = 'manipulation';
-                        button.style.userSelect = 'none';
-                        button.style.webkitTapHighlightColor = 'transparent';
-                        
-                        const mobileHandler = (e) => {
-                            e.preventDefault();
-                            button.style.transform = 'scale(0.95)';
-                            button.style.opacity = '0.8';
-                            
-                            if (navigator.vibrate) navigator.vibrate(30);
-                            
-                            setTimeout(() => {
-                                button.style.transform = 'scale(1)';
-                                button.style.opacity = '1';
-                                button.click();
-                            }, 150);
-                        };
-                        
-                        button.addEventListener('touchend', mobileHandler, { passive: false });
-                    });
-                }, 100);
-            }
-            
-        } catch (error) {
-            console.error('Error creating score history:', error);
-            alert('Error showing score history.');
-        }
-    }
-    
-    getModeDisplayName(mode) {
-        const names = {
-            'kitchen': 'Kitchen Bridge',
-            'bonus': 'Bonus Bridge', 
-            'chicago': 'Chicago Bridge',
-            'rubber': 'Rubber Bridge',
-            'duplicate': 'Duplicate Bridge'
-        };
-        return names[mode] || 'Bridge Navigator';
-    }
-
-    onDealCompleted() {
-        this.licenseManager.incrementDealsPlayed();
-        
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        if (licenseStatus.needsCode) {
-            this.ui.showError('Trial expired! Enter full version code.');
-            setTimeout(() => {
-                this.enterCodeEntryMode(licenseStatus);
-            }, 2000);
-        }
-    }
-    
-    getCurrentMode() {
-        return this.currentMode;
-    }
-    
-    getAppState() {
-        return this.appState;
-    }
-
-    cleanup() {
-        this.removeEventListeners();
-        if (this.bridgeModeInstance && this.bridgeModeInstance.cleanup) {
-            this.bridgeModeInstance.cleanup();
-        }
+    static checksumCode(code) {
+        return code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
     }
 }
-
-// Export and make globally accessible
-export { BridgeApp, LicenseManager };
-window.BridgeApp = BridgeApp;
 
 // Development utilities
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    function generateSampleCodes() {
-        console.log('\n📝 Sample Trial Codes (any sum allowed):');
-        for (let i = 0; i < 5; i++) {
-            const code = LicenseManager.generateTrialCode();
-            console.log(`${code} (sum: ${LicenseManager.checksumCode(code)}) - TRIAL`);
-        }
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    window.generateTestCodes = function() {
+        console.log('\n🧪 Test License Codes:');
+        console.log('\nTrial codes (any checksum):');
+        ['111000', '222111', '333222', '444333', '555444'].forEach(code => {
+            const sum = LicenseManager.checksumCode(code);
+            console.log(`${code} (sum: ${sum}) - TRIAL`);
+        });
         
-        console.log('\n🔐 Sample Full Codes for testing:');
-        console.log('730999 (7+3+0+9+9+9 = 37) - FULL');
-        console.log('775558 (7+7+5+5+5+8 = 37) - FULL');
-        console.log('109999 (1+0+9+9+9+9 = 37) - FULL');
-    }
+        console.log('\nFull license codes (sum = 37):');
+        ['730999', '775558', '109999', '469999', '289999'].forEach(code => {
+            const sum = LicenseManager.checksumCode(code);
+            console.log(`${code} (sum: ${sum}) - FULL`);
+        });
+    };
     
-    function clearTestLicense() {
+    window.clearTestData = function() {
         localStorage.removeItem('bridgeAppLicense');
         localStorage.removeItem('bridgeAppDealsPlayed');
         localStorage.removeItem('bridgeAppUsedCodes');
-        console.log('🧹 License cleared for testing');
-    }
+        console.log('🧹 Test data cleared');
+        location.reload();
+    };
     
-    window.generateSampleCodes = generateSampleCodes;
-    window.clearTestLicense = clearTestLicense;
-    window.LicenseManager = LicenseManager;
-    
-    generateSampleCodes();
-    console.log('\n🛠️ Testing utilities:');
-    console.log('• clearTestLicense() - Clear license for testing');
-    console.log('• generateSampleCodes() - Generate sample codes');
-    console.log('• LicenseManager.checksumCode("123456") - Check code sum');
+    console.log('🛠️ Development mode detected');
+    console.log('• generateTestCodes() - Show sample codes');
+    console.log('• clearTestData() - Reset license state');
+    window.generateTestCodes();
 }
