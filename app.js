@@ -326,8 +326,8 @@ class BridgeApp {
             <div class="current-state">Press BACK to return to mode selection</div>
         `;
 
-        // Enable relevant buttons for demo
-        this.updateButtonStates(['♣', '♦', '♥', '♠', 'NT', 'N', 'S', 'E', 'W', 'BACK']);
+        // Example: Enable bidding buttons (1-7 would be highlighted for contract level)
+        this.updateButtonStates(['1', '2', '3', '4', '5', '6', '7', '♣', '♦', '♥', '♠', 'NT', 'BACK']);
     }
 
     updateButtonStates(activeButtons) {
@@ -338,10 +338,14 @@ class BridgeApp {
             
             if (activeButtons.includes(value)) {
                 btn.classList.remove('disabled');
+                btn.classList.add('active-operation');
             } else {
                 btn.classList.add('disabled');
+                btn.classList.remove('active-operation');
             }
         });
+        
+        console.log('🎯 Active buttons:', activeButtons);
     }
 
     enableControls() {
@@ -469,14 +473,37 @@ class BridgeApp {
                 
                 <h4>📧 Need a License?</h4>
                 <p><strong>Email:</strong> <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
-                
-                <h4>🧪 Test Codes</h4>
-                <p style="font-family: monospace; font-size: 12px;">
-                Trial: 111000, 222111, 333222<br>
-                Full: 730999, 775558 (sum = 37)</p>
             `;
         } else {
+            const licenseStatus = this.licenseManager.checkLicenseStatus();
+            let licenseSection = '';
+            
+            if (licenseStatus.status === 'trial') {
+                licenseSection = `
+                    <h4>📅 Current License Status</h4>
+                    <div style="background: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #ffc107;">
+                        <p><strong>Trial Version Active</strong></p>
+                        <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
+                        <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
+                        <p style="margin-top: 10px; font-size: 12px;">
+                            To upgrade to the full version with unlimited access, 
+                            contact: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a>
+                        </p>
+                    </div>
+                `;
+            } else if (licenseStatus.status === 'full') {
+                licenseSection = `
+                    <h4>✅ Current License Status</h4>
+                    <div style="background: rgba(40, 167, 69, 0.1); padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <p><strong>Full Version Activated</strong></p>
+                        <p>🔓 <strong>Unlimited Access</strong></p>
+                    </div>
+                `;
+            }
+            
             content = `
+                ${licenseSection}
+                
                 <h4>🎮 Bridge Game Controls</h4>
                 <p><strong>Mode Selection:</strong> Press 1-5 to choose scoring mode<br>
                 <strong>Wake:</strong> Keep screen active during play<br>
@@ -687,8 +714,19 @@ class LicenseManager {
 
         const prefix = code.substring(0, 3);
 
-        // Check trial codes
+        // Check trial codes (one-time use per device)
         if (this.trialPrefixes.includes(prefix)) {
+            // Check if this specific trial code was already used
+            if (this.isCodeUsed(code)) {
+                return { 
+                    valid: false, 
+                    message: 'Trial code already used on this device' 
+                };
+            }
+            
+            // Mark trial code as used immediately
+            this.markCodeAsUsed(code);
+            
             return { 
                 valid: true, 
                 type: 'TRIAL', 
@@ -730,7 +768,7 @@ class LicenseManager {
             return { success: false, message: validation.message };
         }
 
-        // Mark full codes as used
+        // For full codes, mark as used (trial codes already marked in validateCode)
         if (validation.type === 'FULL') {
             this.markCodeAsUsed(code);
         }
