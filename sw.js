@@ -17,12 +17,12 @@ const STATIC_ASSETS = [
 
 // Files that can be cached on demand
 const DYNAMIC_ASSETS = [
-    './base-mode.js',
-    './kitchen.js',
-    './bonus.js',
-    './chicago.js',
-    './rubber.js',
-    './duplicate.js'
+    './js/bridge-modes/base-mode.js',
+    './js/bridge-modes/kitchen.js',
+    './js/bridge-modes/bonus.js',
+    './js/bridge-modes/chicago.js',
+    './js/bridge-modes/rubber.js',
+    './js/bridge-modes/duplicate.js'
 ];
 
 self.addEventListener('install', (event) => {
