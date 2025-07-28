@@ -682,6 +682,17 @@ class LicenseManager {
             };
         }
 
+        // Validate license integrity
+        if (!this.validateLicenseIntegrity(license)) {
+            console.warn('🚨 License integrity check failed');
+            this.clearLicense();
+            return { 
+                status: 'invalid', 
+                needsCode: true,
+                message: 'License validation failed. Please re-enter code.'
+            };
+        }
+
         if (license.type === 'FULL') {
             return { 
                 status: 'full', 
@@ -699,6 +710,62 @@ class LicenseManager {
             needsCode: true,
             message: 'Invalid license detected. Please re-enter code.'
         };
+    }
+
+    validateLicenseIntegrity(license) {
+        // Check required fields
+        if (!license.code || !license.type || !license.activatedAt) {
+            return false;
+        }
+
+        // Check if the code is marked as used
+        if (!this.isCodeUsed(license.code)) {
+            console.warn('🚨 License code not found in used codes list');
+            return false;
+        }
+
+        // Validate code format and checksum
+        const validation = this.validateCodeSync(license.code);
+        if (!validation.valid || validation.type !== license.type) {
+            return false;
+        }
+
+        return true;
+    }
+
+    validateCodeSync(code) {
+        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+            return { valid: false };
+        }
+
+        const prefix = code.substring(0, 3);
+
+        if (this.trialPrefixes.includes(prefix)) {
+            return { valid: true, type: 'TRIAL' };
+        }
+
+        const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+        if (digitSum === this.checksumTarget) {
+            return { valid: true, type: 'FULL' };
+        }
+
+        return { valid: false };
+    }
+
+    generateDeviceFingerprint() {
+        // Simple device fingerprint for additional security
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Device fingerprint', 2, 2);
+        
+        return btoa(JSON.stringify({
+            screen: `${screen.width}x${screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            canvas: canvas.toDataURL().slice(0, 100),
+            userAgent: navigator.userAgent.slice(0, 50)
+        }));
     }
 
     checkTrialExpiry(license) {
@@ -735,21 +802,33 @@ class LicenseManager {
 
         // Check trial codes (one-time use per device)
         if (this.trialPrefixes.includes(prefix)) {
+            // STRICT: Check if ANY trial code was already used on this device
+            const usedCodes = this.getUsedCodes();
+            const hasUsedTrial = usedCodes.some(usedCode => {
+                const usedPrefix = usedCode.substring(0, 3);
+                return this.trialPrefixes.includes(usedPrefix);
+            });
+            
+            if (hasUsedTrial) {
+                return { 
+                    valid: false, 
+                    message: 'Trial already used on this device. Only one trial per device allowed.' 
+                };
+            }
+            
             // Check if this specific trial code was already used
             if (this.isCodeUsed(code)) {
                 return { 
                     valid: false, 
-                    message: 'Trial code already used on this device' 
+                    message: 'This trial code has already been used' 
                 };
             }
-            
-            // Mark trial code as used immediately
-            this.markCodeAsUsed(code);
             
             return { 
                 valid: true, 
                 type: 'TRIAL', 
-                message: '🎉 Trial activated! 14 days or 50 deals remaining.' 
+                message: '🎉 Trial activated! 14 days or 50 deals remaining.',
+                markAsUsed: true // Flag to mark as used
             };
         }
 
@@ -773,36 +852,67 @@ class LicenseManager {
         return { 
             valid: true, 
             type: 'FULL', 
-            message: '🎉 Full version activated! Unlimited bridge scoring.' 
+            message: '🎉 Full version activated! Unlimited bridge scoring.',
+            markAsUsed: true // Flag to mark as used
         };
     }
 
     async activateLicense(code) {
-        // Clear any existing license first to prevent conflicts
-        this.clearLicense();
-        
         const validation = await this.validateCode(code);
         
         if (!validation.valid) {
             return { success: false, message: validation.message };
         }
 
-        // For full codes, mark as used (trial codes already marked in validateCode)
-        if (validation.type === 'FULL') {
-            this.markCodeAsUsed(code);
+        // CRITICAL: Only proceed if validation was successful AND requires marking as used
+        if (!validation.markAsUsed) {
+            return { success: false, message: 'License validation error' };
         }
+
+        // Check for existing license conflicts
+        const existingLicense = this.getLicenseData();
+        if (existingLicense) {
+            // If trying to activate trial but already have full license
+            if (validation.type === 'TRIAL' && existingLicense.type === 'FULL') {
+                return { 
+                    success: false, 
+                    message: 'Full license already active. Trial codes cannot be used.' 
+                };
+            }
+            
+            // If trying to use same type of license again
+            if (validation.type === existingLicense.type) {
+                if (validation.type === 'TRIAL') {
+                    return { 
+                        success: false, 
+                        message: 'Trial already used on this device' 
+                    };
+                } else {
+                    return { 
+                        success: false, 
+                        message: 'Full license already active' 
+                    };
+                }
+            }
+        }
+
+        // Mark code as used BEFORE storing license (prevent race conditions)
+        this.markCodeAsUsed(code);
 
         const licenseData = {
             code: code,
             type: validation.type,
             activatedAt: Date.now(),
-            activatedDate: new Date().toISOString()
+            activatedDate: new Date().toISOString(),
+            deviceFingerprint: this.generateDeviceFingerprint()
         };
 
         localStorage.setItem(this.storageKey, JSON.stringify(licenseData));
         
         // Reset deals counter for new license
         localStorage.setItem('bridgeAppDealsPlayed', '0');
+
+        console.log(`🔒 License activated: ${validation.type} (Code: ${code})`);
 
         return { 
             success: true, 
@@ -847,7 +957,7 @@ class LicenseManager {
     clearLicense() {
         localStorage.removeItem(this.storageKey);
         localStorage.removeItem('bridgeAppDealsPlayed');
-        console.log('🧹 License cleared');
+        console.log('🧹 License cleared - used codes preserved for security');
     }
 
     incrementDealsPlayed() {
