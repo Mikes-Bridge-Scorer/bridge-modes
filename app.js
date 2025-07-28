@@ -228,20 +228,12 @@ class BridgeApp {
         const licenseType = licenseInfo.type || 'FULL';
         const isTrialMode = licenseType === 'TRIAL';
         
-        let statusBadge = '';
+        let licenseText = '';
         if (isTrialMode) {
             const status = this.licenseManager.checkLicenseStatus();
-            statusBadge = `
-                <div class="trial-badge">
-                    📅 Trial: ${status.daysLeft || 0} days, ${status.dealsLeft || 0} deals left
-                </div>
-            `;
+            licenseText = `Trial: ${status.daysLeft || 0} days, ${status.dealsLeft || 0} deals left`;
         } else {
-            statusBadge = `
-                <div class="full-badge">
-                    ✅ Full Version Activated
-                </div>
-            `;
+            licenseText = 'Full Version Activated';
         }
         
         const display = document.getElementById('display');
@@ -252,17 +244,17 @@ class BridgeApp {
             </div>
             <div class="game-content">
                 <div class="mode-selection">
-                    ${statusBadge}
                     <div class="mode-list">
-                        <p><strong>1</strong> - Kitchen Bridge (Simple social scoring)</p>
-                        <p><strong>2</strong> - Bonus Bridge (HCP bonus system)</p>
-                        <p><strong>3</strong> - Chicago Bridge (4-deal vulnerability)</p>
-                        <p><strong>4</strong> - Rubber Bridge (Traditional rubber)</p>
-                        <p><strong>5</strong> - Duplicate Bridge (Tournament style)</p>
+                        <p><strong>1</strong> - Kitchen Bridge</p>
+                        <p><strong>2</strong> - Bonus Bridge</p>
+                        <p><strong>3</strong> - Chicago Bridge</p>
+                        <p><strong>4</strong> - Rubber Bridge</p>
+                        <p><strong>5</strong> - Duplicate Bridge</p>
                     </div>
                 </div>
             </div>
             <div class="current-state">Press 1-5 to select bridge scoring mode</div>
+            <div class="license-status">${licenseText}</div>
         `;
 
         // Enable mode selection buttons and controls
@@ -518,11 +510,13 @@ class BridgeApp {
                 <strong>Vuln:</strong> Cycle vulnerability states</p>
                 
                 <h4>🃏 Available Modes</h4>
-                <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring<br>
-                <strong>2 - Bonus Bridge:</strong> HCP-based bonuses<br>
-                <strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle<br>
-                <strong>4 - Rubber Bridge:</strong> Traditional rubber scoring<br>
-                <strong>5 - Duplicate Bridge:</strong> Tournament-style pairs</p>
+                <div style="margin: 10px 0; font-size: 13px; line-height: 1.5;">
+                    <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring for casual games</p>
+                    <p><strong>2 - Bonus Bridge:</strong> HCP-based bonus system with extra points</p>
+                    <p><strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle format</p>
+                    <p><strong>4 - Rubber Bridge:</strong> Traditional rubber scoring with honors</p>
+                    <p><strong>5 - Duplicate Bridge:</strong> Tournament-style pairs scoring</p>
+                </div>
                 
                 <h4>📞 Support</h4>
                 <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
