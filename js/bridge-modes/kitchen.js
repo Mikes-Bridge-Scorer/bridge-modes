@@ -481,8 +481,176 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Get display content for current state
+     * Get help content specific to Kitchen Bridge
      */
+    getHelpContent() {
+        return {
+            title: 'Kitchen Bridge (Party Bridge) Help',
+            content: `
+                <div class="help-section">
+                    <h4>What is Kitchen Bridge?</h4>
+                    <p><strong>Kitchen Bridge</strong> (also called <strong>Party Bridge</strong>) is traditional bridge scoring designed for casual play at a single table with 4 players. It uses standard bridge scoring rules without any adjustments for hand strength or playing skill.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Enhanced Features</h4>
+                    <ul>
+                        <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
+                        <li><strong>Deal Tracking:</strong> Clear display of current deal and vulnerability</li>
+                        <li><strong>Traditional Scoring:</strong> Standard bridge point values</li>
+                        <li><strong>Mobile Support:</strong> Enhanced touch support for all devices</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Vulnerability Control</h4>
+                    <p><strong>Kitchen Bridge allows manual vulnerability control:</strong></p>
+                    <ul>
+                        <li>Press the <strong>Vuln</strong> button to cycle: NV → NS → EW → Both</li>
+                        <li>Set vulnerability as desired for each deal</li>
+                        <li>Vulnerability affects game bonuses and penalty scoring</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Key Characteristics</h4>
+                    <ul>
+                        <li><strong>Standard Scoring:</strong> Uses traditional bridge point values</li>
+                        <li><strong>4 Players Only:</strong> Designed for one table bridge</li>
+                        <li><strong>No Skill Adjustment:</strong> Same score regardless of hand strength</li>
+                        <li><strong>Simple & Quick:</strong> Easy to calculate, familiar to all bridge players</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Mobile & Touch Support</h4>
+                    <ul>
+                        <li><strong>Touch Optimized:</strong> All buttons work perfectly on mobile devices</li>
+                        <li><strong>Visual Feedback:</strong> Buttons provide haptic and visual feedback</li>
+                        <li><strong>Proper Sizing:</strong> Buttons sized for easy touch interaction</li>
+                        <li><strong>Universal Support:</strong> Works on phones, tablets, and desktops</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>How to Use</h4>
+                    <ol>
+                        <li><strong>Set Vulnerability:</strong> Use Vuln button before each deal</li>
+                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
+                        <li><strong>Add Doubling:</strong> Press X to cycle through None/Double/Redouble</li>
+                        <li><strong>Score Automatically:</strong> Calculator applies standard bridge scoring</li>
+                        <li><strong>Next Deal:</strong> Press Deal to continue</li>
+                    </ol>
+                </div>
+            `,
+            buttons: [
+                { text: 'Close Help', action: 'close', class: 'close-btn' }
+            ]
+        };
+    }
+    
+    /**
+     * Show Kitchen Bridge specific help
+     */
+    showHelp() {
+        const helpContent = this.getHelpContent();
+        this.bridgeApp.showModal(helpContent.title, helpContent.content);
+    }
+    
+    /**
+     * Show Kitchen Bridge specific quit options
+     */
+    showQuit() {
+        const scores = this.gameState.scores;
+        const totalDeals = this.gameState.history.length;
+        const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
+        
+        let currentScoreContent = '';
+        if (totalDeals > 0) {
+            const leader = scores.NS > scores.EW ? 'North-South' : 
+                          scores.EW > scores.NS ? 'East-West' : 'Tied';
+            
+            currentScoreContent = `
+                <div class="help-section">
+                    <h4>📊 Current Game Status</h4>
+                    <p><strong>Deals Played:</strong> ${totalDeals}</p>
+                    <p><strong>Current Scores:</strong></p>
+                    <ul>
+                        <li>North-South: ${scores.NS} points</li>
+                        <li>East-West: ${scores.EW} points</li>
+                    </ul>
+                    <p><strong>Current Leader:</strong> ${leader}</p>
+                </div>
+            `;
+        }
+        
+        let licenseSection = '';
+        if (licenseStatus.status === 'trial') {
+            licenseSection = `
+                <div class="help-section">
+                    <h4>📅 License Status</h4>
+                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
+                </div>
+            `;
+        }
+        
+        const content = `
+            ${currentScoreContent}
+            ${licenseSection}
+            <div class="help-section">
+                <h4>🎮 Game Options</h4>
+                <p>What would you like to do?</p>
+            </div>
+        `;
+        
+        const buttons = [
+            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
+            { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
+            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
+        ];
+        
+        this.bridgeApp.showModal('🍳 Kitchen Bridge Options', content, buttons);
+    }
+    
+    /**
+     * Start a new game (reset scores)
+     */
+    startNewGame() {
+        const confirmed = confirm(
+            'Start a new game?\n\nThis will reset all scores to zero and start over.\n\nClick OK to start new game, Cancel to continue current game.'
+        );
+        
+        if (confirmed) {
+            // Reset all scores and history
+            this.gameState.scores = { NS: 0, EW: 0 };
+            this.gameState.history = [];
+            this.currentDeal = 1;
+            this.vulnerability = 'NV';
+            
+            // Update vulnerability display
+            const vulnText = document.getElementById('vulnText');
+            if (vulnText) {
+                vulnText.textContent = 'NV';
+            }
+            
+            // Reset to level selection
+            this.resetContract();
+            this.inputState = 'level_selection';
+            this.updateDisplay();
+            
+            console.log('🆕 New Kitchen Bridge game started');
+        }
+    }
+    
+    /**
+     * Return to main menu
+     */
+    returnToMainMenu() {
+        this.bridgeApp.showLicensedMode({ 
+            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+        });
+    }
     getDisplayContent() {
         const scores = this.gameState.scores;
         
