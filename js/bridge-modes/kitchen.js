@@ -616,12 +616,71 @@ class KitchenBridgeMode extends BaseBridgeMode {
         
         const buttons = [
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
+            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
             { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
             { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
             { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
         ];
         
         this.bridgeApp.showModal('🍳 Kitchen Bridge Options', content, buttons);
+    }
+    
+    /**
+     * Show detailed deal-by-deal scores
+     */
+    showDetailedScores() {
+        const scores = this.gameState.scores;
+        const history = this.gameState.history;
+        
+        if (history.length === 0) {
+            this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
+            return;
+        }
+        
+        let dealSummary = `
+            <div class="scores-summary">
+                <h4>📊 Current Totals</h4>
+                <p><strong>North-South:</strong> ${scores.NS} points</p>
+                <p><strong>East-West:</strong> ${scores.EW} points</p>
+                <p><strong>Leader:</strong> ${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</p>
+            </div>
+            
+            <div class="deals-history">
+                <h4>🃏 Deal by Deal Summary</h4>
+                <div style="max-height: 300px; overflow-y: auto; font-size: 12px;">
+        `;
+        
+        history.forEach((deal, index) => {
+            const contract = deal.contract;
+            const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
+            const scoreDisplay = deal.score >= 0 ? `+${deal.score}` : `${deal.score}`;
+            const scoringSide = deal.scoringSide || (deal.score >= 0 ? 
+                (['N', 'S'].includes(contract.declarer) ? 'NS' : 'EW') :
+                (['N', 'S'].includes(contract.declarer) ? 'EW' : 'NS'));
+            
+            dealSummary += `
+                <div style="border-bottom: 1px solid #444; padding: 8px 0; display: flex; justify-content: space-between;">
+                    <div>
+                        <strong>Deal ${deal.deal}:</strong> ${contractStr} by ${contract.declarer} = ${contract.result}
+                    </div>
+                    <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};">
+                        ${scoreDisplay} for ${scoringSide}
+                    </div>
+                </div>
+            `;
+        });
+        
+        dealSummary += `
+                </div>
+            </div>
+        `;
+        
+        const buttons = [
+            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
+            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
+        ];
+        
+        this.bridgeApp.showModal('📊 Kitchen Bridge - Detailed Scores', dealSummary, buttons);
     }
     
     /**
