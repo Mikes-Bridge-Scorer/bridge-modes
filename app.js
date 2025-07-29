@@ -80,29 +80,35 @@ class BridgeApp {
         }
 
         try {
-            console.log(`📦 Loading ${module.name}...`);
+            console.log(`📦 Loading ${module.name} from ${module.file}...`);
             
-            if (!this.loadedModules.has(module.file)) {
-                await this.loadScript(module.file);
-                this.loadedModules.set(module.file, true);
-            }
+            // Always try to load fresh (bypass cache for debugging)
+            const timestamp = Date.now();
+            const scriptUrl = `${module.file}?v=${timestamp}`;
+            
+            console.log(`🔄 Loading script: ${scriptUrl}`);
+            await this.loadScript(scriptUrl);
+            this.loadedModules.set(module.file, true);
 
             // Verify the class is available
             const ModuleClass = window[module.class];
             if (!ModuleClass) {
-                throw new Error(`Module class ${module.class} not found`);
+                throw new Error(`Module class ${module.class} not found after loading ${scriptUrl}`);
             }
 
-            console.log(`✅ ${module.name} loaded successfully`);
+            console.log(`✅ ${module.name} loaded successfully with class:`, ModuleClass.name);
             return ModuleClass;
 
         } catch (error) {
             console.error(`❌ Failed to load ${module.name}:`, error);
+            console.error(`❌ Script URL attempted: ${module.file}`);
+            console.error(`❌ Available window classes:`, Object.keys(window).filter(k => k.includes('Bridge')));
             
             // Show fallback message if module fails to load
             if (moduleId === '1') {
                 // Kitchen Bridge fallback - use embedded version
                 console.log('🔄 Using embedded Kitchen Bridge fallback');
+                this.showMessage(`Failed to load full Kitchen Bridge. Using demo mode.`, 'error');
                 return this.getEmbeddedKitchenBridge();
             }
             
