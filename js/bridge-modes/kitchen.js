@@ -202,7 +202,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 if (num <= maxOvertricks) {
                     this.currentContract.result = `+${num}`;
                 } else {
-                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                    console.warn(⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
                     return;
                 }
             }
@@ -318,18 +318,33 @@ class KitchenBridgeMode extends BaseBridgeMode {
         console.log('📊 GameState object:', this.gameState);
         console.log('📊 GameState.addScore method:', typeof this.gameState.addScore);
         
+        // FIXED: Better backup logic - track scores before and after
+        const scoresBefore = { ...this.gameState.scores };
+        
         if (score >= 0) {
             // Made contract - points go to declarer side
             console.log(`🎯 About to call: this.gameState.addScore('${declarerSide}', ${score})`);
             this.gameState.addScore(declarerSide, score);
-            console.log(`✅ Called addScore, new scores should be:`, this.gameState.scores);
+            
+            // Check if addScore actually worked
+            if (this.gameState.scores[declarerSide] === scoresBefore[declarerSide]) {
+                console.log('🔧 addScore failed, using direct update');
+                this.gameState.scores[declarerSide] += score;
+            }
+            console.log(`✅ Final scores after update:`, this.gameState.scores);
         } else {
             // Failed contract - penalty points go to defending side
             const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
-            const penaltyPoints = Math.abs(score); // Convert negative to positive
+            const penaltyPoints = Math.abs(score);
             console.log(`🎯 About to call: this.gameState.addScore('${defendingSide}', ${penaltyPoints})`);
             this.gameState.addScore(defendingSide, penaltyPoints);
-            console.log(`✅ Called addScore, new scores should be:`, this.gameState.scores);
+            
+            // Check if addScore actually worked
+            if (this.gameState.scores[defendingSide] === scoresBefore[defendingSide]) {
+                console.log('🔧 addScore failed, using direct update');
+                this.gameState.scores[defendingSide] += penaltyPoints;
+            }
+            console.log(`✅ Final scores after update:`, this.gameState.scores);
         }
         
         console.log('📊 After adding score - Updated gameState.scores:', this.gameState.scores);
@@ -576,10 +591,16 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
                     
-                    // Use the same logic as your original to display score
+                    // Determine who scored based on declarer and score sign
+                    const scoringSide = lastEntry.scoringSide || 
+                        (lastEntry.score >= 0 ? 
+                            (['N', 'S'].includes(lastEntry.contract.declarer) ? 'NS' : 'EW') :
+                            (['N', 'S'].includes(lastEntry.contract.declarer) ? 'EW' : 'NS'));
+                    
+                    const scoreAmount = Math.abs(lastEntry.score);
                     const scoreText = lastEntry.score >= 0 ? 
-                        `+${lastEntry.score}` : 
-                        `${lastEntry.score}`;
+                        `+${scoreAmount} for ${scoringSide}` : 
+                        `+${scoreAmount} penalty for ${scoringSide}`;
                     
                     return `
                         <div class="title-score-row">
