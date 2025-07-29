@@ -1,5 +1,5 @@
-/* ===== BRIDGE MODES CALCULATOR - CLEAN STYLES.CSS ===== */
-/* Replicates your original responsive.css design with mobile-first improvements */
+/* ===== BRIDGE MODES CALCULATOR - IMPROVED UI STYLES ===== */
+/* Enhanced version with smaller, more attractive buttons and better typography */
 
 /* Global Reset */
 * {
@@ -12,7 +12,7 @@
     user-select: none;
 }
 
-/* Root Variables */
+/* Root Variables - Enhanced Color Palette */
 :root {
     --primary-bg: #2c3e50;
     --secondary-bg: #34495e;
@@ -24,6 +24,13 @@
     --text-muted: #bdc3c7;
     --text-dark: #7f8c8d;
     --border-color: #4a6741;
+    
+    /* New enhanced colors */
+    --button-shadow: rgba(0, 0, 0, 0.15);
+    --button-hover-shadow: rgba(0, 0, 0, 0.25);
+    --active-glow: rgba(40, 167, 69, 0.4);
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0, 0, 0, 0.08);
 }
 
 /* HTML & Body - Viewport Fix */
@@ -44,8 +51,8 @@ html {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #212529;
     height: 100vh;
     height: 100svh;
@@ -67,7 +74,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--primary-bg);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -108,33 +115,35 @@ body {
     position: relative;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: 12px;
 }
 
-/* Calculator Container */
+/* Calculator Container - More Modern Design */
 .calculator {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 500px;
+    max-width: 420px;
     height: auto;
-    background: var(--secondary-bg);
-    border-radius: 20px;
-    padding: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Display Panel */
+/* Display Panel - Cleaner Card Design */
 .display-panel {
-    background: white;
-    color: #212529;
-    border-radius: 12px;
-    margin-bottom: 8px;
-    padding: 15px;
-    min-height: 140px;
-    border: 2px solid #dee2e6;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    color: #2c3e50;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    padding: 18px;
+    min-height: 130px;
+    box-shadow: 0 4px 12px var(--card-shadow);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     position: relative;
 }
 
@@ -142,47 +151,55 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .mode-title {
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 700;
     color: var(--accent-blue);
+    letter-spacing: -0.2px;
 }
 
 .score-display {
     text-align: right;
     font-size: 14px;
-    line-height: 1.2;
-    color: #212529;
+    line-height: 1.3;
+    color: #2c3e50;
     background: #f8f9fa;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #dee2e6;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    font-weight: 600;
+    min-width: 70px;
 }
 
 .game-content {
-    margin: 8px 0;
+    margin: 10px 0;
     text-align: center;
 }
 
-/* License Code Display */
+/* License Code Display - Enhanced */
 .code-display {
-    font-family: 'Courier New', monospace;
-    font-size: 24px;
-    font-weight: bold;
+    font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--accent-blue);
-    margin: 15px 0;
-    letter-spacing: 4px;
+    margin: 16px 0;
+    letter-spacing: 6px;
     text-align: center;
+    background: rgba(52, 152, 219, 0.08);
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid rgba(52, 152, 219, 0.15);
 }
 
 .status-message {
-    color: #212529;
+    color: #495057;
     font-size: 14px;
-    margin: 10px 0;
+    margin: 12px 0;
     text-align: center;
+    font-weight: 500;
 }
 
 /* Licensed Mode Content */
@@ -193,16 +210,17 @@ body {
 .mode-grid {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    margin: 8px 0;
+    gap: 4px;
+    margin: 10px 0;
 }
 
 .mode-row {
     display: flex;
     justify-content: space-around;
-    font-size: 12px;
-    line-height: 1.3;
-    min-height: 16px;
+    font-size: 13px;
+    line-height: 1.4;
+    min-height: 18px;
+    font-weight: 500;
 }
 
 .mode-row span {
@@ -212,190 +230,187 @@ body {
     text-align: center;
 }
 
-/* Single item rows should be centered */
 .mode-row:has(span:only-child) {
     justify-content: center;
 }
 
-/* Fallback for original list style */
-.mode-list {
-    text-align: center;
-    margin: 8px 0;
-    font-size: 13px;
-    line-height: 1.4;
-}
-
-.mode-list p {
-    margin: 1px 0;
-    color: #495057;
-}
-
-/* License Status at Bottom */
 .license-status {
     position: absolute;
-    bottom: 5px;
+    bottom: 6px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 10px;
-    color: #007bff;
+    font-size: 11px;
+    color: var(--accent-blue);
     text-align: center;
     width: 100%;
-}
-
-.demo-content {
-    text-align: center;
-}
-
-.demo-info {
-    background: rgba(52, 152, 219, 0.1);
-    padding: 10px;
-    border-radius: 6px;
-    margin: 10px 0;
-    text-align: left;
-    font-size: 12px;
-}
-
-.demo-info ul {
-    margin: 8px 0 0 20px;
-    color: var(--text-muted);
+    font-weight: 600;
 }
 
 .current-state {
     font-size: 12px;
     color: #6c757d;
     text-align: center;
-    margin-top: 6px;
-    padding: 4px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: rgba(108, 117, 125, 0.08);
+    border-radius: 8px;
+    font-weight: 500;
 }
 
-/* Control Bar */
+/* Control Bar - Refined Design */
 .control-bar {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    margin-bottom: 6px;
-    padding: 0 8px;
-    gap: 8px;
+    height: 38px;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    padding: 0 10px;
+    gap: 6px;
 }
 
 .control-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 0 8px;
-    font-size: 11px;
-    color: var(--text-light);
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    height: 26px;
+    padding: 0 10px;
+    font-size: 12px;
+    color: #495057;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    height: 30px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     touch-action: manipulation;
     min-width: 50px;
     justify-content: center;
+    font-weight: 600;
+    backdrop-filter: blur(5px);
 }
 
 .control-item:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .control-item:active {
-    transform: scale(0.95);
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 1);
 }
 
-/* Wake Toggle Switch */
+/* Wake Toggle Switch - Modern Design */
 .toggle-switch {
-    width: 24px;
-    height: 12px;
-    background: var(--text-dark);
-    border-radius: 6px;
+    width: 28px;
+    height: 16px;
+    background: #ddd;
+    border-radius: 8px;
     position: relative;
-    transition: background 0.3s ease;
+    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-knob {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     background: white;
     border-radius: 50%;
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch.active {
     background: var(--success-green);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch.active .toggle-knob {
     transform: translateX(12px);
 }
 
-/* Copyright */
+/* Copyright - Subtle */
 .copyright {
     text-align: center;
     font-size: 10px;
-    color: var(--text-dark);
-    margin-bottom: 6px;
+    color: rgba(0, 0, 0, 0.4);
+    margin-bottom: 8px;
     padding: 2px;
+    font-weight: 500;
 }
 
-/* Button Grid */
+/* Button Grid - Optimized Layout */
 .button-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    padding: 10px;
+    gap: 10px;
+    padding: 12px;
     flex: 1;
-    min-height: 320px;
+    min-height: 280px;
 }
 
-/* Base Button Styles */
+/* Enhanced Button Styles - Smaller, More Attractive */
 .btn {
-    background: var(--accent-blue);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     color: white;
-    font-size: 16px;
-    font-weight: bold;
-    min-height: 50px;
+    font-size: 15px;
+    font-weight: 700;
+    min-height: 42px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     touch-action: manipulation;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px var(--button-shadow);
     position: relative;
     overflow: hidden;
+    letter-spacing: -0.2px;
 }
 
+/* Button Hover Effect */
 .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--button-hover-shadow);
 }
 
 .btn:active,
 .btn.pressed {
-    transform: translateY(1px) scale(0.98);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 6px var(--button-shadow);
 }
 
+/* Active/Enabled Button Glow */
+.btn:not(.disabled) {
+    box-shadow: 0 2px 8px var(--button-shadow), 
+                0 0 0 2px var(--active-glow);
+    animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+    0%, 100% { box-shadow: 0 2px 8px var(--button-shadow), 0 0 0 2px var(--active-glow); }
+    50% { box-shadow: 0 2px 8px var(--button-shadow), 0 0 0 2px rgba(40, 167, 69, 0.6); }
+}
+
+.btn:not(.disabled):hover {
+    box-shadow: 0 6px 16px var(--button-hover-shadow), 
+                0 0 0 2px rgba(255, 255, 255, 0.8);
+    animation: none;
+}
+
+/* Disabled Button Style */
 .btn.disabled {
-    background: #6c757d;
-    color: rgba(255, 255, 255, 0.5);
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    color: rgba(255, 255, 255, 0.6);
     cursor: not-allowed;
     transform: none;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: none;
 }
 
 .btn.disabled:hover,
@@ -404,84 +419,87 @@ body {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* ACTIVE/HIGHLIGHTED BUTTONS - White border for current operation */
-.btn:not(.disabled) {
-    border: 2px solid #28a745;
-    box-shadow: 0 0 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn:not(.disabled):hover {
-    border: 2px solid #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
-}
-
-/* Button Variants */
+/* Enhanced Button Variants */
 .btn-number {
-    background: linear-gradient(145deg, #28a745, #218838);
-}
-
-.btn-number:hover {
-    background: linear-gradient(145deg, #218838, #1e7e34);
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    font-size: 16px;
+    font-weight: 800;
 }
 
 .btn-clubs {
-    background: linear-gradient(145deg, #6c757d, #5a6268);
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
     color: white;
 }
 
 .btn-diamonds {
-    background: linear-gradient(145deg, #dc3545, #c82333);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
 }
 
 .btn-hearts {
-    background: linear-gradient(145deg, #dc3545, #c82333);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
 }
 
 .btn-spades {
-    background: linear-gradient(145deg, #343a40, #23272b);
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
     color: white;
 }
 
 .btn-notrump {
-    background: linear-gradient(145deg, #fd7e14, #e55100);
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
 }
 
 .btn-declarer {
-    background: linear-gradient(145deg, #6f42c1, #5a359a);
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+    font-weight: 800;
 }
 
 .btn-double {
-    background: linear-gradient(145deg, #17a2b8, #138496);
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    font-weight: 800;
 }
 
 .btn-result {
-    background: linear-gradient(145deg, #20c997, #1abc9c);
+    background: linear-gradient(135deg, #20c997 0%, #17a085 100%);
+    color: white;
+    font-weight: 700;
 }
 
 .btn-action {
-    background: linear-gradient(145deg, #dc3545, #c82333);
+    background: linear-gradient(135deg, #fd7e14 0%, #e55100 100%);
+    color: white;
+    font-weight: 700;
 }
 
-/* Suit Symbols */
+/* Suit Symbols - Enhanced Typography */
 .suit-symbol {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 20px;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* NT Button - Larger Text as requested */
 .btn-notrump .suit-symbol {
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1px;
 }
 
-/* Message Styles */
+/* Message Styles - Enhanced */
 .error-message {
-    background: rgba(231, 76, 60, 0.2);
-    border: 1px solid var(--danger-red);
-    border-radius: 6px;
-    padding: 8px;
-    margin: 8px 0;
-    color: #ff6b6b;
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(231, 76, 60, 0.08) 100%);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    color: #c0392b;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     animation: shake 0.5s ease;
 }
 
@@ -492,14 +510,15 @@ body {
 }
 
 .success-message {
-    background: rgba(39, 174, 96, 0.2);
-    border: 1px solid var(--success-green);
-    border-radius: 6px;
-    padding: 8px;
-    margin: 8px 0;
-    color: #51cf66;
+    background: linear-gradient(135deg, rgba(39, 174, 96, 0.15) 0%, rgba(39, 174, 96, 0.08) 100%);
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    color: #27ae60;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     animation: bounce 0.5s ease;
 }
 
@@ -509,17 +528,18 @@ body {
 }
 
 .info-message {
-    background: rgba(52, 152, 219, 0.2);
-    border: 1px solid var(--accent-blue);
-    border-radius: 6px;
-    padding: 8px;
-    margin: 8px 0;
-    color: #74b9ff;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.15) 0%, rgba(52, 152, 219, 0.08) 100%);
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    color: #3498db;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
-/* Modal Styles */
+/* Modal Styles - Enhanced */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -527,99 +547,112 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
     animation: fadeIn 0.3s ease;
+    padding: 15px;
+    box-sizing: border-box;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; backdrop-filter: blur(0px); }
+    to { opacity: 1; backdrop-filter: blur(5px); }
 }
 
 .modal-content {
-    background: var(--secondary-bg);
-    border-radius: 12px;
-    padding: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 24px;
     max-width: 90%;
-    max-height: 80%;
+    width: 100%;
+    max-height: 85vh;
     overflow-y: auto;
-    color: white;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    animation: slideUp 0.3s ease;
+    color: #2c3e50;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from { transform: translateY(30px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 .modal-content h3 {
     color: var(--accent-blue);
-    margin-bottom: 15px;
-    font-size: 18px;
+    margin-bottom: 18px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
 }
 
 .modal-content h4 {
-    color: var(--text-light);
-    margin: 15px 0 8px 0;
-    font-size: 14px;
+    color: #2c3e50;
+    margin: 16px 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .modal-content p {
-    margin: 8px 0;
-    line-height: 1.4;
-    font-size: 13px;
-    color: var(--text-muted);
+    margin: 10px 0;
+    line-height: 1.5;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
 }
 
 .modal-content a {
     color: var(--accent-blue);
     text-decoration: none;
+    font-weight: 600;
 }
 
 .modal-buttons {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: 24px;
     flex-wrap: wrap;
 }
 
 .modal-btn {
-    background: var(--accent-blue);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2980b9 100%);
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     color: white;
-    padding: 10px 20px;
+    padding: 12px 20px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     touch-action: manipulation;
     min-height: 44px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 12px rgba(52, 152, 219, 0.3);
+    letter-spacing: -0.2px;
 }
 
 .modal-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 .modal-btn.close {
-    background: var(--text-dark);
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    box-shadow: 0 3px 12px rgba(149, 165, 166, 0.3);
 }
 
-/* Error Screen */
+/* Error Screen - Enhanced */
 .error-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--primary-bg);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -630,208 +663,116 @@ body {
     text-align: center;
     color: var(--text-light);
     padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
 }
 
 .error-content h2 {
     color: var(--danger-red);
     margin-bottom: 20px;
+    font-weight: 700;
 }
 
 .modal-button {
-    background: var(--accent-blue);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2980b9 100%);
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     color: white;
-    padding: 12px 24px;
+    padding: 14px 28px;
     font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
     margin-top: 20px;
     touch-action: manipulation;
     min-height: 44px;
+    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+/* ===== RESPONSIVE DESIGN - Optimized ===== */
 
 /* Extra Small Mobile (320px - 360px) */
 @media (max-width: 360px) {
     .calculator {
-        padding: 8px;
-        border-radius: 16px;
-        max-height: 640px;
+        padding: 12px;
+        border-radius: 20px;
+        max-width: 340px;
     }
     
     .display-panel {
-        padding: 10px;
-        margin-bottom: 6px;
+        padding: 14px;
+        margin-bottom: 8px;
         min-height: 120px;
-        font-size: 12px;
     }
     
     .mode-title {
-        font-size: 14px;
+        font-size: 16px;
     }
     
     .score-display {
-        font-size: 10px;
+        font-size: 12px;
+        padding: 8px 12px;
     }
     
     .control-bar {
-        height: 24px;
+        height: 34px;
         gap: 4px;
-        margin-bottom: 4px;
     }
     
     .control-item {
-        padding: 0 6px;
-        font-size: 10px;
-        border-radius: 6px;
-        min-width: 40px;
-    }
-    
-    .toggle-switch {
-        width: 20px;
-        height: 10px;
-    }
-    
-    .toggle-knob {
-        width: 6px;
-        height: 6px;
-    }
-    
-    .toggle-switch.active .toggle-knob {
-        transform: translateX(10px);
-    }
-    
-    .copyright {
-        font-size: 8px;
-        margin-bottom: 4px;
+        padding: 0 8px;
+        font-size: 11px;
+        min-width: 45px;
+        height: 26px;
     }
     
     .button-grid {
-        gap: 6px;
-        min-height: 280px;
-        padding: 8px;
+        gap: 8px;
+        min-height: 240px;
+        padding: 10px;
     }
     
     .btn {
-        min-height: 44px;
-        font-size: 13px;
-        border-radius: 8px;
+        min-height: 38px;
+        font-size: 14px;
+        border-radius: 10px;
     }
     
     .suit-symbol {
-        font-size: 22px;
+        font-size: 18px;
     }
     
     .btn-notrump .suit-symbol {
-        font-size: 12px;
+        font-size: 14px;
+    }
+}
+
+/* Standard Mobile (360px - 414px) */
+@media (min-width: 360px) and (max-width: 414px) {
+    .button-grid {
+        gap: 9px;
+        min-height: 260px;
+    }
+    
+    .btn {
+        min-height: 40px;
+        font-size: 14px;
     }
 }
 
 /* Large Mobile (414px - 480px) */
 @media (min-width: 414px) and (max-width: 480px) {
     .calculator {
-        padding: 12px;
-        max-height: 700px;
-    }
-    
-    .display-panel {
-        padding: 14px;
-        margin-bottom: 10px;
-        min-height: 150px;
-        font-size: 14px;
-    }
-    
-    .mode-title {
-        font-size: 17px;
-    }
-    
-    .control-bar {
-        height: 30px;
-        gap: 7px;
-    }
-    
-    .control-item {
-        font-size: 12px;
-        min-width: 50px;
+        max-width: 400px;
     }
     
     .button-grid {
         gap: 10px;
-        min-height: 340px;
-        padding: 12px;
+        min-height: 270px;
     }
     
     .btn {
-        min-height: 50px;
-        font-size: 16px;
-        border-radius: 12px;
-    }
-    
-    .suit-symbol {
-        font-size: 24px;
-    }
-    
-    .btn-notrump .suit-symbol {
-        font-size: 14px;
-    }
-}
-
-/* Small Tablet Portrait (480px - 768px) */
-@media (min-width: 480px) and (max-width: 768px) {
-    .app-container {
-        padding: 15px;
-    }
-    
-    .calculator {
-        max-width: 480px;
-        padding: 18px;
-        max-height: 720px;
-    }
-    
-    .display-panel {
-        padding: 18px;
-        margin-bottom: 12px;
-        min-height: 160px;
-        font-size: 15px;
-    }
-    
-    .mode-title {
-        font-size: 18px;
-    }
-    
-    .score-display {
-        font-size: 13px;
-    }
-    
-    .control-bar {
-        height: 32px;
-        gap: 8px;
-    }
-    
-    .control-item {
-        font-size: 12px;
-        padding: 0 10px;
-        min-width: 55px;
-    }
-    
-    .button-grid {
-        gap: 12px;
-        min-height: 380px;
-        padding: 15px;
-    }
-    
-    .btn {
-        min-height: 52px;
-        font-size: 17px;
-        border-radius: 13px;
-    }
-    
-    .suit-symbol {
-        font-size: 26px;
-    }
-    
-    .btn-notrump .suit-symbol {
+        min-height: 42px;
         font-size: 15px;
     }
 }
@@ -839,50 +780,23 @@ body {
 /* Tablet and Desktop */
 @media (min-width: 768px) {
     .calculator {
-        max-width: 500px;
-        padding: 20px;
-    }
-    
-    .display-panel {
-        padding: 20px;
-        margin-bottom: 15px;
-        min-height: 180px;
-        font-size: 16px;
-    }
-    
-    .mode-title {
-        font-size: 20px;
-    }
-    
-    .score-display {
-        font-size: 14px;
-    }
-    
-    .control-bar {
-        height: 36px;
-        gap: 10px;
-    }
-    
-    .control-item {
-        font-size: 13px;
-        padding: 0 12px;
-        min-width: 60px;
+        max-width: 420px;
+        padding: 18px;
     }
     
     .button-grid {
-        gap: 15px;
-        min-height: 420px;
-        padding: 20px;
+        gap: 12px;
+        min-height: 290px;
+        padding: 14px;
     }
     
     .btn {
-        min-height: 56px;
-        font-size: 18px;
-        border-radius: 14px;
+        min-height: 44px;
+        font-size: 15px;
     }
     
     .suit-symbol {
-        font-size: 28px;
+        font-size: 20px;
     }
     
     .btn-notrump .suit-symbol {
@@ -890,89 +804,34 @@ body {
     }
 }
 
-/* High Resolution Displays */
-@media (min-width: 1024px) {
-    .calculator {
-        max-width: 600px;
-        padding: 25px;
-    }
-    
-    .button-grid {
-        gap: 18px;
-        min-height: 450px;
-        padding: 25px;
-    }
-    
-    .btn {
-        min-height: 60px;
-        font-size: 20px;
-    }
-    
-    .suit-symbol {
-        font-size: 30px;
-    }
-}
-
-/* Force proper sizing on very old Android devices */
-@media screen and (max-width: 400px) and (max-height: 700px) {
-    html {
-        font-size: 18px !important;
-        zoom: 1.1;
-    }
-    
-    body {
-        font-size: 18px !important;
-        zoom: 1.1;
-    }
-    
-    .btn {
-        font-size: 16px !important;
-        min-height: 48px !important;
-    }
-    
-    .display-panel {
-        font-size: 14px !important;
-        min-height: 140px !important;
-    }
-}
-
-/* PWA specific fixes */
+/* PWA and Mobile Fixes */
 @media (display-mode: standalone) {
     html, body {
         overflow: hidden !important;
         position: fixed !important;
-        width: 100% !important;
-        height: 100% !important;
-    }
-    
-    .app-container {
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
     }
 }
 
-/* Prevent zoom on input focus (mobile) */
+/* Prevent zoom on input focus */
 input, select, textarea {
     font-size: 16px !important;
     zoom: 1.0;
-    transform: scale(1);
-}
-
-/* Allow text selection only where needed */
-input, textarea, [contenteditable="true"] {
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-    user-select: text !important;
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-    :root {
-        --primary-bg: #1a1a1a;
-        --secondary-bg: #2d2d2d;
-        --text-light: #ffffff;
-        --text-muted: #cccccc;
+    .calculator {
+        background: rgba(44, 62, 80, 0.95);
+    }
+    
+    .display-panel {
+        background: #2c3e50;
+        color: var(--text-light);
+    }
+    
+    .modal-content {
+        background: rgba(52, 73, 94, 0.95);
+        color: var(--text-light);
     }
 }
 
@@ -983,268 +842,8 @@ input, textarea, [contenteditable="true"] {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .btn {
-        border: 2px solid white;
-    }
     
-    .display-panel {
-        border: 3px solid white;
+    .btn:not(.disabled) {
+        animation: none !important;
     }
-}symbol {
-        font-size: 20px;
-    }
-    
-    .btn-notrump .suit-symbol {
-        font-size: 11px;
-    }
-    
-    .current-state {
-        font-size: 11px;
-        padding: 3px 5px;
-    }
-}
-
-/* Standard Mobile (360px - 414px) */
-@media (min-width: 360px) and (max-width: 414px) {
-    .calculator {
-        padding: 10px;
-        max-height: 680px;
-    }
-    
-    .display-panel {
-        padding: 12px;
-        margin-bottom: 8px;
-        min-height: 140px;
-        font-size: 13px;
-    }
-    
-    .mode-title {
-        font-size: 16px;
-    }
-    
-    .control-bar {
-        height: 28px;
-        gap: 6px;
-    }
-    
-    .control-item {
-        font-size: 11px;
-        min-width: 45px;
-    }
-    
-    .button-grid {
-        gap: 8px;
-        min-height: 320px;
-        padding: 10px;
-    }
-    
-    .btn {
-        min-height: 48px;
-        font-size: 15px;
-        border-radius: 10px;
-    }
-    
-    .suit-
-/* Modal Styles - Enhanced for Mobile */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease;
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.modal-content {
-    background: var(--secondary-bg);
-    border-radius: 12px;
-    padding: 20px;
-    max-width: 90%;
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
-    color: white;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    animation: slideUp 0.3s ease;
-    -webkit-overflow-scrolling: touch;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.modal-content h3 {
-    color: var(--accent-blue);
-    margin-bottom: 15px;
-    font-size: 18px;
-}
-
-.modal-content h4 {
-    color: var(--text-light);
-    margin: 15px 0 8px 0;
-    font-size: 14px;
-}
-
-.modal-content p {
-    margin: 8px 0;
-    line-height: 1.4;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.modal-content ul {
-    margin: 8px 0 8px 20px;
-    color: var(--text-muted);
-}
-
-.modal-content li {
-    margin: 4px 0;
-    font-size: 13px;
-}
-
-.modal-content a {
-    color: var(--accent-blue);
-    text-decoration: none;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-    flex-wrap: wrap;
-}
-
-.modal-btn {
-    background: var(--accent-blue);
-    border: none;
-    border-radius: 6px;
-    color: white;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    touch-action: manipulation;
-    min-height: 44px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    flex: 1;
-    min-width: 120px;
-    max-width: 200px;
-}
-
-.modal-btn:active {
-    transform: scale(0.95);
-}
-
-.modal-btn.close {
-    background: var(--text-dark);
-}
-
-.modal-btn.continue-btn {
-    background: var(--success-green);
-}
-
-.modal-btn.scores-btn {
-    background: var(--accent-blue);
-}
-
-.modal-btn.new-game-btn {
-    background: var(--warning-orange);
-}
-
-.modal-btn.menu-btn {
-    background: var(--text-dark);
-}
-
-.modal-btn.help-btn {
-    background: var(--accent-blue);
-}
-
-/* Mobile-specific modal adjustments */
-@media (max-width: 480px) {
-    .modal-overlay {
-        padding: 5px;
-        align-items: flex-start;
-        padding-top: 20px;
-    }
-    
-    .modal-content {
-        max-height: 90vh;
-        padding: 15px;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-    
-    .modal-content h3 {
-        font-size: 16px;
-        margin-bottom: 12px;
-    }
-    
-    .modal-content h4 {
-        font-size: 13px;
-        margin: 12px 0 6px 0;
-    }
-    
-    .modal-content p {
-        font-size: 12px;
-        line-height: 1.3;
-    }
-    
-    .modal-content li {
-        font-size: 12px;
-    }
-    
-    .modal-buttons {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .modal-btn {
-        width: 100%;
-        max-width: none;
-        min-height: 48px;
-        font-size: 16px;
-    }
-}
-
-/* Help section styling */
-.help-section {
-    margin: 15px 0;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.help-section:last-child {
-    border-bottom: none;
-}
-
-.scores-summary {
-    background: rgba(40, 167, 69, 0.1);
-    padding: 12px;
-    border-radius: 6px;
-    margin: 10px 0;
-    border-left: 4px solid var(--success-green);
-}
-
-.deals-history {
-    margin-top: 15px;
 }
