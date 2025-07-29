@@ -222,18 +222,16 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Calculate score using Kitchen Bridge rules - integrates with new system
+     * Calculate score using Kitchen Bridge rules - using original proven method
      */
-    calculateScore(contract, vulnerability) {
-        // Use the contract from current state if not provided
-        const { level, suit, result, doubled, declarer } = contract || this.currentContract;
+    calculateScore() {
+        const { level, suit, result, doubled, declarer } = this.currentContract;
         
         console.log(`💰 Calculating Kitchen Bridge score for ${level}${suit}${doubled} by ${declarer} = ${result}`);
         
         // Basic suit values per trick
         const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-        let nsScore = 0;
-        let ewScore = 0;
+        let score = 0;
         
         if (result === '=' || result?.startsWith('+')) {
             // Contract made
@@ -245,7 +243,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             if (doubled === 'X') contractScore = basicScore * 2;
             else if (doubled === 'XX') contractScore = basicScore * 4;
             
-            let score = contractScore;
+            score = contractScore;
             
             // Add overtricks
             if (result?.startsWith('+')) {
@@ -253,8 +251,10 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 let overtrickValue;
                 
                 if (doubled === '') {
+                    // Undoubled overtricks
                     overtrickValue = suitValues[suit] * overtricks;
                 } else {
+                    // Doubled overtricks (100 NV, 200 Vul)
                     const isVulnerable = this.isVulnerable(declarer);
                     overtrickValue = overtricks * (isVulnerable ? 200 : 100);
                     if (doubled === 'XX') overtrickValue *= 2;
@@ -264,9 +264,11 @@ class KitchenBridgeMode extends BaseBridgeMode {
             
             // Game/Part-game bonus
             if (contractScore >= 100) {
+                // Game made
                 const isVulnerable = this.isVulnerable(declarer);
                 score += isVulnerable ? 500 : 300;
             } else {
+                // Part-game
                 score += 50;
             }
             
@@ -274,22 +276,17 @@ class KitchenBridgeMode extends BaseBridgeMode {
             if (doubled === 'X') score += 50;
             else if (doubled === 'XX') score += 100;
             
-            // Assign to declaring side
-            if (this.isNorthSouth(declarer)) {
-                nsScore = score;
-            } else {
-                ewScore = score;
-            }
-            
         } else if (result?.startsWith('-')) {
             // Contract failed
             const undertricks = parseInt(result.substring(1));
             const isVulnerable = this.isVulnerable(declarer);
             
-            let penalty = 0;
             if (doubled === '') {
-                penalty = undertricks * (isVulnerable ? 100 : 50);
+                // Undoubled penalties
+                score = -undertricks * (isVulnerable ? 100 : 50);
             } else {
+                // Doubled penalties
+                let penalty = 0;
                 for (let i = 1; i <= undertricks; i++) {
                     if (i === 1) {
                         penalty += isVulnerable ? 200 : 100;
@@ -300,47 +297,54 @@ class KitchenBridgeMode extends BaseBridgeMode {
                     }
                 }
                 if (doubled === 'XX') penalty *= 2;
-            }
-            
-            // Penalty goes to opponents
-            if (this.isNorthSouth(declarer)) {
-                ewScore = penalty;
-            } else {
-                nsScore = penalty;
+                score = -penalty;
             }
         }
         
-        console.log(`📊 Final score: NS=${nsScore}, EW=${ewScore}`);
-        return { NS: nsScore, EW: ewScore };
+        console.log(`📊 Final score: ${score} points`);
+        return score;
     }
     
     /**
-     * Calculate and record the score using new system
+     * Calculate and record the score - using original proven method
      */
     calculateAndRecordScore() {
         const score = this.calculateScore();
+        const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
         
         console.log('📊 Before adding score - Current gameState.scores:', this.gameState.scores);
         console.log('📊 Score to add:', score);
+        console.log('📊 Declarer side:', declarerSide);
         
-        // Add to game state using parent class method
-        this.gameState.addScore('NS', score.NS);
-        this.gameState.addScore('EW', score.EW);
+        if (score >= 0) {
+            // Made contract - points go to declarer side
+            this.gameState.addScore(declarerSide, score);
+            console.log(`✅ Added ${score} to ${declarerSide}`);
+        } else {
+            // Failed contract - penalty points go to defending side
+            const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
+            const penaltyPoints = Math.abs(score); // Convert negative to positive
+            this.gameState.addScore(defendingSide, penaltyPoints);
+            console.log(`✅ Added ${penaltyPoints} penalty to ${defendingSide}`);
+        }
         
         console.log('📊 After adding score - Updated gameState.scores:', this.gameState.scores);
         
-        // Record in history
+        // Record in history with original score for reference
         this.gameState.addDeal({
             deal: this.currentDeal,
             contract: { ...this.currentContract },
-            vulnerability: this.vulnerability,
-            score: score
+            score: score, // Keep original for display purposes
+            actualScore: score >= 0 ? score : Math.abs(score), // Actual points awarded
+            scoringSide: score >= 0 ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS'),
+            mode: 'kitchen',
+            vulnerability: this.vulnerability
         });
         
         // Increment deals for license tracking
         this.licenseManager.incrementDealsPlayed();
         
-        console.log(`💾 Score recorded: NS=${score.NS}, EW=${score.EW}`);
+        console.log(`💾 Score recorded: ${score >= 0 ? score + ' for ' + declarerSide : Math.abs(score) + ' penalty for ' + (declarerSide === 'NS' ? 'EW' : 'NS')}`);
     }
     
     /**
@@ -568,11 +572,10 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
                     
-                    // Determine who scored
-                    const nsScored = lastEntry.score.NS > 0;
-                    const ewScored = lastEntry.score.EW > 0;
-                    const scoreAmount = nsScored ? lastEntry.score.NS : lastEntry.score.EW;
-                    const scoringSide = nsScored ? 'NS' : 'EW';
+                    // Use the same logic as your original to display score
+                    const scoreText = lastEntry.score >= 0 ? 
+                        `+${lastEntry.score}` : 
+                        `${lastEntry.score}`;
                     
                     return `
                         <div class="title-score-row">
@@ -585,8 +588,8 @@ class KitchenBridgeMode extends BaseBridgeMode {
                         <div class="game-content">
                             <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
                             ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}<br>
-                            <span style="color: #27ae60;">
-                                Score: +${scoreAmount} for ${scoringSide}
+                            <span style="color: ${lastEntry.score >= 0 ? '#27ae60' : '#e74c3c'};">
+                                Score: ${scoreText}
                             </span></div>
                         </div>
                         <div class="current-state">Press Deal for next hand</div>
