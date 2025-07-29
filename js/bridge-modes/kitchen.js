@@ -66,6 +66,27 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
+     * Override vulnerability toggle to work with Kitchen Bridge
+     */
+    toggleVulnerability() {
+        const states = ['NV', 'NS', 'EW', 'Both'];
+        const current = this.vulnerability;
+        const currentIndex = states.indexOf(current);
+        const nextIndex = (currentIndex + 1) % states.length;
+        
+        this.vulnerability = states[nextIndex];
+        
+        // Update the control display
+        const vulnText = document.getElementById('vulnText');
+        if (vulnText) {
+            vulnText.textContent = this.vulnerability;
+        }
+        
+        console.log(`🎯 Vulnerability changed to: ${this.vulnerability}`);
+        this.updateDisplay();
+    }
+    
+    /**
      * Handle user actions with enhanced mobile support
      */
     handleAction(value) {
@@ -445,6 +466,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
      */
     getDisplayContent() {
         const scores = this.gameState.scores;
+        
+        // Debug: Log scores to see what's happening
+        console.log('🎯 Current scores in display:', scores);
         
         switch (this.inputState) {
             case 'level_selection':
