@@ -513,6 +513,8 @@ class BridgeApp {
     }
 
     handleControlButton(controlId) {
+        console.log('🎛️ Control button pressed:', controlId);
+        
         switch (controlId) {
             case 'wakeControl':
                 this.toggleWakeLock();
@@ -521,10 +523,24 @@ class BridgeApp {
                 this.toggleVulnerability();
                 break;
             case 'helpControl':
-                this.showHelp();
+                // Route to bridge mode if active
+                if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
+                    console.log('📖 Routing help to bridge mode');
+                    this.currentBridgeMode.showHelp();
+                } else {
+                    console.log('📖 Using default help');
+                    this.showHelp();
+                }
                 break;
             case 'quitControl':
-                this.showQuit();
+                // Route to bridge mode if active
+                if (this.currentBridgeMode && typeof this.currentBridgeMode.showQuit === 'function') {
+                    console.log('🚪 Routing quit to bridge mode');
+                    this.currentBridgeMode.showQuit();
+                } else {
+                    console.log('🚪 Using default quit');
+                    this.showQuit();
+                }
                 break;
         }
     }
