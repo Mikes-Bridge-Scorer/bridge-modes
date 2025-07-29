@@ -1,22 +1,15 @@
 /**
  * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
- * 
- * Kitchen Bridge is a casual, social form of bridge that removes the complexity
- * of rubber bridge while maintaining the essence of bridge scoring. Perfect for
- * home games where you want proper scoring without the full complexity.
- * 
- * Enhanced with dealer rotation display, consistent vulnerability info, and mobile support.
+ * Updated to work with new modular bridge system
  */
 
-import { BaseBridgeMode } from './base-mode.js';
-
-class KitchenBridge extends BaseBridgeMode {
-    constructor(gameState, ui) {
-        super(gameState, ui);
+class KitchenBridgeMode extends BaseBridgeMode {
+    constructor(bridgeApp) {
+        super(bridgeApp);
         
-        this.modeName = 'kitchen';
-        this.displayName = 'Kitchen Bridge';
+        this.modeName = 'Kitchen Bridge';
+        this.displayName = '🍳 Kitchen Bridge';
         
         // Kitchen Bridge state
         this.currentContract = {
@@ -31,6 +24,9 @@ class KitchenBridge extends BaseBridgeMode {
         this.resultMode = null; // 'down', 'plus'
         
         console.log('🏠 Kitchen Bridge mode initialized with enhanced mobile support');
+        
+        // Initialize immediately
+        this.initialize();
     }
     
     /**
@@ -39,35 +35,40 @@ class KitchenBridge extends BaseBridgeMode {
     initialize() {
         console.log('🎯 Starting Kitchen Bridge session');
         
-        // Kitchen Bridge uses manual vulnerability control (starts with None)
-        this.gameState.setMode('kitchen'); // This keeps manual control
-        
         // Start with level selection
         this.inputState = 'level_selection';
         this.resetContract();
         
         this.updateDisplay();
+    }
+    
+    /**
+     * Handle user input - integration with new system
+     */
+    handleInput(value) {
+        console.log(`🎮 Kitchen Bridge input: ${value} in state: ${this.inputState}`);
         
-        // Debug mobile setup if needed
-        if (this.isMobile) {
-            setTimeout(() => this.debugMobileSetup(), 1000);
+        // Handle back navigation
+        if (value === 'BACK') {
+            if (this.handleBack()) {
+                return; // Handled internally
+            } else {
+                // Let parent handle (return to mode selection)
+                this.bridgeApp.showLicensedMode({ 
+                    type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+                });
+                return;
+            }
         }
+        
+        // Handle other inputs
+        this.handleAction(value);
     }
     
     /**
      * Handle user actions with enhanced mobile support
      */
     handleAction(value) {
-        console.log(`🎮 Kitchen Bridge action: ${value} in state: ${this.inputState}`);
-        
-        // Provide mobile feedback for the action
-        if (this.isMobile) {
-            const activeButton = document.querySelector(`[data-value="${value}"]:not(.disabled)`);
-            if (activeButton) {
-                this.provideMobileButtonFeedback(activeButton);
-            }
-        }
-        
         switch (this.inputState) {
             case 'level_selection':
                 this.handleLevelSelection(value);
@@ -120,10 +121,8 @@ class KitchenBridge extends BaseBridgeMode {
     handleDeclarerSelection(value) {
         if (['N', 'S', 'E', 'W'].includes(value)) {
             this.currentContract.declarer = value;
-            this.ui.highlightVulnerability(value, this.gameState.getVulnerability());
             console.log(`👤 Declarer selected: ${this.currentContract.declarer}`);
             
-            // Don't advance state yet - allow doubling and result entry
         } else if (value === 'X') {
             this.handleDoubling();
         } else if (['MADE', 'PLUS', 'DOWN'].includes(value)) {
@@ -131,7 +130,7 @@ class KitchenBridge extends BaseBridgeMode {
             if (this.currentContract.declarer) {
                 this.inputState = 'result_type_selection';
                 this.handleResultTypeSelection(value);
-                return; // Prevent double processing
+                return;
             }
         }
     }
@@ -148,7 +147,6 @@ class KitchenBridge extends BaseBridgeMode {
             this.currentContract.doubled = '';
         }
         
-        this.ui.updateDoubleButton(this.currentContract.doubled);
         console.log(`💥 Double state: ${this.currentContract.doubled || 'None'}`);
     }
     
@@ -203,17 +201,18 @@ class KitchenBridge extends BaseBridgeMode {
     }
     
     /**
-     * Calculate score using Kitchen Bridge rules
+     * Calculate score using Kitchen Bridge rules - integrates with new system
      */
-    calculateScore() {
-        const { level, suit, result, doubled, declarer } = this.currentContract;
-        const vulnerability = this.gameState.getVulnerability();
+    calculateScore(contract, vulnerability) {
+        // Use the contract from current state if not provided
+        const { level, suit, result, doubled, declarer } = contract || this.currentContract;
         
         console.log(`💰 Calculating Kitchen Bridge score for ${level}${suit}${doubled} by ${declarer} = ${result}`);
         
         // Basic suit values per trick
         const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-        let score = 0;
+        let nsScore = 0;
+        let ewScore = 0;
         
         if (result === '=' || result?.startsWith('+')) {
             // Contract made
@@ -225,7 +224,7 @@ class KitchenBridge extends BaseBridgeMode {
             if (doubled === 'X') contractScore = basicScore * 2;
             else if (doubled === 'XX') contractScore = basicScore * 4;
             
-            score = contractScore;
+            let score = contractScore;
             
             // Add overtricks
             if (result?.startsWith('+')) {
@@ -233,11 +232,9 @@ class KitchenBridge extends BaseBridgeMode {
                 let overtrickValue;
                 
                 if (doubled === '') {
-                    // Undoubled overtricks
                     overtrickValue = suitValues[suit] * overtricks;
                 } else {
-                    // Doubled overtricks (100 NV, 200 Vul)
-                    const isVulnerable = this.isDeclarerVulnerable();
+                    const isVulnerable = this.isVulnerable(declarer);
                     overtrickValue = overtricks * (isVulnerable ? 200 : 100);
                     if (doubled === 'XX') overtrickValue *= 2;
                 }
@@ -246,11 +243,9 @@ class KitchenBridge extends BaseBridgeMode {
             
             // Game/Part-game bonus
             if (contractScore >= 100) {
-                // Game made
-                const isVulnerable = this.isDeclarerVulnerable();
+                const isVulnerable = this.isVulnerable(declarer);
                 score += isVulnerable ? 500 : 300;
             } else {
-                // Part-game
                 score += 50;
             }
             
@@ -258,17 +253,22 @@ class KitchenBridge extends BaseBridgeMode {
             if (doubled === 'X') score += 50;
             else if (doubled === 'XX') score += 100;
             
+            // Assign to declaring side
+            if (this.isNorthSouth(declarer)) {
+                nsScore = score;
+            } else {
+                ewScore = score;
+            }
+            
         } else if (result?.startsWith('-')) {
             // Contract failed
             const undertricks = parseInt(result.substring(1));
-            const isVulnerable = this.isDeclarerVulnerable();
+            const isVulnerable = this.isVulnerable(declarer);
             
+            let penalty = 0;
             if (doubled === '') {
-                // Undoubled penalties
-                score = -undertricks * (isVulnerable ? 100 : 50);
+                penalty = undertricks * (isVulnerable ? 100 : 50);
             } else {
-                // Doubled penalties
-                let penalty = 0;
                 for (let i = 1; i <= undertricks; i++) {
                     if (i === 1) {
                         penalty += isVulnerable ? 200 : 100;
@@ -279,52 +279,47 @@ class KitchenBridge extends BaseBridgeMode {
                     }
                 }
                 if (doubled === 'XX') penalty *= 2;
-                score = -penalty;
+            }
+            
+            // Penalty goes to opponents
+            if (this.isNorthSouth(declarer)) {
+                ewScore = penalty;
+            } else {
+                nsScore = penalty;
             }
         }
         
-        console.log(`📊 Final score: ${score} points`);
-        return score;
+        console.log(`📊 Final score: NS=${nsScore}, EW=${ewScore}`);
+        return { NS: nsScore, EW: ewScore };
     }
     
     /**
-     * Calculate and record the score
+     * Calculate and record the score using new system
      */
     calculateAndRecordScore() {
         const score = this.calculateScore();
-        const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
         
-        if (score >= 0) {
-            // Made contract - points go to declarer side
-            this.gameState.addScore(declarerSide, score);
+        // Add to game state using parent class method
+        if (this.isNorthSouth(this.currentContract.declarer)) {
+            this.gameState.addScore('NS', score.NS);
+            this.gameState.addScore('EW', score.EW);
         } else {
-            // Failed contract - penalty points go to defending side
-            const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
-            const penaltyPoints = Math.abs(score); // Convert negative to positive
-            this.gameState.addScore(defendingSide, penaltyPoints);
+            this.gameState.addScore('EW', score.EW);
+            this.gameState.addScore('NS', score.NS);
         }
         
-        // Record in history with original score for reference
-        this.gameState.addToHistory({
-            deal: this.gameState.getDealNumber(),
+        // Record in history
+        this.gameState.addDeal({
+            deal: this.currentDeal,
             contract: { ...this.currentContract },
-            score: score, // Keep original for display purposes
-            actualScore: score >= 0 ? score : Math.abs(score), // Actual points awarded
-            scoringSide: score >= 0 ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS'),
-            mode: 'kitchen',
-            vulnerability: this.gameState.getVulnerability()
+            vulnerability: this.vulnerability,
+            score: score
         });
         
-        console.log(`💾 Score recorded: ${score >= 0 ? score + ' for ' + declarerSide : Math.abs(score) + ' penalty for ' + (declarerSide === 'NS' ? 'EW' : 'NS')}`);
-    }
-    
-    /**
-     * Check if declarer is vulnerable
-     */
-    isDeclarerVulnerable() {
-        const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
-        const vulnerability = this.gameState.getVulnerability();
-        return vulnerability === declarerSide || vulnerability === 'Both';
+        // Increment deals for license tracking
+        this.licenseManager.incrementDealsPlayed();
+        
+        console.log(`💾 Score recorded: NS=${score.NS}, EW=${score.EW}`);
     }
     
     /**
@@ -333,14 +328,10 @@ class KitchenBridge extends BaseBridgeMode {
     nextDeal() {
         console.log('🃏 Moving to next deal');
         
-        this.gameState.nextDeal();
-        
-        // Kitchen Bridge keeps manual vulnerability control
-        // Vulnerability stays as set by user
-        
+        this.currentDeal++;
         this.resetContract();
         this.inputState = 'level_selection';
-        this.ui.clearVulnerabilityHighlight();
+        this.updateDisplay();
     }
     
     /**
@@ -355,7 +346,6 @@ class KitchenBridge extends BaseBridgeMode {
             result: null
         };
         this.resultMode = null;
-        this.ui.updateDoubleButton('');
     }
     
     /**
@@ -371,20 +361,16 @@ class KitchenBridge extends BaseBridgeMode {
                 this.inputState = 'suit_selection';
                 this.currentContract.suit = null;
                 this.currentContract.doubled = '';
-                this.ui.updateDoubleButton('');
                 break;
             case 'result_type_selection':
                 this.inputState = 'declarer_selection';
                 this.currentContract.declarer = null;
-                this.ui.clearVulnerabilityHighlight();
                 break;
             case 'result_number_selection':
                 this.inputState = 'result_type_selection';
                 this.resultMode = null;
                 break;
             case 'scoring':
-                // Undo the last score and go back to result entry
-                this.undoLastScore();
                 this.inputState = 'result_type_selection';
                 this.currentContract.result = null;
                 break;
@@ -394,48 +380,6 @@ class KitchenBridge extends BaseBridgeMode {
         
         this.updateDisplay();
         return true;
-    }
-    
-    /**
-     * Undo the last score entry
-     */
-    undoLastScore() {
-        const lastEntry = this.gameState.getLastHistoryEntry();
-        if (lastEntry && lastEntry.deal === this.gameState.getDealNumber()) {
-            // Use the scoring side from the history entry
-            const scoringSide = lastEntry.scoringSide || (['N', 'S'].includes(lastEntry.contract.declarer) ? 'NS' : 'EW');
-            const pointsToRemove = lastEntry.actualScore || Math.abs(lastEntry.score);
-            
-            this.gameState.addScore(scoringSide, -pointsToRemove);
-            this.gameState.removeLastHistoryEntry();
-            console.log(`↩️ Undid score: ${pointsToRemove} from ${scoringSide}`);
-        }
-    }
-    
-    /**
-     * Check if back navigation is possible
-     */
-    canGoBack() {
-        return this.inputState !== 'level_selection';
-    }
-    
-    /**
-     * Toggle vulnerability (Kitchen Bridge allows manual control)
-     */
-    toggleVulnerability() {
-        const cycle = ['None', 'NS', 'EW', 'Both'];
-        const current = cycle.indexOf(this.gameState.getVulnerability());
-        const newVuln = cycle[(current + 1) % 4];
-        
-        this.gameState.setVulnerability(newVuln);
-        this.ui.updateVulnerabilityDisplay(newVuln);
-        
-        // Update highlight if declarer is selected
-        if (this.currentContract.declarer) {
-            this.ui.highlightVulnerability(this.currentContract.declarer, newVuln);
-        }
-        
-        console.log(`🎯 Vulnerability changed to: ${newVuln}`);
     }
     
     /**
@@ -451,7 +395,6 @@ class KitchenBridge extends BaseBridgeMode {
                 
             case 'declarer_selection':
                 const buttons = ['N', 'S', 'E', 'W', 'X'];
-                // If declarer is selected, also allow result buttons
                 if (this.currentContract.declarer) {
                     buttons.push('MADE', 'PLUS', 'DOWN');
                 }
@@ -482,20 +425,26 @@ class KitchenBridge extends BaseBridgeMode {
     }
     
     /**
-     * Update the display
+     * Update the display using new system
      */
     updateDisplay() {
-        const content = this.getDisplayContent();
-        this.ui.updateDisplay(content);
-        this.ui.updateButtonStates(this.getActiveButtons());
+        const display = document.getElementById('display');
+        if (display) {
+            display.innerHTML = this.getDisplayContent();
+        }
+        
+        // Update button states
+        const activeButtons = this.getActiveButtons();
+        activeButtons.push('BACK'); // Always allow going back
+        
+        this.bridgeApp.updateButtonStates(activeButtons);
     }
     
     /**
      * Get display content for current state
      */
     getDisplayContent() {
-        const scores = this.gameState.getScores();
-        const dealInfo = this.gameState.getDealInfo();
+        const scores = this.gameState.scores;
         
         switch (this.inputState) {
             case 'level_selection':
@@ -508,9 +457,9 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
                         <div style="color: #3498db; font-size: 12px; margin-top: 4px;">
-                            Traditional bridge scoring • Manual vulnerability control • Enhanced mobile support
+                            Traditional bridge scoring • Manual vulnerability control
                         </div>
                     </div>
                     <div class="current-state">Select bid level (1-7)</div>
@@ -526,7 +475,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
                         <div><strong>Level: ${this.currentContract.level}</strong></div>
                     </div>
                     <div class="current-state">Select suit</div>
@@ -545,7 +494,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
                         <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                     </div>
                     <div class="current-state">
@@ -566,7 +515,7 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
                         <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                     </div>
                     <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
@@ -584,17 +533,16 @@ class KitchenBridge extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>${dealInfo}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
                         <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                     </div>
                     <div class="current-state">Enter number of ${modeText}</div>
                 `;
                 
             case 'scoring':
-                const lastEntry = this.gameState.getLastHistoryEntry();
+                const lastEntry = this.gameState.getLastDeal();
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
-                    const nextDealInfo = this.gameState.getDealInfo().replace(`Deal ${this.gameState.getDealNumber()}`, `Deal ${this.gameState.getDealNumber() + 1}`);
                     
                     return `
                         <div class="title-score-row">
@@ -607,12 +555,9 @@ class KitchenBridge extends BaseBridgeMode {
                         <div class="game-content">
                             <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
                             ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}<br>
-                            <span style="color: ${lastEntry.score >= 0 ? '#27ae60' : '#e74c3c'};">
-                                Score: ${lastEntry.score >= 0 ? '+' : ''}${lastEntry.score}
+                            <span style="color: #27ae60;">
+                                Score: +${lastEntry.score.NS || lastEntry.score.EW}
                             </span></div>
-                            <div style="color: #95a5a6; font-size: 11px; margin-top: 4px;">
-                                Next: ${nextDealInfo}
-                            </div>
                         </div>
                         <div class="current-state">Press Deal for next hand</div>
                     `;
@@ -623,99 +568,13 @@ class KitchenBridge extends BaseBridgeMode {
                 return '<div class="current-state">Loading...</div>';
         }
     }
-    
-    /**
-     * Get help content specific to Kitchen Bridge
-     */
-    getHelpContent() {
-        return {
-            title: 'Kitchen Bridge (Party Bridge) Help',
-            content: `
-                <div class="help-section">
-                    <h4>What is Kitchen Bridge?</h4>
-                    <p><strong>Kitchen Bridge</strong> (also called <strong>Party Bridge</strong>) is traditional bridge scoring designed for casual play at a single table with 4 players. It uses standard bridge scoring rules without any adjustments for hand strength or playing skill.</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Enhanced Features</h4>
-                    <ul>
-                        <li><strong>Dealer Rotation:</strong> Standard N→E→S→W progression displayed</li>
-                        <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
-                        <li><strong>Deal Tracking:</strong> Clear display of current deal, dealer, and vulnerability</li>
-                        <li><strong>Traditional Scoring:</strong> Standard bridge point values</li>
-                        <li><strong>Mobile Support:</strong> Enhanced touch support for all devices</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Dealer & Vulnerability Display</h4>
-                    <p>Each deal shows: <strong>Deal X • Dealer: N/E/S/W • Vuln: None/NS/EW/All</strong></p>
-                    <ul>
-                        <li><strong>Dealer:</strong> Rotates automatically (North → East → South → West)</li>
-                        <li><strong>Vulnerability:</strong> Use Vuln button to cycle through None/NS/EW/All</li>
-                        <li><strong>Deal Counter:</strong> Tracks session progress</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Key Characteristics</h4>
-                    <ul>
-                        <li><strong>Standard Scoring:</strong> Uses traditional bridge point values</li>
-                        <li><strong>4 Players Only:</strong> Designed for one table bridge</li>
-                        <li><strong>No Skill Adjustment:</strong> Same score regardless of hand strength</li>
-                        <li><strong>Simple & Quick:</strong> Easy to calculate, familiar to all bridge players</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Vulnerability Control</h4>
-                    <p><strong>Kitchen Bridge allows manual vulnerability control:</strong></p>
-                    <ul>
-                        <li>Press the <strong>Vuln</strong> button to cycle: None → NS → EW → All</li>
-                        <li>Set vulnerability as desired for each deal</li>
-                        <li>Red highlighting shows when declarer is vulnerable</li>
-                        <li>Green highlighting shows when declarer is not vulnerable</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Mobile & Touch Support</h4>
-                    <ul>
-                        <li><strong>Touch Optimized:</strong> All buttons work perfectly on mobile devices</li>
-                        <li><strong>Visual Feedback:</strong> Buttons provide haptic and visual feedback</li>
-                        <li><strong>Proper Sizing:</strong> Buttons sized for easy touch interaction</li>
-                        <li><strong>Universal Support:</strong> Works on phones, tablets, and desktops</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use</h4>
-                    <ol>
-                        <li><strong>Set Vulnerability:</strong> Use Vuln button before each deal</li>
-                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
-                        <li><strong>Add Doubling:</strong> Press X to cycle through None/Double/Redouble</li>
-                        <li><strong>Score Automatically:</strong> Calculator applies standard bridge scoring</li>
-                        <li><strong>Next Deal:</strong> Press Deal to continue with automatic dealer rotation</li>
-                    </ol>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    /**
-     * Enhanced cleanup for Kitchen Bridge
-     */
-    cleanup() {
-        this.ui.clearVulnerabilityHighlight();
-        this.ui.updateDoubleButton('');
-        console.log('🧹 Kitchen Bridge cleanup completed');
-        
-        // Call parent cleanup
-        super.cleanup();
-    }
 }
 
-export default KitchenBridge;
+// Export for the new module system
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = KitchenBridgeMode;
+} else if (typeof window !== 'undefined') {
+    window.KitchenBridgeMode = KitchenBridgeMode;
+}
+
+console.log('🍳 Kitchen Bridge module loaded successfully');
