@@ -320,14 +320,14 @@ class KitchenBridgeMode extends BaseBridgeMode {
     calculateAndRecordScore() {
         const score = this.calculateScore();
         
+        console.log('📊 Before adding score - Current gameState.scores:', this.gameState.scores);
+        console.log('📊 Score to add:', score);
+        
         // Add to game state using parent class method
-        if (this.isNorthSouth(this.currentContract.declarer)) {
-            this.gameState.addScore('NS', score.NS);
-            this.gameState.addScore('EW', score.EW);
-        } else {
-            this.gameState.addScore('EW', score.EW);
-            this.gameState.addScore('NS', score.NS);
-        }
+        this.gameState.addScore('NS', score.NS);
+        this.gameState.addScore('EW', score.EW);
+        
+        console.log('📊 After adding score - Updated gameState.scores:', this.gameState.scores);
         
         // Record in history
         this.gameState.addDeal({
@@ -568,6 +568,12 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
                     
+                    // Determine who scored
+                    const nsScored = lastEntry.score.NS > 0;
+                    const ewScored = lastEntry.score.EW > 0;
+                    const scoreAmount = nsScored ? lastEntry.score.NS : lastEntry.score.EW;
+                    const scoringSide = nsScored ? 'NS' : 'EW';
+                    
                     return `
                         <div class="title-score-row">
                             <div class="mode-title">${this.displayName}</div>
@@ -580,7 +586,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
                             ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}<br>
                             <span style="color: #27ae60;">
-                                Score: +${lastEntry.score.NS || lastEntry.score.EW}
+                                Score: +${scoreAmount} for ${scoringSide}
                             </span></div>
                         </div>
                         <div class="current-state">Press Deal for next hand</div>
