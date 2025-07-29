@@ -61,6 +61,17 @@ class KitchenBridgeMode extends BaseBridgeMode {
             }
         }
         
+        // Handle control buttons
+        if (value === 'HELP') {
+            this.showHelp();
+            return;
+        }
+        
+        if (value === 'QUIT') {
+            this.showQuit();
+            return;
+        }
+        
         // Handle other inputs
         this.handleAction(value);
     }
