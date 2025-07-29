@@ -318,31 +318,18 @@ class KitchenBridgeMode extends BaseBridgeMode {
         console.log('📊 GameState object:', this.gameState);
         console.log('📊 GameState.addScore method:', typeof this.gameState.addScore);
         
-        // TEMPORARY FIX: Direct score update if addScore method is broken
         if (score >= 0) {
             // Made contract - points go to declarer side
             console.log(`🎯 About to call: this.gameState.addScore('${declarerSide}', ${score})`);
             this.gameState.addScore(declarerSide, score);
-            
-            // Backup direct update if addScore fails
-            if (this.gameState.scores[declarerSide] === 0) {
-                console.log('🔧 addScore failed, using direct update');
-                this.gameState.scores[declarerSide] += score;
-            }
-            console.log(`✅ Final scores after update:`, this.gameState.scores);
+            console.log(`✅ Called addScore, new scores should be:`, this.gameState.scores);
         } else {
             // Failed contract - penalty points go to defending side
             const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
-            const penaltyPoints = Math.abs(score);
+            const penaltyPoints = Math.abs(score); // Convert negative to positive
             console.log(`🎯 About to call: this.gameState.addScore('${defendingSide}', ${penaltyPoints})`);
             this.gameState.addScore(defendingSide, penaltyPoints);
-            
-            // Backup direct update if addScore fails
-            if (this.gameState.scores[defendingSide] === 0) {
-                console.log('🔧 addScore failed, using direct update');
-                this.gameState.scores[defendingSide] += penaltyPoints;
-            }
-            console.log(`✅ Final scores after update:`, this.gameState.scores);
+            console.log(`✅ Called addScore, new scores should be:`, this.gameState.scores);
         }
         
         console.log('📊 After adding score - Updated gameState.scores:', this.gameState.scores);
