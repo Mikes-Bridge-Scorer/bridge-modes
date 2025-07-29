@@ -82,11 +82,19 @@ class BridgeApp {
         try {
             console.log(`📦 Loading ${module.name} from ${module.file}...`);
             
-            // Always try to load fresh (bypass cache for debugging)
-            const timestamp = Date.now();
-            const scriptUrl = `${module.file}?v=${timestamp}`;
+            // Force bypass cache with version timestamp
+            const version = new Date().getTime();
+            const scriptUrl = `${module.file}?v=${version}&bust=${Math.random()}`;
             
             console.log(`🔄 Loading script: ${scriptUrl}`);
+            
+            // Remove any existing script for this module first
+            const existingScript = document.querySelector(`script[src*="${module.file}"]`);
+            if (existingScript) {
+                existingScript.remove();
+                console.log(`🗑️ Removed existing script for ${module.name}`);
+            }
+            
             await this.loadScript(scriptUrl);
             this.loadedModules.set(module.file, true);
 
@@ -106,7 +114,6 @@ class BridgeApp {
             
             // Show fallback message if module fails to load
             if (moduleId === '1') {
-                // Kitchen Bridge fallback - use embedded version
                 console.log('🔄 Using embedded Kitchen Bridge fallback');
                 this.showMessage(`Failed to load full Kitchen Bridge. Using demo mode.`, 'error');
                 return this.getEmbeddedKitchenBridge();
@@ -1254,7 +1261,31 @@ class LicenseManager {
 }
 
 // Development utilities
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.io')) {
+    
+    window.forceClearCache = async function() {
+        console.log('🧹 Force clearing all caches...');
+        
+        // Clear all caches
+        const cacheNames = await caches.keys();
+        await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+        
+        // Unregister service worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(
+                registrations.map(registration => registration.unregister())
+            );
+        }
+        
+        console.log('✅ All caches cleared and service worker unregistered');
+        console.log('🔄 Reloading page...');
+        
+        setTimeout(() => location.reload(true), 500);
+    };
+    
     window.generateTestCodes = function() {
         console.log('\n🧪 Test License Codes:');
         console.log('\nTrial codes (any checksum):');
@@ -1286,6 +1317,7 @@ if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     };
     
     console.log('🛠️ Development mode detected');
+    console.log('• forceClearCache() - Clear all caches and reload');
     console.log('• generateTestCodes() - Show sample codes');
     console.log('• clearTestData() - Reset all license data');
     console.log('• showLicenseDebug() - Show current license state');
