@@ -550,19 +550,20 @@ class BridgeApp {
 
     toggleVulnerability() {
         const vulnText = document.getElementById('vulnText');
+        
+        // If in bridge mode, let the bridge mode handle it
+        if (this.currentBridgeMode && typeof this.currentBridgeMode.toggleVulnerability === 'function') {
+            this.currentBridgeMode.toggleVulnerability();
+            return;
+        }
+        
+        // Default behavior for main menu
         const states = ['NV', 'NS', 'EW', 'Both'];
         const current = vulnText.textContent;
         const currentIndex = states.indexOf(current);
         const nextIndex = (currentIndex + 1) % states.length;
         
         vulnText.textContent = states[nextIndex];
-        
-        // Update bridge mode vulnerability if active
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.vulnerability = states[nextIndex];
-            this.currentBridgeMode.updateDisplay();
-        }
-        
         this.showMessage(`Vulnerability: ${states[nextIndex]}`, 'info');
     }
 
