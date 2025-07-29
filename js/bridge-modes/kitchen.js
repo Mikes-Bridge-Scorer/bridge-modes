@@ -202,7 +202,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 if (num <= maxOvertricks) {
                     this.currentContract.result = `+${num}`;
                 } else {
-                    console.warn(⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
                     return;
                 }
             }
@@ -312,42 +312,38 @@ class KitchenBridgeMode extends BaseBridgeMode {
         const score = this.calculateScore();
         const declarerSide = ['N', 'S'].includes(this.currentContract.declarer) ? 'NS' : 'EW';
         
-        console.log('📊 Before adding score - Current gameState.scores:', this.gameState.scores);
-        console.log('📊 Score to add:', score);
+        console.log('📊 Before adding score - gameState.scores:', this.gameState.scores);
+        console.log('📊 Score calculated:', score);
         console.log('📊 Declarer side:', declarerSide);
-        console.log('📊 GameState object:', this.gameState);
-        console.log('📊 GameState.addScore method:', typeof this.gameState.addScore);
         
-        // FIXED: Better backup logic - track scores before and after
+        // Store scores before attempting to add
         const scoresBefore = { ...this.gameState.scores };
         
         if (score >= 0) {
             // Made contract - points go to declarer side
-            console.log(`🎯 About to call: this.gameState.addScore('${declarerSide}', ${score})`);
             this.gameState.addScore(declarerSide, score);
             
-            // Check if addScore actually worked
+            // Check if addScore worked, if not use direct update
             if (this.gameState.scores[declarerSide] === scoresBefore[declarerSide]) {
                 console.log('🔧 addScore failed, using direct update');
                 this.gameState.scores[declarerSide] += score;
             }
-            console.log(`✅ Final scores after update:`, this.gameState.scores);
+            console.log(`✅ Added ${score} to ${declarerSide}`);
         } else {
             // Failed contract - penalty points go to defending side
             const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
             const penaltyPoints = Math.abs(score);
-            console.log(`🎯 About to call: this.gameState.addScore('${defendingSide}', ${penaltyPoints})`);
             this.gameState.addScore(defendingSide, penaltyPoints);
             
-            // Check if addScore actually worked
+            // Check if addScore worked, if not use direct update
             if (this.gameState.scores[defendingSide] === scoresBefore[defendingSide]) {
                 console.log('🔧 addScore failed, using direct update');
                 this.gameState.scores[defendingSide] += penaltyPoints;
             }
-            console.log(`✅ Final scores after update:`, this.gameState.scores);
+            console.log(`✅ Added ${penaltyPoints} penalty to ${defendingSide}`);
         }
         
-        console.log('📊 After adding score - Updated gameState.scores:', this.gameState.scores);
+        console.log('📊 Final scores:', this.gameState.scores);
         
         // Record in history with original score for reference
         this.gameState.addDeal({
@@ -591,16 +587,10 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 if (lastEntry) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
                     
-                    // Determine who scored based on declarer and score sign
-                    const scoringSide = lastEntry.scoringSide || 
-                        (lastEntry.score >= 0 ? 
-                            (['N', 'S'].includes(lastEntry.contract.declarer) ? 'NS' : 'EW') :
-                            (['N', 'S'].includes(lastEntry.contract.declarer) ? 'EW' : 'NS'));
-                    
+                    // Show who scored - simple logic
+                    const declarerSide = ['N', 'S'].includes(lastEntry.contract.declarer) ? 'NS' : 'EW';
                     const scoreAmount = Math.abs(lastEntry.score);
-                    const scoreText = lastEntry.score >= 0 ? 
-                        `+${scoreAmount} for ${scoringSide}` : 
-                        `+${scoreAmount} penalty for ${scoringSide}`;
+                    const scoringSide = lastEntry.score >= 0 ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS');
                     
                     return `
                         <div class="title-score-row">
@@ -613,8 +603,8 @@ class KitchenBridgeMode extends BaseBridgeMode {
                         <div class="game-content">
                             <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
                             ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}<br>
-                            <span style="color: ${lastEntry.score >= 0 ? '#27ae60' : '#e74c3c'};">
-                                Score: ${scoreText}
+                            <span style="color: #27ae60;">
+                                Score: +${scoreAmount} for ${scoringSide}
                             </span></div>
                         </div>
                         <div class="current-state">Press Deal for next hand</div>
