@@ -1,485 +1,44 @@
-handleLicenseInput(value) {
-        if (value >= '0' && value <= '9') {
-            this.addDigit(value);
-        } else if (value === 'BACK') {
-            this.removeDigit();
-        } else if (value === 'DEAL') {
-            this.submitLicenseCode();
-        }
-    }
+/**
+ * Bridge Modes Calculator - Main Application Controller
+ * Mobile-first touch handling with modular architecture
+ * License logic extracted to license.js for better organization
+ */
 
-    handleLicensedInput(value) {
-        if (['1', '2', '3', '4', '5'].includes(value)) {
-            this.selectBridgeMode(value);
-        } else if (value === 'BACK') {
-            // Return to mode selection
-            this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
-        }
-    }
-
-    async selectBridgeMode(mode) {
-        const modeNames = {
-            '1': 'Kitchen Bridge',
-            '2': 'Bonus Bridge', 
-            '3': 'Chicago Bridge',
-            '4': 'Rubber Bridge',
-            '5': 'Duplicate Bridge'
-        };
-        
-        const modeName = modeNames[mode];
-        console.log(`🎮 Loading: ${modeName}`);
-        
-        try {
-            this.showMessage(`Loading ${modeName}...`, 'info');
-            
-            const ModuleClass = await this.loadBridgeModule(mode);
-            
-            // Create new bridge mode instance
-            this.currentBridgeMode = new ModuleClass(this);
-            this.appState = 'bridge_mode';
-            
-            // Initialize the mode display
-            this.currentBridgeMode.updateDisplay();
-            
-            this.showMessage(`${modeName} loaded! 🎉`, 'success');
-            
-        } catch (error) {
-            console.error(`Failed to load ${modeName}:`, error);
-            this.showMessage(`Failed to load ${modeName}. Please try again.`, 'error');
-            
-            // Return to mode selection after error
-            setTimeout(() => {
-                this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
-            }, 3000);
-        }
-    }
-
-    // License handling methods
-    addDigit(digit) {
-        if (this.enteredCode.length < this.maxCodeLength) {
-            this.enteredCode += digit;
-            this.updateLicenseDisplay();
-        }
-    }
-
-    removeDigit() {
-        if (this.enteredCode.length > 0) {
-            this.enteredCode = this.enteredCode.slice(0, -1);
-            this.updateLicenseDisplay();
-        }
-    }
-
-    updateLicenseDisplay() {
-        const codeDisplay = document.getElementById('codeDisplay');
-        const statusMessage = document.getElementById('statusMessage');
-        const dealBtn = document.getElementById('dealBtn');
-        
-        if (!codeDisplay || !statusMessage || !dealBtn) {
-            console.warn('License display elements not found');
-            return;
-        }
-        
-        // Update code display
-        const displayCode = this.enteredCode.padEnd(this.maxCodeLength, '_').split('').join(' ');
-        codeDisplay.textContent = displayCode;
-        
-        // Update deal button and status
-        if (this.enteredCode.length === this.maxCodeLength) {
-            dealBtn.classList.remove('disabled');
-            statusMessage.textContent = 'Code complete - press DEAL to submit';
-        } else {
-            dealBtn.classList.add('disabled');
-            const remaining = this.maxCodeLength - this.enteredCode.length;
-            statusMessage.textContent = `Enter ${remaining} more digit${remaining !== 1 ? 's' : ''}`;
-        }
-    }
-
-    async submitLicenseCode() {
-        if (this.enteredCode.length !== this.maxCodeLength) {
-            this.showMessage('Code must be exactly 6 digits', 'error');
-            return;
-        }
-
-        console.log('📤 Submitting license code:', this.enteredCode);
-        
-        // Show loading state
-        this.showLoadingState('Validating license code...');
-        
-        try {
-            // Simulate validation delay for better UX
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            const result = await this.licenseManager.activateLicense(this.enteredCode);
-            
-            if (result.success) {
-                this.showMessage(result.message, 'success');
-                this.isLicensed = true;
-                this.appState = 'licensed_mode';
-                
-                // Transition to licensed mode
-                setTimeout(() => {
-                    this.showLicensedMode(result);
-                }, 2000);
-                
-            } else {
-                this.showMessage(result.message, 'error');
-                
-                // Clear code after error
-                setTimeout(() => {
-                    this.enteredCode = '';
-                    this.updateLicenseDisplay();
-                }, 2500);
-            }
-            
-        } catch (error) {
-            console.error('License validation error:', error);
-            this.showMessage('Validation failed. Please try again.', 'error');
-        } finally {
-            this.hideLoadingState();
-        }
-    }
-
-    showLicenseEntry(licenseStatus) {
-        this.appState = 'license_entry';
+class BridgeApp {
+    constructor() {
         this.enteredCode = '';
+        this.isLicensed = false;
+        this.appState = 'license_entry'; // 'license_entry', 'licensed_mode', or 'bridge_mode'
+        this.maxCodeLength = 6;
+        this.currentBridgeMode = null;
         
-        // Clean up any active bridge mode
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.destroy?.();
-            this.currentBridgeMode = null;
-        }
+        // Mobile detection
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        const display = document.getElementById('display');
-        if (!display) {
-            console.error('Display element not found');
-            return;
-        }
+        // Initialize license manager (imported from license.js)
+        this.licenseManager = new LicenseManager();
         
-        display.innerHTML = `
-            <div class="title-score-row">
-                <div class="mode-title">🔑 License Code</div>
-                <div class="score-display">Bridge<br>Modes</div>
-            </div>
-            <div class="game-content">
-                <div class="code-display" id="codeDisplay">_ _ _ _ _ _</div>
-                <div class="status-message" id="statusMessage">${licenseStatus.message}</div>
-            </div>
-            <div class="current-state">Use number buttons. BACK to delete, DEAL to submit</div>
-        `;
+        // Wake lock for screen management
+        this.wakeLock = null;
+        this.isWakeActive = false;
         
-        this.updateButtonStates(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK']);
-        this.updateLicenseDisplay();
+        // Module loading cache
+        this.loadedModules = new Map();
+        
+        this.init();
     }
 
-    showLicensedMode(licenseInfo) {
-        this.appState = 'licensed_mode';
+    async init() {
+        console.log('🎮 Initializing Bridge Modes Calculator');
+        console.log('📱 Mobile device detected:', this.isMobile);
         
-        // Clean up any active bridge mode
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.destroy?.();
-            this.currentBridgeMode = null;
-        }
+        // Load base mode class first
+        await this.loadBaseMode();
         
-        const licenseType = licenseInfo.type || 'FULL';
-        const isTrialMode = licenseType === 'TRIAL';
-        
-        let licenseText = '';
-        if (isTrialMode) {
-            const status = this.licenseManager.checkLicenseStatus();
-            licenseText = `Trial: ${status.daysLeft || 0} days, ${status.dealsLeft || 0} deals left`;
-        } else {
-            licenseText = 'Full Version Activated';
-        }
-        
-        const display = document.getElementById('display');
-        if (!display) {
-            console.error('Display element not found');
-            return;
-        }
-        
-        display.innerHTML = `
-            <div class="title-score-row">
-                <div class="mode-title">Bridge Modes Calculator</div>
-                <div class="score-display">NS: 0<br>EW: 0</div>
-            </div>
-            <div class="game-content">
-                <div class="mode-selection">
-                    <div class="mode-grid">
-                        <div class="mode-row">
-                            <span><strong>1</strong> - Kitchen Bridge</span>
-                            <span><strong>2</strong> - Bonus Bridge</span>
-                        </div>
-                        <div class="mode-row">
-                            <span><strong>3</strong> - Chicago Bridge</span>
-                        </div>
-                        <div class="mode-row">
-                            <span><strong>4</strong> - Rubber Bridge</span>
-                            <span><strong>5</strong> - Duplicate Bridge</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="current-state">Press 1-5 to select bridge scoring mode</div>
-            <div class="license-status">${licenseText}</div>
-        `;
-
-        // Enable mode selection buttons and controls
-        this.updateButtonStates(['1', '2', '3', '4', '5']);
-        this.enableControls();
-    }
-
-    updateButtonStates(activeButtons) {
-        const allButtons = document.querySelectorAll('.btn');
-        
-        allButtons.forEach(btn => {
-            const value = btn.dataset.value;
-            
-            if (activeButtons.includes(value)) {
-                btn.classList.remove('disabled');
-                btn.classList.add('active-operation');
-            } else {
-                btn.classList.add('disabled');
-                btn.classList.remove('active-operation');
-            }
-        });
-        
-        console.log('🎯 Active buttons:', activeButtons);
-    }
-
-    enableControls() {
-        const vulnControl = document.getElementById('vulnControl');
-        if (vulnControl) {
-            vulnControl.classList.remove('disabled');
-        }
-    }
-
-    handleControlButton(controlId) {
-        console.log('🎛️ Control button pressed:', controlId);
-        
-        switch (controlId) {
-            case 'wakeControl':
-                this.toggleWakeLock();
-                break;
-            case 'vulnControl':
-                this.toggleVulnerability();
-                break;
-            case 'helpControl':
-                // Route to bridge mode if active
-                if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
-                    console.log('📖 Routing help to bridge mode');
-                    this.currentBridgeMode.showHelp();
-                } else {
-                    console.log('📖 Using default help');
-                    this.showHelp();
-                }
-                break;
-            case 'quitControl':
-                // Route to bridge mode if active
-                if (this.currentBridgeMode && typeof this.currentBridgeMode.showQuit === 'function') {
-                    console.log('🚪 Routing quit to bridge mode');
-                    this.currentBridgeMode.showQuit();
-                } else {
-                    console.log('🚪 Using default quit');
-                    this.showQuit();
-                }
-                break;
-        }
-    }
-    
-    // ENHANCED HELP METHOD
-    showHelp() {
-        // If in bridge mode, let the bridge mode handle help
-        if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
-            this.currentBridgeMode.showHelp();
-            return;
-        }
-        
-        // Default help for main menu
-        const isLicenseMode = this.appState === 'license_entry';
-        const title = isLicenseMode ? '🔑 License Help' : '🃏 Bridge Modes Calculator Help';
-        
-        let content = '';
-        if (isLicenseMode) {
-            content = `
-                <h4>How to Enter License Code</h4>
-                <p>• Use number buttons <strong>0-9</strong> to enter digits<br>
-                • <strong>BACK</strong> button removes last digit<br>
-                • <strong>DEAL</strong> button submits complete code</p>
-                
-                <h4>📧 Need a License?</h4>
-                <p><strong>Email:</strong> <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
-            `;
-        } else {
-            const licenseStatus = this.licenseManager.checkLicenseStatus();
-            let licenseSection = '';
-            
-            if (licenseStatus.status === 'trial') {
-                licenseSection = `
-                    <h4>📅 Current License Status</h4>
-                    <div style="background: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #ffc107;">
-                        <p><strong>Trial Version Active</strong></p>
-                        <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
-                        <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
-                        <p style="margin-top: 10px; font-size: 12px;">
-                            To upgrade to the full version, contact: 
-                            <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a>
-                        </p>
-                    </div>
-                    
-                    <div style="text-align: center; margin: 15px 0;">
-                        <button onclick="window.bridgeApp.enterFullLicenseFromHelp()" 
-                                style="background: #28a745; color: white; border: none; padding: 10px 20px; 
-                                       border-radius: 6px; font-size: 14px; cursor: pointer; 
-                                       min-height: 44px; touch-action: manipulation;">
-                            Enter Full License Code
-                        </button>
-                    </div>
-                `;
-            } else if (licenseStatus.status === 'full') {
-                licenseSection = `
-                    <h4>✅ Current License Status</h4>
-                    <div style="background: rgba(40, 167, 69, 0.1); padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #28a745;">
-                        <p><strong>Full Version Activated</strong></p>
-                        <p>🔓 <strong>Unlimited Access</strong></p>
-                    </div>
-                `;
-            }
-            
-            content = `
-                ${licenseSection}
-                
-                <h4>🎮 Bridge Game Controls</h4>
-                <p><strong>Mode Selection:</strong> Press 1-5 to choose scoring mode<br>
-                <strong>Wake:</strong> Keep screen active during play<br>
-                <strong>Vuln:</strong> Cycle vulnerability states</p>
-                
-                <h4>🃏 Available Modes</h4>
-                <div style="margin: 10px 0; font-size: 13px; line-height: 1.5;">
-                    <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring</p>
-                    <p><strong>2 - Bonus Bridge:</strong> HCP-based bonus system</p>
-                    <p><strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle</p>
-                    <p><strong>4 - Rubber Bridge:</strong> Traditional rubber scoring</p>
-                    <p><strong>5 - Duplicate Bridge:</strong> Tournament-style pairs scoring</p>
-                </div>
-                
-                <h4>📞 Support</h4>
-                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
-            `;
-        }
-        
-        this.showModal(title, content);
-    }
-
-    // Method to enter full license from help popup
-    enterFullLicenseFromHelp() {
-        // Close any open modal first
-        this.closeModal();
-        
-        setTimeout(() => {
-            this.showLicenseEntry({ message: 'Enter your full version license code' });
-        }, 100);
-    }
-
-    // ENHANCED QUIT METHOD WITH LICENSE MANAGEMENT
-    showQuit() {
-        // If in bridge mode, let the bridge mode handle quit
-        if (this.currentBridgeMode && typeof this.currentBridgeMode.showQuit === 'function') {
-            this.currentBridgeMode.showQuit();
-            return;
-        }
-        
-        // Enhanced quit menu with license management for all states
+        // Check existing license
         const licenseStatus = this.licenseManager.checkLicenseStatus();
-        let buttons = [];
         
-        // Core game options (context-aware)
-        if (this.appState === 'bridge_mode') {
-            buttons.push({ 
-                text: 'Continue Playing', 
-                action: () => this.closeModal(),
-                class: 'modal-button continue-btn'
-            });
-            buttons.push({ 
-                text: 'Return to Main Menu', 
-                action: () => this.showLicensedMode(licenseStatus), 
-                class: 'modal-button menu-btn'
-            });
-        } else if (this.appState === 'licensed_mode') {
-            buttons.push({ 
-                text: 'Continue', 
-                action: () => this.closeModal(),
-                class: 'modal-button continue-btn'
-            });
-            buttons.push({ 
-                text: 'Show Help', 
-                action: () => { this.closeModal(); this.showHelp(); },
-                class: 'modal-button help-btn'
-            });
-        }
-        
-        // License management options (always available)
-        if (licenseStatus.status === 'trial' || licenseStatus.status === 'expired') {
-            buttons.push({ 
-                text: '🔓 Enter Full License', 
-                action: () => this.enterFullLicenseFromQuit(),
-                class: 'modal-button upgrade-btn'
-            });
-        }
-        
-        // License information (always available)
-        buttons.push({ 
-            text: '📄 License Info', 
-            action: () => this.showLicenseInfoFromQuit(),
-            class: 'modal-button info-btn'
-        });
-        
-        // Clear data option (always available - important for troubleshooting)
-        buttons.push({ 
-            text: '🗑️ Clear License Data', 
-            action: () => this.showClearLicenseWarning(),
-            class: 'modal-button clear-btn'
-        });
-        
-        // App management
-        buttons.push({ 
-            text: 'Close App', 
-            action: () => this.closeApp(),
-            class: 'modal-button close-app-btn'
-        });
-        
-        // Cancel (always last)
-        buttons.push({ 
-            text: 'Cancel', 
-            action: 'close', 
-            class: 'modal-button cancel-btn'
-        });
-        
-        // Create content based on current state
-        let title = 'Bridge Modes Calculator Options';
-        let content = `
-            <div style="text-align: center; margin-bottom: 15px;">
-                <p style="font-size: 14px; color: #666;">Choose an option:</p>
-            </div>
-        `;
-        
-        // Add license status info
-        if (licenseStatus.status === 'trial') {
-            content += `
-                <div style="background: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ffc107;">
-                    <h4 style="color: #856404; margin-bottom: 5px;">📅 Current License Status</h4>
-                    <p style="font-size: 12px; margin: 0; color: #856404;">
-                        <strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining
-                    </p>
-                </div>
-            `;
-        } else if (licenseStatus.status === 'full') {
-            content += `
-                <div style="background: rgba(40, 167, 69, 0.1); padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #28a745;">
-                    <h4 style="color: #155724; margin-bottom: 5px;">✅ Current License Status</h4>
-                    <p style="font-size: 12px; margin: 0; color: #155724;">
-                        <strong>Full Version Activated</strong> - Unlimited Access
-                    </p>
-                </div>
+        if (!licenseStatus.needsCode) {
             `;
         }
         
@@ -987,48 +546,7 @@ if (location.hostname === 'localhost' ||
 // Make app globally accessible for development
 if (typeof window !== 'undefined') {
     window.BridgeApp = BridgeApp;
-}/**
- * Bridge Modes Calculator - Main Application Controller
- * Mobile-first touch handling with modular architecture
- * License logic extracted to license.js for better organization
- */
-
-class BridgeApp {
-    constructor() {
-        this.enteredCode = '';
-        this.isLicensed = false;
-        this.appState = 'license_entry'; // 'license_entry', 'licensed_mode', or 'bridge_mode'
-        this.maxCodeLength = 6;
-        this.currentBridgeMode = null;
-        
-        // Mobile detection
-        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // Initialize license manager (imported from license.js)
-        this.licenseManager = new LicenseManager();
-        
-        // Wake lock for screen management
-        this.wakeLock = null;
-        this.isWakeActive = false;
-        
-        // Module loading cache
-        this.loadedModules = new Map();
-        
-        this.init();
-    }
-
-    async init() {
-        console.log('🎮 Initializing Bridge Modes Calculator');
-        console.log('📱 Mobile device detected:', this.isMobile);
-        
-        // Load base mode class first
-        await this.loadBaseMode();
-        
-        // Check existing license
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        
-        if (!licenseStatus.needsCode) {
-            console.log('📄 Valid license found, entering licensed mode');
+}console.log('📄 Valid license found, entering licensed mode');
             this.isLicensed = true;
             this.appState = 'licensed_mode';
             this.showLicensedMode(licenseStatus);
@@ -1263,4 +781,485 @@ class BridgeApp {
         }
     }
 
-    handleLicenseInput(value)
+    handleLicenseInput(value) {
+        if (value >= '0' && value <= '9') {
+            this.addDigit(value);
+        } else if (value === 'BACK') {
+            this.removeDigit();
+        } else if (value === 'DEAL') {
+            this.submitLicenseCode();
+        }
+    }
+
+    handleLicensedInput(value) {
+        if (['1', '2', '3', '4', '5'].includes(value)) {
+            this.selectBridgeMode(value);
+        } else if (value === 'BACK') {
+            // Return to mode selection
+            this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
+        }
+    }
+
+    async selectBridgeMode(mode) {
+        const modeNames = {
+            '1': 'Kitchen Bridge',
+            '2': 'Bonus Bridge', 
+            '3': 'Chicago Bridge',
+            '4': 'Rubber Bridge',
+            '5': 'Duplicate Bridge'
+        };
+        
+        const modeName = modeNames[mode];
+        console.log(`🎮 Loading: ${modeName}`);
+        
+        try {
+            this.showMessage(`Loading ${modeName}...`, 'info');
+            
+            const ModuleClass = await this.loadBridgeModule(mode);
+            
+            // Create new bridge mode instance
+            this.currentBridgeMode = new ModuleClass(this);
+            this.appState = 'bridge_mode';
+            
+            // Initialize the mode display
+            this.currentBridgeMode.updateDisplay();
+            
+            this.showMessage(`${modeName} loaded! 🎉`, 'success');
+            
+        } catch (error) {
+            console.error(`Failed to load ${modeName}:`, error);
+            this.showMessage(`Failed to load ${modeName}. Please try again.`, 'error');
+            
+            // Return to mode selection after error
+            setTimeout(() => {
+                this.showLicensedMode({ type: this.licenseManager.getLicenseData()?.type || 'FULL' });
+            }, 3000);
+        }
+    }
+
+    // License handling methods
+    addDigit(digit) {
+        if (this.enteredCode.length < this.maxCodeLength) {
+            this.enteredCode += digit;
+            this.updateLicenseDisplay();
+        }
+    }
+
+    removeDigit() {
+        if (this.enteredCode.length > 0) {
+            this.enteredCode = this.enteredCode.slice(0, -1);
+            this.updateLicenseDisplay();
+        }
+    }
+
+    updateLicenseDisplay() {
+        const codeDisplay = document.getElementById('codeDisplay');
+        const statusMessage = document.getElementById('statusMessage');
+        const dealBtn = document.getElementById('dealBtn');
+        
+        if (!codeDisplay || !statusMessage || !dealBtn) {
+            console.warn('License display elements not found');
+            return;
+        }
+        
+        // Update code display
+        const displayCode = this.enteredCode.padEnd(this.maxCodeLength, '_').split('').join(' ');
+        codeDisplay.textContent = displayCode;
+        
+        // Update deal button and status
+        if (this.enteredCode.length === this.maxCodeLength) {
+            dealBtn.classList.remove('disabled');
+            statusMessage.textContent = 'Code complete - press DEAL to submit';
+        } else {
+            dealBtn.classList.add('disabled');
+            const remaining = this.maxCodeLength - this.enteredCode.length;
+            statusMessage.textContent = `Enter ${remaining} more digit${remaining !== 1 ? 's' : ''}`;
+        }
+    }
+
+    async submitLicenseCode() {
+        if (this.enteredCode.length !== this.maxCodeLength) {
+            this.showMessage('Code must be exactly 6 digits', 'error');
+            return;
+        }
+
+        console.log('📤 Submitting license code:', this.enteredCode);
+        
+        // Show loading state
+        this.showLoadingState('Validating license code...');
+        
+        try {
+            // Simulate validation delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            const result = await this.licenseManager.activateLicense(this.enteredCode);
+            
+            if (result.success) {
+                this.showMessage(result.message, 'success');
+                this.isLicensed = true;
+                this.appState = 'licensed_mode';
+                
+                // Transition to licensed mode
+                setTimeout(() => {
+                    this.showLicensedMode(result);
+                }, 2000);
+                
+            } else {
+                this.showMessage(result.message, 'error');
+                
+                // Clear code after error
+                setTimeout(() => {
+                    this.enteredCode = '';
+                    this.updateLicenseDisplay();
+                }, 2500);
+            }
+            
+        } catch (error) {
+            console.error('License validation error:', error);
+            this.showMessage('Validation failed. Please try again.', 'error');
+        } finally {
+            this.hideLoadingState();
+        }
+    }
+
+    showLicenseEntry(licenseStatus) {
+        this.appState = 'license_entry';
+        this.enteredCode = '';
+        
+        // Clean up any active bridge mode
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy?.();
+            this.currentBridgeMode = null;
+        }
+        
+        const display = document.getElementById('display');
+        if (!display) {
+            console.error('Display element not found');
+            return;
+        }
+        
+        display.innerHTML = `
+            <div class="title-score-row">
+                <div class="mode-title">🔑 License Code</div>
+                <div class="score-display">Bridge<br>Modes</div>
+            </div>
+            <div class="game-content">
+                <div class="code-display" id="codeDisplay">_ _ _ _ _ _</div>
+                <div class="status-message" id="statusMessage">${licenseStatus.message}</div>
+            </div>
+            <div class="current-state">Use number buttons. BACK to delete, DEAL to submit</div>
+        `;
+        
+        this.updateButtonStates(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK']);
+        this.updateLicenseDisplay();
+    }
+
+    showLicensedMode(licenseInfo) {
+        this.appState = 'licensed_mode';
+        
+        // Clean up any active bridge mode
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy?.();
+            this.currentBridgeMode = null;
+        }
+        
+        const licenseType = licenseInfo.type || 'FULL';
+        const isTrialMode = licenseType === 'TRIAL';
+        
+        let licenseText = '';
+        if (isTrialMode) {
+            const status = this.licenseManager.checkLicenseStatus();
+            licenseText = `Trial: ${status.daysLeft || 0} days, ${status.dealsLeft || 0} deals left`;
+        } else {
+            licenseText = 'Full Version Activated';
+        }
+        
+        const display = document.getElementById('display');
+        if (!display) {
+            console.error('Display element not found');
+            return;
+        }
+        
+        display.innerHTML = `
+            <div class="title-score-row">
+                <div class="mode-title">Bridge Modes Calculator</div>
+                <div class="score-display">NS: 0<br>EW: 0</div>
+            </div>
+            <div class="game-content">
+                <div class="mode-selection">
+                    <div class="mode-grid">
+                        <div class="mode-row">
+                            <span><strong>1</strong> - Kitchen Bridge</span>
+                            <span><strong>2</strong> - Bonus Bridge</span>
+                        </div>
+                        <div class="mode-row">
+                            <span><strong>3</strong> - Chicago Bridge</span>
+                        </div>
+                        <div class="mode-row">
+                            <span><strong>4</strong> - Rubber Bridge</span>
+                            <span><strong>5</strong> - Duplicate Bridge</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="current-state">Press 1-5 to select bridge scoring mode</div>
+            <div class="license-status">${licenseText}</div>
+        `;
+
+        // Enable mode selection buttons and controls
+        this.updateButtonStates(['1', '2', '3', '4', '5']);
+        this.enableControls();
+    }
+
+    updateButtonStates(activeButtons) {
+        const allButtons = document.querySelectorAll('.btn');
+        
+        allButtons.forEach(btn => {
+            const value = btn.dataset.value;
+            
+            if (activeButtons.includes(value)) {
+                btn.classList.remove('disabled');
+                btn.classList.add('active-operation');
+            } else {
+                btn.classList.add('disabled');
+                btn.classList.remove('active-operation');
+            }
+        });
+        
+        console.log('🎯 Active buttons:', activeButtons);
+    }
+
+    enableControls() {
+        const vulnControl = document.getElementById('vulnControl');
+        if (vulnControl) {
+            vulnControl.classList.remove('disabled');
+        }
+    }
+
+    handleControlButton(controlId) {
+        console.log('🎛️ Control button pressed:', controlId);
+        
+        switch (controlId) {
+            case 'wakeControl':
+                this.toggleWakeLock();
+                break;
+            case 'vulnControl':
+                this.toggleVulnerability();
+                break;
+            case 'helpControl':
+                // Route to bridge mode if active
+                if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
+                    console.log('📖 Routing help to bridge mode');
+                    this.currentBridgeMode.showHelp();
+                } else {
+                    console.log('📖 Using default help');
+                    this.showHelp();
+                }
+                break;
+            case 'quitControl':
+                // Route to bridge mode if active
+                if (this.currentBridgeMode && typeof this.currentBridgeMode.showQuit === 'function') {
+                    console.log('🚪 Routing quit to bridge mode');
+                    this.currentBridgeMode.showQuit();
+                } else {
+                    console.log('🚪 Using default quit');
+                    this.showQuit();
+                }
+                break;
+        }
+    }
+    
+    // ENHANCED HELP METHOD
+    showHelp() {
+        // If in bridge mode, let the bridge mode handle help
+        if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
+            this.currentBridgeMode.showHelp();
+            return;
+        }
+        
+        // Default help for main menu
+        const isLicenseMode = this.appState === 'license_entry';
+        const title = isLicenseMode ? '🔑 License Help' : '🃏 Bridge Modes Calculator Help';
+        
+        let content = '';
+        if (isLicenseMode) {
+            content = `
+                <h4>How to Enter License Code</h4>
+                <p>• Use number buttons <strong>0-9</strong> to enter digits<br>
+                • <strong>BACK</strong> button removes last digit<br>
+                • <strong>DEAL</strong> button submits complete code</p>
+                
+                <h4>📧 Need a License?</h4>
+                <p><strong>Email:</strong> <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+            `;
+        } else {
+            const licenseStatus = this.licenseManager.checkLicenseStatus();
+            let licenseSection = '';
+            
+            if (licenseStatus.status === 'trial') {
+                licenseSection = `
+                    <h4>📅 Current License Status</h4>
+                    <div style="background: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #ffc107;">
+                        <p><strong>Trial Version Active</strong></p>
+                        <p>⏰ <strong>${licenseStatus.daysLeft} days remaining</strong></p>
+                        <p>🃏 <strong>${licenseStatus.dealsLeft} deals remaining</strong></p>
+                        <p style="margin-top: 10px; font-size: 12px;">
+                            To upgrade to the full version, contact: 
+                            <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a>
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 15px 0;">
+                        <button onclick="window.bridgeApp.enterFullLicenseFromHelp()" 
+                                style="background: #28a745; color: white; border: none; padding: 10px 20px; 
+                                       border-radius: 6px; font-size: 14px; cursor: pointer; 
+                                       min-height: 44px; touch-action: manipulation;">
+                            Enter Full License Code
+                        </button>
+                    </div>
+                `;
+            } else if (licenseStatus.status === 'full') {
+                licenseSection = `
+                    <h4>✅ Current License Status</h4>
+                    <div style="background: rgba(40, 167, 69, 0.1); padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <p><strong>Full Version Activated</strong></p>
+                        <p>🔓 <strong>Unlimited Access</strong></p>
+                    </div>
+                `;
+            }
+            
+            content = `
+                ${licenseSection}
+                
+                <h4>🎮 Bridge Game Controls</h4>
+                <p><strong>Mode Selection:</strong> Press 1-5 to choose scoring mode<br>
+                <strong>Wake:</strong> Keep screen active during play<br>
+                <strong>Vuln:</strong> Cycle vulnerability states</p>
+                
+                <h4>🃏 Available Modes</h4>
+                <div style="margin: 10px 0; font-size: 13px; line-height: 1.5;">
+                    <p><strong>1 - Kitchen Bridge:</strong> Simple social scoring</p>
+                    <p><strong>2 - Bonus Bridge:</strong> HCP-based bonus system</p>
+                    <p><strong>3 - Chicago Bridge:</strong> 4-deal vulnerability cycle</p>
+                    <p><strong>4 - Rubber Bridge:</strong> Traditional rubber scoring</p>
+                    <p><strong>5 - Duplicate Bridge:</strong> Tournament-style pairs scoring</p>
+                </div>
+                
+                <h4>📞 Support</h4>
+                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+            `;
+        }
+        
+        this.showModal(title, content);
+    }
+
+    // Method to enter full license from help popup
+    enterFullLicenseFromHelp() {
+        // Close any open modal first
+        this.closeModal();
+        
+        setTimeout(() => {
+            this.showLicenseEntry({ message: 'Enter your full version license code' });
+        }, 100);
+    }
+
+    // ENHANCED QUIT METHOD WITH LICENSE MANAGEMENT
+    showQuit() {
+        // If in bridge mode, let the bridge mode handle quit
+        if (this.currentBridgeMode && typeof this.currentBridgeMode.showQuit === 'function') {
+            this.currentBridgeMode.showQuit();
+            return;
+        }
+        
+        // Enhanced quit menu with license management for all states
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        let buttons = [];
+        
+        // Core game options (context-aware)
+        if (this.appState === 'bridge_mode') {
+            buttons.push({ 
+                text: 'Continue Playing', 
+                action: () => this.closeModal(),
+                class: 'modal-button continue-btn'
+            });
+            buttons.push({ 
+                text: 'Return to Main Menu', 
+                action: () => this.showLicensedMode(licenseStatus), 
+                class: 'modal-button menu-btn'
+            });
+        } else if (this.appState === 'licensed_mode') {
+            buttons.push({ 
+                text: 'Continue', 
+                action: () => this.closeModal(),
+                class: 'modal-button continue-btn'
+            });
+            buttons.push({ 
+                text: 'Show Help', 
+                action: () => { this.closeModal(); this.showHelp(); },
+                class: 'modal-button help-btn'
+            });
+        }
+        
+        // License management options (always available)
+        if (licenseStatus.status === 'trial' || licenseStatus.status === 'expired') {
+            buttons.push({ 
+                text: '🔓 Enter Full License', 
+                action: () => this.enterFullLicenseFromQuit(),
+                class: 'modal-button upgrade-btn'
+            });
+        }
+        
+        // License information (always available)
+        buttons.push({ 
+            text: '📄 License Info', 
+            action: () => this.showLicenseInfoFromQuit(),
+            class: 'modal-button info-btn'
+        });
+        
+        // Clear data option (always available - important for troubleshooting)
+        buttons.push({ 
+            text: '🗑️ Clear License Data', 
+            action: () => this.showClearLicenseWarning(),
+            class: 'modal-button clear-btn'
+        });
+        
+        // App management
+        buttons.push({ 
+            text: 'Close App', 
+            action: () => this.closeApp(),
+            class: 'modal-button close-app-btn'
+        });
+        
+        // Cancel (always last)
+        buttons.push({ 
+            text: 'Cancel', 
+            action: 'close', 
+            class: 'modal-button cancel-btn'
+        });
+        
+        // Create content based on current state
+        let title = 'Bridge Modes Calculator Options';
+        let content = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                <p style="font-size: 14px; color: #666;">Choose an option:</p>
+            </div>
+        `;
+        
+        // Add license status info
+        if (licenseStatus.status === 'trial') {
+            content += `
+                <div style="background: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ffc107;">
+                    <h4 style="color: #856404; margin-bottom: 5px;">📅 Current License Status</h4>
+                    <p style="font-size: 12px; margin: 0; color: #856404;">
+                        <strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining
+                    </p>
+                </div>
+            `;
+        } else if (licenseStatus.status === 'full') {
+            content += `
+                <div style="background: rgba(40, 167, 69, 0.1); padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #28a745;">
+                    <h4 style="color: #155724; margin-bottom: 5px;">✅ Current License Status</h4>
+                    <p style="font-size: 12px; margin: 0; color: #155724;">
+                        <strong>Full Version Activated</strong> - Unlimited Access
+                    </p>
+                </div>
