@@ -129,36 +129,118 @@
     <script src="app.js"></script>
     
     <script>
+        // Mobile debug console
+        window.mobileLog = function(msg) {
+            const debug = document.getElementById('mobile-debug') || (() => {
+                const d = document.createElement('div');
+                d.id = 'mobile-debug';
+                d.style.cssText = `
+                    position: fixed; 
+                    top: 0; 
+                    left: 0; 
+                    right: 0; 
+                    background: rgba(0,0,0,0.9); 
+                    color: #00ff00; 
+                    padding: 5px; 
+                    font-size: 10px; 
+                    max-height: 120px; 
+                    overflow-y: auto; 
+                    z-index: 99999;
+                    font-family: monospace;
+                    border-bottom: 1px solid #333;
+                `;
+                document.body.appendChild(d);
+                return d;
+            })();
+            debug.innerHTML += msg + '<br>';
+            debug.scrollTop = debug.scrollHeight;
+            console.log(msg);
+        };
+
+        // Double-tap debug console to hide it
+        let debugTapCount = 0;
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'mobile-debug') {
+                debugTapCount++;
+                if (debugTapCount >= 2) {
+                    e.target.style.display = 'none';
+                    debugTapCount = 0;
+                }
+                setTimeout(() => { debugTapCount = 0; }, 1000);
+            }
+        });
+
         // Initialize app when DOM is ready
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Check if required classes are loaded
+                mobileLog('🚀 DOM loaded, starting initialization...');
+                mobileLog('📱 User Agent: ' + navigator.userAgent.substring(0, 50) + '...');
+                mobileLog('🌐 Location: ' + location.hostname);
+                
+                // Extra delay for newer/faster phones
+                mobileLog('⏰ Waiting for scripts to load...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Check script loading step by step
+                mobileLog('🔍 Checking LicenseManager...');
                 if (typeof LicenseManager === 'undefined') {
+                    mobileLog('❌ LicenseManager not found');
+                    mobileLog('🔍 Available globals: ' + Object.keys(window).filter(k => k.includes('License')).join(', '));
                     throw new Error('LicenseManager class not loaded from license.js');
                 }
+                mobileLog('✅ LicenseManager loaded successfully');
                 
+                mobileLog('🔍 Checking BridgeApp...');
                 if (typeof BridgeApp === 'undefined') {
+                    mobileLog('❌ BridgeApp not found');
+                    mobileLog('🔍 Available globals: ' + Object.keys(window).filter(k => k.includes('Bridge')).join(', '));
                     throw new Error('BridgeApp class not loaded from app.js');
                 }
+                mobileLog('✅ BridgeApp loaded successfully');
                 
                 // Hide loading screen
+                mobileLog('🎨 Updating UI...');
                 setTimeout(() => {
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('app-container').style.display = 'flex';
+                    mobileLog('🎨 UI updated');
                 }, 500);
                 
                 // Initialize the Bridge Modes Calculator
+                mobileLog('🎮 Creating BridgeApp instance...');
                 window.bridgeApp = new BridgeApp();
-                console.log('🃏 Bridge Modes Calculator initialized successfully');
+                mobileLog('✅ Bridge Modes Calculator initialized successfully!');
+                
+                // Auto-hide debug after successful load
+                setTimeout(() => {
+                    const debug = document.getElementById('mobile-debug');
+                    if (debug) {
+                        debug.style.opacity = '0.3';
+                        debug.style.transition = 'opacity 2s';
+                        setTimeout(() => {
+                            debug.style.display = 'none';
+                        }, 2000);
+                    }
+                }, 3000);
                 
             } catch (error) {
+                mobileLog('❌ CRITICAL ERROR: ' + error.message);
+                mobileLog('🔍 Error stack: ' + (error.stack || 'No stack trace'));
                 console.error('Failed to initialize Bridge Navigator:', error);
                 
                 // Show error screen
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('error-screen').style.display = 'flex';
                 document.getElementById('error-message').textContent = 
-                    `Error: ${error.message}. Please check the console for details.`;
+                    `Error: ${error.message}. Check the green debug text above for details.`;
+                
+                // Make debug console more visible on error
+                const debug = document.getElementById('mobile-debug');
+                if (debug) {
+                    debug.style.background = 'rgba(139,0,0,0.9)';
+                    debug.style.color = '#ffff00';
+                    debug.style.maxHeight = '200px';
+                }
             }
         });
         
@@ -166,14 +248,24 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('SW registered'))
-                    .catch(err => console.log('SW registration failed'));
+                    .then(registration => {
+                        console.log('SW registered');
+                        if (window.mobileLog) mobileLog('📦 Service Worker registered');
+                    })
+                    .catch(err => {
+                        console.log('SW registration failed');
+                        if (window.mobileLog) mobileLog('❌ Service Worker failed');
+                    });
             });
         }
         
-        // Global error handler
+        // Global error handler for debugging
         window.addEventListener('error', (e) => {
             console.error('Global error:', e.error);
+            if (window.mobileLog) {
+                mobileLog('🚨 Global Error: ' + e.message);
+                mobileLog('📄 File: ' + e.filename + ':' + e.lineno);
+            }
             
             // Show user-friendly error for critical failures
             if (e.error?.message?.includes('BridgeApp') || e.error?.message?.includes('LicenseManager')) {
@@ -184,15 +276,13 @@
                     'Application failed to load. Please refresh the page or clear your browser cache.';
             }
         });
-    </script>
-<!-- JavaScript - Load license.js first, then app.js -->
-    <script src="license.js"></script>
-    <script src="app.js"></script>
-    
-    <script>
-        // Initialize app when DOM is ready
-        document.addEventListener('DOMContentLoaded', async () => {
-            // ... existing initialization code ...
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+            if (window.mobileLog) {
+                mobileLog('🚨 Promise Error: ' + e.reason);
+            }
         });
     </script>
 </body>
