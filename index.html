@@ -124,13 +124,23 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- JavaScript - Load license.js first, then app.js -->
+    <script src="license.js"></script>
     <script src="app.js"></script>
     
     <script>
         // Initialize app when DOM is ready
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Check if required classes are loaded
+                if (typeof LicenseManager === 'undefined') {
+                    throw new Error('LicenseManager class not loaded from license.js');
+                }
+                
+                if (typeof BridgeApp === 'undefined') {
+                    throw new Error('BridgeApp class not loaded from app.js');
+                }
+                
                 // Hide loading screen
                 setTimeout(() => {
                     document.getElementById('loading-screen').style.display = 'none';
@@ -160,6 +170,20 @@
                     .catch(err => console.log('SW registration failed'));
             });
         }
+        
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            
+            // Show user-friendly error for critical failures
+            if (e.error?.message?.includes('BridgeApp') || e.error?.message?.includes('LicenseManager')) {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('error-screen').style.display = 'flex';
+                document.getElementById('error-message').textContent = 
+                    'Application failed to load. Please refresh the page or clear your browser cache.';
+            }
+        });
     </script>
 </body>
 </html>
