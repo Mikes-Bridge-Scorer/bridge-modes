@@ -1,25 +1,25 @@
 // Smart Service Worker with Version Control
 // This ensures users get updates while still benefiting from caching
 
-const CACHE_VERSION = 'bridge-modes-v2025-01-31-001'; // Update this for each release
+const CACHE_VERSION = 'bridge-modes-v2025-01-31-002'; // Updated version
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
 // Files that should always be cached
 const STATIC_FILES = [
-    '/',
-    '/index.html',
-    '/styles.css',
-    '/app.js',
-    '/license.js'
-'/update-manager.js'
-
+    './',
+    './index.html',
+    './styles.css',
+    './app.js',
+    './license.js',
+    './update-manager.js'
 ];
 
 // Files that should be checked for updates frequently
 const DYNAMIC_FILES = [
-    '/app.js',
-    '/license.js'
+    './app.js',
+    './license.js',
+    './update-manager.js'
 ];
 
 self.addEventListener('install', event => {
@@ -36,6 +36,9 @@ self.addEventListener('install', event => {
                 // Force immediate activation of new service worker
                 return self.skipWaiting();
             })
+            .catch(error => {
+                console.error('❌ Cache failed:', error);
+            })
     );
 });
 
@@ -48,7 +51,9 @@ self.addEventListener('activate', event => {
                 return Promise.all(
                     cacheNames.map(cacheName => {
                         // Delete old caches when version changes
-                        if (cacheName.startsWith('bridge-modes-v') && cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+                        if (cacheName.startsWith('bridge-modes-v') && 
+                            cacheName !== STATIC_CACHE && 
+                            cacheName !== DYNAMIC_CACHE) {
                             console.log('🗑️ Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
                         }
@@ -72,8 +77,13 @@ self.addEventListener('fetch', event => {
         return;
     }
     
+    // Skip non-GET requests
+    if (request.method !== 'GET') {
+        return;
+    }
+    
     // Check if this is a dynamic file that should be updated frequently
-    const isDynamicFile = DYNAMIC_FILES.some(file => url.pathname.endsWith(file));
+    const isDynamicFile = DYNAMIC_FILES.some(file => url.pathname.endsWith(file.replace('./', '')));
     
     if (isDynamicFile) {
         // For dynamic files: Network first, then cache
@@ -84,7 +94,8 @@ self.addEventListener('fetch', event => {
                     if (response.ok) {
                         const responseClone = response.clone();
                         caches.open(DYNAMIC_CACHE)
-                            .then(cache => cache.put(request, responseClone));
+                            .then(cache => cache.put(request, responseClone))
+                            .catch(error => console.log('Cache put failed:', error));
                     }
                     return response;
                 })
@@ -106,7 +117,8 @@ self.addEventListener('fetch', event => {
                             if (response.ok) {
                                 const responseClone = response.clone();
                                 caches.open(STATIC_CACHE)
-                                    .then(cache => cache.put(request, responseClone));
+                                    .then(cache => cache.put(request, responseClone))
+                                    .catch(error => console.log('Cache put failed:', error));
                             }
                             return response;
                         });
@@ -128,11 +140,6 @@ self.addEventListener('message', event => {
             version: CACHE_VERSION
         });
     }
-});
-
-// Notify app when there's an update available
-self.addEventListener('controllerchange', () => {
-    console.log('🔄 Controller changed - new version active');
 });
 
 console.log('🚀 Bridge Modes Service Worker loaded - Version:', CACHE_VERSION);
