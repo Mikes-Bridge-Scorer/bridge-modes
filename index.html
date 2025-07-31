@@ -8,6 +8,7 @@
     <!-- PWA Meta Tags -->
     <meta name="description" content="Professional Bridge Scoring Calculator">
     <meta name="theme-color" content="#34495e">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bridge Modes">
@@ -124,9 +125,10 @@
         </div>
     </div>
 
-    <!-- JavaScript - Load license.js first, then app.js -->
+    <!-- JavaScript - Load in correct order -->
     <script src="license.js"></script>
     <script src="app.js"></script>
+    <script src="update-manager.js"></script>
     
     <script>
         // Mobile debug console
@@ -177,15 +179,14 @@
                 mobileLog('📱 User Agent: ' + navigator.userAgent.substring(0, 50) + '...');
                 mobileLog('🌐 Location: ' + location.hostname);
                 
-                // Extra delay for newer/faster phones
+                // Extra delay for scripts to load
                 mobileLog('⏰ Waiting for scripts to load...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 // Check script loading step by step
                 mobileLog('🔍 Checking LicenseManager...');
                 if (typeof LicenseManager === 'undefined') {
                     mobileLog('❌ LicenseManager not found');
-                    mobileLog('🔍 Available globals: ' + Object.keys(window).filter(k => k.includes('License')).join(', '));
                     throw new Error('LicenseManager class not loaded from license.js');
                 }
                 mobileLog('✅ LicenseManager loaded successfully');
@@ -193,10 +194,16 @@
                 mobileLog('🔍 Checking BridgeApp...');
                 if (typeof BridgeApp === 'undefined') {
                     mobileLog('❌ BridgeApp not found');
-                    mobileLog('🔍 Available globals: ' + Object.keys(window).filter(k => k.includes('Bridge')).join(', '));
                     throw new Error('BridgeApp class not loaded from app.js');
                 }
                 mobileLog('✅ BridgeApp loaded successfully');
+                
+                mobileLog('🔍 Checking UpdateManager...');
+                if (typeof UpdateManager === 'undefined') {
+                    mobileLog('⚠️ UpdateManager not found - updates disabled');
+                } else {
+                    mobileLog('✅ UpdateManager loaded successfully');
+                }
                 
                 // Hide loading screen
                 mobileLog('🎨 Updating UI...');
@@ -232,7 +239,7 @@
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('error-screen').style.display = 'flex';
                 document.getElementById('error-message').textContent = 
-                    `Error: ${error.message}. Check the green debug text above for details.`;
+                    `Error: ${error.message}. Check the debug console for details.`;
                 
                 // Make debug console more visible on error
                 const debug = document.getElementById('mobile-debug');
@@ -243,21 +250,6 @@
                 }
             }
         });
-        
-        // Service Worker Registration (PWA) - Optional
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('SW registered');
-                        if (window.mobileLog) mobileLog('📦 Service Worker registered');
-                    })
-                    .catch(err => {
-                        console.log('SW registration failed');
-                        if (window.mobileLog) mobileLog('❌ Service Worker failed');
-                    });
-            });
-        }
         
         // Global error handler for debugging
         window.addEventListener('error', (e) => {
