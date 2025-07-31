@@ -12,6 +12,8 @@ const STATIC_FILES = [
     '/styles.css',
     '/app.js',
     '/license.js'
+'/update-manager.js'
+
 ];
 
 // Files that should be checked for updates frequently
