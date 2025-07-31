@@ -2,7 +2,7 @@
 
 class UpdateManager {
     constructor() {
-        this.currentVersion = '2025-01-31-001'; // Match service worker version
+        this.currentVersion = '2025-01-31-002'; // Match service worker version
         this.init();
     }
 
