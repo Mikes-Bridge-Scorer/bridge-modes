@@ -1,5 +1,5 @@
 // VERSION CHECK - Updated at 2025-01-31
-console.log('🔍 APP.JS VERSION: 2025-01-31-FINAL');
+console.log('🔍 APP.JS VERSION: 2025-01-31-SCROLL-FIXED');
 
 /**
  * Bridge Modes Calculator - Main Application Controller
@@ -9,7 +9,7 @@ console.log('🔍 APP.JS VERSION: 2025-01-31-FINAL');
 
 class BridgeApp {
     constructor() {
-        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-FINAL');
+        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-SCROLL-FIXED');
         
         this.enteredCode = '';
         this.isLicensed = false;
@@ -676,8 +676,11 @@ class BridgeApp {
         }
     }
 
-    // FIXED MODAL METHOD - Clean version without debug code
+    // ENHANCED MODAL METHOD - Fixed for Mobile Scrolling on Pixel 9a
     showModal(title, content, buttons = null) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
         // Create modal overlay
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -695,6 +698,9 @@ class BridgeApp {
         
         // Enhanced event handling - the fix that worked!
         const handleAction = (actionText) => {
+            // Restore body scroll
+            document.body.classList.remove('modal-open');
+            
             const buttonConfig = modalButtons.find(b => b.text === actionText);
             if (buttonConfig && buttonConfig.action && buttonConfig.action !== 'close') {
                 buttonConfig.action();
@@ -705,7 +711,7 @@ class BridgeApp {
         // Method 1: Traditional click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                modal.remove();
+                handleAction('Close');
                 return;
             }
             
@@ -747,27 +753,73 @@ class BridgeApp {
             });
         }, 50);
         
-        // Method 3: Mobile fallback
+        // Method 3: Mobile fallback - Enhanced for scrolling
         if (this.isMobile) {
-            modal.addEventListener('touchend', (e) => {
-                if (e.target === modal) {
-                    modal.remove();
+            // Prevent modal background from interfering with scrolling
+            modal.addEventListener('touchstart', (e) => {
+                // Allow scrolling within modal content
+                if (!e.target.closest('.modal-content')) {
+                    e.preventDefault();
                 }
             }, { passive: false });
             
-            // Prevent modal scrolling
-            modal.addEventListener('touchmove', (e) => {
-                e.preventDefault();
+            modal.addEventListener('touchend', (e) => {
+                if (e.target === modal) {
+                    handleAction('Close');
+                }
             }, { passive: false });
+            
+            // Enhanced touch handling for modal content scrolling
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                let startY = 0;
+                let currentY = 0;
+                
+                modalContent.addEventListener('touchstart', (e) => {
+                    startY = e.touches[0].clientY;
+                }, { passive: true });
+                
+                modalContent.addEventListener('touchmove', (e) => {
+                    currentY = e.touches[0].clientY;
+                    const scrollTop = modalContent.scrollTop;
+                    const scrollHeight = modalContent.scrollHeight;
+                    const clientHeight = modalContent.clientHeight;
+                    
+                    // Prevent overscroll bouncing
+                    if ((scrollTop <= 0 && currentY > startY) || 
+                        (scrollTop >= scrollHeight - clientHeight && currentY < startY)) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
         }
         
         document.body.appendChild(modal);
+        
+        // Auto-focus first button for accessibility
+        setTimeout(() => {
+            const firstButton = modal.querySelector('.modal-btn');
+            if (firstButton && !this.isMobile) {
+                firstButton.focus();
+            }
+        }, 100);
+        
+        // Close modal on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                handleAction('Close');
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
     }
 
     closeModal() {
         const existingModal = document.querySelector('.modal-overlay');
         if (existingModal) {
             existingModal.remove();
+            // Restore body scroll when modal closes
+            document.body.classList.remove('modal-open');
         }
     }
 
@@ -828,6 +880,9 @@ class BridgeApp {
             this.currentBridgeMode.destroy?.();
         }
         
+        // Restore body scroll
+        document.body.classList.remove('modal-open');
+        
         // Remove event listeners
         document.removeEventListener('click', this.handleClick);
         document.removeEventListener('touchend', this.handleClick);
@@ -871,5 +926,5 @@ if (location.hostname === 'localhost' ||
     
     console.log('🛠️ Development mode detected');
     console.log('• forceClearCache() - Clear all caches and reload');
-    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-FINAL"');
+    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-SCROLL-FIXED"');
 }
