@@ -28,7 +28,9 @@
 })();
 
 // Your existing license.js code goes here unchanged
-// The console.log statements will now be hidden in production/**
+// The console.log statements will now be hidden in production
+
+/**
  * License Manager - Handles license validation and storage
  * Extracted from app.js for better code organization
  */
