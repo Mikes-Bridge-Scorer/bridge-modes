@@ -182,6 +182,42 @@
                 mobileLog('📱 User Agent: ' + navigator.userAgent.substring(0, 50) + '...');
                 mobileLog('🌐 Location: ' + location.hostname);
                 
+                // RESTORE LICENSE DATA AFTER UPDATE - CRITICAL FIX
+                try {
+                    const licenseBackup = sessionStorage.getItem('licenseBackup');
+                    if (licenseBackup) {
+                        mobileLog('🔄 Restoring license data after update...');
+                        const backup = JSON.parse(licenseBackup);
+                        
+                        // Restore license data
+                        if (backup.licenseData) {
+                            localStorage.setItem('bridgeModesLicense', backup.licenseData);
+                            mobileLog('✅ License data restored');
+                        }
+                        if (backup.activationDate) {
+                            localStorage.setItem('bridgeModesActivationDate', backup.activationDate);
+                            mobileLog('✅ Activation date restored');
+                        }
+                        if (backup.dealsPlayed) {
+                            localStorage.setItem('bridgeModesDealsPlayed', backup.dealsPlayed);
+                            mobileLog('✅ Deals played restored');
+                        }
+                        if (backup.lastAccess) {
+                            localStorage.setItem('bridgeModesLastAccess', backup.lastAccess);
+                            mobileLog('✅ Last access restored');
+                        }
+                        
+                        // Clear the backup
+                        sessionStorage.removeItem('licenseBackup');
+                        mobileLog('🧹 License backup cleared');
+                    } else {
+                        mobileLog('ℹ️ No license backup found (normal for first load)');
+                    }
+                } catch (error) {
+                    mobileLog('⚠️ Failed to restore license backup: ' + error.message);
+                    console.warn('⚠️ Failed to restore license backup:', error);
+                }
+                
                 // Reduced delay for faster loading
                 mobileLog('⏰ Scripts loaded, initializing...');
                 await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 1000ms
@@ -279,6 +315,22 @@
                 mobileLog('🚨 Promise Error: ' + e.reason);
             }
         });
+
+        // License persistence debug function
+        window.checkLicenseData = function() {
+            const data = {
+                licenseData: localStorage.getItem('bridgeModesLicense'),
+                activationDate: localStorage.getItem('bridgeModesActivationDate'),
+                dealsPlayed: localStorage.getItem('bridgeModesDealsPlayed'),
+                lastAccess: localStorage.getItem('bridgeModesLastAccess'),
+                backup: sessionStorage.getItem('licenseBackup')
+            };
+            console.log('📊 Current license data:', data);
+            if (window.mobileLog) {
+                mobileLog('📊 License check - Data exists: ' + (data.licenseData ? 'YES' : 'NO'));
+            }
+            return data;
+        };
     </script>
 </body>
 </html>

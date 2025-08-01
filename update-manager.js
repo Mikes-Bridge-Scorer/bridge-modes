@@ -110,6 +110,16 @@ class UpdateManager {
             notification.remove();
         }
         
+        // PRESERVE LICENSE DATA BEFORE UPDATE
+        const licenseBackup = {
+            licenseData: localStorage.getItem('bridgeModesLicense'),
+            activationDate: localStorage.getItem('bridgeModesActivationDate'),
+            dealsPlayed: localStorage.getItem('bridgeModesDealsPlayed'),
+            lastAccess: localStorage.getItem('bridgeModesLastAccess')
+        };
+        
+        console.log('💾 Backing up license data before update:', licenseBackup);
+        
         // Show updating message
         const updatingMsg = document.createElement('div');
         updatingMsg.style.cssText = `
@@ -128,8 +138,17 @@ class UpdateManager {
         updatingMsg.innerHTML = `
             <div style="margin-bottom: 10px;">🔄</div>
             <div>Updating to latest version...</div>
+            <div style="font-size: 12px; margin-top: 10px; color: #ccc;">Preserving license data...</div>
         `;
         document.body.appendChild(updatingMsg);
+        
+        // Store backup in sessionStorage as extra protection
+        try {
+            sessionStorage.setItem('licenseBackup', JSON.stringify(licenseBackup));
+            console.log('💾 License backup stored in sessionStorage');
+        } catch (error) {
+            console.warn('⚠️ Failed to backup to sessionStorage:', error);
+        }
         
         // Tell service worker to skip waiting and take control
         if (navigator.serviceWorker.controller) {
@@ -139,6 +158,7 @@ class UpdateManager {
         }
         
         // The controllerchange event will trigger a reload
+        // License data will be restored on next load
     }
 
     // Method to manually check for updates
