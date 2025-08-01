@@ -1229,3 +1229,44 @@ input, textarea, [contenteditable="true"] {
         transform: scale(0.95) !important;
     }
 }
+/* Add this to your styles.css - Forces proper touch handling on all devices */
+
+.modal-overlay {
+    /* Your existing styles stay the same, just add: */
+    touch-action: manipulation !important;
+    -webkit-touch-callout: none !important;
+}
+
+.modal-content {
+    /* Your existing styles stay the same, just add: */
+    touch-action: manipulation !important;
+    -webkit-touch-callout: none !important;
+}
+
+.modal-btn {
+    /* Your existing styles stay the same, just add: */
+    touch-action: manipulation !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+    
+    /* Force proper button behavior on modern Android */
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Pixel 9a specific fix */
+@media screen and (max-device-width: 430px) and (-webkit-device-pixel-ratio: 2.625) {
+    .modal-btn {
+        min-height: 48px !important;
+        font-size: 16px !important;
+        padding: 12px 20px !important;
+    }
+}
+
+/* Modern Android Chrome fix */
+@supports (-webkit-touch-callout: none) {
+    .modal-btn:active {
+        background: rgba(52, 152, 219, 0.8) !important;
+        transform: scale(0.98) !important;
+    }
+}
