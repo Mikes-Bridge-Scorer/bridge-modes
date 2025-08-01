@@ -1,5 +1,5 @@
 // VERSION CHECK - Updated at 2025-01-31
-console.log('🔍 APP.JS VERSION: 2025-01-31-DEBUG-MODAL');
+console.log('🔍 APP.JS VERSION: 2025-01-31-FINAL');
 
 /**
  * Bridge Modes Calculator - Main Application Controller
@@ -9,7 +9,7 @@ console.log('🔍 APP.JS VERSION: 2025-01-31-DEBUG-MODAL');
 
 class BridgeApp {
     constructor() {
-        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-DEBUG-MODAL');
+        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-FINAL');
         
         this.enteredCode = '';
         this.isLicensed = false;
@@ -676,38 +676,8 @@ class BridgeApp {
         }
     }
 
-    // MOBILE DEBUG MODAL METHOD - Shows debug info on screen
+    // FIXED MODAL METHOD - Clean version without debug code
     showModal(title, content, buttons = null) {
-        // Create mobile debug display
-        let debugDiv = document.getElementById('mobile-modal-debug');
-        if (!debugDiv) {
-            debugDiv = document.createElement('div');
-            debugDiv.id = 'mobile-modal-debug';
-            debugDiv.style.cssText = `
-                position: fixed;
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                background: rgba(0,0,0,0.8);
-                color: #00ff00;
-                padding: 5px;
-                font-size: 10px;
-                z-index: 99999;
-                border-radius: 4px;
-                max-height: 80px;
-                overflow-y: auto;
-                font-family: monospace;
-            `;
-            document.body.appendChild(debugDiv);
-        }
-        
-        const addDebug = (msg) => {
-            debugDiv.innerHTML += msg + '<br>';
-            debugDiv.scrollTop = debugDiv.scrollHeight;
-        };
-        
-        addDebug('🚀 Creating modal: ' + title);
-        
         // Create modal overlay
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -723,97 +693,75 @@ class BridgeApp {
         
         modal.innerHTML = '<div class="modal-content"><h3>' + title + '</h3><div class="modal-body">' + content + '</div><div class="modal-buttons">' + buttonsHTML + '</div></div>';
         
-        addDebug('📱 Device: ' + (this.isMobile ? 'Mobile' : 'Desktop'));
-        
-        // Enhanced event handling with debug
-        const handleAction = (actionText, source) => {
-            addDebug('✅ Action: ' + actionText + ' from ' + source);
+        // Enhanced event handling - the fix that worked!
+        const handleAction = (actionText) => {
             const buttonConfig = modalButtons.find(b => b.text === actionText);
             if (buttonConfig && buttonConfig.action && buttonConfig.action !== 'close') {
                 buttonConfig.action();
             }
             modal.remove();
-            // Clear debug after successful action
-            setTimeout(() => {
-                if (debugDiv) debugDiv.innerHTML = '';
-            }, 2000);
         };
         
         // Method 1: Traditional click
         modal.addEventListener('click', (e) => {
-            addDebug('🖱️ Click: ' + e.target.tagName + '.' + e.target.className);
-            
             if (e.target === modal) {
-                addDebug('🖱️ Overlay click - closing');
                 modal.remove();
                 return;
             }
             
             const btn = e.target.closest('.modal-btn');
             if (btn) {
-                handleAction(btn.dataset.action, 'click');
+                handleAction(btn.dataset.action);
             }
         });
         
-        // Method 2: Direct button listeners
+        // Method 2: Direct button event listeners (this was the key fix!)
         setTimeout(() => {
             const modalBtns = modal.querySelectorAll('.modal-btn');
-            addDebug('🎯 Found ' + modalBtns.length + ' buttons');
             
-            modalBtns.forEach((btn, index) => {
-                addDebug('🎯 Btn' + index + ': ' + btn.textContent);
+            modalBtns.forEach((btn) => {
+                // Multiple event types for maximum compatibility
+                ['click', 'touchend', 'pointerup'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
                 
                 // Visual feedback for touch
                 btn.addEventListener('touchstart', (e) => {
-                    addDebug('👆 TouchStart: ' + btn.textContent);
-                    btn.style.background = 'rgba(255, 0, 0, 0.8)'; // Red to show it's working
-                    btn.style.transform = 'scale(0.95)';
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.98)';
                 }, { passive: true });
                 
-                // Main touch handler
-                btn.addEventListener('touchend', (e) => {
-                    addDebug('👆 TouchEnd: ' + btn.textContent);
-                    e.preventDefault();
-                    e.stopPropagation();
+                btn.addEventListener('touchcancel', (e) => {
                     btn.style.background = '';
                     btn.style.transform = '';
-                    setTimeout(() => handleAction(btn.dataset.action, 'touchend'), 100);
-                }, { passive: false });
+                }, { passive: true });
                 
-                // Backup click handler
-                btn.addEventListener('click', (e) => {
-                    addDebug('🖱️ BtnClick: ' + btn.textContent);
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleAction(btn.dataset.action, 'direct-click');
-                }, { passive: false });
+                btn.addEventListener('touchend', (e) => {
+                    btn.style.background = '';
+                    btn.style.transform = '';
+                }, { passive: true });
             });
-            
-            addDebug('✅ Listeners attached');
-        }, 100);
+        }, 50);
         
-        // Method 3: Fallback overlay touch
+        // Method 3: Mobile fallback
         if (this.isMobile) {
             modal.addEventListener('touchend', (e) => {
-                addDebug('👆 Overlay touch: ' + e.target.tagName);
-                
-                // Only close if touching the overlay itself, not content
                 if (e.target === modal) {
-                    addDebug('👆 Overlay close');
                     modal.remove();
                 }
+            }, { passive: false });
+            
+            // Prevent modal scrolling
+            modal.addEventListener('touchmove', (e) => {
+                e.preventDefault();
             }, { passive: false });
         }
         
         document.body.appendChild(modal);
-        addDebug('🎉 Modal ready - try buttons!');
-        
-        // Auto-clear debug if no interaction
-        setTimeout(() => {
-            if (debugDiv && debugDiv.innerHTML.includes('Modal ready')) {
-                debugDiv.innerHTML += '<br>⏰ No interaction detected...';
-            }
-        }, 5000);
     }
 
     closeModal() {
@@ -923,5 +871,5 @@ if (location.hostname === 'localhost' ||
     
     console.log('🛠️ Development mode detected');
     console.log('• forceClearCache() - Clear all caches and reload');
-    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-DEBUG-MODAL"');
+    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-FINAL"');
 }
