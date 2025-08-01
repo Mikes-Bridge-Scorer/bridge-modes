@@ -1,5 +1,5 @@
 // VERSION CHECK - Updated at 2025-01-31
-console.log('🔍 APP.JS VERSION: 2025-01-31-SCROLL-FIXED');
+console.log('🔍 APP.JS VERSION: 2025-01-31-ENHANCED');
 
 /**
  * Bridge Modes Calculator - Main Application Controller
@@ -9,7 +9,7 @@ console.log('🔍 APP.JS VERSION: 2025-01-31-SCROLL-FIXED');
 
 class BridgeApp {
     constructor() {
-        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-SCROLL-FIXED');
+        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-ENHANCED');
         
         this.enteredCode = '';
         this.isLicensed = false;
@@ -547,7 +547,7 @@ class BridgeApp {
         }
     }
     
-    // HELP METHOD - Simplified to avoid template literal issues
+    // ENHANCED HELP METHOD
     showHelp() {
         // If in bridge mode, let the bridge mode handle help
         if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
@@ -555,19 +555,149 @@ class BridgeApp {
             return;
         }
         
-        // Simple help content
-        const title = this.appState === 'license_entry' ? '🔑 License Help' : '🃏 Bridge Modes Calculator Help';
-        const content = '<p>Basic help content loaded successfully. App is working!</p><p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>';
+        // Enhanced help content based on current state
+        let title, content;
+        
+        if (this.appState === 'license_entry') {
+            title = '🔑 License Help';
+            content = `
+                <h4>License Codes</h4>
+                <p><strong>Trial Version:</strong> Try any 6-digit code starting with 111, 222, 333, etc. for a 14-day, 50-deal trial.</p>
+                <p><strong>Full Version:</strong> Enter your purchased 6-digit license code for unlimited access.</p>
+                
+                <h4>Need a License?</h4>
+                <p>Request a code from Mike Smith</p>
+                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+            `;
+        } else {
+            title = '🃏 Bridge Modes Calculator';
+            content = `
+                <h4>Available Bridge Modes</h4>
+                <p><strong>1 - Kitchen Bridge:</strong> Casual bridge scoring with simple bonuses</p>
+                <p><strong>2 - Bonus Bridge:</strong> Kitchen bridge with additional bonus points</p>
+                <p><strong>3 - Chicago Bridge:</strong> Four-deal bridge with rotating partnerships</p>
+                <p><strong>4 - Rubber Bridge:</strong> Traditional rubber bridge scoring</p>
+                <p><strong>5 - Duplicate Bridge:</strong> Tournament-style duplicate scoring</p>
+                
+                <h4>How to Use</h4>
+                <p>1. Select a bridge mode (1-5)</p>
+                <p>2. Set vulnerability with the NV button</p>
+                <p>3. Enter: Level → Suit → Declarer → Result</p>
+                <p>4. Press DEAL for next hand</p>
+                
+                <h4>Controls</h4>
+                <p><strong>Wake:</strong> Keep screen on during play</p>
+                <p><strong>NV/NS/EW/Both:</strong> Set vulnerability</p>
+                <p><strong>X/XX:</strong> Doubles and redoubles</p>
+                <p><strong>Made/Plus/Down:</strong> Contract results</p>
+                
+                <h4>Support</h4>
+                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+            `;
+        }
         
         this.showModal(title, content);
     }
 
-    // Simplified methods to avoid complex template literals
+    // ENHANCED QUIT METHOD WITH LICENSE PURCHASE
     showQuit() {
-        this.showModal('Quit Options', '<p>Choose an option:</p>', [
-            { text: 'Continue', action: 'close' },
-            { text: 'Close App', action: () => this.closeApp() }
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        const isTrialMode = licenseStatus.status === 'trial' || licenseStatus.status === 'expired';
+        
+        let title = 'Options';
+        let content = '<p>What would you like to do?</p>';
+        let buttons = [
+            { text: 'Continue', action: 'close' }
+        ];
+        
+        // Add license purchase option for trial users
+        if (isTrialMode) {
+            title = '🎯 Upgrade Available';
+            content = `
+                <p><strong>Enjoying Bridge Modes Calculator?</strong></p>
+                <p>Upgrade to the full version for:</p>
+                <ul>
+                    <li>✅ Unlimited deals and time</li>
+                    <li>✅ All 5 bridge scoring modes</li>
+                    <li>✅ Advanced scoring features</li>
+                    <li>✅ Lifetime updates</li>
+                </ul>
+                <p><strong>Request a license code from Mike Smith</strong></p>
+            `;
+            
+            buttons = [
+                { text: 'Continue Playing', action: 'close' },
+                { text: 'Request License', action: () => this.showPurchaseInfo() },
+                { text: 'Enter License Code', action: () => this.showLicenseEntry(this.licenseManager.checkLicenseStatus()) },
+                { text: 'Close App', action: () => this.closeApp() }
+            ];
+        } else {
+            // Full version - standard quit menu
+            buttons = [
+                { text: 'Continue', action: 'close' },
+                { text: 'Close App', action: () => this.closeApp() }
+            ];
+        }
+        
+        this.showModal(title, content, buttons);
+    }
+
+    // LICENSE REQUEST INFORMATION
+    showPurchaseInfo() {
+        const content = `
+            <h4>📧 Request Full License</h4>
+            <p><strong>Bridge Modes Calculator - Full Version</strong></p>
+            
+            <h4>What's Included:</h4>
+            <ul>
+                <li>All 5 bridge scoring modes</li>
+                <li>Unlimited deals and playing time</li>
+                <li>Advanced scoring features</li>
+                <li>Detailed score tracking</li>
+                <li>Lifetime updates</li>
+            </ul>
+            
+            <h4>How to Request:</h4>
+            <p>1. Email: <a href="mailto:mike.chris.smith@gmail.com?subject=Bridge%20Modes%20License%20Request">mike.chris.smith@gmail.com</a></p>
+            <p>2. Include "License Request" in subject</p>
+            <p>3. Mike will respond with license details</p>
+            
+            <p><strong>Contact Mike Smith for pricing and availability</strong></p>
+        `;
+        
+        this.showModal('📧 Request License', content, [
+            { text: 'Send Email', action: () => this.openPurchaseEmail() },
+            { text: 'Back', action: () => this.showQuit() },
+            { text: 'Close', action: 'close' }
         ]);
+    }
+
+    // OPEN EMAIL CLIENT FOR LICENSE REQUEST
+    openPurchaseEmail() {
+        const subject = encodeURIComponent('Bridge Modes License Request');
+        const body = encodeURIComponent(`Hi Mike,
+
+I would like to request information about a full license for Bridge Modes Calculator.
+
+Device Info:
+- User Agent: ${navigator.userAgent}
+- Date: ${new Date().toLocaleString()}
+
+Please let me know about pricing and availability.
+
+Thanks!`);
+        
+        const mailtoLink = `mailto:mike.chris.smith@gmail.com?subject=${subject}&body=${body}`;
+        
+        try {
+            window.open(mailtoLink, '_blank');
+        } catch (error) {
+            // Fallback for mobile devices
+            this.showModal('📧 Contact Information', 
+                '<p>Email: <strong>mike.chris.smith@gmail.com</strong></p><p>Subject: <strong>Bridge Modes License Request</strong></p>',
+                [{ text: 'Close', action: 'close' }]
+            );
+        }
     }
 
     async toggleWakeLock() {
@@ -926,5 +1056,5 @@ if (location.hostname === 'localhost' ||
     
     console.log('🛠️ Development mode detected');
     console.log('• forceClearCache() - Clear all caches and reload');
-    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-SCROLL-FIXED"');
+    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-ENHANCED"');
 }
