@@ -1,5 +1,5 @@
 // VERSION CHECK - Updated at 2025-01-31
-console.log('🔍 APP.JS VERSION: 2025-01-31-MODAL-FIXED');
+console.log('🔍 APP.JS VERSION: 2025-01-31-DEBUG-MODAL');
 
 /**
  * Bridge Modes Calculator - Main Application Controller
@@ -9,7 +9,7 @@ console.log('🔍 APP.JS VERSION: 2025-01-31-MODAL-FIXED');
 
 class BridgeApp {
     constructor() {
-        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-MODAL-FIXED');
+        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-DEBUG-MODAL');
         
         this.enteredCode = '';
         this.isLicensed = false;
@@ -676,8 +676,38 @@ class BridgeApp {
         }
     }
 
-    // ENHANCED MODAL METHOD - Fixed for Pixel 9a Touch Issues
+    // MOBILE DEBUG MODAL METHOD - Shows debug info on screen
     showModal(title, content, buttons = null) {
+        // Create mobile debug display
+        let debugDiv = document.getElementById('mobile-modal-debug');
+        if (!debugDiv) {
+            debugDiv = document.createElement('div');
+            debugDiv.id = 'mobile-modal-debug';
+            debugDiv.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                background: rgba(0,0,0,0.8);
+                color: #00ff00;
+                padding: 5px;
+                font-size: 10px;
+                z-index: 99999;
+                border-radius: 4px;
+                max-height: 80px;
+                overflow-y: auto;
+                font-family: monospace;
+            `;
+            document.body.appendChild(debugDiv);
+        }
+        
+        const addDebug = (msg) => {
+            debugDiv.innerHTML += msg + '<br>';
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        };
+        
+        addDebug('🚀 Creating modal: ' + title);
+        
         // Create modal overlay
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -693,99 +723,205 @@ class BridgeApp {
         
         modal.innerHTML = '<div class="modal-content"><h3>' + title + '</h3><div class="modal-body">' + content + '</div><div class="modal-buttons">' + buttonsHTML + '</div></div>';
         
-        // Enhanced event handling with multiple approaches
-        const handleAction = (actionText) => {
-            console.log('🔘 Modal action triggered:', actionText);
+        addDebug('📱 Device: ' + (this.isMobile ? 'Mobile' : 'Desktop'));
+        
+        // Enhanced event handling with debug
+        const handleAction = (actionText, source) => {
+            addDebug('✅ Action: ' + actionText + ' from ' + source);
             const buttonConfig = modalButtons.find(b => b.text === actionText);
             if (buttonConfig && buttonConfig.action && buttonConfig.action !== 'close') {
                 buttonConfig.action();
             }
             modal.remove();
+            // Clear debug after successful action
+            setTimeout(() => {
+                if (debugDiv) debugDiv.innerHTML = '';
+            }, 2000);
         };
         
         // Method 1: Traditional click
         modal.addEventListener('click', (e) => {
-            console.log('🖱️ Modal click detected:', e.target.className);
+            addDebug('🖱️ Click: ' + e.target.tagName + '.' + e.target.className);
             
             if (e.target === modal) {
-                console.log('🖱️ Clicked overlay - closing modal');
+                addDebug('🖱️ Overlay click - closing');
                 modal.remove();
                 return;
             }
             
             const btn = e.target.closest('.modal-btn');
             if (btn) {
-                console.log('🖱️ Modal button clicked:', btn.dataset.action);
-                handleAction(btn.dataset.action);
+                handleAction(btn.dataset.action, 'click');
             }
         });
         
-        // Method 2: Direct button event listeners (bypass event bubbling issues)
+        // Method 2: Direct button listeners
         setTimeout(() => {
             const modalBtns = modal.querySelectorAll('.modal-btn');
-            console.log('🎯 Setting up direct listeners for', modalBtns.length, 'modal buttons');
+            addDebug('🎯 Found ' + modalBtns.length + ' buttons');
             
             modalBtns.forEach((btn, index) => {
-                console.log('🎯 Button', index, ':', btn.textContent, btn.dataset.action);
+                addDebug('🎯 Btn' + index + ': ' + btn.textContent);
                 
-                // Multiple event types for maximum compatibility
-                ['click', 'touchend', 'pointerup'].forEach(eventType => {
-                    btn.addEventListener(eventType, (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🎯 Direct button event:', eventType, btn.dataset.action);
-                        handleAction(btn.dataset.action);
-                    }, { passive: false });
-                });
-                
-                // Visual feedback
+                // Visual feedback for touch
                 btn.addEventListener('touchstart', (e) => {
-                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
-                    btn.style.transform = 'scale(0.98)';
+                    addDebug('👆 TouchStart: ' + btn.textContent);
+                    btn.style.background = 'rgba(255, 0, 0, 0.8)'; // Red to show it's working
+                    btn.style.transform = 'scale(0.95)';
                 }, { passive: true });
                 
-                btn.addEventListener('touchcancel', (e) => {
+                // Main touch handler
+                btn.addEventListener('touchend', (e) => {
+                    addDebug('👆 TouchEnd: ' + btn.textContent);
+                    e.preventDefault();
+                    e.stopPropagation();
                     btn.style.background = '';
                     btn.style.transform = '';
-                }, { passive: true });
+                    setTimeout(() => handleAction(btn.dataset.action, 'touchend'), 100);
+                }, { passive: false });
+                
+                // Backup click handler
+                btn.addEventListener('click', (e) => {
+                    addDebug('🖱️ BtnClick: ' + btn.textContent);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleAction(btn.dataset.action, 'direct-click');
+                }, { passive: false });
             });
-        }, 50);
-        
-        // Method 3: Fallback touch handling for stubborn devices
-        if (this.isMobile) {
-            console.log('📱 Adding mobile-specific touch handlers');
             
+            addDebug('✅ Listeners attached');
+        }, 100);
+        
+        // Method 3: Fallback overlay touch
+        if (this.isMobile) {
             modal.addEventListener('touchend', (e) => {
-                console.log('👆 Modal touchend detected:', e.target.className, e.target.tagName);
-                e.preventDefault();
-                e.stopPropagation();
+                addDebug('👆 Overlay touch: ' + e.target.tagName);
                 
-                const btn = e.target.closest('.modal-btn');
-                if (btn) {
-                    btn.style.background = '';
-                    btn.style.transform = '';
-                    console.log('👆 Touch button found:', btn.dataset.action);
-                    setTimeout(() => handleAction(btn.dataset.action), 50);
-                } else if (e.target === modal) {
-                    console.log('👆 Touch overlay - closing modal');
+                // Only close if touching the overlay itself, not content
+                if (e.target === modal) {
+                    addDebug('👆 Overlay close');
                     modal.remove();
                 }
-            }, { passive: false });
-            
-            // Prevent modal scrolling
-            modal.addEventListener('touchmove', (e) => {
-                e.preventDefault();
             }, { passive: false });
         }
         
         document.body.appendChild(modal);
-        console.log('✅ Enhanced modal created with triple-redundant event handling');
+        addDebug('🎉 Modal ready - try buttons!');
         
-        // Debug logging for modal buttons
+        // Auto-clear debug if no interaction
         setTimeout(() => {
-            const buttons = modal.querySelectorAll('.modal-btn');
-            console.log('🔍 Modal buttons verification:', buttons.length);
-            buttons.forEach((btn, i) => {
-                console.log('🔍 Button', i, '- Text:', btn.textContent, 'Action:', btn.dataset.action);
-            });
-        }, 100);
+            if (debugDiv && debugDiv.innerHTML.includes('Modal ready')) {
+                debugDiv.innerHTML += '<br>⏰ No interaction detected...';
+            }
+        }, 5000);
+    }
+
+    closeModal() {
+        const existingModal = document.querySelector('.modal-overlay');
+        if (existingModal) {
+            existingModal.remove();
+        }
+    }
+
+    // Utility methods for bridge modes
+    getCurrentLicenseStatus() {
+        return this.licenseManager.checkLicenseStatus();
+    }
+
+    getDealsStats() {
+        return this.licenseManager.getDealsStats();
+    }
+
+    // Return to mode selection (used by bridge modes)
+    returnToModeSelection() {
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy?.();
+            this.currentBridgeMode = null;
+        }
+        
+        this.appState = 'licensed_mode';
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        this.showLicensedMode(licenseStatus);
+    }
+
+    // Get current app state (for bridge modes)
+    getAppState() {
+        return {
+            appState: this.appState,
+            isLicensed: this.isLicensed,
+            isMobile: this.isMobile,
+            currentMode: this.currentBridgeMode?.modeName || null
+        };
+    }
+
+    // Deal completion callback
+    onDealCompleted() {
+        const result = this.licenseManager.incrementDealsPlayed();
+        
+        if (result.trialExpired) {
+            this.showMessage('Trial expired! Enter full version code.', 'error');
+            setTimeout(() => {
+                this.showLicenseEntry(result.licenseStatus);
+            }, 2000);
+        }
+    }
+
+    // Cleanup method
+    cleanup() {
+        console.log('🧹 Cleaning up Bridge App');
+        
+        // Release wake lock
+        if (this.wakeLock) {
+            this.wakeLock.release().catch(console.error);
+        }
+        
+        // Clean up bridge mode
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy?.();
+        }
+        
+        // Remove event listeners
+        document.removeEventListener('click', this.handleClick);
+        document.removeEventListener('touchend', this.handleClick);
+        document.removeEventListener('keydown', this.handleKeyboard);
+    }
+}
+
+// Make app globally accessible
+if (typeof window !== 'undefined') {
+    window.BridgeApp = BridgeApp;
+    console.log('✅ BridgeApp class exported to window');
+}
+
+// Development utilities
+if (location.hostname === 'localhost' || 
+    location.hostname === '127.0.0.1' || 
+    location.hostname.includes('github.io')) {
+    
+    window.forceClearCache = async function() {
+        console.log('🧹 Force clearing all caches...');
+        
+        // Clear all caches
+        const cacheNames = await caches.keys();
+        await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+        
+        // Unregister service worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(
+                registrations.map(registration => registration.unregister())
+            );
+        }
+        
+        console.log('✅ All caches cleared and service worker unregistered');
+        console.log('🔄 Reloading page...');
+        
+        setTimeout(() => location.reload(true), 500);
+    };
+    
+    console.log('🛠️ Development mode detected');
+    console.log('• forceClearCache() - Clear all caches and reload');
+    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-DEBUG-MODAL"');
+}
