@@ -1378,65 +1378,98 @@ body.modal-open {
     width: 100%;
     height: 100%;
 }
-/* Add this to your styles.css - Specific fix for score sheet scrolling */
+/* Add this to your styles.css - Specific fix for Pixel 9a score sheet scrolling */
 
-/* Score sheet specific modal styling */
-.modal-content:has(.deals-history),
-.modal-content:has(.scores-summary) {
-    max-height: 90vh !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-}
-
-/* Enhanced mobile score sheet */
+/* Force scrolling for ANY modal content on mobile */
 @media (max-width: 480px) {
-    .modal-content:has(.deals-history),
-    .modal-content:has(.scores-summary) {
-        max-height: 85vh !important;
-        padding: 10px !important;
+    .modal-overlay {
+        align-items: flex-start !important;
+        padding-top: 20px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
     
-    /* Make sure deal summaries are readable */
-    .deals-history {
+    .modal-content {
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-bottom: 20px !important;
+        position: relative !important;
+    }
+    
+    /* Force scrollbars to be visible on mobile */
+    .modal-content::-webkit-scrollbar {
+        width: 8px !important;
+        background: rgba(0, 0, 0, 0.1) !important;
+        border-radius: 4px !important;
+    }
+    
+    .modal-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border-radius: 4px !important;
+    }
+    
+    /* Specific fixes for score sheets and deal histories */
+    .modal-body {
         max-height: 60vh !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
-        padding: 5px;
-        margin: 10px 0;
+        padding: 10px !important;
     }
     
-    /* Style individual deal entries */
-    .deal-entry {
-        border-bottom: 1px solid #eee;
-        padding: 8px 0;
-        font-size: 13px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    /* Make buttons sticky at bottom */
+    .modal-buttons {
+        position: sticky !important;
+        bottom: 0 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        padding: 15px 0 5px 0 !important;
+        margin: 10px -15px -15px -15px !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
     }
     
-    .deal-entry:last-child {
-        border-bottom: none;
-    }
-    
-    /* Ensure vulnerability info is visible */
-    .vulnerability-indicator {
-        font-weight: bold;
-        font-size: 11px;
-        color: #666;
-        margin-left: 5px;
+    /* Make title sticky at top */
+    .modal-content h3 {
+        position: sticky !important;
+        top: 0 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        padding: 15px 0 10px 0 !important;
+        margin: -15px -15px 10px -15px !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+        z-index: 10 !important;
     }
 }
 
-/* Force visible scrollbars on mobile for score sheets */
-@media (max-width: 480px) {
-    .deals-history::-webkit-scrollbar {
-        width: 6px !important;
-        background: rgba(0, 0, 0, 0.1) !important;
+/* Pixel 9a specific targeting */
+@media screen and (max-device-width: 430px) and (-webkit-device-pixel-ratio: 2.625) {
+    .modal-overlay {
+        height: 100vh !important;
+        height: 100svh !important;
     }
     
-    .deals-history::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.4) !important;
-        border-radius: 3px !important;
+    .modal-content {
+        max-height: 75vh !important;
+        max-height: 75svh !important;
+    }
+    
+    .modal-body {
+        max-height: 50vh !important;
+        max-height: 50svh !important;
+    }
+}
+
+/* Alternative: Use system scroll for better compatibility */
+@supports (-webkit-overflow-scrolling: touch) {
+    @media (max-width: 480px) {
+        .modal-content {
+            overflow-y: scroll !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        
+        .modal-body {
+            overflow-y: scroll !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
     }
 }
