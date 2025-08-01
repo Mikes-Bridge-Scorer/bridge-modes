@@ -1378,3 +1378,65 @@ body.modal-open {
     width: 100%;
     height: 100%;
 }
+/* Add this to your styles.css - Specific fix for score sheet scrolling */
+
+/* Score sheet specific modal styling */
+.modal-content:has(.deals-history),
+.modal-content:has(.scores-summary) {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Enhanced mobile score sheet */
+@media (max-width: 480px) {
+    .modal-content:has(.deals-history),
+    .modal-content:has(.scores-summary) {
+        max-height: 85vh !important;
+        padding: 10px !important;
+    }
+    
+    /* Make sure deal summaries are readable */
+    .deals-history {
+        max-height: 60vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 5px;
+        margin: 10px 0;
+    }
+    
+    /* Style individual deal entries */
+    .deal-entry {
+        border-bottom: 1px solid #eee;
+        padding: 8px 0;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .deal-entry:last-child {
+        border-bottom: none;
+    }
+    
+    /* Ensure vulnerability info is visible */
+    .vulnerability-indicator {
+        font-weight: bold;
+        font-size: 11px;
+        color: #666;
+        margin-left: 5px;
+    }
+}
+
+/* Force visible scrollbars on mobile for score sheets */
+@media (max-width: 480px) {
+    .deals-history::-webkit-scrollbar {
+        width: 6px !important;
+        background: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .deals-history::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.4) !important;
+        border-radius: 3px !important;
+    }
+}
