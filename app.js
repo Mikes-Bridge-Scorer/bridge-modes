@@ -1,5 +1,5 @@
 // VERSION CHECK - Updated at 2025-01-31
-console.log('🔍 APP.JS VERSION: 2025-01-31-FIXED');
+console.log('🔍 APP.JS VERSION: 2025-01-31-MODAL-FIXED');
 
 /**
  * Bridge Modes Calculator - Main Application Controller
@@ -9,7 +9,7 @@ console.log('🔍 APP.JS VERSION: 2025-01-31-FIXED');
 
 class BridgeApp {
     constructor() {
-        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-FIXED');
+        console.log('🎮 BridgeApp constructor called - Version 2025-01-31-MODAL-FIXED');
         
         this.enteredCode = '';
         this.isLicensed = false;
@@ -676,6 +676,7 @@ class BridgeApp {
         }
     }
 
+    // ENHANCED MODAL METHOD - Fixed for Pixel 9a Touch Issues
     showModal(title, content, buttons = null) {
         // Create modal overlay
         const modal = document.createElement('div');
@@ -692,132 +693,99 @@ class BridgeApp {
         
         modal.innerHTML = '<div class="modal-content"><h3>' + title + '</h3><div class="modal-body">' + content + '</div><div class="modal-buttons">' + buttonsHTML + '</div></div>';
         
-        // Event handling
+        // Enhanced event handling with multiple approaches
+        const handleAction = (actionText) => {
+            console.log('🔘 Modal action triggered:', actionText);
+            const buttonConfig = modalButtons.find(b => b.text === actionText);
+            if (buttonConfig && buttonConfig.action && buttonConfig.action !== 'close') {
+                buttonConfig.action();
+            }
+            modal.remove();
+        };
+        
+        // Method 1: Traditional click
         modal.addEventListener('click', (e) => {
+            console.log('🖱️ Modal click detected:', e.target.className);
+            
             if (e.target === modal) {
+                console.log('🖱️ Clicked overlay - closing modal');
                 modal.remove();
                 return;
             }
             
             const btn = e.target.closest('.modal-btn');
             if (btn) {
-                const buttonConfig = modalButtons.find(b => b.text === btn.dataset.action);
-                if (buttonConfig && buttonConfig.action && buttonConfig.action !== 'close') {
-                    buttonConfig.action();
-                }
-                modal.remove();
+                console.log('🖱️ Modal button clicked:', btn.dataset.action);
+                handleAction(btn.dataset.action);
             }
         });
         
+        // Method 2: Direct button event listeners (bypass event bubbling issues)
+        setTimeout(() => {
+            const modalBtns = modal.querySelectorAll('.modal-btn');
+            console.log('🎯 Setting up direct listeners for', modalBtns.length, 'modal buttons');
+            
+            modalBtns.forEach((btn, index) => {
+                console.log('🎯 Button', index, ':', btn.textContent, btn.dataset.action);
+                
+                // Multiple event types for maximum compatibility
+                ['click', 'touchend', 'pointerup'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🎯 Direct button event:', eventType, btn.dataset.action);
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
+                
+                // Visual feedback
+                btn.addEventListener('touchstart', (e) => {
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.98)';
+                }, { passive: true });
+                
+                btn.addEventListener('touchcancel', (e) => {
+                    btn.style.background = '';
+                    btn.style.transform = '';
+                }, { passive: true });
+            });
+        }, 50);
+        
+        // Method 3: Fallback touch handling for stubborn devices
+        if (this.isMobile) {
+            console.log('📱 Adding mobile-specific touch handlers');
+            
+            modal.addEventListener('touchend', (e) => {
+                console.log('👆 Modal touchend detected:', e.target.className, e.target.tagName);
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const btn = e.target.closest('.modal-btn');
+                if (btn) {
+                    btn.style.background = '';
+                    btn.style.transform = '';
+                    console.log('👆 Touch button found:', btn.dataset.action);
+                    setTimeout(() => handleAction(btn.dataset.action), 50);
+                } else if (e.target === modal) {
+                    console.log('👆 Touch overlay - closing modal');
+                    modal.remove();
+                }
+            }, { passive: false });
+            
+            // Prevent modal scrolling
+            modal.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+        }
+        
         document.body.appendChild(modal);
-    }
-
-    closeModal() {
-        const existingModal = document.querySelector('.modal-overlay');
-        if (existingModal) {
-            existingModal.remove();
-        }
-    }
-
-    // Utility methods for bridge modes
-    getCurrentLicenseStatus() {
-        return this.licenseManager.checkLicenseStatus();
-    }
-
-    getDealsStats() {
-        return this.licenseManager.getDealsStats();
-    }
-
-    // Return to mode selection (used by bridge modes)
-    returnToModeSelection() {
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.destroy?.();
-            this.currentBridgeMode = null;
-        }
+        console.log('✅ Enhanced modal created with triple-redundant event handling');
         
-        this.appState = 'licensed_mode';
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        this.showLicensedMode(licenseStatus);
-    }
-
-    // Get current app state (for bridge modes)
-    getAppState() {
-        return {
-            appState: this.appState,
-            isLicensed: this.isLicensed,
-            isMobile: this.isMobile,
-            currentMode: this.currentBridgeMode?.modeName || null
-        };
-    }
-
-    // Deal completion callback
-    onDealCompleted() {
-        const result = this.licenseManager.incrementDealsPlayed();
-        
-        if (result.trialExpired) {
-            this.showMessage('Trial expired! Enter full version code.', 'error');
-            setTimeout(() => {
-                this.showLicenseEntry(result.licenseStatus);
-            }, 2000);
-        }
-    }
-
-    // Cleanup method
-    cleanup() {
-        console.log('🧹 Cleaning up Bridge App');
-        
-        // Release wake lock
-        if (this.wakeLock) {
-            this.wakeLock.release().catch(console.error);
-        }
-        
-        // Clean up bridge mode
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.destroy?.();
-        }
-        
-        // Remove event listeners
-        document.removeEventListener('click', this.handleClick);
-        document.removeEventListener('touchend', this.handleClick);
-        document.removeEventListener('keydown', this.handleKeyboard);
-    }
-}
-
-// Make app globally accessible
-if (typeof window !== 'undefined') {
-    window.BridgeApp = BridgeApp;
-    console.log('✅ BridgeApp class exported to window');
-}
-
-// Development utilities
-if (location.hostname === 'localhost' || 
-    location.hostname === '127.0.0.1' || 
-    location.hostname.includes('github.io')) {
-    
-    window.forceClearCache = async function() {
-        console.log('🧹 Force clearing all caches...');
-        
-        // Clear all caches
-        const cacheNames = await caches.keys();
-        await Promise.all(
-            cacheNames.map(cacheName => caches.delete(cacheName))
-        );
-        
-        // Unregister service worker
-        if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(
-                registrations.map(registration => registration.unregister())
-            );
-        }
-        
-        console.log('✅ All caches cleared and service worker unregistered');
-        console.log('🔄 Reloading page...');
-        
-        setTimeout(() => location.reload(true), 500);
-    };
-    
-    console.log('🛠️ Development mode detected');
-    console.log('• forceClearCache() - Clear all caches and reload');
-    console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-FIXED"');
-}
+        // Debug logging for modal buttons
+        setTimeout(() => {
+            const buttons = modal.querySelectorAll('.modal-btn');
+            console.log('🔍 Modal buttons verification:', buttons.length);
+            buttons.forEach((btn, i) => {
+                console.log('🔍 Button', i, '- Text:', btn.textContent, 'Action:', btn.dataset.action);
+            });
+        }, 100);
