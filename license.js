@@ -2,8 +2,7 @@
 
 // SECURITY: Hide console logs in production to prevent license code exposure
 (function() {
-    const isProduction = location.hostname === 'mikes-bridge-scorer.github.io' ||
-                    (location.protocol === 'https:' && !location.hostname.includes('localhost'));
+    const isProduction = location.hostname === 'mikes-bridge-scorer.github.io';
     
     if (isProduction) {
         // Disable console logging in production
