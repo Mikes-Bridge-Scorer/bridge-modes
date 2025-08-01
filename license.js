@@ -1,4 +1,35 @@
-/**
+// Add this IMMEDIATELY at the top of your license.js file, before any other code
+
+// SECURITY: Hide console logs in production to prevent license code exposure
+(function() {
+    const isProduction = location.hostname === 'mikes-bridge-scorer.github.io' ||
+                    (location.protocol === 'https:' && !location.hostname.includes('localhost'));
+    
+    if (isProduction) {
+        // Disable console logging in production
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        const originalInfo = console.info;
+        
+        console.log = function() {};
+        console.warn = function() {};
+        console.info = function() {};
+        // Keep error logging for critical issues
+        console.error = originalError;
+        
+        // Store original functions for internal use if needed
+        window._devConsole = {
+            log: originalLog,
+            warn: originalWarn,
+            error: originalError,
+            info: originalInfo
+        };
+    }
+})();
+
+// Your existing license.js code goes here unchanged
+// The console.log statements will now be hidden in production/**
  * License Manager - Handles license validation and storage
  * Extracted from app.js for better code organization
  */
