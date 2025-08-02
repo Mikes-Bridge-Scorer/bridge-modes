@@ -2,6 +2,7 @@
  * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
  * Updated to work with new modular bridge system
+ * PIXEL 9A SCROLLING FIXES INCLUDED
  */
 
 class KitchenBridgeMode extends BaseBridgeMode {
@@ -626,7 +627,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Show detailed deal-by-deal scores
+     * Show detailed deal-by-deal scores - ENHANCED WITH PIXEL 9A SCROLLING FIXES
      */
     showDetailedScores() {
         const scores = this.gameState.scores;
@@ -636,7 +637,8 @@ class KitchenBridgeMode extends BaseBridgeMode {
             this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
             return;
         }
-        
+
+        // Enhanced content with mobile-optimized structure
         let dealSummary = `
             <div class="scores-summary">
                 <h4>📊 Current Totals</h4>
@@ -647,7 +649,18 @@ class KitchenBridgeMode extends BaseBridgeMode {
             
             <div class="deals-history">
                 <h4>🃏 Deal by Deal Summary</h4>
-                <div style="max-height: 300px; overflow-y: auto; font-size: 12px;">
+                <div class="deal-scroll-container" style="
+                    max-height: 280px; 
+                    overflow-y: auto; 
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    font-size: 12px;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    background: rgba(0,0,0,0.05);
+                    margin: 10px 0;
+                    position: relative;
+                ">
         `;
         
         history.forEach((deal, index) => {
@@ -659,12 +672,30 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 (['N', 'S'].includes(contract.declarer) ? 'EW' : 'NS'));
             
             dealSummary += `
-                <div style="border-bottom: 1px solid #444; padding: 8px 0; display: flex; justify-content: space-between;">
-                    <div>
-                        <strong>Deal ${deal.deal}:</strong> ${contractStr} by ${contract.declarer} = ${contract.result}
+                <div style="
+                    border-bottom: 1px solid #444; 
+                    padding: 12px 8px; 
+                    display: flex; 
+                    justify-content: space-between;
+                    align-items: center;
+                    min-height: 40px;
+                    background: ${index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'};
+                ">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: bold; margin-bottom: 2px;">Deal ${deal.deal}</div>
+                        <div style="font-size: 11px; color: #888;">
+                            ${contractStr} by ${contract.declarer} = ${contract.result}
+                        </div>
                     </div>
-                    <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};">
-                        ${scoreDisplay} for ${scoringSide}
+                    <div style="
+                        color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};
+                        font-weight: bold;
+                        text-align: right;
+                        min-width: 80px;
+                        font-size: 11px;
+                    ">
+                        ${scoreDisplay}<br>
+                        <span style="font-size: 10px;">${scoringSide}</span>
                     </div>
                 </div>
             `;
@@ -673,6 +704,17 @@ class KitchenBridgeMode extends BaseBridgeMode {
         dealSummary += `
                 </div>
             </div>
+            
+            <!-- Force scrolling hints for mobile -->
+            <div style="
+                text-align: center; 
+                font-size: 10px; 
+                color: #666; 
+                margin-top: 10px;
+                display: block;
+            ">
+                📱 Scroll in the box above to see all deals
+            </div>
         `;
         
         const buttons = [
@@ -680,7 +722,117 @@ class KitchenBridgeMode extends BaseBridgeMode {
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
         ];
         
+        // Show modal and then apply additional mobile fixes
         this.bridgeApp.showModal('📊 Kitchen Bridge - Detailed Scores', dealSummary, buttons);
+        
+        // Apply Pixel 9a specific scrolling fixes after modal is shown
+        setTimeout(() => {
+            this.applyPixelScrollingFixes();
+        }, 100);
+    }
+    
+    /**
+     * Apply specific scrolling fixes for Pixel 9a and other problematic devices
+     */
+    applyPixelScrollingFixes() {
+        console.log('🔧 Applying Pixel 9a scrolling fixes...');
+        
+        // Find the modal and scroll container
+        const modal = document.querySelector('.modal-content');
+        const scrollContainer = document.querySelector('.deal-scroll-container');
+        
+        if (modal && scrollContainer) {
+            // Force the modal to be scrollable
+            modal.style.maxHeight = '85vh';
+            modal.style.overflowY = 'auto';
+            modal.style.webkitOverflowScrolling = 'touch';
+            modal.style.position = 'relative';
+            
+            // Enhanced scroll container fixes
+            scrollContainer.style.height = '280px'; // Fixed height instead of max-height
+            scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
+            scrollContainer.style.webkitOverflowScrolling = 'touch';
+            scrollContainer.style.transform = 'translateZ(0)'; // Force hardware acceleration
+            scrollContainer.style.willChange = 'scroll-position';
+            
+            // Add visible scrollbar for mobile
+            const style = document.createElement('style');
+            style.textContent = `
+                .deal-scroll-container::-webkit-scrollbar {
+                    width: 8px !important;
+                    background: rgba(255, 255, 255, 0.1) !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.4) !important;
+                    border-radius: 4px !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.1) !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Test scroll and log results
+            const testScroll = () => {
+                scrollContainer.scrollTop = 50;
+                setTimeout(() => {
+                    console.log(`📱 Scroll test - scrollTop: ${scrollContainer.scrollTop}, scrollHeight: ${scrollContainer.scrollHeight}, clientHeight: ${scrollContainer.clientHeight}`);
+                    if (scrollContainer.scrollTop === 0 && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                        console.warn('⚠️ Scrolling may not be working properly on this device');
+                        // Add a touch scroll hint
+                        scrollContainer.style.border = '2px solid #3498db';
+                        scrollContainer.style.boxShadow = 'inset 0 0 10px rgba(52, 152, 219, 0.3)';
+                        
+                        // Add a visible scroll indicator
+                        const scrollHint = document.createElement('div');
+                        scrollHint.innerHTML = '👆 Touch and drag to scroll';
+                        scrollHint.style.cssText = `
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: rgba(52, 152, 219, 0.8);
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            z-index: 100;
+                            pointer-events: none;
+                        `;
+                        scrollContainer.style.position = 'relative';
+                        scrollContainer.appendChild(scrollHint);
+                    }
+                }, 100);
+            };
+            
+            testScroll();
+            
+            // Add touch event handlers for better mobile scrolling
+            let touchStart = null;
+            
+            scrollContainer.addEventListener('touchstart', (e) => {
+                touchStart = e.touches[0].clientY;
+                console.log('📱 Touch start detected');
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchmove', (e) => {
+                if (touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const deltaY = touchStart - touchY;
+                    scrollContainer.scrollTop += deltaY * 0.5; // Smooth scrolling
+                    touchStart = touchY;
+                    console.log(`📱 Touch scroll: ${scrollContainer.scrollTop}`);
+                }
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchend', () => {
+                touchStart = null;
+                console.log('📱 Touch end');
+            }, { passive: true });
+            
+            console.log('✅ Pixel 9a scrolling fixes applied successfully');
+        } else {
+            console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
+        }
     }
     
     /**
@@ -721,6 +873,10 @@ class KitchenBridgeMode extends BaseBridgeMode {
             type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
         });
     }
+    
+    /**
+     * Get display content for current state
+     */
     getDisplayContent() {
         const scores = this.gameState.scores;
         
@@ -863,4 +1019,4 @@ if (typeof module !== 'undefined' && module.exports) {
     window.KitchenBridgeMode = KitchenBridgeMode;
 }
 
-console.log('🍳 Kitchen Bridge module loaded successfully');
+console.log('🍳 Kitchen Bridge module loaded successfully with Pixel 9a scrolling fixes');
