@@ -213,12 +213,6 @@
             case 'suit_selection':
                 this.inputState = 'level_selection';
                 this.currentContract.level = null;
-                break;
-                
-            default:
-                return '<div class="current-state">Loading...</div>';
-        }
-    }
 }
 
 // Export for the new module system
