@@ -638,7 +638,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             return;
         }
 
-        // Enhanced content with mobile-optimized structure
+        // Enhanced content with mobile-optimized structure and vulnerability info
         let dealSummary = `
             <div class="scores-summary">
                 <h4>📊 Current Totals</h4>
@@ -671,6 +671,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 (['N', 'S'].includes(contract.declarer) ? 'NS' : 'EW') :
                 (['N', 'S'].includes(contract.declarer) ? 'EW' : 'NS'));
             
+            // Add vulnerability display
+            const vulnerability = deal.vulnerability || 'NV';
+            
             dealSummary += `
                 <div style="
                     border-bottom: 1px solid #444; 
@@ -682,7 +685,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
                     background: ${index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'};
                 ">
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: bold; margin-bottom: 2px;">Deal ${deal.deal}</div>
+                        <div style="font-weight: bold; margin-bottom: 2px;">
+                            Deal ${deal.deal} - ${vulnerability}
+                        </div>
                         <div style="font-size: 11px; color: #888;">
                             ${contractStr} by ${contract.declarer} = ${contract.result}
                         </div>
@@ -705,7 +710,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 </div>
             </div>
             
-            <!-- Force scrolling hints for mobile -->
+            <!-- Enhanced mobile scrolling hints -->
             <div style="
                 text-align: center; 
                 font-size: 10px; 
@@ -713,12 +718,13 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 margin-top: 10px;
                 display: block;
             ">
-                📱 Scroll in the box above to see all deals
+                📱 On mobile: Refresh Scroll below if needed
             </div>
         `;
         
         const buttons = [
             { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
+            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
         ];
         
@@ -729,6 +735,36 @@ class KitchenBridgeMode extends BaseBridgeMode {
         setTimeout(() => {
             this.applyPixelScrollingFixes();
         }, 100);
+    }
+    
+    /**
+     * Refresh the score sheet to force scrolling activation on problematic devices
+     */
+    refreshScoreSheet() {
+        console.log('🔄 Refreshing score sheet for better scrolling...');
+        
+        // Simply re-show the detailed scores - this forces DOM refresh
+        this.showDetailedScores();
+        
+        // Add a brief visual indication that refresh happened
+        setTimeout(() => {
+            const container = document.querySelector('.deal-scroll-container');
+            if (container) {
+                // Flash border to indicate refresh
+                container.style.border = '2px solid #27ae60';
+                container.style.transition = 'border-color 0.3s ease';
+                
+                setTimeout(() => {
+                    container.style.border = '1px solid #444';
+                }, 500);
+                
+                // Scroll to bottom and back to top to "wake up" scrolling
+                container.scrollTop = container.scrollHeight;
+                setTimeout(() => {
+                    container.scrollTop = 0;
+                }, 100);
+            }
+        }, 150);
     }
     
     /**
