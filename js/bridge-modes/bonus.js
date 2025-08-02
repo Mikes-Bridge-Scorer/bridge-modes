@@ -1,7 +1,4 @@
-// Calculate distribution points
-        const distributionPoints = (voids * 3) + (singletons * 2) + longSuits;
-        
-        // HCP percentages
+// HCP percentages
         const declarerHCPPercentage = Math.round((totalHCP / 40) * 100);
         const defenderHCPPercentage = 100 - declarerHCPPercentage;
         const hcpAdvantage = Math.abs(declarerHCPPercentage - 50);
@@ -213,16 +210,7 @@
             case 'suit_selection':
                 this.inputState = 'level_selection';
                 this.currentContract.level = null;
-}
-
-// Export for the new module system
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = BonusBridgeMode;
-} else if (typeof window !== 'undefined') {
-    window.BonusBridgeMode = BonusBridgeMode;
-}
-
-console.log('⭐ Bonus Bridge module loaded successfully with enhanced mobile HCP analysis');;
+                break;
             case 'declarer_selection':
                 this.inputState = 'suit_selection';
                 this.currentContract.suit = null;
@@ -742,7 +730,24 @@ console.log('⭐ Bonus Bridge module loaded successfully with enhanced mobile HC
                         <div class="current-state">Press Deal for next hand</div>
                     `;
                 }
-                break/**
+                break;
+                
+            default:
+                return '<div class="current-state">Loading...</div>';
+        }
+    }
+}
+
+}
+
+// Export for the new module system
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = BonusBridgeMode;
+} else if (typeof window !== 'undefined') {
+    window.BonusBridgeMode = BonusBridgeMode;
+}
+
+console.log('⭐ Bonus Bridge module loaded successfully with enhanced mobile HCP analysis');/**
  * Bonus Bridge Mode - HCP-Based Enhanced Scoring System (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
  * Updated to work with new modular bridge system
@@ -1459,4 +1464,8 @@ class BonusBridgeMode extends BaseBridgeMode {
         // Expected HCP for contract type
         const expectedHCP = this.getExpectedHCP(level, suit);
         
-        // Calculate
+        // Calculate distribution points
+        const distributionPoints = (voids * 3) + (singletons * 2) + longSuits;
+        
+        // HCP percentages
+        const declar
