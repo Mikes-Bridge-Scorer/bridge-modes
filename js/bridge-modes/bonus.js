@@ -1237,6 +1237,140 @@ class BonusBridgeMode extends BaseBridgeMode {
                 </div>
             `;
         }
+    
+    /**
+     * Refresh the score sheet to force scrolling activation on problematic devices - PIXEL 9A FIX
+     */
+    refreshScoreSheet() {
+        console.log('🔄 Refreshing score sheet for better scrolling...');
+        
+        // Simply re-show the detailed scores - this forces DOM refresh
+        this.showDetailedScores();
+        
+        // Add a brief visual indication that refresh happened
+        setTimeout(() => {
+            const container = document.querySelector('.deal-scroll-container');
+            if (container) {
+                // Flash border to indicate refresh
+                container.style.border = '2px solid #27ae60';
+                container.style.transition = 'border-color 0.3s ease';
+                
+                setTimeout(() => {
+                    container.style.border = '1px solid #444';
+                }, 500);
+                
+                // Scroll to bottom and back to top to "wake up" scrolling
+                container.scrollTop = container.scrollHeight;
+                setTimeout(() => {
+                    container.scrollTop = 0;
+                }, 100);
+            }
+        }, 150);
+    }
+    
+    /**
+     * Apply specific scrolling fixes for Pixel 9a and other problematic devices - PIXEL 9A FIX
+     */
+    applyPixelScrollingFixes() {
+        console.log('🔧 Applying Pixel 9a scrolling fixes...');
+        
+        // Find the modal and scroll container
+        const modal = document.querySelector('.modal-content');
+        const scrollContainer = document.querySelector('.deal-scroll-container');
+        
+        if (modal && scrollContainer) {
+            // Force the modal to be scrollable
+            modal.style.maxHeight = '85vh';
+            modal.style.overflowY = 'auto';
+            modal.style.webkitOverflowScrolling = 'touch';
+            modal.style.position = 'relative';
+            
+            // Enhanced scroll container fixes
+            scrollContainer.style.height = '280px'; // Fixed height instead of max-height
+            scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
+            scrollContainer.style.webkitOverflowScrolling = 'touch';
+            scrollContainer.style.transform = 'translateZ(0)'; // Force hardware acceleration
+            scrollContainer.style.willChange = 'scroll-position';
+            
+            // Add visible scrollbar for mobile
+            const style = document.createElement('style');
+            style.textContent = `
+                .deal-scroll-container::-webkit-scrollbar {
+                    width: 8px !important;
+                    background: rgba(255, 255, 255, 0.1) !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.4) !important;
+                    border-radius: 4px !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.1) !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Test scroll and log results
+            const testScroll = () => {
+                scrollContainer.scrollTop = 50;
+                setTimeout(() => {
+                    console.log(`📱 Scroll test - scrollTop: ${scrollContainer.scrollTop}, scrollHeight: ${scrollContainer.scrollHeight}, clientHeight: ${scrollContainer.clientHeight}`);
+                    if (scrollContainer.scrollTop === 0 && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                        console.warn('⚠️ Scrolling may not be working properly on this device');
+                        // Add a touch scroll hint
+                        scrollContainer.style.border = '2px solid #3498db';
+                        scrollContainer.style.boxShadow = 'inset 0 0 10px rgba(52, 152, 219, 0.3)';
+                        
+                        // Add a visible scroll indicator
+                        const scrollHint = document.createElement('div');
+                        scrollHint.innerHTML = '👆 Touch and drag to scroll';
+                        scrollHint.style.cssText = `
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: rgba(52, 152, 219, 0.8);
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            z-index: 100;
+                            pointer-events: none;
+                        `;
+                        scrollContainer.style.position = 'relative';
+                        scrollContainer.appendChild(scrollHint);
+                    }
+                }, 100);
+            };
+            
+            testScroll();
+            
+            // Add touch event handlers for better mobile scrolling
+            let touchStart = null;
+            
+            scrollContainer.addEventListener('touchstart', (e) => {
+                touchStart = e.touches[0].clientY;
+                console.log('📱 Touch start detected');
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchmove', (e) => {
+                if (touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const deltaY = touchStart - touchY;
+                    scrollContainer.scrollTop += deltaY * 0.5; // Smooth scrolling
+                    touchStart = touchY;
+                    console.log(`📱 Touch scroll: ${scrollContainer.scrollTop}`);
+                }
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchend', () => {
+                touchStart = null;
+                console.log('📱 Touch end');
+            }, { passive: true });
+            
+            console.log('✅ Pixel 9a scrolling fixes applied successfully');
+        } else {
+            console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
+        }
+    }
         
         let licenseSection = '';
         if (licenseStatus.status === 'trial') {
@@ -1362,16 +1496,23 @@ class BonusBridgeMode extends BaseBridgeMode {
                 margin-top: 10px;
                 display: block;
             ">
-                📱 Enhanced scoring shows raw score, HCP analysis and both-side rewards
+                📱 Enhanced scoring shows raw score, HCP analysis and both-side rewards<br>
+                On mobile: Use Refresh Scroll if needed
             </div>
         `;
         
         const buttons = [
             { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
+            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
         ];
         
         this.bridgeApp.showModal('📊 Bonus Bridge - Detailed Analysis', dealSummary, buttons);
+        
+        // Apply Pixel 9a specific scrolling fixes after modal is shown
+        setTimeout(() => {
+            this.applyPixelScrollingFixes();
+        }, 100);
     }
     
     /**
@@ -1595,4 +1736,4 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 console.log('⭐ Bonus Bridge module loaded successfully with enhanced mobile HCP analysis');
-// END SECTION TEN - FILE COMPLETETE
+// END SECTION TEN - FILE COMPLETE
