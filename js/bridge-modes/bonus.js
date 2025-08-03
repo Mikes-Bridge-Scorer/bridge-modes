@@ -48,15 +48,32 @@ class BonusBridgeMode extends BaseBridgeMode {
 // END SECTION ONE
 // SECTION TWO - Core Methods
     /**
-     * Initialize Bonus Bridge mode
+     * Initialize Bonus Bridge mode with proper vulnerability and dealer rotation
      */
     initialize() {
         console.log('🎯 Starting Bonus Bridge session');
         
-       // Bonus Bridge uses auto-vulnerability like Chicago
-// this.gameState.setMode('bonus'); // Method not available
-// Set vulnerability manually for now
-this.vulnerability = 'NV';
+        // Initialize game state if not already done
+        if (!this.gameState) {
+            this.gameState = this.bridgeApp.gameState || {
+                scores: { NS: 0, EW: 0 },
+                history: [],
+                currentDeal: 1
+            };
+        }
+        
+        // Initialize current deal if not set
+        if (!this.currentDeal) {
+            this.currentDeal = this.gameState.currentDeal || 1;
+        }
+        
+        // Initialize dealer rotation (North=0, East=1, South=2, West=3)
+        if (this.currentDealer === undefined) {
+            this.currentDealer = (this.currentDeal - 1) % 4; // Starts with North (0) for deal 1
+        }
+        
+        // Auto-vulnerability follows Chicago cycle based on deal number
+        this.updateVulnerabilityAndDealer();
         
         // Start with level selection
         this.inputState = 'level_selection';
@@ -64,6 +81,57 @@ this.vulnerability = 'NV';
         this.resetHandAnalysis();
         
         this.updateDisplay();
+        
+        console.log(`🎯 Deal ${this.currentDeal} initialized - Dealer: ${this.getDealerName()}, Vulnerability: ${this.vulnerability}`);
+    }
+    
+    /**
+     * Update vulnerability and dealer based on current deal (Chicago Bridge style)
+     */
+    updateVulnerabilityAndDealer() {
+        // Dealer rotates: North(0), East(1), South(2), West(3)
+        this.currentDealer = (this.currentDeal - 1) % 4;
+        
+        // Vulnerability follows Chicago cycle:
+        // Deal 1: None Vulnerable (NV)
+        // Deal 2: North-South Vulnerable (NS) 
+        // Deal 3: East-West Vulnerable (EW)
+        // Deal 4: Both Vulnerable (Both)
+        const vulnCycle = ['NV', 'NS', 'EW', 'Both'];
+        this.vulnerability = vulnCycle[(this.currentDeal - 1) % 4];
+        
+        console.log(`🔄 Updated - Deal ${this.currentDeal}: Dealer ${this.getDealerName()}, Vulnerability ${this.vulnerability}`);
+    }
+    
+    /**
+     * Get dealer name from dealer number
+     */
+    getDealerName() {
+        const dealers = ['North', 'East', 'South', 'West'];
+        return dealers[this.currentDealer] || 'North';
+    }
+    
+    /**
+     * Get dealer abbreviation
+     */
+    getDealerAbbreviation() {
+        const dealers = ['N', 'E', 'S', 'W'];
+        return dealers[this.currentDealer] || 'N';
+    }
+    
+    /**
+     * Check if a side is vulnerable
+     */
+    isVulnerable(declarer) {
+        if (this.vulnerability === 'NV') return false;
+        if (this.vulnerability === 'Both') return true;
+        
+        const isNS = declarer === 'N' || declarer === 'S';
+        
+        if (this.vulnerability === 'NS') return isNS;
+        if (this.vulnerability === 'EW') return !isNS;
+        
+        return false;
     }
     
     /**
@@ -105,17 +173,24 @@ this.vulnerability = 'NV';
      */
     toggleVulnerability() {
         console.log('🚫 Manual vulnerability control not allowed in Bonus Bridge - uses auto cycle');
-        // Show brief message to user
+        
+        // Show brief message to user about auto-vulnerability
         const vulnText = document.getElementById('vulnText');
         if (vulnText) {
             const originalText = vulnText.textContent;
             vulnText.textContent = 'AUTO';
             vulnText.style.color = '#e67e22';
+            vulnText.style.fontWeight = 'bold';
+            
             setTimeout(() => {
                 vulnText.textContent = originalText;
                 vulnText.style.color = '';
-            }, 1000);
+                vulnText.style.fontWeight = '';
+            }, 1500);
         }
+        
+        // Show informational message
+        this.bridgeApp.showMessage('Bonus Bridge uses automatic vulnerability cycle (Chicago style)', 'info');
     }
 // END SECTION TWO
 // SECTION THREE - Action Handlers
@@ -282,16 +357,20 @@ this.vulnerability = 'NV';
     }
     
     /**
-     * Build HCP Analysis popup content
+     * Build HCP Analysis popup content - FIXED READABILITY
      */
     buildHCPAnalysisContent(contract) {
         const { totalHCP, singletons, voids, longSuits } = this.handAnalysis;
+        const vulnerability = this.vulnerability === 'NV' ? 'Non-Vul' : 
+                             this.vulnerability === 'Both' ? 'Vulnerable' : 
+                             `${this.vulnerability} Vulnerable`;
         
         return `
             <div style="padding: 10px; font-family: Arial, sans-serif;">
-                <div style="text-align: center; margin-bottom: 15px; padding: 10px; background: rgba(52,152,219,0.2); border-radius: 8px;">
-                    <strong style="font-size: 16px; color: white;">${contract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong><br>
-                    <span style="color: white; font-size: 14px; font-weight: bold;">Raw Score: ${this.currentContract.rawScore} points</span>
+                <div style="text-align: center; margin-bottom: 15px; padding: 12px; background: #2c3e50; border-radius: 8px; border: 2px solid #34495e;">
+                    <strong style="font-size: 16px; color: #ffffff; font-weight: bold;">${contract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong><br>
+                    <strong style="font-size: 14px; color: #ecf0f1;">${vulnerability}</strong><br>
+                    <span style="color: #f39c12; font-size: 15px; font-weight: bold;">Raw Score: ${this.currentContract.rawScore} points</span>
                 </div>
                 
                 <div style="background: rgba(255,193,7,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #f39c12;">
@@ -894,16 +973,22 @@ this.vulnerability = 'NV';
 // END SECTION EIGHT
 // SECTION NINE - Game Management
     /**
-     * Move to next deal
+     * Move to next deal with proper vulnerability and dealer rotation
      */
     nextDeal() {
         console.log('🃏 Moving to next deal');
         
         this.currentDeal++;
+        
+        // CRITICAL FIX: Update vulnerability and dealer for new deal
+        this.updateVulnerabilityAndDealer();
+        
         this.resetContract();
         this.resetHandAnalysis();
         this.inputState = 'level_selection';
         this.updateDisplay();
+        
+        console.log(`🎯 Advanced to Deal ${this.currentDeal} - Dealer: ${this.getDealerName()}, Vulnerability: ${this.vulnerability}`);
     }
     
     /**
@@ -1026,11 +1111,24 @@ this.vulnerability = 'NV';
             display.innerHTML = this.getDisplayContent();
         }
         
+        // Update vulnerability display in the UI control
+        this.updateVulnerabilityDisplay();
+        
         // Update button states
         const activeButtons = this.getActiveButtons();
         activeButtons.push('BACK'); // Always allow going back
         
         this.bridgeApp.updateButtonStates(activeButtons);
+    }
+    
+    /**
+     * Update the vulnerability display in the UI control
+     */
+    updateVulnerabilityDisplay() {
+        const vulnText = document.getElementById('vulnText');
+        if (vulnText) {
+            vulnText.textContent = this.vulnerability;
+        }
     }
     
     /**
@@ -1084,6 +1182,17 @@ this.vulnerability = 'NV';
                         <li><strong>Failed Contracts:</strong> Defenders rewarded, declarers get consolation if weak</li>
                         <li><strong>Both Sides Score:</strong> Most deals award points to both partnerships</li>
                         <li><strong>Skill Recognition:</strong> Better performance with weaker hands = more points</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Vulnerability Cycle (Auto)</h4>
+                    <ul>
+                        <li><strong>Deal 1:</strong> None Vulnerable (NV)</li>
+                        <li><strong>Deal 2:</strong> North-South Vulnerable (NS)</li>
+                        <li><strong>Deal 3:</strong> East-West Vulnerable (EW)</li>
+                        <li><strong>Deal 4:</strong> Both Vulnerable (Both)</li>
+                        <li><strong>Cycle repeats...</strong> Deal 5 = NV, Deal 6 = NS, etc.</li>
                     </ul>
                 </div>
             `,
@@ -1160,7 +1269,7 @@ this.vulnerability = 'NV';
     }
     
     /**
-     * Show detailed deal-by-deal scores with Bonus Bridge analysis
+     * Show detailed deal-by-deal scores with Bonus Bridge analysis - FIXED READABILITY
      */
     showDetailedScores() {
         const scores = this.gameState.scores;
@@ -1186,10 +1295,10 @@ this.vulnerability = 'NV';
                     overflow-y: auto; 
                     overflow-x: hidden;
                     -webkit-overflow-scrolling: touch;
-                    font-size: 11px;
+                    font-size: 12px;
                     border: 1px solid #444;
                     border-radius: 4px;
-                    background: rgba(0,0,0,0.05);
+                    background: rgba(255,255,255,0.95);
                     margin: 10px 0;
                     position: relative;
                 ">
@@ -1199,13 +1308,14 @@ this.vulnerability = 'NV';
             const contract = deal.contract;
             const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
             const vulnerability = deal.vulnerability || 'NV';
+            const rawScore = deal.score || contract.rawScore || 0;
             
             let analysisText = '';
             if (deal.bonusAnalysis) {
                 const analysis = deal.bonusAnalysis;
                 analysisText = `
-                    <div style="font-size: 10px; color: #888; margin-top: 2px;">
-                        HCP: ${analysis.totalHCP}/${analysis.expectedHCP} | Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks} | 
+                    <div style="font-size: 11px; color: #444; margin-top: 3px; font-weight: 500;">
+                        Raw: ${rawScore} | HCP: ${analysis.totalHCP}/${analysis.expectedHCP} | Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks} | 
                         ${analysis.madeContract ? 'Made' : 'Failed'}
                     </div>
                 `;
@@ -1213,28 +1323,28 @@ this.vulnerability = 'NV';
             
             dealSummary += `
                 <div style="
-                    border-bottom: 1px solid #444; 
-                    padding: 10px 6px; 
-                    background: ${index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'};
+                    border-bottom: 1px solid #ccc; 
+                    padding: 12px 8px; 
+                    background: ${index % 2 === 0 ? 'rgba(240,240,240,0.8)' : 'rgba(255,255,255,0.9)'};
                 ">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">
+                            <div style="font-weight: bold; margin-bottom: 3px; color: #222; font-size: 13px;">
                                 Deal ${deal.deal} - ${vulnerability}
                             </div>
-                            <div style="font-size: 10px; color: #ccc;">
+                            <div style="font-size: 12px; color: #333; font-weight: 500;">
                                 ${contractStr} by ${contract.declarer} = ${contract.result}
                             </div>
                             ${analysisText}
                         </div>
                         <div style="
                             text-align: right;
-                            min-width: 80px;
-                            font-size: 10px;
+                            min-width: 90px;
+                            font-size: 12px;
                             font-weight: bold;
                         ">
-                            <div style="color: #3498db;">NS: +${deal.bonusAnalysis?.nsPoints || 0}</div>
-                            <div style="color: #e67e22;">EW: +${deal.bonusAnalysis?.ewPoints || 0}</div>
+                            <div style="color: #2980b9; margin-bottom: 2px;">NS: +${deal.bonusAnalysis?.nsPoints || 0}</div>
+                            <div style="color: #d35400;">EW: +${deal.bonusAnalysis?.ewPoints || 0}</div>
                         </div>
                     </div>
                 </div>
@@ -1247,12 +1357,12 @@ this.vulnerability = 'NV';
             
             <div style="
                 text-align: center; 
-                font-size: 10px; 
+                font-size: 11px; 
                 color: #666; 
                 margin-top: 10px;
                 display: block;
             ">
-                📱 Enhanced scoring shows HCP analysis and both-side rewards
+                📱 Enhanced scoring shows raw score, HCP analysis and both-side rewards
             </div>
         `;
         
@@ -1277,7 +1387,9 @@ this.vulnerability = 'NV';
             this.gameState.scores = { NS: 0, EW: 0 };
             this.gameState.history = [];
             this.currentDeal = 1;
-            this.vulnerability = 'NV';
+            
+            // Reset vulnerability and dealer for deal 1
+            this.updateVulnerabilityAndDealer();
             
             // Reset to level selection
             this.resetContract();
@@ -1299,7 +1411,7 @@ this.vulnerability = 'NV';
     }
     
     /**
-     * Get display content for current state
+     * Get display content for current state - FIXED DEALER DISPLAY
      */
     getDisplayContent() {
         const scores = this.gameState.scores;
@@ -1315,7 +1427,7 @@ this.vulnerability = 'NV';
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                         <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                             HCP-based enhanced scoring • Auto vulnerability cycle
                         </div>
@@ -1333,7 +1445,7 @@ this.vulnerability = 'NV';
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                         <div><strong>Level: ${this.currentContract.level}</strong></div>
                         <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                             Raw score calculated after result, then HCP analysis
@@ -1355,7 +1467,7 @@ this.vulnerability = 'NV';
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                         <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                         <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                             Enter result to see raw score before HCP analysis
@@ -1379,7 +1491,7 @@ this.vulnerability = 'NV';
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                         <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                         <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                             Raw score calculated, then HCP analysis popup appears
@@ -1400,7 +1512,7 @@ this.vulnerability = 'NV';
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                         <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                         <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                             After number entry: raw score + HCP analysis popup
@@ -1420,7 +1532,7 @@ this.vulnerability = 'NV';
                         </div>
                     </div>
                     <div class="game-content">
-                        <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
+                        <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                         <div><strong>${analysisContract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong></div>
                         <div style="color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px; background: rgba(52,152,219,0.3); padding: 6px; border-radius: 4px;">
                             Raw Score: ${this.currentContract.rawScore} points
@@ -1437,6 +1549,11 @@ this.vulnerability = 'NV';
                 if (lastEntry && lastEntry.bonusAnalysis) {
                     const contractDisplay = `${lastEntry.contract.level}${lastEntry.contract.suit}${lastEntry.contract.doubled}`;
                     const analysis = lastEntry.bonusAnalysis;
+                    const rawScore = lastEntry.score || lastEntry.contract.rawScore || 0;
+                    const vulnerability = lastEntry.vulnerability || 'NV';
+                    const vulnText = vulnerability === 'NV' ? 'Non-Vul' : 
+                                   vulnerability === 'Both' ? 'Vulnerable' : 
+                                   `${vulnerability} Vulnerable`;
                     
                     return `
                         <div class="title-score-row">
@@ -1448,7 +1565,7 @@ this.vulnerability = 'NV';
                         </div>
                         <div class="game-content">
                             <div><strong>Deal ${lastEntry.deal} completed:</strong><br>
-                            ${contractDisplay} by ${lastEntry.contract.declarer} = ${lastEntry.contract.result}</div>
+                            <strong>${contractDisplay} by ${lastEntry.contract.declarer} ${vulnText} Raw Score: ${rawScore}</strong></div>
                             <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                                 HCP: ${analysis.totalHCP}/${analysis.expectedHCP} | 
                                 Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks}
@@ -1478,7 +1595,4 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 console.log('⭐ Bonus Bridge module loaded successfully with enhanced mobile HCP analysis');
-// END SECTION TEN - FILE COMPLETE
-
-
-
+// END SECTION TEN - FILE COMPLETETE
