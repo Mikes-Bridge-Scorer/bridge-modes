@@ -1237,6 +1237,149 @@ class BonusBridgeMode extends BaseBridgeMode {
                 </div>
             `;
         }
+        
+        let licenseSection = '';
+        if (licenseStatus.status === 'trial') {
+            licenseSection = `
+                <div class="help-section">
+                    <h4>📅 License Status</h4>
+                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
+                </div>
+            `;
+        }
+        
+        const content = `
+            ${currentScoreContent}
+            ${licenseSection}
+            <div class="help-section">
+                <h4>🎮 Game Options</h4>
+                <p>What would you like to do?</p>
+            </div>
+        `;
+        
+        const buttons = [
+            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
+            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
+            { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
+            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
+        ];
+        
+        this.bridgeApp.showModal('⭐ Bonus Bridge Options', content, buttons);
+    }
+    
+    /**
+     * Show detailed deal-by-deal scores with Bonus Bridge analysis - FIXED READABILITY + PIXEL 9A
+     */
+    showDetailedScores() {
+        const scores = this.gameState.scores;
+        const history = this.gameState.history;
+        
+        if (history.length === 0) {
+            this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
+            return;
+        }
+
+        let dealSummary = `
+            <div class="scores-summary">
+                <h4>📊 Current Totals</h4>
+                <p><strong>North-South:</strong> ${scores.NS} points</p>
+                <p><strong>East-West:</strong> ${scores.EW} points</p>
+                <p><strong>Leader:</strong> ${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</p>
+            </div>
+            
+            <div class="deals-history">
+                <h4>🃏 Deal by Deal Analysis</h4>
+                <div class="deal-scroll-container" style="
+                    max-height: 280px; 
+                    overflow-y: auto; 
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    font-size: 12px;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    background: rgba(255,255,255,0.95);
+                    margin: 10px 0;
+                    position: relative;
+                ">
+        `;
+        
+        history.forEach((deal, index) => {
+            const contract = deal.contract;
+            const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
+            const vulnerability = deal.vulnerability || 'NV';
+            const rawScore = deal.score || contract.rawScore || 0;
+            
+            let analysisText = '';
+            if (deal.bonusAnalysis) {
+                const analysis = deal.bonusAnalysis;
+                analysisText = `
+                    <div style="font-size: 11px; color: #444; margin-top: 3px; font-weight: 500;">
+                        Raw: ${rawScore} | HCP: ${analysis.totalHCP}/${analysis.expectedHCP} | Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks} | 
+                        ${analysis.madeContract ? 'Made' : 'Failed'}
+                    </div>
+                `;
+            }
+            
+            dealSummary += `
+                <div style="
+                    border-bottom: 1px solid #ccc; 
+                    padding: 12px 8px; 
+                    background: ${index % 2 === 0 ? 'rgba(240,240,240,0.8)' : 'rgba(255,255,255,0.9)'};
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: bold; margin-bottom: 3px; color: #222; font-size: 13px;">
+                                Deal ${deal.deal} - ${vulnerability}
+                            </div>
+                            <div style="font-size: 12px; color: #333; font-weight: 500;">
+                                ${contractStr} by ${contract.declarer} = ${contract.result}
+                            </div>
+                            ${analysisText}
+                        </div>
+                        <div style="
+                            text-align: right;
+                            min-width: 90px;
+                            font-size: 12px;
+                            font-weight: bold;
+                        ">
+                            <div style="color: #2980b9; margin-bottom: 2px;">NS: +${deal.bonusAnalysis?.nsPoints || 0}</div>
+                            <div style="color: #d35400;">EW: +${deal.bonusAnalysis?.ewPoints || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        dealSummary += `
+                </div>
+            </div>
+            
+            <div style="
+                text-align: center; 
+                font-size: 11px; 
+                color: #666; 
+                margin-top: 10px;
+                display: block;
+            ">
+                📱 Enhanced scoring shows raw score, HCP analysis and both-side rewards<br>
+                On mobile: Use Refresh Scroll if needed
+            </div>
+        `;
+        
+        const buttons = [
+            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
+            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
+            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
+        ];
+        
+        this.bridgeApp.showModal('📊 Bonus Bridge - Detailed Analysis', dealSummary, buttons);
+        
+        // Apply Pixel 9a specific scrolling fixes after modal is shown
+        setTimeout(() => {
+            this.applyPixelScrollingFixes();
+        }, 100);
+    }
     
     /**
      * Refresh the score sheet to force scrolling activation on problematic devices - PIXEL 9A FIX
@@ -1370,149 +1513,6 @@ class BonusBridgeMode extends BaseBridgeMode {
         } else {
             console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
         }
-    }
-        
-        let licenseSection = '';
-        if (licenseStatus.status === 'trial') {
-            licenseSection = `
-                <div class="help-section">
-                    <h4>📅 License Status</h4>
-                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
-                </div>
-            `;
-        }
-        
-        const content = `
-            ${currentScoreContent}
-            ${licenseSection}
-            <div class="help-section">
-                <h4>🎮 Game Options</h4>
-                <p>What would you like to do?</p>
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
-            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
-            { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
-            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
-        ];
-        
-        this.bridgeApp.showModal('⭐ Bonus Bridge Options', content, buttons);
-    }
-    
-    /**
-     * Show detailed deal-by-deal scores with Bonus Bridge analysis - FIXED READABILITY
-     */
-    showDetailedScores() {
-        const scores = this.gameState.scores;
-        const history = this.gameState.history;
-        
-        if (history.length === 0) {
-            this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
-            return;
-        }
-
-        let dealSummary = `
-            <div class="scores-summary">
-                <h4>📊 Current Totals</h4>
-                <p><strong>North-South:</strong> ${scores.NS} points</p>
-                <p><strong>East-West:</strong> ${scores.EW} points</p>
-                <p><strong>Leader:</strong> ${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</p>
-            </div>
-            
-            <div class="deals-history">
-                <h4>🃏 Deal by Deal Analysis</h4>
-                <div class="deal-scroll-container" style="
-                    max-height: 280px; 
-                    overflow-y: auto; 
-                    overflow-x: hidden;
-                    -webkit-overflow-scrolling: touch;
-                    font-size: 12px;
-                    border: 1px solid #444;
-                    border-radius: 4px;
-                    background: rgba(255,255,255,0.95);
-                    margin: 10px 0;
-                    position: relative;
-                ">
-        `;
-        
-        history.forEach((deal, index) => {
-            const contract = deal.contract;
-            const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
-            const vulnerability = deal.vulnerability || 'NV';
-            const rawScore = deal.score || contract.rawScore || 0;
-            
-            let analysisText = '';
-            if (deal.bonusAnalysis) {
-                const analysis = deal.bonusAnalysis;
-                analysisText = `
-                    <div style="font-size: 11px; color: #444; margin-top: 3px; font-weight: 500;">
-                        Raw: ${rawScore} | HCP: ${analysis.totalHCP}/${analysis.expectedHCP} | Tricks: ${analysis.actualTricks}/${analysis.handExpectedTricks} | 
-                        ${analysis.madeContract ? 'Made' : 'Failed'}
-                    </div>
-                `;
-            }
-            
-            dealSummary += `
-                <div style="
-                    border-bottom: 1px solid #ccc; 
-                    padding: 12px 8px; 
-                    background: ${index % 2 === 0 ? 'rgba(240,240,240,0.8)' : 'rgba(255,255,255,0.9)'};
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: bold; margin-bottom: 3px; color: #222; font-size: 13px;">
-                                Deal ${deal.deal} - ${vulnerability}
-                            </div>
-                            <div style="font-size: 12px; color: #333; font-weight: 500;">
-                                ${contractStr} by ${contract.declarer} = ${contract.result}
-                            </div>
-                            ${analysisText}
-                        </div>
-                        <div style="
-                            text-align: right;
-                            min-width: 90px;
-                            font-size: 12px;
-                            font-weight: bold;
-                        ">
-                            <div style="color: #2980b9; margin-bottom: 2px;">NS: +${deal.bonusAnalysis?.nsPoints || 0}</div>
-                            <div style="color: #d35400;">EW: +${deal.bonusAnalysis?.ewPoints || 0}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        dealSummary += `
-                </div>
-            </div>
-            
-            <div style="
-                text-align: center; 
-                font-size: 11px; 
-                color: #666; 
-                margin-top: 10px;
-                display: block;
-            ">
-                📱 Enhanced scoring shows raw score, HCP analysis and both-side rewards<br>
-                On mobile: Use Refresh Scroll if needed
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
-            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
-        ];
-        
-        this.bridgeApp.showModal('📊 Bonus Bridge - Detailed Analysis', dealSummary, buttons);
-        
-        // Apply Pixel 9a specific scrolling fixes after modal is shown
-        setTimeout(() => {
-            this.applyPixelScrollingFixes();
-        }, 100);
     }
     
     /**
