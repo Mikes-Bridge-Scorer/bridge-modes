@@ -53,8 +53,10 @@ class BonusBridgeMode extends BaseBridgeMode {
     initialize() {
         console.log('🎯 Starting Bonus Bridge session');
         
-        // Bonus Bridge uses auto-vulnerability like Chicago
-        this.gameState.setMode('bonus');
+       // Bonus Bridge uses auto-vulnerability like Chicago
+// this.gameState.setMode('bonus'); // Method not available
+// Set vulnerability manually for now
+this.vulnerability = 'NV';
         
         // Start with level selection
         this.inputState = 'level_selection';
