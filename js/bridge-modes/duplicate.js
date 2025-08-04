@@ -554,7 +554,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
     }
 // END SECTION THREE
-// SECTION FOUR - Scoring Logic (COMPLETE MOBILE VERSION)
+// SECTION FOUR - Scoring Logic (FINAL FIXED VERSION)
     /**
      * Open specific traveler for a board
      */
@@ -591,7 +591,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Show specific traveler popup - MOBILE REWRITE
+     * Show specific traveler popup - MOBILE REWRITE WITH SCROLLING FIXES
      */
     showSpecificTravelerPopup() {
         const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
@@ -604,6 +604,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             background: rgba(0,0,0,0.85); z-index: 1000; 
             display: flex; align-items: center; justify-content: center;
             -webkit-overflow-scrolling: touch;
+            overflow: hidden;
         `;
         
         popup.innerHTML = `
@@ -611,23 +612,47 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 background: white; 
                 padding: 15px; 
                 border-radius: 8px; 
-                max-width: 95%; 
-                max-height: 90%; 
-                overflow: auto; 
+                width: 95%; 
+                height: 90%; 
                 color: #2c3e50;
-                -webkit-overflow-scrolling: touch;
+                display: flex;
+                flex-direction: column;
                 min-width: 300px;
+                overflow: hidden;
             ">
-                <div style="text-align: center; margin-bottom: 15px; position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 10px;">
+                <div style="
+                    text-align: center; 
+                    margin-bottom: 15px; 
+                    flex-shrink: 0;
+                    background: white; 
+                    z-index: 10; 
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #ecf0f1;
+                ">
                     <h3 style="margin: 0; color: #2c3e50; font-size: 18px;">📊 Board ${this.traveler.boardNumber}</h3>
                     <div style="color: #e74c3c; font-weight: bold; font-size: 14px;">${vulnDisplay[vulnerability]}</div>
                 </div>
                 
-                <div id="travelerResults">
+                <div id="travelerResults" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                    transform: translateZ(0);
+                    will-change: scroll-position;
+                    overflow-anchor: none;
+                    padding-right: 5px;
+                ">
                     ${this.getMobileTravelerHTML()}
                 </div>
                 
-                <div style="text-align: center; margin-top: 15px; position: sticky; bottom: 0; background: white; padding-top: 10px;">
+                <div style="
+                    text-align: center; 
+                    margin-top: 15px; 
+                    flex-shrink: 0;
+                    background: white; 
+                    padding-top: 15px;
+                    border-top: 2px solid #ecf0f1;
+                ">
                     <button onclick="window.duplicateBridge.saveTravelerData()" style="
                         background: #27ae60; color: white; border: none; 
                         padding: 12px 18px; border-radius: 6px; margin: 5px;
@@ -652,9 +677,130 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         setTimeout(() => {
             this.setupMobileTravelerEvents();
             this.setupMobilePopupButtons();
+            this.applyPixelScrollingFixes();
         }, 100);
         
-        console.log('📊 Mobile traveler popup created');
+        console.log('📊 Mobile traveler popup created with Pixel fixes');
+    }
+    
+    /**
+     * Apply Pixel 9a specific scrolling fixes
+     */
+    applyPixelScrollingFixes() {
+        const scrollContainer = document.getElementById('travelerResults');
+        if (!scrollContainer) return;
+        
+        console.log('🔧 Applying Pixel 9a scrolling fixes to traveler...');
+        
+        // Enhanced scroll container fixes
+        scrollContainer.style.height = '100%';
+        scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
+        scrollContainer.style.webkitOverflowScrolling = 'touch';
+        scrollContainer.style.transform = 'translateZ(0)';
+        scrollContainer.style.willChange = 'scroll-position';
+        scrollContainer.style.overflowAnchor = 'none';
+        
+        // Enhanced scrollbar visibility
+        const scrollbarStyle = document.createElement('style');
+        scrollbarStyle.textContent = `
+            #travelerResults::-webkit-scrollbar {
+                width: 12px !important;
+                background: rgba(255, 255, 255, 0.2) !important;
+            }
+            #travelerResults::-webkit-scrollbar-thumb {
+                background: rgba(52, 152, 219, 0.6) !important;
+                border-radius: 6px !important;
+                border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            }
+            #travelerResults::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.05) !important;
+                border-radius: 6px !important;
+            }
+        `;
+        document.head.appendChild(scrollbarStyle);
+        
+        // Test scrolling and add fallback if needed
+        setTimeout(() => {
+            const testScroll = () => {
+                const initialScrollTop = scrollContainer.scrollTop;
+                scrollContainer.scrollTop = 50;
+                
+                setTimeout(() => {
+                    const newScrollTop = scrollContainer.scrollTop;
+                    console.log(`📱 Scroll test - Initial: ${initialScrollTop}, Set: 50, Actual: ${newScrollTop}`);
+                    
+                    if (newScrollTop === initialScrollTop && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                        console.warn('⚠️ Scrolling not working - applying touch handlers');
+                        this.addTouchScrollHandlers(scrollContainer);
+                    }
+                    
+                    scrollContainer.scrollTop = 0;
+                }, 100);
+            };
+            
+            testScroll();
+        }, 200);
+    }
+    
+    /**
+     * Add manual touch scroll handlers for problematic devices
+     */
+    addTouchScrollHandlers(container) {
+        let touchStartY = null;
+        let isScrolling = false;
+        
+        container.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
+            console.log('📱 Touch scroll start');
+        }, { passive: true });
+        
+        container.addEventListener('touchmove', (e) => {
+            if (touchStartY !== null) {
+                const touchY = e.touches[0].clientY;
+                const deltaY = touchStartY - touchY;
+                
+                if (Math.abs(deltaY) > 5) {
+                    isScrolling = true;
+                    const newScrollTop = container.scrollTop + deltaY * 0.8;
+                    const maxScroll = container.scrollHeight - container.clientHeight;
+                    
+                    container.scrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+                    touchStartY = touchY;
+                }
+            }
+        }, { passive: true });
+        
+        container.addEventListener('touchend', () => {
+            touchStartY = null;
+            isScrolling = false;
+        }, { passive: true });
+        
+        // Add visual indicator
+        const scrollHint = document.createElement('div');
+        scrollHint.innerHTML = '👆 Swipe to scroll';
+        scrollHint.style.cssText = `
+            position: absolute;
+            top: 60px;
+            right: 15px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            z-index: 100;
+            pointer-events: none;
+        `;
+        container.parentElement.style.position = 'relative';
+        container.parentElement.appendChild(scrollHint);
+        
+        setTimeout(() => {
+            scrollHint.style.transition = 'opacity 1s ease';
+            scrollHint.style.opacity = '0';
+            setTimeout(() => scrollHint.remove(), 1000);
+        }, 3000);
+        
+        console.log('✅ Touch scroll handlers added');
     }
     
     /**
@@ -758,7 +904,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                                 ">${row.double || 'None'}</div>
                             </div>
                             <div>
-                                <label style="font-size: 12px; color: #7f8c8d;">Tricks:</label>
+                                <label style="font-size: 12px; color: #7f8c8d;">Result:</label>
                                 <div class="mobile-select" data-field="tricks" data-row="${index}" style="
                                     background: white;
                                     border: 2px solid #bdc3c7;
@@ -771,7 +917,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                                     display: flex;
                                     align-items: center;
                                     justify-content: center;
-                                ">${row.tricks !== '' ? row.tricks : 'Select'}</div>
+                                ">${this.formatTricksDisplay(row)}</div>
                             </div>
                         </div>
                     </div>
@@ -805,6 +951,28 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         });
         
         return html;
+    }
+    
+    /**
+     * Format tricks display based on contract level
+     */
+    formatTricksDisplay(row) {
+        if (!row.level || row.tricks === '') {
+            return 'Select';
+        }
+        
+        const level = parseInt(row.level);
+        const expectedTricks = 6 + level;
+        const actualTricks = parseInt(row.tricks);
+        const difference = actualTricks - expectedTricks;
+        
+        if (difference === 0) {
+            return '= (Made exactly)';
+        } else if (difference > 0) {
+            return `+${difference} (${actualTricks} tricks)`;
+        } else {
+            return `${difference} (${actualTricks} tricks)`;
+        }
     }
     
     /**
@@ -857,10 +1025,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Show mobile field selector popup
+     * Show mobile field selector popup - WITH ENHANCED SCROLLING
      */
     showMobileFieldSelector(field, rowIndex, targetElement) {
-        const options = this.getFieldOptions(field);
+        const options = this.getFieldOptions(field, rowIndex);
         const currentValue = this.traveler.data[rowIndex][field];
         
         const selectorPopup = document.createElement('div');
@@ -869,6 +1037,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.9); z-index: 2000; 
             display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         `;
         
         selectorPopup.innerHTML = `
@@ -876,15 +1045,26 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 background: white; 
                 padding: 20px; 
                 border-radius: 8px; 
-                max-width: 90%; 
+                width: 90%; 
+                height: 80%;
                 color: #2c3e50;
                 min-width: 250px;
-                max-height: 80%;
-                overflow: auto;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             ">
-                <h4 style="margin: 0 0 15px 0; text-align: center;">Select ${field.charAt(0).toUpperCase() + field.slice(1)}</h4>
+                <h4 style="margin: 0 0 15px 0; text-align: center; flex-shrink: 0;">
+                    Select ${field === 'tricks' ? 'Result' : field.charAt(0).toUpperCase() + field.slice(1)}
+                </h4>
                 
-                <div style="max-height: 300px; overflow-y: auto;">
+                <div id="optionsContainer" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                    transform: translateZ(0);
+                    will-change: scroll-position;
+                    padding-right: 5px;
+                ">
                     ${options.map(option => `
                         <div class="option-item" data-value="${option.value}" style="
                             background: ${currentValue === option.value ? '#3498db' : 'rgba(52, 152, 219, 0.1)'};
@@ -906,7 +1086,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     `).join('')}
                 </div>
                 
-                <div style="text-align: center; margin-top: 15px;">
+                <div style="text-align: center; margin-top: 15px; flex-shrink: 0;">
                     <button onclick="this.parentElement.parentElement.remove()" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 10px 20px; border-radius: 6px;
@@ -919,63 +1099,162 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         document.body.appendChild(selectorPopup);
         
-        // Setup option selection
+        // Apply scrolling fixes to options container
         setTimeout(() => {
-            const optionItems = selectorPopup.querySelectorAll('.option-item');
-            optionItems.forEach(item => {
-                const value = item.dataset.value;
-                
-                const optionHandler = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Update data
-                    this.traveler.data[rowIndex][field] = value;
-                    
-                    // Update display
-                    targetElement.textContent = item.textContent;
-                    targetElement.style.background = value ? 'rgba(39, 174, 96, 0.1)' : 'white';
-                    targetElement.style.borderColor = value ? '#27ae60' : '#bdc3c7';
-                    
-                    // Auto-calculate if row is complete
-                    const row = this.traveler.data[rowIndex];
-                    if (row.level && row.suit && row.declarer && row.tricks !== '') {
-                        console.log(`🧮 Auto-calculating score for row ${rowIndex}`);
-                        this.calculateScore(rowIndex);
-                    }
-                    
-                    // Close popup
-                    selectorPopup.remove();
-                    
-                    console.log(`📱 Set ${field} = ${value} for row ${rowIndex}`);
-                };
-                
-                item.addEventListener('click', optionHandler);
-                item.addEventListener('touchend', optionHandler, { passive: false });
-                
-                // Touch feedback
-                item.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    item.style.transform = 'scale(0.95)';
-                    item.style.opacity = '0.8';
-                }, { passive: false });
-                
-                item.addEventListener('touchcancel', () => {
-                    item.style.transform = '';
-                    item.style.opacity = '';
-                }, { passive: true });
-            });
+            this.setupOptionScrolling();
+            this.setupOptionSelection(rowIndex, targetElement);
         }, 100);
     }
     
     /**
-     * Get options for each field
+     * Setup enhanced scrolling for options container
      */
-    getFieldOptions(field) {
+    setupOptionScrolling() {
+        const container = document.getElementById('optionsContainer');
+        if (!container) return;
+        
+        // Apply same fixes as main traveler
+        container.style.overflowY = 'scroll';
+        container.style.webkitOverflowScrolling = 'touch';
+        container.style.transform = 'translateZ(0)';
+        container.style.willChange = 'scroll-position';
+        
+        // Enhanced scrollbar for options
+        const optionScrollStyle = document.createElement('style');
+        optionScrollStyle.textContent = `
+            #optionsContainer::-webkit-scrollbar {
+                width: 8px !important;
+                background: rgba(255, 255, 255, 0.2) !important;
+            }
+            #optionsContainer::-webkit-scrollbar-thumb {
+                background: rgba(52, 152, 219, 0.6) !important;
+                border-radius: 4px !important;
+            }
+        `;
+        document.head.appendChild(optionScrollStyle);
+        
+        // Test and add manual handlers if needed
+        setTimeout(() => {
+            const testScrollTop = container.scrollTop;
+            container.scrollTop = 20;
+            
+            setTimeout(() => {
+                if (container.scrollTop === testScrollTop && container.scrollHeight > container.clientHeight) {
+                    console.log('📱 Adding manual scroll for options');
+                    this.addTouchScrollHandlers(container);
+                }
+                container.scrollTop = 0;
+            }, 50);
+        }, 100);
+    }
+    
+    /**
+     * Setup option selection events - FIXED VERSION
+     */
+    setupOptionSelection(rowIndex, targetElement) {
+        const optionItems = document.querySelectorAll('.option-item');
+        const field = targetElement.dataset.field;
+        
+        console.log(`📱 Setting up option selection for field: ${field}, row: ${rowIndex}`);
+        
+        optionItems.forEach(item => {
+            const value = item.dataset.value;
+            
+            const optionHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log(`📱 Selected ${field} = ${value} for row ${rowIndex}`);
+                
+                // Update data
+                this.traveler.data[rowIndex][field] = value;
+                
+                // Update display based on field type
+                if (field === 'tricks') {
+                    // For tricks, use smart formatting
+                    const row = this.traveler.data[rowIndex];
+                    targetElement.textContent = this.formatTricksDisplay(row);
+                } else {
+                    // For other fields, use the label from the option
+                    targetElement.textContent = this.getDisplayLabel(field, value);
+                }
+                
+                // Update visual state
+                targetElement.style.background = value ? 'rgba(39, 174, 96, 0.1)' : 'white';
+                targetElement.style.borderColor = value ? '#27ae60' : '#bdc3c7';
+                
+                // Auto-calculate if row is complete
+                const row = this.traveler.data[rowIndex];
+                if (row.level && row.suit && row.declarer && row.tricks !== '') {
+                    console.log(`🧮 Auto-calculating score for row ${rowIndex}`);
+                    setTimeout(() => {
+                        this.calculateScore(rowIndex);
+                    }, 100);
+                }
+                
+                // Close popup
+                const popup = document.getElementById('fieldSelectorPopup');
+                if (popup) popup.remove();
+                
+                console.log(`✅ Updated ${field} successfully`);
+            };
+            
+            // Add multiple event types for maximum compatibility
+            item.addEventListener('click', optionHandler);
+            item.addEventListener('touchend', optionHandler, { passive: false });
+            
+            // Touch feedback
+            item.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                item.style.transform = 'scale(0.95)';
+                item.style.opacity = '0.8';
+            }, { passive: false });
+            
+            item.addEventListener('touchcancel', () => {
+                item.style.transform = '';
+                item.style.opacity = '';
+            }, { passive: true });
+            
+            // Reset on touchend
+            item.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    item.style.transform = '';
+                    item.style.opacity = '';
+                }, 100);
+            }, { passive: false });
+        });
+        
+        console.log(`✅ Option selection setup complete for ${optionItems.length} options`);
+    }
+    
+    /**
+     * Get display label for field value
+     */
+    getDisplayLabel(field, value) {
+        if (!value) return 'Select';
+        
+        switch (field) {
+            case 'level':
+                return value;
+            case 'suit':
+                const suitNames = { '♣': '♣', '♦': '♦', '♥': '♥', '♠': '♠', 'NT': 'NT' };
+                return suitNames[value] || value;
+            case 'declarer':
+                return value;
+            case 'double':
+                return value || 'None';
+            default:
+                return value;
+        }
+    }
+    
+    /**
+     * Get options for each field - SMART TRICKS VERSION
+     */
+    getFieldOptions(field, rowIndex) {
         switch (field) {
             case 'level':
                 return [
-                    { value: '', label: 'None' },
                     { value: '1', label: '1' },
                     { value: '2', label: '2' },
                     { value: '3', label: '3' },
@@ -986,7 +1265,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 ];
             case 'suit':
                 return [
-                    { value: '', label: 'None' },
                     { value: '♣', label: '♣ Clubs' },
                     { value: '♦', label: '♦ Diamonds' },
                     { value: '♥', label: '♥ Hearts' },
@@ -995,7 +1273,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 ];
             case 'declarer':
                 return [
-                    { value: '', label: 'None' },
                     { value: 'N', label: 'N (North)' },
                     { value: 'S', label: 'S (South)' },
                     { value: 'E', label: 'E (East)' },
@@ -1008,13 +1285,43 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     { value: 'XX', label: 'XX (Redoubled)' }
                 ];
             case 'tricks':
-                return [
-                    { value: '', label: 'None' },
-                    ...Array.from({length: 14}, (_, i) => ({ value: i.toString(), label: `${i} tricks` }))
-                ];
+                return this.getSmartTricksOptions(rowIndex);
             default:
                 return [];
         }
+    }
+    
+    /**
+     * Get smart tricks options based on contract level
+     */
+    getSmartTricksOptions(rowIndex) {
+        const row = this.traveler.data[rowIndex];
+        const level = parseInt(row.level);
+        
+        if (!level) {
+            return [{ value: '', label: 'Select contract level first' }];
+        }
+        
+        const expectedTricks = 6 + level;
+        const options = [];
+        
+        // Add options from 1 to 13 tricks
+        for (let tricks = 1; tricks <= 13; tricks++) {
+            const difference = tricks - expectedTricks;
+            let label;
+            
+            if (difference === 0) {
+                label = `${tricks} tricks (= Made exactly)`;
+            } else if (difference > 0) {
+                label = `${tricks} tricks (+${difference} overtricks)`;
+            } else {
+                label = `${tricks} tricks (${difference} down)`;
+            }
+            
+            options.push({ value: tricks.toString(), label });
+        }
+        
+        return options;
     }
     
     /**
