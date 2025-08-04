@@ -1,10 +1,26 @@
-import { BaseBridgeMode } from './base-mode.js';
+// SECTION ONE - Header and Constructor
+/**
+ * Rubber Bridge Mode - Classic Bridge with Above/Below Line Scoring (Enhanced)
+ * MOBILE ENHANCED VERSION - Full touch support for all devices
+ * Updated to work with new modular bridge system
+ * 
+ * Rubber Bridge is the classic form of bridge featuring:
+ * - Above/below the line scoring system
+ * - Game completion at 100+ below-line points
+ * - Vulnerability after winning a game
+ * - Rubber completion (best of 3 games)
+ * - Honor bonuses for holding A-K-Q-J-10
+ * - Rubber bonuses: 500 points (2-1) or 700 points (2-0)
+ * 
+ * Enhanced with comprehensive scoring display and mobile optimization.
+ */
 
-class RubberBridge extends BaseBridgeMode {
-    constructor(gameState, ui) {
-        super(gameState, ui);
-        this.modeName = 'rubber';
-        this.displayName = 'Rubber Bridge';
+class RubberBridgeMode extends BaseBridgeMode {
+    constructor(bridgeApp) {
+        super(bridgeApp);
+        
+        this.modeName = 'Rubber Bridge';
+        this.displayName = '🎩 Rubber Bridge';
         
         // Contract state
         this.currentContract = {
@@ -16,14 +32,14 @@ class RubberBridge extends BaseBridgeMode {
         };
         
         this.inputState = 'level_selection';
-        this.resultMode = null;
+        this.resultMode = null; // 'down', 'plus'
         
         // Rubber state with detailed scoring
         this.rubberState = {
             gamesWon: { NS: 0, EW: 0 },
-            belowLineScores: { NS: 0, EW: 0 },
-            aboveLineScores: { NS: 0, EW: 0 },
-            partScores: { NS: 0, EW: 0 }, // Track part-game points
+            belowLineScores: { NS: 0, EW: 0 },     // Contract points (toward game)
+            aboveLineScores: { NS: 0, EW: 0 },     // Bonus points
+            partScores: { NS: 0, EW: 0 },          // Current game progress
             rubberComplete: false,
             rubberWinner: null,
             vulnerability: { NS: false, EW: false },
@@ -32,17 +48,54 @@ class RubberBridge extends BaseBridgeMode {
             lastContractDetails: null
         };
         
-        console.log('🏗️ Enhanced Rubber Bridge initialized');
+        // Mobile detection
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        console.log('🎩 Rubber Bridge mode initialized with enhanced mobile support');
+        
+        // Initialize immediately
+        this.initialize();
     }
-    
+// END SECTION ONE
+
+// SECTION TWO - Core Methods
+    /**
+     * Initialize Rubber Bridge mode
+     */
     initialize() {
-        this.gameState.setMode('rubber');
-        this.resetRubber();
+        console.log('🎯 Starting Rubber Bridge session');
+        
+        // Initialize game state if not already done
+        if (!this.gameState) {
+            this.gameState = this.bridgeApp.gameState || {
+                scores: { NS: 0, EW: 0 },
+                history: [],
+                currentDeal: 1
+            };
+        }
+        
+        // Initialize current deal if not set
+        if (!this.currentDeal) {
+            this.currentDeal = this.gameState.currentDeal || 1;
+        }
+        
+        // Start with level selection
         this.inputState = 'level_selection';
         this.resetContract();
+        
+        // Initialize rubber if needed
+        if (this.rubberState.gamesWon.NS === 0 && this.rubberState.gamesWon.EW === 0) {
+            this.resetRubber();
+        }
+        
         this.updateDisplay();
+        
+        console.log(`🎯 Deal ${this.currentDeal} initialized - Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
     }
     
+    /**
+     * Reset rubber to initial state
+     */
     resetRubber() {
         this.rubberState.gamesWon = { NS: 0, EW: 0 };
         this.rubberState.belowLineScores = { NS: 0, EW: 0 };
@@ -54,23 +107,163 @@ class RubberBridge extends BaseBridgeMode {
         this.rubberState.honorBonusPending = false;
         this.rubberState.lastContractSide = null;
         this.rubberState.lastContractDetails = null;
-        this.gameState.resetScores();
+        
+        // Reset game state scores
+        this.gameState.scores = { NS: 0, EW: 0 };
+        
         console.log('🔄 Rubber reset - starting fresh');
     }
     
-    handleAction(value) {
-        console.log(`🎮 Rubber Bridge action: ${value} in state: ${this.inputState}`);
+    /**
+     * Start a new rubber
+     */
+    startNewRubber() {
+        console.log('🆕 Starting new rubber');
+        this.resetRubber();
+        this.resetContract();
+        this.inputState = 'level_selection';
+        this.updateDisplay();
+    }
+    
+    /**
+     * Get current vulnerability status as string
+     */
+    getCurrentVulnerabilityString() {
+        const nsVuln = this.rubberState.vulnerability.NS;
+        const ewVuln = this.rubberState.vulnerability.EW;
+        if (nsVuln && ewVuln) return 'Both';
+        if (nsVuln) return 'NS';
+        if (ewVuln) return 'EW';
+        return 'None';
+    }
+    
+    /**
+     * Check if a side is vulnerable
+     */
+    isVulnerable(declarer) {
+        const declarerSide = (declarer === 'N' || declarer === 'S') ? 'NS' : 'EW';
+        return this.rubberState.vulnerability[declarerSide];
+    }
+    
+    /**
+     * Check if declarer is vulnerable - used by scoring
+     */
+    isDeclarerVulnerable() {
+        return this.isVulnerable(this.currentContract.declarer);
+    }
+    
+    /**
+     * Get rubber totals (below + above line)
+     */
+    getRubberTotals() {
+        return {
+            NS: this.rubberState.belowLineScores.NS + this.rubberState.aboveLineScores.NS,
+            EW: this.rubberState.belowLineScores.EW + this.rubberState.aboveLineScores.EW
+        };
+    }
+    
+    /**
+     * Update game state scores from rubber totals
+     */
+    updateGameStateScores() {
+        const totals = this.getRubberTotals();
+        this.gameState.scores.NS = totals.NS;
+        this.gameState.scores.EW = totals.EW;
+    }
+    
+    /**
+     * Handle user input - integration with new system - FIXED FOR HONOR BUTTON
+     */
+    handleInput(value) {
+        console.log(`🎮 Rubber Bridge input: ${value} in state: ${this.inputState}`);
         
+        // Handle rubber completion
         if (this.rubberState.rubberComplete && value === 'DEAL') {
             this.startNewRubber();
             return;
         }
         
+        // Handle honor bonus input
         if (this.rubberState.honorBonusPending) {
             this.handleHonorBonusInput(value);
             return;
         }
         
+        // Handle back navigation
+        if (value === 'BACK') {
+            if (this.handleBack()) {
+                return; // Handled internally
+            } else {
+                // Let parent handle (return to mode selection)
+                this.bridgeApp.showLicensedMode({ 
+                    type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+                });
+                return;
+            }
+        }
+        
+        // Handle control buttons
+        if (value === 'HELP') {
+            this.showHelp();
+            return;
+        }
+        
+        if (value === 'QUIT') {
+            this.showQuit();
+            return;
+        }
+        
+        // Handle honors button - FIXED: X button works as honors in scoring state
+        if (value === 'HONORS' || (this.inputState === 'scoring' && value === 'X')) {
+            this.startHonorBonusInput();
+            return;
+        }
+        
+        // Handle other inputs
+        this.handleAction(value);
+    }
+    
+    /**
+     * Vulnerability is controlled by game wins in Rubber Bridge
+     */
+    toggleVulnerability() {
+        console.log('🚫 Manual vulnerability control not allowed in Rubber Bridge - controlled by game wins');
+        
+        // Show brief message to user about rubber vulnerability
+        const vulnText = document.getElementById('vulnText');
+        if (vulnText) {
+            const originalText = vulnText.textContent;
+            vulnText.textContent = 'GAME';
+            vulnText.style.color = '#e74c3c';
+            vulnText.style.fontWeight = 'bold';
+            
+            setTimeout(() => {
+                vulnText.textContent = originalText;
+                vulnText.style.color = '';
+                vulnText.style.fontWeight = '';
+            }, 1500);
+        }
+        
+        // Show informational message
+        this.bridgeApp.showMessage('Rubber Bridge vulnerability is determined by winning games', 'info');
+    }
+    
+    /**
+     * Update the vulnerability display in the UI control
+     */
+    updateVulnerabilityDisplay() {
+        const vulnText = document.getElementById('vulnText');
+        if (vulnText) {
+            vulnText.textContent = this.getCurrentVulnerabilityString();
+        }
+    }
+// END SECTION TWO
+
+// SECTION THREE - Action Handlers
+    /**
+     * Handle user actions with enhanced mobile support
+     */
+    handleAction(value) {
         switch (this.inputState) {
             case 'level_selection':
                 this.handleLevelSelection(value);
@@ -91,35 +284,55 @@ class RubberBridge extends BaseBridgeMode {
                 this.handleScoringActions(value);
                 break;
         }
+        
         this.updateDisplay();
     }
     
+    /**
+     * Handle bid level selection (1-7)
+     */
     handleLevelSelection(value) {
         if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
             this.currentContract.level = parseInt(value);
             this.inputState = 'suit_selection';
+            console.log(`📊 Level selected: ${this.currentContract.level}`);
         }
     }
     
+    /**
+     * Handle suit selection
+     */
     handleSuitSelection(value) {
         if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
             this.currentContract.suit = value;
             this.inputState = 'declarer_selection';
+            console.log(`♠ Suit selected: ${this.currentContract.suit}`);
         }
     }
     
+    /**
+     * Handle declarer selection and doubling
+     */
     handleDeclarerSelection(value) {
         if (['N', 'S', 'E', 'W'].includes(value)) {
             this.currentContract.declarer = value;
-            this.ui.highlightVulnerability(value, this.getCurrentVulnerabilityString());
+            console.log(`👤 Declarer selected: ${this.currentContract.declarer}`);
+            
         } else if (value === 'X') {
             this.handleDoubling();
-        } else if (['MADE', 'PLUS', 'DOWN'].includes(value) && this.currentContract.declarer) {
-            this.inputState = 'result_type_selection';
-            this.handleResultTypeSelection(value);
+        } else if (['MADE', 'PLUS', 'DOWN'].includes(value)) {
+            // Only advance to result if declarer is selected
+            if (this.currentContract.declarer) {
+                this.inputState = 'result_type_selection';
+                this.handleResultTypeSelection(value);
+                return;
+            }
         }
     }
     
+    /**
+     * Handle doubling (X/XX cycling)
+     */
     handleDoubling() {
         if (this.currentContract.doubled === '') {
             this.currentContract.doubled = 'X';
@@ -128,9 +341,13 @@ class RubberBridge extends BaseBridgeMode {
         } else {
             this.currentContract.doubled = '';
         }
-        this.ui.updateDoubleButton(this.currentContract.doubled);
+        
+        console.log(`💥 Double state: ${this.currentContract.doubled || 'None'}`);
     }
     
+    /**
+     * Handle result type selection (Made/Plus/Down)
+     */
     handleResultTypeSelection(value) {
         if (value === 'MADE') {
             this.currentContract.result = '=';
@@ -145,22 +362,33 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
+    /**
+     * Handle result number selection (overtricks/undertricks)
+     */
     handleResultNumberSelection(value) {
         if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
             const num = parseInt(value);
+            
             if (this.resultMode === 'down') {
-                this.currentContract.result = '-' + num;
+                this.currentContract.result = `-${num}`;
             } else if (this.resultMode === 'plus') {
                 const maxOvertricks = 13 - (6 + this.currentContract.level);
                 if (num <= maxOvertricks) {
-                    this.currentContract.result = '+' + num;
+                    this.currentContract.result = `+${num}`;
+                } else {
+                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                    return;
                 }
             }
+            
             this.calculateAndRecordScore();
             this.inputState = 'scoring';
         }
     }
     
+    /**
+     * Handle actions in scoring state
+     */
     handleScoringActions(value) {
         if (value === 'HONORS') {
             this.startHonorBonusInput();
@@ -169,22 +397,36 @@ class RubberBridge extends BaseBridgeMode {
         }
     }
     
+    /**
+     * Start honor bonus input process
+     */
+    startHonorBonusInput() {
+        this.rubberState.honorBonusPending = true;
+        console.log('🏅 Starting honor bonus input');
+        this.updateDisplay();
+    }
+    
+    /**
+     * Handle honor bonus input
+     */
     handleHonorBonusInput(value) {
         console.log(`🏅 Honor bonus input: ${value}`);
         
         if (value === 'BACK') {
             this.rubberState.honorBonusPending = false;
             console.log('❌ No honor bonuses claimed');
-        } else if (value === 'PLUS' || value === 'Plus') {
+        } else if (value === 'PLUS') {
             // 4 honors in suit (100) or 4 aces in NT (150)
             const bonus = this.currentContract.suit === 'NT' ? 150 : 100;
             this.awardHonorBonus(bonus);
             console.log(`✅ Awarded ${bonus} points for 4 honors/aces`);
-        } else if (value === 'DOWN' || value === 'Down') {
+        } else if (value === 'DOWN') {
             // 5 honors (150) - only available in suit contracts
             if (this.currentContract.suit !== 'NT') {
                 this.awardHonorBonus(150);
                 console.log('✅ Awarded 150 points for 5 honors');
+            } else {
+                console.log('❌ 5 honors not available in NT contracts');
             }
         }
         
@@ -192,66 +434,89 @@ class RubberBridge extends BaseBridgeMode {
         this.updateDisplay();
     }
     
-    startHonorBonusInput() {
-        this.rubberState.honorBonusPending = true;
-        console.log('🏅 Starting honor bonus input');
-        this.updateDisplay();
-    }
-    
+    /**
+     * Award honor bonus to the last contract side
+     */
     awardHonorBonus(bonus) {
         if (this.rubberState.lastContractSide && bonus > 0) {
             this.rubberState.aboveLineScores[this.rubberState.lastContractSide] += bonus;
             this.updateGameStateScores();
             console.log(`🏆 ${bonus} honor points awarded to ${this.rubberState.lastContractSide}`);
+            
+            // Add to history for tracking
+            this.gameState.addDeal({
+                deal: this.currentDeal,
+                contract: { level: 0, suit: 'HONOR', declarer: this.rubberState.lastContractSide, doubled: '', result: `+${bonus}` },
+                score: bonus,
+                actualScore: bonus,
+                scoringSide: this.rubberState.lastContractSide,
+                mode: 'rubber',
+                honorBonus: true,
+                rubberScoring: {
+                    belowLine: 0,
+                    aboveLine: bonus,
+                    gameWon: false
+                }
+            });
         }
     }
-    
+// END SECTION THREE
+
+// SECTION FOUR - Rubber Bridge Scoring Logic
+    /**
+     * Calculate and record score using Rubber Bridge rules
+     */
     calculateAndRecordScore() {
         const { level, suit, result, doubled, declarer } = this.currentContract;
         const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
         const declarerSide = (declarer === 'N' || declarer === 'S') ? 'NS' : 'EW';
-        const isVulnerable = this.rubberState.vulnerability[declarerSide];
+        const isVulnerable = this.isDeclarerVulnerable();
         
         let belowLineScore = 0;
         let aboveLineScore = 0;
         let contractMade = false;
         let totalScore = 0;
         
-        console.log(`💰 Calculating score for ${level}${suit}${doubled} by ${declarer} = ${result}, vuln: ${isVulnerable}`);
+        console.log(`💰 Calculating Rubber Bridge score for ${level}${suit}${doubled} by ${declarer} = ${result}, vuln: ${isVulnerable}`);
         
         if (result === '=' || (result && result.startsWith('+'))) {
             contractMade = true;
             
-            // Basic score calculation
+            // Basic score calculation (goes below the line)
             let basicScore = level * suitValues[suit];
-            if (suit === 'NT') basicScore += 10; // First trick bonus
+            if (suit === 'NT') basicScore += 10; // First trick bonus for NT
             
             // Apply doubling to basic score
             belowLineScore = basicScore;
             if (doubled === 'X') belowLineScore *= 2;
             else if (doubled === 'XX') belowLineScore *= 4;
             
-            // Game and part-game bonuses
+            // Game and part-game bonuses (go above the line)
             if (belowLineScore >= 100) {
                 aboveLineScore += isVulnerable ? 500 : 300; // Game bonus
             } else {
                 aboveLineScore += 50; // Part-game bonus
             }
             
-            // Slam bonuses
-            if (level === 6) aboveLineScore += isVulnerable ? 750 : 500; // Small slam
-            else if (level === 7) aboveLineScore += isVulnerable ? 1500 : 1000; // Grand slam
+            // Slam bonuses (go above the line)
+            if (level === 6) {
+                aboveLineScore += isVulnerable ? 750 : 500; // Small slam
+            } else if (level === 7) {
+                aboveLineScore += isVulnerable ? 1500 : 1000; // Grand slam
+            }
             
-            // Double bonuses
+            // Double bonuses (go above the line)
             if (doubled === 'X') aboveLineScore += 50;
             else if (doubled === 'XX') aboveLineScore += 100;
             
-            // Overtricks
+            // Overtricks (go above the line)
             if (result && result.startsWith('+')) {
                 const overtricks = parseInt(result.substring(1));
                 if (doubled === '') {
+                    // Undoubled overtricks at basic rate
                     aboveLineScore += suitValues[suit] * overtricks;
                 } else {
+                    // Doubled overtricks at penalty rates
                     let overtrickValue = overtricks * (isVulnerable ? 200 : 100);
                     if (doubled === 'XX') overtrickValue *= 2;
                     aboveLineScore += overtrickValue;
@@ -263,70 +528,92 @@ class RubberBridge extends BaseBridgeMode {
             // Update rubber state for made contracts
             this.rubberState.partScores[declarerSide] += belowLineScore;
             this.rubberState.aboveLineScores[declarerSide] += aboveLineScore;
+            this.rubberState.belowLineScores[declarerSide] += belowLineScore;
             this.rubberState.lastContractSide = declarerSide;
             
-            // Check for game
+            // Check for game completion
             if (this.rubberState.partScores[declarerSide] >= 100) {
                 this.processGameWon(declarerSide);
             }
             
         } else if (result && result.startsWith('-')) {
-            // Contract failed
+            // Contract failed - penalties go above the line to defending side
             const undertricks = parseInt(result.substring(1));
             const defendingSide = declarerSide === 'NS' ? 'EW' : 'NS';
             
             if (doubled === '') {
+                // Undoubled penalties
                 aboveLineScore = undertricks * (isVulnerable ? 100 : 50);
             } else {
+                // Doubled penalties - complex structure
                 let penalty = 0;
                 for (let i = 1; i <= undertricks; i++) {
-                    if (i === 1) penalty += isVulnerable ? 200 : 100;
-                    else if (i <= 3) penalty += isVulnerable ? 300 : 200;
-                    else penalty += 300;
+                    if (i === 1) {
+                        penalty += isVulnerable ? 200 : 100;
+                    } else if (i <= 3) {
+                        penalty += isVulnerable ? 300 : 200;
+                    } else {
+                        penalty += 300;
+                    }
                 }
                 if (doubled === 'XX') penalty *= 2;
                 aboveLineScore = penalty;
             }
             
-            totalScore = -aboveLineScore;
+            totalScore = -aboveLineScore; // Negative for display purposes
             
             // Update rubber state for failed contracts
             this.rubberState.aboveLineScores[defendingSide] += aboveLineScore;
             this.rubberState.lastContractSide = defendingSide;
         }
         
-        // Store contract details for honor bonuses
+        // Store contract details for display and honor bonuses
         this.rubberState.lastContractDetails = {
             contract: `${level}${suit}${doubled}`,
             declarer: declarer,
             result: result,
             belowLineScore: belowLineScore,
-            aboveLineScore: aboveLineScore,
-            totalScore: totalScore
+            aboveLineScore: contractMade ? aboveLineScore : aboveLineScore,
+            totalScore: totalScore,
+            gameWon: contractMade && this.rubberState.partScores[declarerSide] >= 100
         };
         
+        // Update game state scores
         this.updateGameStateScores();
         
-        // Record in history
-        this.gameState.addToHistory({
-            deal: this.gameState.getDealNumber(),
+        // Record in history with rubber-specific details
+        this.gameState.addDeal({
+            deal: this.currentDeal,
             contract: { ...this.currentContract },
             score: totalScore,
             actualScore: Math.abs(totalScore),
             scoringSide: contractMade ? declarerSide : (declarerSide === 'NS' ? 'EW' : 'NS'),
             mode: 'rubber',
+            vulnerability: this.getCurrentVulnerabilityString(),
             rubberScoring: {
                 belowLine: belowLineScore,
                 aboveLine: contractMade ? aboveLineScore : aboveLineScore,
-                gameWon: this.rubberState.partScores[declarerSide] >= 100
+                gameWon: contractMade && this.rubberState.partScores[declarerSide] >= 100,
+                rubberState: {
+                    gamesWon: { ...this.rubberState.gamesWon },
+                    vulnerability: { ...this.rubberState.vulnerability }
+                }
             }
         });
         
-        console.log(`📊 Score: ${totalScore} (${belowLineScore} below, ${aboveLineScore} above)`);
+        // Increment deals for license tracking
+        this.bridgeApp.licenseManager.incrementDealsPlayed();
+        
+        console.log(`📊 Rubber Bridge Score: ${totalScore} (${belowLineScore} below, ${aboveLineScore} above)`);
     }
     
+    /**
+     * Process game won - key rubber bridge logic
+     */
     processGameWon(winningSide) {
         console.log(`🎯 Game won by ${winningSide}!`);
+        
+        // Increment games won
         this.rubberState.gamesWon[winningSide]++;
         
         // Reset part scores - new game starts
@@ -335,74 +622,131 @@ class RubberBridge extends BaseBridgeMode {
         // Winner becomes vulnerable
         this.rubberState.vulnerability[winningSide] = true;
         
-        // Check for rubber completion
+        // Check for rubber completion (first to 2 games)
         if (this.rubberState.gamesWon[winningSide] === 2) {
             this.processRubberWon(winningSide);
         }
+        
+        console.log(`🏆 Game score now: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
     }
     
+    /**
+     * Process rubber completion
+     */
     processRubberWon(winningSide) {
         console.log(`🏆 RUBBER WON BY ${winningSide}!`);
+        
         this.rubberState.rubberComplete = true;
         this.rubberState.rubberWinner = winningSide;
         
-        // Award rubber bonus
+        // Calculate rubber bonus
         const losingGames = this.rubberState.gamesWon[winningSide === 'NS' ? 'EW' : 'NS'];
         const rubberBonus = losingGames === 0 ? 700 : 500; // 2-0 = 700, 2-1 = 500
         
+        // Award rubber bonus (goes above the line)
         this.rubberState.aboveLineScores[winningSide] += rubberBonus;
         this.updateGameStateScores();
         
-        console.log(`🎊 Rubber bonus: ${rubberBonus} points to ${winningSide}`);
+        // Record rubber bonus in history
+        this.gameState.addDeal({
+            deal: this.currentDeal,
+            contract: { level: 0, suit: 'RUBBER', declarer: winningSide, doubled: '', result: `+${rubberBonus}` },
+            score: rubberBonus,
+            actualScore: rubberBonus,
+            scoringSide: winningSide,
+            mode: 'rubber',
+            rubberBonus: true,
+            rubberScoring: {
+                belowLine: 0,
+                aboveLine: rubberBonus,
+                gameWon: false,
+                rubberComplete: true,
+                rubberWinner: winningSide
+            }
+        });
+        
+        console.log(`🎊 Rubber bonus: ${rubberBonus} points to ${winningSide} (${losingGames === 0 ? '2-0' : '2-1'} rubber)`);
     }
     
-    startNewRubber() {
-        console.log('🆕 Starting new rubber');
-        this.resetRubber();
-        this.resetContract();
-        this.inputState = 'level_selection';
-        this.updateDisplay();
-    }
-    
-    updateGameStateScores() {
-        const totals = this.getRubberTotals();
-        this.gameState.scores.NS = totals.NS;
-        this.gameState.scores.EW = totals.EW;
-    }
-    
-    getRubberTotals() {
+    /**
+     * Get detailed scoring breakdown for display
+     */
+    getScoringBreakdown() {
+        const ns = this.rubberState;
+        const partNS = ns.partScores.NS;
+        const partEW = ns.partScores.EW;
+        const aboveNS = ns.aboveLineScores.NS;
+        const aboveEW = ns.aboveLineScores.EW;
+        const totalNS = partNS + aboveNS;
+        const totalEW = partEW + aboveEW;
+        
         return {
-            NS: this.rubberState.partScores.NS + this.rubberState.aboveLineScores.NS,
-            EW: this.rubberState.partScores.EW + this.rubberState.aboveLineScores.EW
+            partScores: { NS: partNS, EW: partEW },
+            aboveScores: { NS: aboveNS, EW: aboveEW },
+            totals: { NS: totalNS, EW: totalEW },
+            vulnerability: { ...ns.vulnerability },
+            gamesWon: { ...ns.gamesWon }
         };
     }
     
-    getCurrentVulnerabilityString() {
-        const nsVuln = this.rubberState.vulnerability.NS;
-        const ewVuln = this.rubberState.vulnerability.EW;
-        if (nsVuln && ewVuln) return 'Both';
-        if (nsVuln) return 'NS';
-        if (ewVuln) return 'EW';
-        return 'None';
+    /**
+     * Check if current contract would make game
+     */
+    wouldMakeGame() {
+        if (!this.currentContract.level || !this.currentContract.suit) return false;
+        
+        const { level, suit, doubled } = this.currentContract;
+        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        
+        let basicScore = level * suitValues[suit];
+        if (suit === 'NT') basicScore += 10;
+        
+        if (doubled === 'X') basicScore *= 2;
+        else if (doubled === 'XX') basicScore *= 4;
+        
+        return basicScore >= 100;
     }
-    
+// END SECTION FOUR
+// SECTION FIVE - Game Management
+    /**
+     * Move to next deal
+     */
     nextDeal() {
-        this.gameState.nextDeal();
+        console.log('🃏 Moving to next deal in rubber');
+        
+        this.currentDeal++;
         this.resetContract();
         this.inputState = 'level_selection';
-        this.ui.clearVulnerabilityHighlight();
         this.rubberState.honorBonusPending = false;
-    }
-    
-    resetContract() {
-        this.currentContract = { level: null, suit: null, declarer: null, doubled: '', result: null };
-        this.resultMode = null;
-        this.ui.updateDoubleButton('');
-    }
-    
-    handleBack() {
-        if (this.rubberState.rubberComplete) return false;
+        this.updateDisplay();
         
+        console.log(`🎯 Advanced to Deal ${this.currentDeal} - Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
+    }
+    
+    /**
+     * Reset contract to initial state
+     */
+    resetContract() {
+        this.currentContract = {
+            level: null,
+            suit: null,
+            declarer: null,
+            doubled: '',
+            result: null
+        };
+        this.resultMode = null;
+    }
+    
+    /**
+     * Handle back navigation
+     */
+    handleBack() {
+        // Can't go back if rubber is complete
+        if (this.rubberState.rubberComplete) {
+            return false;
+        }
+        
+        // Handle honor bonus pending state
         if (this.rubberState.honorBonusPending) {
             this.rubberState.honorBonusPending = false;
             this.updateDisplay();
@@ -418,98 +762,1974 @@ class RubberBridge extends BaseBridgeMode {
                 this.inputState = 'suit_selection';
                 this.currentContract.suit = null;
                 this.currentContract.doubled = '';
-                this.ui.updateDoubleButton('');
                 break;
             case 'result_type_selection':
                 this.inputState = 'declarer_selection';
                 this.currentContract.declarer = null;
-                this.ui.clearVulnerabilityHighlight();
                 break;
             case 'result_number_selection':
                 this.inputState = 'result_type_selection';
                 this.resultMode = null;
                 break;
             case 'scoring':
+                // Allow going back to result entry (undo scoring)
+                this.undoLastScore();
                 this.inputState = 'result_type_selection';
                 this.currentContract.result = null;
                 break;
             default:
-                return false;
+                return false; // Let app handle return to mode selection
         }
+        
         this.updateDisplay();
         return true;
     }
     
+    /**
+     * Undo the last score entry - complex for rubber bridge
+     */
+    undoLastScore() {
+        const lastEntry = this.gameState.getLastDeal();
+        if (lastEntry && lastEntry.deal === this.currentDeal) {
+            console.log('↩️ Undoing last Rubber Bridge score entry');
+            
+            // Get the rubber scoring details
+            const rubberScoring = lastEntry.rubberScoring;
+            if (rubberScoring) {
+                const scoringSide = lastEntry.scoringSide;
+                
+                // Undo below-line score
+                if (rubberScoring.belowLine > 0) {
+                    this.rubberState.belowLineScores[scoringSide] -= rubberScoring.belowLine;
+                    this.rubberState.partScores[scoringSide] -= rubberScoring.belowLine;
+                }
+                
+                // Undo above-line score
+                if (rubberScoring.aboveLine > 0) {
+                    this.rubberState.aboveLineScores[scoringSide] -= rubberScoring.aboveLine;
+                }
+                
+                // Undo game win if it happened
+                if (rubberScoring.gameWon) {
+                    this.rubberState.gamesWon[scoringSide]--;
+                    this.rubberState.vulnerability[scoringSide] = false;
+                    
+                    // Restore part scores from before the game was won
+                    // This is complex - for now, just reset to 0
+                    this.rubberState.partScores = { NS: 0, EW: 0 };
+                }
+                
+                // Undo rubber completion if it happened
+                if (rubberScoring.rubberComplete) {
+                    this.rubberState.rubberComplete = false;
+                    this.rubberState.rubberWinner = null;
+                }
+            }
+            
+            // Update game state scores
+            this.updateGameStateScores();
+            
+            // Remove from history
+            this.gameState.history.pop();
+            
+            console.log(`↩️ Undid rubber score - Games now: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
+        }
+    }
+    
+    /**
+     * Get active buttons for current state - FIXED FOR HONOR BUTTON
+     */
     getActiveButtons() {
+        // Rubber complete - only allow new rubber
         if (this.rubberState.rubberComplete) {
             return ['DEAL'];
         }
         
+        // Honor bonus input
         if (this.rubberState.honorBonusPending) {
-            const buttons = ['BACK'];
+            const honorButtons = ['BACK'];
             if (this.currentContract.suit !== 'NT') {
-                buttons.push('PLUS', 'DOWN'); // Try uppercase to match UI buttons
+                honorButtons.push('PLUS', 'DOWN'); // 4 honors (100) or 5 honors (150)
             } else {
-                buttons.push('PLUS'); // 4 aces only
+                honorButtons.push('PLUS'); // 4 aces only (150)
             }
-            console.log('🏅 Honor buttons active:', buttons);
-            return buttons;
+            return honorButtons;
         }
         
         switch (this.inputState) {
             case 'level_selection':
                 return ['1', '2', '3', '4', '5', '6', '7'];
+                
             case 'suit_selection':
                 return ['♣', '♦', '♥', '♠', 'NT'];
+                
             case 'declarer_selection':
-                const buttons = ['N', 'S', 'E', 'W', 'X'];
+                const declarerButtons = ['N', 'S', 'E', 'W', 'X'];
                 if (this.currentContract.declarer) {
-                    buttons.push('MADE', 'PLUS', 'DOWN');
+                    declarerButtons.push('MADE', 'PLUS', 'DOWN');
                 }
-                return buttons;
+                return declarerButtons;
+                
             case 'result_type_selection':
                 return ['MADE', 'PLUS', 'DOWN'];
+                
             case 'result_number_selection':
                 if (this.resultMode === 'down') {
                     return ['1', '2', '3', '4', '5', '6', '7'];
                 } else if (this.resultMode === 'plus') {
-                    const maxOvertricks = 13 - (6 + this.currentContract.level);
-                    const buttons = [];
+                    const maxOvertricks = Math.min(6, 13 - (6 + this.currentContract.level));
+                    const overtrickButtons = [];
                     for (let i = 1; i <= maxOvertricks; i++) {
-                        buttons.push(i.toString());
+                        overtrickButtons.push(i.toString());
                     }
-                    return buttons;
+                    return overtrickButtons;
                 }
                 break;
+                
             case 'scoring':
-                return ['DEAL'];
+                const scoringButtons = ['DEAL'];
+                // FIXED: Use X button for honors instead of 'HONORS'
+                if (!this.rubberState.rubberComplete && !this.rubberState.honorBonusPending) {
+                    scoringButtons.push('X');
+                }
+                return scoringButtons;
+                
+            default:
+                return [];
         }
-        return [];
     }
     
+    /**
+     * Update the display using new system
+     */
     updateDisplay() {
-        const content = this.getDisplayContent();
-        this.ui.updateDisplay(content);
-        this.ui.updateButtonStates(this.getActiveButtons());
-        this.ui.updateVulnerabilityDisplay(this.getCurrentVulnerabilityString());
+        const display = document.getElementById('display');
+        if (display) {
+            display.innerHTML = this.getDisplayContent();
+        }
         
-        // Show/hide honors button
-        if (this.inputState === 'scoring' && !this.rubberState.honorBonusPending && !this.rubberState.rubberComplete) {
-            this.ui.showHonorsButton();
+        // Update vulnerability display in the UI control
+        this.updateVulnerabilityDisplay();
+        
+        // Update button states
+        const activeButtons = this.getActiveButtons();
+        activeButtons.push('BACK'); // Always allow going back (when possible)
+        
+        this.bridgeApp.updateButtonStates(activeButtons);
+    }
+    
+    /**
+     * Check if back navigation is possible
+     */
+    canGoBack() {
+        return !this.rubberState.rubberComplete;
+    }
+    
+    /**
+     * Get rubber status summary
+     */
+    getRubberStatus() {
+        return {
+            gamesWon: { ...this.rubberState.gamesWon },
+            vulnerability: { ...this.rubberState.vulnerability },
+            partScores: { ...this.rubberState.partScores },
+            rubberComplete: this.rubberState.rubberComplete,
+            rubberWinner: this.rubberState.rubberWinner,
+            dealsPlayed: this.gameState.history.filter(deal => deal.mode === 'rubber').length
+        };
+    }
+    
+    /**
+     * Check if we're at a natural break point
+     */
+    isAtBreakPoint() {
+        // Rubber completion is always a break point
+        if (this.rubberState.rubberComplete) {
+            return { isBreak: true, reason: 'Rubber Complete', severity: 'major' };
+        }
+        
+        // Game completion is a minor break point
+        const totalGames = this.rubberState.gamesWon.NS + this.rubberState.gamesWon.EW;
+        if (totalGames > 0) {
+            return { isBreak: true, reason: 'Game Complete', severity: 'minor' };
+        }
+        
+        return { isBreak: false, reason: null, severity: null };
+    }
+    
+    /**
+     * Validate rubber state consistency
+     */
+    validateRubberState() {
+        const issues = [];
+        
+        // Check games won doesn't exceed 2
+        if (this.rubberState.gamesWon.NS > 2 || this.rubberState.gamesWon.EW > 2) {
+            issues.push('Games won exceeds maximum of 2');
+        }
+        
+        // Check rubber completion logic
+        const totalGames = Math.max(this.rubberState.gamesWon.NS, this.rubberState.gamesWon.EW);
+        if (totalGames >= 2 && !this.rubberState.rubberComplete) {
+            issues.push('Rubber should be complete but is not marked as such');
+        }
+        
+        // Check vulnerability logic
+        if (this.rubberState.gamesWon.NS === 0 && this.rubberState.vulnerability.NS) {
+            issues.push('NS is vulnerable but has won no games');
+        }
+        if (this.rubberState.gamesWon.EW === 0 && this.rubberState.vulnerability.EW) {
+            issues.push('EW is vulnerable but has won no games');
+        }
+        
+        // Check part scores
+        if (this.rubberState.partScores.NS >= 100 || this.rubberState.partScores.EW >= 100) {
+            issues.push('Part scores >= 100 should have triggered game completion');
+        }
+        
+        if (issues.length > 0) {
+            console.warn('🚨 Rubber Bridge state validation issues:', issues);
+            return { valid: false, issues };
+        }
+        
+        console.log('✅ Rubber Bridge state validation passed');
+        return { valid: true, issues: [] };
+    }
+// END SECTION FIVE
+// SECTION SIX - Help and Quit Methods
+    /**
+     * Get help content specific to Rubber Bridge
+     */
+    getHelpContent() {
+        return {
+            title: 'Rubber Bridge (Classic) Help',
+            content: `
+                <div class="help-section">
+                    <h4>🎩 What is Rubber Bridge?</h4>
+                    <p><strong>Rubber Bridge</strong> is the classic form of bridge featuring the famous "above and below the line" scoring system. It's the original way bridge was played before duplicate and other variants were invented.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📊 Above/Below the Line Scoring</h4>
+                    <p><strong>Below the Line (Game Points):</strong></p>
+                    <ul>
+                        <li>Only basic contract points count here</li>
+                        <li>♣/♦: 20 points per trick • ♥/♠: 30 points per trick • NT: 30 + 10 bonus</li>
+                        <li><strong>Game = 100+ below-the-line points</strong></li>
+                        <li>Can accumulate over multiple deals</li>
+                    </ul>
+                    
+                    <p><strong>Above the Line (Bonus Points):</strong></p>
+                    <ul>
+                        <li>Game bonuses, slam bonuses, doubled bonuses, honors, penalties</li>
+                        <li>Add to your total score but don't count toward making game</li>
+                        <li>All overtricks, bonuses, and penalties go here</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🎯 Game & Rubber Rules</h4>
+                    <ul>
+                        <li><strong>Making Game:</strong> Accumulate 100+ below-the-line points</li>
+                        <li><strong>Game Examples:</strong> 3NT (100), 4♥/♠ (120), 5♣/♦ (100)</li>
+                        <li><strong>Part-Score Building:</strong> 2♣ (40) + 3♦ (60) = Game!</li>
+                        <li><strong>After Game:</strong> Part-scores reset, winner becomes vulnerable</li>
+                        <li><strong>Rubber:</strong> First side to win 2 games wins the rubber</li>
+                        <li><strong>Rubber Bonus:</strong> 700 points (2-0) or 500 points (2-1)</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🏅 Honor Bonuses (Detailed)</h4>
+                    <p><strong>What are honors?</strong> The top 5 cards of trump suit: A, K, Q, J, 10</p>
+                    
+                    <p><strong>Honor Scoring:</strong></p>
+                    <ul>
+                        <li><strong>4 Honors in trump:</strong> 100 points (any 4 of A-K-Q-J-10)</li>
+                        <li><strong>5 Honors in trump:</strong> 150 points (all A-K-Q-J-10)</li>
+                        <li><strong>4 Aces in NT:</strong> 150 points (all four aces)</li>
+                    </ul>
+                    
+                    <p><strong>Important:</strong> Honor bonuses go to whichever side (declarer + dummy) holds the honors, regardless of whether the contract made or failed. Click the <strong>Honors</strong> button after each deal to claim any bonuses.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📈 Scoring Examples</h4>
+                    <p><strong>Example 1 - Making Game:</strong></p>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                        4♥ by N = Made exactly (not vulnerable)<br>
+                        • Below line: 4 × 30 = <strong>120 points</strong> → GAME!<br>
+                        • Above line: 300 (game bonus)<br>
+                        • Total: 420 points to NS<br>
+                        • Result: NS wins first game, becomes vulnerable
+                    </div>
+                    
+                    <p><strong>Example 2 - Part-Score Building:</strong></p>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                        Deal 1: 2♣ by S = Made exactly<br>
+                        • Below line: 40 points (toward game)<br>
+                        • Above line: 50 (part-game bonus)<br>
+                        <br>
+                        Deal 2: 2♠ by N = Made exactly<br>
+                        • Below line: 60 points (40 + 60 = 100) → GAME!<br>
+                        • Above line: 300 (game bonus)<br>
+                        • Result: NS wins game from accumulated part-scores
+                    </div>
+                    
+                    <p><strong>Example 3 - With Honors:</strong></p>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                        3NT by E = Made +1 + 4 Aces<br>
+                        • Below line: 100 points → GAME!<br>
+                        • Above line: 300 (game) + 30 (overtrick) + 150 (4 aces)<br>
+                        • Total: 580 points to EW<br>
+                        • Result: EW wins game, becomes vulnerable
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🔴🟢 Vulnerability System</h4>
+                    <ul>
+                        <li><strong>🟢 Green:</strong> Not vulnerable (haven't won a game yet)</li>
+                        <li><strong>🔴 Red:</strong> Vulnerable (won at least one game)</li>
+                        <li><strong>Effects:</strong> Higher game bonuses (+500 vs +300) and penalties</li>
+                        <li><strong>Slam Bonuses:</strong> Also increased when vulnerable</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🎮 How to Play</h4>
+                    <ol>
+                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer</li>
+                        <li><strong>Doubling:</strong> Use X button for doubles/redoubles</li>
+                        <li><strong>Enter Result:</strong> Made/Plus/Down</li>
+                        <li><strong>Claim Honors:</strong> Click Honors button if you held 4+ honors</li>
+                        <li><strong>Continue:</strong> Deal continues until rubber is complete</li>
+                        <li><strong>New Rubber:</strong> Start fresh when rubber ends</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📱 Display Guide</h4>
+                    <ul>
+                        <li><strong>Games Won:</strong> Shown as "Games: 1-0" in top right</li>
+                        <li><strong>Game Points:</strong> Red numbers (below-line, count toward game)</li>
+                        <li><strong>Bonus Points:</strong> Blue numbers (above-line, bonuses only)</li>
+                        <li><strong>Total:</strong> Green numbers (final score)</li>
+                        <li><strong>Vulnerability:</strong> 🔴/🟢 indicators show vulnerability status</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🏆 Rubber Completion</h4>
+                    <p>When a side wins 2 games:</p>
+                    <ul>
+                        <li><strong>2-0 Rubber:</strong> +700 bonus to winner</li>
+                        <li><strong>2-1 Rubber:</strong> +500 bonus to winner</li>
+                        <li><strong>Final Score:</strong> Sum of all above and below line points</li>
+                        <li><strong>New Rubber:</strong> Everything resets for fresh start</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>💡 Strategy Tips</h4>
+                    <ul>
+                        <li><strong>Part-Score Pressure:</strong> When opponents have part-score, bid aggressively</li>
+                        <li><strong>Vulnerability Awareness:</strong> Take more risks when not vulnerable</li>
+                        <li><strong>Game Timing:</strong> Sometimes better to make 3NT than build part-scores</li>
+                        <li><strong>Honor Cards:</strong> Don't forget to claim honor bonuses!</li>
+                    </ul>
+                </div>
+            `,
+            modalButtons: [
+                { text: 'Close Help', action: 'close', class: 'close-btn' }
+            ]
+        };
+    }
+    
+    /**
+     * Show Rubber Bridge specific help
+     */
+    showHelp() {
+        const helpContent = this.getHelpContent();
+        this.bridgeApp.showModal(helpContent.title, helpContent.content);
+    }
+    
+    /**
+     * Show Rubber Bridge specific quit options
+     */
+    showQuit() {
+        const scores = this.gameState.scores;
+        const totalDeals = this.gameState.history.filter(deal => deal.mode === 'rubber' && !deal.honorBonus && !deal.rubberBonus).length;
+        const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        let currentScoreContent = '';
+        if (totalDeals > 0) {
+            const leader = scores.NS > scores.EW ? 'North-South' : 
+                          scores.EW > scores.NS ? 'East-West' : 'Tied';
+            
+            currentScoreContent = `
+                <div class="help-section">
+                    <h4>📊 Current Rubber Status</h4>
+                    <p><strong>Games Won:</strong> NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}</p>
+                    <p><strong>Vulnerability:</strong> ${rubberStatus.vulnerability.NS ? 'NS 🔴' : 'NS 🟢'} | ${rubberStatus.vulnerability.EW ? 'EW 🔴' : 'EW 🟢'}</p>
+                    <p><strong>Deals Played:</strong> ${totalDeals}</p>
+                    
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 8px 0;">
+                        <p><strong>Score Breakdown:</strong></p>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <div>
+                                <strong>NS:</strong><br>
+                                Game: ${breakdown.partScores.NS}<br>
+                                Bonus: ${breakdown.aboveScores.NS}<br>
+                                <strong>Total: ${breakdown.totals.NS}</strong>
+                            </div>
+                            <div>
+                                <strong>EW:</strong><br>
+                                Game: ${breakdown.partScores.EW}<br>
+                                Bonus: ${breakdown.aboveScores.EW}<br>
+                                <strong>Total: ${breakdown.totals.EW}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${rubberStatus.rubberComplete ? 
+                        `<p style="color: #f39c12;"><strong>🏆 Rubber Complete!</strong> Winner: ${rubberStatus.rubberWinner}</p>` : 
+                        `<p><strong>Current Leader:</strong> ${leader}</p>`
+                    }
+                </div>
+            `;
+        }
+        
+        let licenseSection = '';
+        if (licenseStatus.status === 'trial') {
+            licenseSection = `
+                <div class="help-section">
+                    <h4>📅 License Status</h4>
+                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
+                </div>
+            `;
+        }
+        
+        const content = `
+            ${currentScoreContent}
+            ${licenseSection}
+            <div class="help-section">
+                <h4>🎮 Game Options</h4>
+                <p>What would you like to do?</p>
+            </div>
+        `;
+        
+        const modalButtons = [
+            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
+            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
+            { text: 'New Rubber', action: () => this.confirmNewRubber(), class: 'new-game-btn' },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
+            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
+        ];
+        
+        this.bridgeApp.showModal('🎩 Rubber Bridge Options', content, modalButtons);
+    }
+    
+    /**
+     * Confirm starting a new rubber
+     */
+    confirmNewRubber() {
+        const rubberStatus = this.getRubberStatus();
+        
+        if (rubberStatus.rubberComplete) {
+            // Rubber is complete, just start new one
+            this.startNewRubber();
         } else {
-            this.ui.hideHonorsButton();
+            // Rubber in progress, confirm
+            const confirmed = confirm(
+                `Start a new rubber?\n\nCurrent rubber in progress:\nGames: NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}\n\nThis will reset all scores and start over.\n\nClick OK to start new rubber, Cancel to continue current rubber.`
+            );
+            
+            if (confirmed) {
+                this.startNewRubber();
+            }
         }
     }
     
+    /**
+     * Start a new game (reset scores and rubber state)
+     */
+    startNewGame() {
+        const rubberStatus = this.getRubberStatus();
+        
+        let confirmMessage = 'Start a new rubber?\n\n';
+        if (rubberStatus.rubberComplete) {
+            confirmMessage += 'Current rubber is complete.\n\n';
+        } else {
+            confirmMessage += `Current rubber in progress:\nGames: NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}\nDeals played: ${rubberStatus.dealsPlayed}\n\n`;
+        }
+        confirmMessage += 'This will reset all scores and start fresh.\n\nClick OK to start new rubber, Cancel to continue.';
+        
+        const confirmed = confirm(confirmMessage);
+        
+        if (confirmed) {
+            this.startNewRubber();
+            console.log('🆕 New Rubber Bridge game started');
+        }
+    }
+    
+    /**
+     * Return to main menu
+     */
+    returnToMainMenu() {
+        this.bridgeApp.showLicensedMode({ 
+            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+        });
+    }
+    
+    /**
+     * Get current deal information string
+     */
+    getDealInfo() {
+        const vulnerability = this.getCurrentVulnerabilityString();
+        return `Deal ${this.currentDeal} - ${vulnerability}`;
+    }
+    
+    /**
+     * Get rubber progress summary
+     */
+    getRubberProgressSummary() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        return {
+            gamesWon: rubberStatus.gamesWon,
+            vulnerability: rubberStatus.vulnerability,
+            partScores: breakdown.partScores,
+            totals: breakdown.totals,
+            isComplete: rubberStatus.rubberComplete,
+            winner: rubberStatus.rubberWinner,
+            dealsPlayed: rubberStatus.dealsPlayed
+        };
+    }
+    
+    /**
+     * Check if rubber is at a natural break point
+     */
+    isAtRubberBreak() {
+        const rubberStatus = this.getRubberStatus();
+        
+        if (rubberStatus.rubberComplete) {
+            return { 
+                isBreak: true, 
+                reason: `Rubber Complete - ${rubberStatus.rubberWinner} wins`, 
+                severity: 'major' 
+            };
+        }
+        
+        // Game completion is a minor break point
+        const totalGames = rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW;
+        if (totalGames > 0) {
+            const gameWinner = rubberStatus.gamesWon.NS > rubberStatus.gamesWon.EW ? 'NS' : 'EW';
+            return { 
+                isBreak: true, 
+                reason: `Game Complete - ${gameWinner} leads ${Math.max(rubberStatus.gamesWon.NS, rubberStatus.gamesWon.EW)}-${Math.min(rubberStatus.gamesWon.NS, rubberStatus.gamesWon.EW)}`, 
+                severity: 'minor' 
+            };
+        }
+        
+        return { isBreak: false, reason: null, severity: null };
+    }
+    
+    /**
+     * Get part-score pressure analysis
+     */
+    getPartScorePressure() {
+        const breakdown = this.getScoringBreakdown();
+        const nsPartScore = breakdown.partScores.NS;
+        const ewPartScore = breakdown.partScores.EW;
+        
+        const analysis = {
+            NS: {
+                points: nsPartScore,
+                needed: Math.max(0, 100 - nsPartScore),
+                pressure: nsPartScore >= 60 ? 'high' : nsPartScore >= 40 ? 'medium' : 'low',
+                percentage: Math.round((nsPartScore / 100) * 100)
+            },
+            EW: {
+                points: ewPartScore,
+                needed: Math.max(0, 100 - ewPartScore),
+                pressure: ewPartScore >= 60 ? 'high' : ewPartScore >= 40 ? 'medium' : 'low',
+                percentage: Math.round((ewPartScore / 100) * 100)
+            }
+        };
+        
+        return analysis;
+    }
+    
+    /**
+     * Export rubber bridge game data
+     */
+    exportRubberData() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        
+        return {
+            mode: 'rubber',
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            gameState: {
+                currentDeal: this.currentDeal,
+                rubberStatus: rubberStatus,
+                scoreBreakdown: breakdown,
+                vulnerability: this.getCurrentVulnerabilityString()
+            },
+            rubberState: {
+                gamesWon: { ...this.rubberState.gamesWon },
+                belowLineScores: { ...this.rubberState.belowLineScores },
+                aboveLineScores: { ...this.rubberState.aboveLineScores },
+                partScores: { ...this.rubberState.partScores },
+                vulnerability: { ...this.rubberState.vulnerability },
+                rubberComplete: this.rubberState.rubberComplete,
+                rubberWinner: this.rubberState.rubberWinner
+            },
+            history: history.map(deal => ({
+                deal: deal.deal,
+                contract: { ...deal.contract },
+                result: deal.contract.result,
+                score: deal.score,
+                scoringSide: deal.scoringSide,
+                vulnerability: deal.vulnerability,
+                rubberScoring: deal.rubberScoring,
+                isHonorBonus: deal.honorBonus || false,
+                isRubberBonus: deal.rubberBonus || false
+            })),
+            statistics: this.getRubberStatistics()
+        };
+    }
+    
+    /**
+     * Get comprehensive rubber bridge statistics
+     */
+    getRubberStatistics() {
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        const breakdown = this.getScoringBreakdown();
+        const rubberStatus = this.getRubberStatus();
+        
+        if (history.length === 0) {
+            return {
+                totalDeals: 0,
+                rubbersCompleted: 0,
+                averageScore: { NS: 0, EW: 0 }
+            };
+        }
+        
+        const regularDeals = history.filter(deal => !deal.honorBonus && !deal.rubberBonus);
+        const honorBonuses = history.filter(deal => deal.honorBonus);
+        const rubberBonuses = history.filter(deal => deal.rubberBonus);
+        
+        const stats = {
+            totalDeals: regularDeals.length,
+            honorBonuses: honorBonuses.length,
+            rubberBonuses: rubberBonuses.length,
+            rubbersCompleted: rubberBonuses.length,
+            currentRubber: {
+                gamesWon: { ...rubberStatus.gamesWon },
+                totalScore: { ...breakdown.totals },
+                belowLine: { ...breakdown.partScores },
+                aboveLine: { ...breakdown.aboveScores }
+            },
+            contractsMade: regularDeals.filter(d => d.score >= 0).length,
+            contractsFailed: regularDeals.filter(d => d.score < 0).length,
+            gamesWon: {
+                NS: rubberStatus.gamesWon.NS,
+                EW: rubberStatus.gamesWon.EW,
+                total: rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW
+            },
+            averageScore: {
+                NS: regularDeals.length > 0 ? Math.round(breakdown.totals.NS / regularDeals.length) : 0,
+                EW: regularDeals.length > 0 ? Math.round(breakdown.totals.EW / regularDeals.length) : 0
+            },
+            highestScore: regularDeals.length > 0 ? Math.max(...regularDeals.map(d => Math.abs(d.score))) : 0,
+            slamsBid: regularDeals.filter(d => {
+                const contract = d.contract;
+                return contract.level >= 6;
+            }).length,
+            doublesPlayed: regularDeals.filter(d => d.contract.doubled !== '').length,
+            honorBonusValue: honorBonuses.reduce((sum, deal) => sum + deal.score, 0),
+            rubberBonusValue: rubberBonuses.reduce((sum, deal) => sum + deal.score, 0)
+        };
+        
+        return stats;
+    }
+    
+    /**
+     * Calculate rubber efficiency (games per deal ratio)
+     */
+    calculateRubberEfficiency() {
+        const stats = this.getRubberStatistics();
+        const rubberStatus = this.getRubberStatus();
+        
+        if (stats.totalDeals === 0) return 0;
+        
+        const totalGames = rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW;
+        return totalGames / stats.totalDeals;
+    }
+    
+    /**
+     * Get game recommendations based on rubber state
+     */
+    getRubberRecommendations() {
+        const rubberStatus = this.getRubberStatus();
+        const partScorePressure = this.getPartScorePressure();
+        const breakPoint = this.isAtRubberBreak();
+        const recommendations = [];
+        
+        if (breakPoint.isBreak && breakPoint.severity === 'major') {
+            recommendations.push({
+                type: 'break',
+                message: 'Rubber complete - natural stopping point!',
+                action: 'Perfect time for a break or to start a new rubber'
+            });
+        }
+        
+        if (partScorePressure.NS.pressure === 'high' || partScorePressure.EW.pressure === 'high') {
+            const highPressureSide = partScorePressure.NS.pressure === 'high' ? 'NS' : 'EW';
+            recommendations.push({
+                type: 'strategy',
+                message: `${highPressureSide} has part-score pressure (${partScorePressure[highPressureSide].points}/100)`,
+                action: 'Consider aggressive bidding or defensive tactics'
+            });
+        }
+        
+        if (rubberStatus.gamesWon.NS === 1 && rubberStatus.gamesWon.EW === 1) {
+            recommendations.push({
+                type: 'excitement',
+                message: 'Rubber tied 1-1 - decisive game coming!',
+                action: 'Next game wins the rubber'
+            });
+        }
+        
+        if (rubberStatus.dealsPlayed >= 20) {
+            recommendations.push({
+                type: 'session',
+                message: 'Long rubber session detected',
+                action: 'Consider natural break after current game'
+            });
+        }
+        
+        return recommendations;
+    }
+    
+    /**
+     * Reset to specific game for teaching/practice
+     */
+    resetToGame(gameNumber) {
+        if (gameNumber < 1 || gameNumber > 3) {
+            console.warn('Invalid game number for rubber bridge');
+            return false;
+        }
+        
+        this.resetRubber();
+        
+        // Set up the specified game state
+        if (gameNumber === 2) {
+            // Start of second game - NS won first game
+            this.rubberState.gamesWon.NS = 1;
+            this.rubberState.vulnerability.NS = true;
+        } else if (gameNumber === 3) {
+            // Start of third game - both sides won one game
+            this.rubberState.gamesWon.NS = 1;
+            this.rubberState.gamesWon.EW = 1;
+            this.rubberState.vulnerability.NS = true;
+            this.rubberState.vulnerability.EW = true;
+        }
+        
+        this.resetContract();
+        this.inputState = 'level_selection';
+        this.updateDisplay();
+        
+        console.log(`🔄 Reset to Game ${gameNumber} - Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
+        return true;
+    }
+    
+    /**
+     * Cleanup when switching modes
+     */
+    cleanup() {
+        console.log('🧹 Rubber Bridge cleanup completed');
+        // Rubber Bridge doesn't have special UI elements to clean up
+    }
+// END SECTION SIX
+// SECTION SEVEN - Score Display Methods
+    /**
+     * Show detailed deal-by-deal scores with Rubber Bridge analysis - WITH PIXEL 9A FIX
+     */
+    showDetailedScores() {
+        const scores = this.gameState.scores;
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        
+        if (history.length === 0) {
+            this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
+            return;
+        }
+
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+
+        let dealSummary = `
+            <div class="scores-summary">
+                <h4>📊 Rubber Bridge Score Sheet</h4>
+                <div style="display: flex; justify-content: space-between; margin: 10px 0; font-size: 13px;">
+                    <div><strong>Games Won:</strong> NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}</div>
+                    <div><strong>Vulnerability:</strong> ${rubberStatus.vulnerability.NS ? 'NS 🔴' : 'NS 🟢'} | ${rubberStatus.vulnerability.EW ? 'EW 🔴' : 'EW 🟢'}</div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.95); padding: 12px; border-radius: 6px; margin: 8px 0; border: 2px solid #3498db;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
+                        <span>North-South</span>
+                        <span>East-West</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #e74c3c; font-weight: bold;">
+                        <span>Game Points: ${breakdown.partScores.NS}</span>
+                        <span>Game Points: ${breakdown.partScores.EW}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 6px; text-align: center;">
+                        (Below-the-line • Need 100+ for game)
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #3498db; font-weight: bold;">
+                        <span>Bonus Points: ${breakdown.aboveScores.NS}</span>
+                        <span>Bonus Points: ${breakdown.aboveScores.EW}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 8px; text-align: center;">
+                        (Above-the-line • Bonuses, penalties, honors)
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 2px solid #34495e; padding-top: 6px; font-weight: bold; color: #27ae60; font-size: 16px;">
+                        <span>Total: ${breakdown.totals.NS}</span>
+                        <span>Total: ${breakdown.totals.EW}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="deals-history">
+                <h4>🎩 Deal by Deal History</h4>
+                <div class="deal-scroll-container" style="
+                    max-height: 280px; 
+                    overflow-y: auto; 
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    font-size: 12px;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    background: rgba(255,255,255,0.95);
+                    margin: 10px 0;
+                    position: relative;
+                ">
+        `;
+        
+        // Group deals and bonuses together
+        let dealNumber = 1;
+        history.forEach((deal, index) => {
+            if (deal.honorBonus) {
+                // Honor bonus entry
+                dealSummary += `
+                    <div style="
+                        border-left: 4px solid #f39c12;
+                        padding: 8px 12px;
+                        background: rgba(243, 156, 18, 0.1);
+                        margin: 2px 4px;
+                        border-radius: 4px;
+                    ">
+                        <div style="font-weight: bold; color: #d68910; font-size: 11px;">
+                            🏅 Honor Bonus: +${deal.score} to ${deal.scoringSide}
+                        </div>
+                        <div style="font-size: 10px; color: #85701f;">
+                            ${deal.contract.suit === 'HONOR' ? 'Honor cards held' : 'Honor bonus awarded'}
+                        </div>
+                    </div>
+                `;
+            } else if (deal.rubberBonus) {
+                // Rubber bonus entry
+                const rubberScore = deal.rubberScoring.rubberComplete ? '2-0' : '2-1';
+                dealSummary += `
+                    <div style="
+                        border-left: 4px solid #e74c3c;
+                        padding: 12px;
+                        background: rgba(231, 76, 60, 0.1);
+                        margin: 4px;
+                        border-radius: 6px;
+                        text-align: center;
+                    ">
+                        <div style="font-weight: bold; color: #c0392b; font-size: 14px;">
+                            🏆 RUBBER COMPLETE!
+                        </div>
+                        <div style="font-size: 12px; color: #a93226; margin: 2px 0;">
+                            ${deal.scoringSide} wins ${rubberScore} rubber
+                        </div>
+                        <div style="font-size: 11px; color: #943126;">
+                            Rubber bonus: +${deal.score} points
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Regular deal
+                const contract = deal.contract;
+                const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
+                const vulnerability = deal.vulnerability || 'None';
+                const rubberScoring = deal.rubberScoring || {};
+                
+                // Vulnerability color
+                const vulnColor = vulnerability === 'None' ? '#95a5a6' : 
+                                 vulnerability === 'NS' ? '#27ae60' : 
+                                 vulnerability === 'EW' ? '#e74c3c' : '#f39c12';
+                
+                const scoreDisplay = deal.score >= 0 ? `+${deal.score}` : `${deal.score}`;
+                const scoringSide = deal.scoringSide;
+                
+                dealSummary += `
+                    <div style="
+                        border-bottom: 1px solid #ddd; 
+                        padding: 12px 8px; 
+                        background: ${index % 2 === 0 ? 'rgba(240,240,240,0.8)' : 'rgba(255,255,255,0.9)'};
+                        margin: 2px 0;
+                        border-radius: 4px;
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: bold; margin-bottom: 3px; color: #222; font-size: 12px;">
+                                    Deal ${dealNumber} - <span style="color: ${vulnColor};">${vulnerability}</span>
+                                </div>
+                                <div style="font-size: 11px; color: #333; font-weight: 500; margin-bottom: 2px;">
+                                    ${contractStr} by ${contract.declarer} = ${contract.result}
+                                </div>
+                                ${rubberScoring.belowLine || rubberScoring.aboveLine ? `
+                                    <div style="font-size: 10px; color: #666;">
+                                        Below: ${rubberScoring.belowLine || 0} | Above: ${rubberScoring.aboveLine || 0}
+                                        ${rubberScoring.gameWon ? ' | 🎯 GAME!' : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="
+                                text-align: right;
+                                min-width: 70px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            ">
+                                <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};">
+                                    ${scoreDisplay}
+                                </div>
+                                <div style="font-size: 10px; color: #666;">
+                                    ${scoringSide}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                dealNumber++;
+            }
+        });
+        
+        dealSummary += `
+                </div>
+            </div>
+            
+            <div style="
+                text-align: center; 
+                font-size: 11px; 
+                color: #666; 
+                margin-top: 10px;
+                display: block;
+            ">
+                🎩 Rubber Bridge: Classic above/below line scoring<br>
+                On mobile: Use Refresh Scroll if needed
+            </div>
+        `;
+        
+        const scoreModalButtons = [
+            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
+            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
+            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
+        ];
+        
+        this.bridgeApp.showModal('📊 Rubber Bridge - Score Sheet', dealSummary, scoreModalButtons);
+        
+        // Apply Pixel 9a specific scrolling fixes after modal is shown
+        setTimeout(() => {
+            this.applyPixelScrollingFixes();
+        }, 100);
+    }
+    
+    /**
+     * Refresh the score sheet to force scrolling activation on problematic devices - PIXEL 9A FIX
+     */
+    refreshScoreSheet() {
+        console.log('🔄 Refreshing score sheet for better scrolling...');
+        
+        // Simply re-show the detailed scores - this forces DOM refresh
+        this.showDetailedScores();
+        
+        // Add a brief visual indication that refresh happened
+        setTimeout(() => {
+            const container = document.querySelector('.deal-scroll-container');
+            if (container) {
+                // Flash border to indicate refresh
+                container.style.border = '2px solid #27ae60';
+                container.style.transition = 'border-color 0.3s ease';
+                
+                setTimeout(() => {
+                    container.style.border = '1px solid #444';
+                }, 500);
+                
+                // Scroll to bottom and back to top to "wake up" scrolling
+                container.scrollTop = container.scrollHeight;
+                setTimeout(() => {
+                    container.scrollTop = 0;
+                }, 100);
+            }
+        }, 150);
+    }
+    
+    /**
+     * Apply specific scrolling fixes for Pixel 9a and other problematic devices - PIXEL 9A FIX
+     */
+    applyPixelScrollingFixes() {
+        console.log('🔧 Applying Pixel 9a scrolling fixes...');
+        
+        // Find the modal and scroll container
+        const modal = document.querySelector('.modal-content');
+        const scrollContainer = document.querySelector('.deal-scroll-container');
+        
+        if (modal && scrollContainer) {
+            // Force the modal to be scrollable
+            modal.style.maxHeight = '85vh';
+            modal.style.overflowY = 'auto';
+            modal.style.webkitOverflowScrolling = 'touch';
+            modal.style.position = 'relative';
+            
+            // Enhanced scroll container fixes
+            scrollContainer.style.height = '280px'; // Fixed height instead of max-height
+            scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
+            scrollContainer.style.webkitOverflowScrolling = 'touch';
+            scrollContainer.style.transform = 'translateZ(0)'; // Force hardware acceleration
+            scrollContainer.style.willChange = 'scroll-position';
+            
+            // Add visible scrollbar for mobile
+            const style = document.createElement('style');
+            style.textContent = `
+                .deal-scroll-container::-webkit-scrollbar {
+                    width: 8px !important;
+                    background: rgba(255, 255, 255, 0.1) !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.4) !important;
+                    border-radius: 4px !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.1) !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Test scroll and log results
+            const testScroll = () => {
+                scrollContainer.scrollTop = 50;
+                setTimeout(() => {
+                    console.log(`📱 Scroll test - scrollTop: ${scrollContainer.scrollTop}, scrollHeight: ${scrollContainer.scrollHeight}, clientHeight: ${scrollContainer.clientHeight}`);
+                    if (scrollContainer.scrollTop === 0 && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                        console.warn('⚠️ Scrolling may not be working properly on this device');
+                        // Add a touch scroll hint
+                        scrollContainer.style.border = '2px solid #3498db';
+                        scrollContainer.style.boxShadow = 'inset 0 0 10px rgba(52, 152, 219, 0.3)';
+                        
+                        // Add a visible scroll indicator
+                        const scrollHint = document.createElement('div');
+                        scrollHint.innerHTML = '👆 Touch and drag to scroll';
+                        scrollHint.style.cssText = `
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: rgba(52, 152, 219, 0.8);
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            z-index: 100;
+                            pointer-events: none;
+                        `;
+                        scrollContainer.style.position = 'relative';
+                        scrollContainer.appendChild(scrollHint);
+                    }
+                }, 100);
+            };
+            
+            testScroll();
+            
+            // Add touch event handlers for better mobile scrolling
+            let touchStart = null;
+            
+            scrollContainer.addEventListener('touchstart', (e) => {
+                touchStart = e.touches[0].clientY;
+                console.log('📱 Touch start detected');
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchmove', (e) => {
+                if (touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const deltaY = touchStart - touchY;
+                    scrollContainer.scrollTop += deltaY * 0.5; // Smooth scrolling
+                    touchStart = touchY;
+                    console.log(`📱 Touch scroll: ${scrollContainer.scrollTop}`);
+                }
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchend', () => {
+                touchStart = null;
+                console.log('📱 Touch end');
+            }, { passive: true });
+            
+            console.log('✅ Pixel 9a scrolling fixes applied successfully');
+        } else {
+            console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
+        }
+    }
+    
+    /**
+     * Get rubber score breakdown formatted for display
+     */
+    getRubberScoreBreakdown() {
+        const ns = this.rubberState;
+        const partNS = ns.partScores.NS;
+        const partEW = ns.partScores.EW;
+        const aboveNS = ns.aboveLineScores.NS;
+        const aboveEW = ns.aboveLineScores.EW;
+        const totalNS = partNS + aboveNS;
+        const totalEW = partEW + aboveEW;
+        
+        const vulnNS = ns.vulnerability.NS ? '🔴' : '🟢';
+        const vulnEW = ns.vulnerability.EW ? '🔴' : '🟢';
+        
+        return `
+            <div style="background: rgba(255,255,255,0.95); padding: 12px; border-radius: 6px; margin: 6px 0; font-size: 12px; border: 1px solid #bdc3c7;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
+                    <span>NS ${vulnNS}</span>
+                    <span>EW ${vulnEW}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: #e74c3c; font-weight: bold;">Game Points: ${partNS}</span>
+                    <span style="color: #e74c3c; font-weight: bold;">Game Points: ${partEW}</span>
+                </div>
+                <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 4px; text-align: center;">
+                    (Below-the-line • Need 100+ for game)
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: #3498db; font-weight: bold;">Bonus Points: ${aboveNS}</span>
+                    <span style="color: #3498db; font-weight: bold;">Bonus Points: ${aboveEW}</span>
+                </div>
+                <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 6px; text-align: center;">
+                    (Above-the-line • Game/slam/honor bonuses)
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid #95a5a6; padding-top: 4px; font-weight: bold; color: #27ae60;">
+                    <span>Total: ${totalNS}</span>
+                    <span>Total: ${totalEW}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Get enhanced status display for Rubber Bridge
+     */
+    getStatusDisplay() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        const partScorePressure = this.getPartScorePressure();
+        
+        return {
+            dealInfo: this.getDealInfo(),
+            gamesWon: rubberStatus.gamesWon,
+            vulnerability: rubberStatus.vulnerability,
+            scores: breakdown.totals,
+            partScores: breakdown.partScores,
+            partScorePressure: partScorePressure,
+            isComplete: rubberStatus.rubberComplete,
+            winner: rubberStatus.rubberWinner
+        };
+    }
+    
+    /**
+     * Get rubber progress visualization
+     */
+    getRubberProgressDisplay() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        let progressHTML = `<div class="rubber-progress" style="margin: 10px 0;">`;
+        progressHTML += `<div style="font-weight: bold; margin-bottom: 8px;">Rubber Progress:</div>`;
+        
+        // Games won display
+        progressHTML += `<div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">`;
+        
+        // NS games
+        for (let i = 0; i < 2; i++) {
+            const won = i < rubberStatus.gamesWon.NS;
+            progressHTML += `
+                <div style="
+                    width: 40px;
+                    height: 30px;
+                    background: ${won ? '#27ae60' : '#ecf0f1'};
+                    color: ${won ? 'white' : '#7f8c8d'};
+                    border: 1px solid #bdc3c7;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">
+                    NS
+                </div>
+            `;
+        }
+        
+        progressHTML += `<div style="width: 20px; text-align: center; line-height: 30px; font-weight: bold;">vs</div>`;
+        
+        // EW games
+        for (let i = 0; i < 2; i++) {
+            const won = i < rubberStatus.gamesWon.EW;
+            progressHTML += `
+                <div style="
+                    width: 40px;
+                    height: 30px;
+                    background: ${won ? '#e74c3c' : '#ecf0f1'};
+                    color: ${won ? 'white' : '#7f8c8d'};
+                    border: 1px solid #bdc3c7;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">
+                    EW
+                </div>
+            `;
+        }
+        
+        progressHTML += `</div>`;
+        
+        // Part-score progress
+        progressHTML += `<div style="font-size: 11px; color: #7f8c8d; text-align: center;">`;
+        progressHTML += `Part-scores: NS ${breakdown.partScores.NS}/100 | EW ${breakdown.partScores.EW}/100`;
+        progressHTML += `</div>`;
+        
+        progressHTML += `</div>`;
+        return progressHTML;
+    }
+    
+    /**
+     * Get compact rubber summary for mobile displays
+     */
+    getCompactRubberSummary() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        return {
+            games: `${rubberStatus.gamesWon.NS}-${rubberStatus.gamesWon.EW}`,
+            vulnerability: this.getCurrentVulnerabilityString(),
+            partScores: `${breakdown.partScores.NS}/${breakdown.partScores.EW}`,
+            totals: `${breakdown.totals.NS}-${breakdown.totals.EW}`,
+            isComplete: rubberStatus.rubberComplete,
+            winner: rubberStatus.rubberWinner
+        };
+    }
+    
+    /**
+     * Format vulnerability for display with rubber-specific styling
+     */
+    formatRubberVulnerabilityDisplay(vulnerability) {
+        const vulnConfig = {
+            'None': { text: 'All Fresh', color: '#95a5a6', bgColor: 'rgba(149, 165, 166, 0.1)' },
+            'NS': { text: 'NS Vul', color: '#27ae60', bgColor: 'rgba(39, 174, 96, 0.1)' },
+            'EW': { text: 'EW Vul', color: '#e74c3c', bgColor: 'rgba(231, 76, 60, 0.1)' },
+            'Both': { text: 'Both Vul', color: '#f39c12', bgColor: 'rgba(243, 156, 18, 0.1)' }
+        };
+        
+        const config = vulnConfig[vulnerability] || vulnConfig['None'];
+        
+        return `
+            <span style="
+                color: ${config.color};
+                background: ${config.bgColor};
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-weight: bold;
+                font-size: 11px;
+                border: 1px solid ${config.color};
+            ">
+                ${config.text}
+            </span>
+        `;
+    }
+    
+    /**
+     * Get part-score progress bar HTML
+     */
+    getPartScoreProgressBar(side) {
+        const breakdown = this.getScoringBreakdown();
+        const points = breakdown.partScores[side];
+        const percentage = Math.min(100, (points / 100) * 100);
+        
+        const color = side === 'NS' ? '#3498db' : '#e67e22';
+        const bgColor = side === 'NS' ? 'rgba(52, 152, 219, 0.2)' : 'rgba(230, 126, 34, 0.2)';
+        
+        return `
+            <div style="
+                width: 100%;
+                height: 20px;
+                background: ${bgColor};
+                border-radius: 10px;
+                overflow: hidden;
+                position: relative;
+                margin: 4px 0;
+            ">
+                <div style="
+                    width: ${percentage}%;
+                    height: 100%;
+                    background: ${color};
+                    transition: width 0.3s ease;
+                "></div>
+                <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                ">
+                    ${points}/100
+                </div>
+            </div>
+        `;
+    }
+// END SECTION SEVEN
+// SECTION EIGHT - Utility and Game Management
+    /**
+     * Start a new game (reset scores and rubber state)
+     */
+    startNewGame() {
+        const rubberStatus = this.getRubberStatus();
+        
+        let confirmMessage = 'Start a new rubber?\n\n';
+        if (rubberStatus.rubberComplete) {
+            confirmMessage += 'Current rubber is complete.\n\n';
+        } else {
+            confirmMessage += `Current rubber in progress:\nGames: NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}\nDeals played: ${rubberStatus.dealsPlayed}\n\n`;
+        }
+        confirmMessage += 'This will reset all scores and start fresh.\n\nClick OK to start new rubber, Cancel to continue.';
+        
+        const confirmed = confirm(confirmMessage);
+        
+        if (confirmed) {
+            this.startNewRubber();
+            console.log('🆕 New Rubber Bridge game started');
+        }
+    }
+    
+    /**
+     * Return to main menu
+     */
+    returnToMainMenu() {
+        this.bridgeApp.showLicensedMode({ 
+            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+        });
+    }
+    
+    /**
+     * Get current deal information string
+     */
+    getDealInfo() {
+        const vulnerability = this.getCurrentVulnerabilityString();
+        return `Deal ${this.currentDeal} - ${vulnerability}`;
+    }
+    
+    /**
+     * Get rubber progress summary
+     */
+    getRubberProgressSummary() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        return {
+            gamesWon: rubberStatus.gamesWon,
+            vulnerability: rubberStatus.vulnerability,
+            partScores: breakdown.partScores,
+            totals: breakdown.totals,
+            isComplete: rubberStatus.rubberComplete,
+            winner: rubberStatus.rubberWinner,
+            dealsPlayed: rubberStatus.dealsPlayed
+        };
+    }
+    
+    /**
+     * Check if rubber is at a natural break point
+     */
+    isAtRubberBreak() {
+        const rubberStatus = this.getRubberStatus();
+        
+        if (rubberStatus.rubberComplete) {
+            return { 
+                isBreak: true, 
+                reason: `Rubber Complete - ${rubberStatus.rubberWinner} wins`, 
+                severity: 'major' 
+            };
+        }
+        
+        // Game completion is a minor break point
+        const totalGames = rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW;
+        if (totalGames > 0) {
+            const gameWinner = rubberStatus.gamesWon.NS > rubberStatus.gamesWon.EW ? 'NS' : 'EW';
+            return { 
+                isBreak: true, 
+                reason: `Game Complete - ${gameWinner} leads ${Math.max(rubberStatus.gamesWon.NS, rubberStatus.gamesWon.EW)}-${Math.min(rubberStatus.gamesWon.NS, rubberStatus.gamesWon.EW)}`, 
+                severity: 'minor' 
+            };
+        }
+        
+        return { isBreak: false, reason: null, severity: null };
+    }
+    
+    /**
+     * Get part-score pressure analysis
+     */
+    getPartScorePressure() {
+        const breakdown = this.getScoringBreakdown();
+        const nsPartScore = breakdown.partScores.NS;
+        const ewPartScore = breakdown.partScores.EW;
+        
+        const analysis = {
+            NS: {
+                points: nsPartScore,
+                needed: Math.max(0, 100 - nsPartScore),
+                pressure: nsPartScore >= 60 ? 'high' : nsPartScore >= 40 ? 'medium' : 'low',
+                percentage: Math.round((nsPartScore / 100) * 100)
+            },
+            EW: {
+                points: ewPartScore,
+                needed: Math.max(0, 100 - ewPartScore),
+                pressure: ewPartScore >= 60 ? 'high' : ewPartScore >= 40 ? 'medium' : 'low',
+                percentage: Math.round((ewPartScore / 100) * 100)
+            }
+        };
+        
+        return analysis;
+    }
+    
+    /**
+     * Export rubber bridge game data
+     */
+    exportRubberData() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        
+        return {
+            mode: 'rubber',
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            gameState: {
+                currentDeal: this.currentDeal,
+                rubberStatus: rubberStatus,
+                scoreBreakdown: breakdown,
+                vulnerability: this.getCurrentVulnerabilityString()
+            },
+            rubberState: {
+                gamesWon: { ...this.rubberState.gamesWon },
+                belowLineScores: { ...this.rubberState.belowLineScores },
+                aboveLineScores: { ...this.rubberState.aboveLineScores },
+                partScores: { ...this.rubberState.partScores },
+                vulnerability: { ...this.rubberState.vulnerability },
+                rubberComplete: this.rubberState.rubberComplete,
+                rubberWinner: this.rubberState.rubberWinner
+            },
+            history: history.map(deal => ({
+                deal: deal.deal,
+                contract: { ...deal.contract },
+                result: deal.contract.result,
+                score: deal.score,
+                scoringSide: deal.scoringSide,
+                vulnerability: deal.vulnerability,
+                rubberScoring: deal.rubberScoring,
+                isHonorBonus: deal.honorBonus || false,
+                isRubberBonus: deal.rubberBonus || false
+            })),
+            statistics: this.getRubberStatistics()
+        };
+    }
+    
+    /**
+     * Get comprehensive rubber bridge statistics
+     */
+    getRubberStatistics() {
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        const breakdown = this.getScoringBreakdown();
+        const rubberStatus = this.getRubberStatus();
+        
+        if (history.length === 0) {
+            return {
+                totalDeals: 0,
+                rubbersCompleted: 0,
+                averageScore: { NS: 0, EW: 0 }
+            };
+        }
+        
+        const regularDeals = history.filter(deal => !deal.honorBonus && !deal.rubberBonus);
+        const honorBonuses = history.filter(deal => deal.honorBonus);
+        const rubberBonuses = history.filter(deal => deal.rubberBonus);
+        
+        const stats = {
+            totalDeals: regularDeals.length,
+            honorBonuses: honorBonuses.length,
+            rubberBonuses: rubberBonuses.length,
+            rubbersCompleted: rubberBonuses.length,
+            currentRubber: {
+                gamesWon: { ...rubberStatus.gamesWon },
+                totalScore: { ...breakdown.totals },
+                belowLine: { ...breakdown.partScores },
+                aboveLine: { ...breakdown.aboveScores }
+            },
+            contractsMade: regularDeals.filter(d => d.score >= 0).length,
+            contractsFailed: regularDeals.filter(d => d.score < 0).length,
+            gamesWon: {
+                NS: rubberStatus.gamesWon.NS,
+                EW: rubberStatus.gamesWon.EW,
+                total: rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW
+            },
+            averageScore: {
+                NS: regularDeals.length > 0 ? Math.round(breakdown.totals.NS / regularDeals.length) : 0,
+                EW: regularDeals.length > 0 ? Math.round(breakdown.totals.EW / regularDeals.length) : 0
+            },
+            highestScore: regularDeals.length > 0 ? Math.max(...regularDeals.map(d => Math.abs(d.score))) : 0,
+            slamsBid: regularDeals.filter(d => {
+                const contract = d.contract;
+                return contract.level >= 6;
+            }).length,
+            doublesPlayed: regularDeals.filter(d => d.contract.doubled !== '').length,
+            honorBonusValue: honorBonuses.reduce((sum, deal) => sum + deal.score, 0),
+            rubberBonusValue: rubberBonuses.reduce((sum, deal) => sum + deal.score, 0)
+        };
+        
+        return stats;
+    }
+    
+    /**
+     * Calculate rubber efficiency (games per deal ratio)
+     */
+    calculateRubberEfficiency() {
+        const stats = this.getRubberStatistics();
+        const rubberStatus = this.getRubberStatus();
+        
+        if (stats.totalDeals === 0) return 0;
+        
+        const totalGames = rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW;
+        return totalGames / stats.totalDeals;
+    }
+    
+    /**
+     * Get game recommendations based on rubber state
+     */
+    getRubberRecommendations() {
+        const rubberStatus = this.getRubberStatus();
+        const partScorePressure = this.getPartScorePressure();
+        const breakPoint = this.isAtRubberBreak();
+        const recommendations = [];
+        
+        if (breakPoint.isBreak && breakPoint.severity === 'major') {
+            recommendations.push({
+                type: 'break',
+                message: 'Rubber complete - natural stopping point!',
+                action: 'Perfect time for a break or to start a new rubber'
+            });
+        }
+        
+        if (partScorePressure.NS.pressure === 'high' || partScorePressure.EW.pressure === 'high') {
+            const highPressureSide = partScorePressure.NS.pressure === 'high' ? 'NS' : 'EW';
+            recommendations.push({
+                type: 'strategy',
+                message: `${highPressureSide} has part-score pressure (${partScorePressure[highPressureSide].points}/100)`,
+                action: 'Consider aggressive bidding or defensive tactics'
+            });
+        }
+        
+        if (rubberStatus.gamesWon.NS === 1 && rubberStatus.gamesWon.EW === 1) {
+            recommendations.push({
+                type: 'excitement',
+                message: 'Rubber tied 1-1 - decisive game coming!',
+                action: 'Next game wins the rubber'
+            });
+        }
+        
+        if (rubberStatus.dealsPlayed >= 20) {
+            recommendations.push({
+                type: 'session',
+                message: 'Long rubber session detected',
+                action: 'Consider natural break after current game'
+            });
+        }
+        
+        return recommendations;
+    }
+    
+    /**
+     * Reset to specific game for teaching/practice
+     */
+    resetToGame(gameNumber) {
+        if (gameNumber < 1 || gameNumber > 3) {
+            console.warn('Invalid game number for rubber bridge');
+            return false;
+        }
+        
+        this.resetRubber();
+        
+        // Set up the specified game state
+        if (gameNumber === 2) {
+            // Start of second game - NS won first game
+            this.rubberState.gamesWon.NS = 1;
+            this.rubberState.vulnerability.NS = true;
+        } else if (gameNumber === 3) {
+            // Start of third game - both sides won one game
+            this.rubberState.gamesWon.NS = 1;
+            this.rubberState.gamesWon.EW = 1;
+            this.rubberState.vulnerability.NS = true;
+            this.rubberState.vulnerability.EW = true;
+        }
+        
+        this.resetContract();
+        this.inputState = 'level_selection';
+        this.updateDisplay();
+        
+        console.log(`🔄 Reset to Game ${gameNumber} - Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
+        return true;
+    }
+    
+    /**
+     * Check if we're at a natural break point
+     */
+    isAtBreakPoint() {
+        // Rubber completion is always a break point
+        if (this.rubberState.rubberComplete) {
+            return { isBreak: true, reason: 'Rubber Complete', severity: 'major' };
+        }
+        
+        // Game completion is a minor break point
+        const totalGames = this.rubberState.gamesWon.NS + this.rubberState.gamesWon.EW;
+        if (totalGames > 0) {
+            return { isBreak: true, reason: 'Game Complete', severity: 'minor' };
+        }
+        
+        return { isBreak: false, reason: null, severity: null };
+    }
+    
+    /**
+     * Get natural break points in the rubber
+     */
+    getRubberBreakPoints() {
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        const breakPoints = [];
+        
+        // Find all game completions
+        history.forEach((deal, index) => {
+            if (deal.rubberScoring && deal.rubberScoring.gameWon) {
+                const gamesWonAtTime = {
+                    NS: history.slice(0, index + 1).filter(d => 
+                        d.rubberScoring && d.rubberScoring.gameWon && 
+                        (d.contract.declarer === 'N' || d.contract.declarer === 'S')
+                    ).length,
+                    EW: history.slice(0, index + 1).filter(d => 
+                        d.rubberScoring && d.rubberScoring.gameWon && 
+                        (d.contract.declarer === 'E' || d.contract.declarer === 'W')
+                    ).length
+                };
+                
+                breakPoints.push({
+                    deal: deal.deal,
+                    type: 'game',
+                    winner: deal.scoringSide,
+                    gamesWon: gamesWonAtTime,
+                    description: `Game won by ${deal.scoringSide}`,
+                    severity: 'minor'
+                });
+            }
+            
+            if (deal.rubberScoring && deal.rubberScoring.rubberComplete) {
+                breakPoints.push({
+                    deal: deal.deal,
+                    type: 'rubber',
+                    winner: deal.rubberScoring.rubberWinner,
+                    description: `Rubber won by ${deal.rubberScoring.rubberWinner}`,
+                    severity: 'major'
+                });
+            }
+        });
+        
+        return breakPoints;
+    }
+    
+    /**
+     * Generate detailed rubber bridge report
+     */
+    generateRubberReport() {
+        const summary = this.getGameSummary();
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        const breakdown = this.getScoringBreakdown();
+        
+        let report = `RUBBER BRIDGE GAME REPORT\n`;
+        report += `Generated: ${new Date().toLocaleString()}\n`;
+        report += `=====================================\n\n`;
+        
+        report += `CURRENT RUBBER STATUS:\n`;
+        report += `Games Won: NS ${summary.currentStatus.gamesWon.NS} - EW ${summary.currentStatus.gamesWon.EW}\n`;
+        report += `Vulnerability: NS ${summary.currentStatus.vulnerability.NS ? 'Vulnerable' : 'Fresh'}, EW ${summary.currentStatus.vulnerability.EW ? 'Vulnerable' : 'Fresh'}\n`;
+        report += `Part Scores: NS ${summary.currentStatus.partScores.NS}/100, EW ${summary.currentStatus.partScores.EW}/100\n`;
+        report += `Total Scores: NS ${summary.currentStatus.totals.NS}, EW ${summary.currentStatus.totals.EW}\n`;
+        if (summary.rubberComplete) {
+            report += `RUBBER COMPLETE - Winner: ${summary.currentStatus.rubberWinner}\n`;
+        }
+        report += `\n`;
+        
+        report += `RUBBER STATISTICS:\n`;
+        report += `Total Deals: ${summary.statistics.totalDeals}\n`;
+        report += `Contracts Made: ${summary.statistics.contractsMade}\n`;
+        report += `Contracts Failed: ${summary.statistics.contractsFailed}\n`;
+        report += `Honor Bonuses: ${summary.statistics.honorBonuses} (${summary.statistics.honorBonusValue} points)\n`;
+        report += `Slams Bid: ${summary.statistics.slamsBid}\n`;
+        report += `Doubles Played: ${summary.statistics.doublesPlayed}\n`;
+        report += `Rubber Efficiency: ${(summary.efficiency * 100).toFixed(1)}% (games per deal)\n\n`;
+        
+        if (summary.breakPoints.length > 0) {
+            report += `BREAK POINTS:\n`;
+            summary.breakPoints.forEach(bp => {
+                report += `Deal ${bp.deal}: ${bp.description}\n`;
+            });
+            report += `\n`;
+        }
+        
+        report += `DEAL HISTORY:\n`;
+        report += `Deal | Contract | Result | Score | Below | Above | Notes\n`;
+        report += `-----|----------|--------|-------|-------|-------|------\n`;
+        
+        let dealNumber = 1;
+        history.forEach(deal => {
+            if (deal.honorBonus) {
+                report += `     | Honor Bonus | +${deal.score} | ${deal.score} |   0   | ${deal.score} | ${deal.scoringSide}\n`;
+            } else if (deal.rubberBonus) {
+                report += `     | Rubber Bonus | +${deal.score} | ${deal.score} |   0   | ${deal.score} | ${deal.scoringSide} wins\n`;
+            } else {
+                const contract = deal.contract;
+                const contractStr = `${contract.level}${contract.suit}${contract.doubled || ''}`;
+                const rubberScoring = deal.rubberScoring || {};
+                const notes = rubberScoring.gameWon ? 'GAME!' : '';
+                
+                report += `${dealNumber.toString().padStart(4)} | ${contractStr.padEnd(8)} | ${contract.result.padEnd(6)} | ${deal.score.toString().padStart(5)} | ${(rubberScoring.belowLine || 0).toString().padStart(5)} | ${(rubberScoring.aboveLine || 0).toString().padStart(5)} | ${notes}\n`;
+                dealNumber++;
+            }
+        });
+        
+        return report;
+    }
+    
+    /**
+     * Setup teaching scenarios for rubber bridge
+     */
+    setupTeachingScenario(scenario) {
+        const scenarios = {
+            'fresh-rubber': {
+                description: 'Start a fresh rubber - both sides non-vulnerable',
+                setup: () => this.resetRubber(),
+                setupMessage: 'Fresh rubber started - both sides non-vulnerable'
+            },
+            'game-point': {
+                description: 'Game point situation - one side needs one game to win rubber',
+                setup: () => {
+                    this.resetRubber();
+                    this.rubberState.gamesWon.NS = 1;
+                    this.rubberState.gamesWon.EW = 1;
+                    this.rubberState.vulnerability.NS = true;
+                    this.rubberState.vulnerability.EW = true;
+                },
+                setupMessage: 'Game point! Both sides vulnerable - next game wins rubber'
+            },
+            'part-score-pressure': {
+                description: 'Part-score pressure - both sides have significant part-scores',
+                setup: () => {
+                    this.resetRubber();
+                    this.rubberState.partScores.NS = 60;
+                    this.rubberState.partScores.EW = 70;
+                    this.rubberState.belowLineScores.NS = 60;
+                    this.rubberState.belowLineScores.EW = 70;
+                    this.updateGameStateScores();
+                },
+                setupMessage: 'Part-score pressure! NS: 60/100, EW: 70/100'
+            },
+            'vulnerability-demo': {
+                description: 'Demonstrate vulnerability effects - one side vulnerable',
+                setup: () => {
+                    this.resetRubber();
+                    this.rubberState.gamesWon.NS = 1;
+                    this.rubberState.vulnerability.NS = true;
+                },
+                setupMessage: 'Vulnerability demo - NS vulnerable, EW fresh'
+            }
+        };
+        
+        const config = scenarios[scenario];
+        if (!config) {
+            console.warn('Unknown rubber bridge teaching scenario:', scenario);
+            return false;
+        }
+        
+        config.setup();
+        this.resetContract();
+        this.inputState = 'level_selection';
+        this.updateDisplay();
+        
+        console.log(`📚 Teaching scenario: ${config.description}`);
+        this.bridgeApp.showMessage(config.setupMessage, 'info');
+        
+        return true;
+    }
+    
+    /**
+     * Calculate rubber bridge lesson value
+     */
+    calculateLessonValue() {
+        const stats = this.getRubberStatistics();
+        const partScorePressure = this.getPartScorePressure();
+        const rubberStatus = this.getRubberStatus();
+        
+        let lessonValue = 0;
+        
+        // Basic engagement
+        lessonValue += stats.totalDeals * 2;
+        
+        // Learning bonuses
+        if (stats.honorBonuses > 0) lessonValue += 10; // Honor bonus understanding
+        if (stats.slamsBid > 0) lessonValue += 15; // Slam bidding experience
+        if (stats.doublesPlayed > 0) lessonValue += 8; // Doubling experience
+        
+        // Strategic understanding
+        if (partScorePressure.NS.pressure === 'high' || partScorePressure.EW.pressure === 'high') {
+            lessonValue += 12; // Part-score pressure experience
+        }
+        
+        if (rubberStatus.gamesWon.NS > 0 && rubberStatus.gamesWon.EW > 0) {
+            lessonValue += 20; // Competitive rubber experience
+        }
+        
+        if (rubberStatus.rubberComplete) {
+            lessonValue += 25; // Complete rubber experience
+        }
+        
+        return Math.min(100, lessonValue); // Cap at 100
+    }
+    
+    /**
+     * Get rubber bridge insights for improvement
+     */
+    getRubberInsights() {
+        const stats = this.getRubberStatistics();
+        const efficiency = this.calculateRubberEfficiency();
+        const insights = [];
+        
+        if (efficiency < 0.3) {
+            insights.push({
+                type: 'efficiency',
+                message: 'Consider more aggressive game bidding',
+                explanation: 'Low games-per-deal ratio suggests conservative bidding'
+            });
+        }
+        
+        if (stats.honorBonuses === 0 && stats.totalDeals > 5) {
+            insights.push({
+                type: 'honors',
+                message: 'Remember to claim honor bonuses',
+                explanation: 'Honor bonuses can add significant points above the line'
+            });
+        }
+        
+        if (stats.slamsBid === 0 && stats.totalDeals > 10) {
+            insights.push({
+                type: 'slams',
+                message: 'Consider bidding slams with strong hands',
+                explanation: 'Slam bonuses are substantial in rubber bridge'
+            });
+        }
+        
+        if (stats.contractsMade / stats.totalDeals < 0.5) {
+            insights.push({
+                type: 'bidding',
+                message: 'Consider more conservative bidding',
+                explanation: 'High failure rate suggests overbidding'
+            });
+        }
+        
+        return insights;
+    }
+    
+    /**
+     * Get comprehensive rubber bridge game summary
+     */
+    getGameSummary() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        const stats = this.getRubberStatistics();
+        const partScorePressure = this.getPartScorePressure();
+        
+        return {
+            mode: 'Rubber Bridge',
+            currentStatus: {
+                deal: this.currentDeal,
+                gamesWon: rubberStatus.gamesWon,
+                vulnerability: rubberStatus.vulnerability,
+                partScores: breakdown.partScores,
+                totals: breakdown.totals,
+                rubberComplete: rubberStatus.rubberComplete,
+                rubberWinner: rubberStatus.rubberWinner
+            },
+            statistics: stats,
+            partScorePressure: partScorePressure,
+            rubberComplete: rubberStatus.rubberComplete,
+            recommendations: this.getRubberRecommendations(),
+            breakPoints: this.getRubberBreakPoints(),
+            efficiency: this.calculateRubberEfficiency()
+        };
+    }
+    
+    /**
+     * Cleanup when switching modes
+     */
+    cleanup() {
+        console.log('🧹 Rubber Bridge cleanup completed');
+        // Rubber Bridge doesn't have special UI elements to clean up
+    }
+// END SECTION EIGHT
+// SECTION NINE - Display Content Methods
+    /**
+     * Get display content for current state - RUBBER BRIDGE ENHANCED - FIXED HONOR BUTTON MESSAGE
+     */
     getDisplayContent() {
-        const totals = this.getRubberTotals();
-        const dealInfo = this.gameState.getDealInfo();
+        const scores = this.gameState.scores;
+        const dealInfo = this.getDealInfo();
+        const rubberScoring = this.getRubberScoreBreakdown();
         
         // Rubber completion screen
         if (this.rubberState.rubberComplete) {
             const winner = this.rubberState.rubberWinner;
             const gamesWon = this.rubberState.gamesWon[winner];
             const gamesLost = this.rubberState.gamesWon[winner === 'NS' ? 'EW' : 'NS'];
+            const totals = this.getRubberTotals();
             const margin = totals[winner] - totals[winner === 'NS' ? 'EW' : 'NS'];
             
             return `
@@ -524,7 +2744,7 @@ class RubberBridge extends BaseBridgeMode {
                     <div style="text-align: center; font-size: 14px; margin: 8px 0;">
                         Victory margin: ${margin} points
                     </div>
-                    ${this.getRubberScoreBreakdown()}
+                    ${rubberScoring}
                 </div>
                 <div class="current-state">Press <strong>Deal</strong> to start new rubber</div>
             `;
@@ -544,32 +2764,33 @@ class RubberBridge extends BaseBridgeMode {
                     <div style="text-align: center; color: #f39c12; margin: 10px 0; font-size: 16px;">
                         <strong>Honor bonuses for ${lastSide}?</strong>
                     </div>
-                    <div style="background: rgba(241,196,15,0.2); padding: 10px; border-radius: 6px; margin: 8px 0;">
+                    <div style="background: rgba(241,196,15,0.2); padding: 12px; border-radius: 6px; margin: 8px 0; border: 1px solid #f39c12;">
                         ${contractSuit === 'NT' 
                             ? '<strong>Plus</strong> = 4 Aces (150 pts)<br><strong>Back</strong> = No honors'
                             : '<strong>Plus</strong> = 4 Honors (100 pts)<br><strong>Down</strong> = 5 Honors (150 pts)<br><strong>Back</strong> = No honors'
                         }
                     </div>
-                    <div style="font-size: 11px; color: #bdc3c7; margin-top: 6px;">
+                    <div style="font-size: 11px; color: #95a5a6; margin-top: 6px; text-align: center;">
                         Honors = A, K, Q, J, 10 of trump suit ${contractSuit === 'NT' ? '| NT honors = 4 Aces' : ''}
                     </div>
                 </div>
-                <div class="current-state">Press <strong>Plus/Down</strong> buttons if you held honors, or <strong>Back</strong> for none</div>
+                <div class="current-state">Press <strong>Plus/Down</strong> for honors, or <strong>Back</strong> for none</div>
             `;
         }
         
-        // Standard game display with rubber scoring breakdown
-        const rubberScoring = this.getRubberScoreBreakdown();
-        
+        // Standard game display with rubber scoring
         switch (this.inputState) {
             case 'level_selection':
                 return `
                     <div class="title-score-row">
-                        <div class="mode-title">Rubber Bridge</div>
+                        <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
                     </div>
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
+                            Classic above/below line scoring • Games to 100 points
+                        </div>
                         ${rubberScoring}
                     </div>
                     <div class="current-state">Select bid level (1-7)</div>
@@ -578,12 +2799,15 @@ class RubberBridge extends BaseBridgeMode {
             case 'suit_selection':
                 return `
                     <div class="title-score-row">
-                        <div class="mode-title">Rubber Bridge</div>
+                        <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
                     </div>
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
                         <div><strong>Level: ${this.currentContract.level}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 2px;">
+                            ${this.wouldMakeGame() ? 'Game contract (100+ points)' : 'Part-score contract'}
+                        </div>
                         ${rubberScoring}
                     </div>
                     <div class="current-state">Select suit</div>
@@ -592,34 +2816,44 @@ class RubberBridge extends BaseBridgeMode {
             case 'declarer_selection':
                 const contractSoFar = `${this.currentContract.level}${this.currentContract.suit}`;
                 const doubleText = this.currentContract.doubled ? ` ${this.currentContract.doubled}` : '';
+                const wouldMakeGame = this.wouldMakeGame();
                 
                 return `
                     <div class="title-score-row">
-                        <div class="mode-title">Rubber Bridge</div>
+                        <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
                     </div>
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 2px;">
+                            ${wouldMakeGame ? '🎯 Game contract if made' : 'Part-score toward game'}
+                        </div>
                         ${rubberScoring}
                     </div>
                     <div class="current-state">
                         ${this.currentContract.declarer ? 
-                            'Made/Plus/Down or X for double' : 
+                            'Press Made/Plus/Down for result, or X for double/redouble' : 
                             'Select declarer (N/S/E/W)'}
                     </div>
                 `;
                 
             case 'result_type_selection':
                 const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
+                const declarerSide = (this.currentContract.declarer === 'N' || this.currentContract.declarer === 'S') ? 'NS' : 'EW';
+                const wouldMakeGameResult = this.wouldMakeGame();
+                
                 return `
                     <div class="title-score-row">
-                        <div class="mode-title">Rubber Bridge</div>
+                        <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
                     </div>
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
-                        <div><strong>${contract} by ${this.currentContract.declarer}</strong></div>
+                        <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 2px;">
+                            ${wouldMakeGameResult ? `🎯 If made: ${declarerSide} wins game!` : `Part-score: ${declarerSide} gets points toward game`}
+                        </div>
                         ${rubberScoring}
                     </div>
                     <div class="current-state">Made exactly, Plus overtricks, or Down?</div>
@@ -627,15 +2861,19 @@ class RubberBridge extends BaseBridgeMode {
                 
             case 'result_number_selection':
                 const fullContract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-                const modeText = this.resultMode === 'down' ? 'tricks down' : 'overtricks';
+                const modeText = this.resultMode === 'down' ? 'tricks down (1-7)' : 'overtricks (1-6)';
+                
                 return `
                     <div class="title-score-row">
-                        <div class="mode-title">Rubber Bridge</div>
+                        <div class="mode-title">${this.displayName}</div>
                         <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
                     </div>
                     <div class="game-content">
                         <div><strong>${dealInfo}</strong></div>
-                        <div><strong>${fullContract} by ${this.currentContract.declarer}</strong></div>
+                        <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
+                        <div style="color: #e67e22; font-size: 12px; margin-top: 2px;">
+                            ${this.resultMode === 'down' ? 'Failed contract - penalty to defenders' : 'Made with overtricks - bonus points'}
+                        </div>
                         ${rubberScoring}
                     </div>
                     <div class="current-state">Enter number of ${modeText}</div>
@@ -643,208 +2881,960 @@ class RubberBridge extends BaseBridgeMode {
                 
             case 'scoring':
                 const lastDetails = this.rubberState.lastContractDetails;
-                return `
-                    <div class="title-score-row">
-                        <div class="mode-title">Rubber Bridge</div>
-                        <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
-                    </div>
-                    <div class="game-content">
-                        <div><strong>Deal ${this.gameState.getDealNumber()} completed</strong></div>
-                        ${lastDetails ? `
-                            <div style="margin: 8px 0; padding: 8px; background: rgba(52,152,219,0.2); border-radius: 4px;">
-                                <strong>${lastDetails.contract} by ${lastDetails.declarer} = ${lastDetails.result}</strong><br>
-                                <span style="font-size: 12px;">
+                const vulnerability = this.getCurrentVulnerabilityString();
+                const vulnText = vulnerability === 'None' ? 'Non-Vul' : 
+                               vulnerability === 'Both' ? 'Both Vul' : 
+                               `${vulnerability} Vulnerable`;
+                
+                if (lastDetails) {
+                    return `
+                        <div class="title-score-row">
+                            <div class="mode-title">${this.displayName}</div>
+                            <div class="score-display">Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}</div>
+                        </div>
+                        <div class="game-content">
+                            <div><strong>Deal ${this.currentDeal} completed:</strong></div>
+                            <div style="margin: 8px 0; padding: 10px; background: rgba(52,152,219,0.2); border-radius: 6px; border: 1px solid #3498db;">
+                                <div style="font-weight: bold; margin-bottom: 4px;">
+                                    ${lastDetails.contract} by ${lastDetails.declarer} ${vulnText} = ${lastDetails.result}
+                                </div>
+                                <div style="font-size: 12px; color: #2c3e50;">
                                     Below line: ${lastDetails.belowLineScore} | Above line: ${lastDetails.aboveLineScore}
-                                </span>
+                                </div>
+                                ${lastDetails.gameWon ? 
+                                    '<div style="color: #f39c12; font-weight: bold; margin-top: 4px;">🎯 GAME WON!</div>' : ''
+                                }
                             </div>
-                        ` : ''}
-                        ${rubberScoring}
-                    </div>
-                    <div class="current-state">Press <strong>Honors</strong> button to claim bonuses, or <strong>Deal</strong> for next hand</div>
-                `;
+                            ${rubberScoring}
+                        </div>
+                        <div class="current-state">Press <strong>X</strong> to claim honors, or <strong>Deal</strong> for next hand</div>
+                    `;
+                }
+                break;
+                
+            default:
+                return '<div class="current-state">Loading...</div>';
         }
         
         return '<div class="current-state">Loading...</div>';
     }
     
-    getRubberScoreBreakdown() {
-        const ns = this.rubberState;
-        const partNS = ns.partScores.NS;
-        const partEW = ns.partScores.EW;
-        const aboveNS = ns.aboveLineScores.NS;
-        const aboveEW = ns.aboveLineScores.EW;
-        const totalNS = partNS + aboveNS;
-        const totalEW = partEW + aboveEW;
+    /**
+     * Get enhanced status display for Rubber Bridge
+     */
+    getStatusDisplay() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        const partScorePressure = this.getPartScorePressure();
         
-        const vulnNS = ns.vulnerability.NS ? '🔴' : '🟢';
-        const vulnEW = ns.vulnerability.EW ? '🔴' : '🟢';
+        return {
+            dealInfo: this.getDealInfo(),
+            gamesWon: rubberStatus.gamesWon,
+            vulnerability: rubberStatus.vulnerability,
+            scores: breakdown.totals,
+            partScores: breakdown.partScores,
+            partScorePressure: partScorePressure,
+            isComplete: rubberStatus.rubberComplete,
+            winner: rubberStatus.rubberWinner
+        };
+    }
+    
+    /**
+     * Get rubber progress visualization
+     */
+    getRubberProgressDisplay() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        let progressHTML = `<div class="rubber-progress" style="margin: 10px 0;">`;
+        progressHTML += `<div style="font-weight: bold; margin-bottom: 8px;">Rubber Progress:</div>`;
+        
+        // Games won display
+        progressHTML += `<div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">`;
+        
+        // NS games
+        for (let i = 0; i < 2; i++) {
+            const won = i < rubberStatus.gamesWon.NS;
+            progressHTML += `
+                <div style="
+                    width: 40px;
+                    height: 30px;
+                    background: ${won ? '#27ae60' : '#ecf0f1'};
+                    color: ${won ? 'white' : '#7f8c8d'};
+                    border: 1px solid #bdc3c7;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">
+                    NS
+                </div>
+            `;
+        }
+        
+        progressHTML += `<div style="width: 20px; text-align: center; line-height: 30px; font-weight: bold;">vs</div>`;
+        
+        // EW games
+        for (let i = 0; i < 2; i++) {
+            const won = i < rubberStatus.gamesWon.EW;
+            progressHTML += `
+                <div style="
+                    width: 40px;
+                    height: 30px;
+                    background: ${won ? '#e74c3c' : '#ecf0f1'};
+                    color: ${won ? 'white' : '#7f8c8d'};
+                    border: 1px solid #bdc3c7;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">
+                    EW
+                </div>
+            `;
+        }
+        
+        progressHTML += `</div>`;
+        
+        // Part-score progress
+        progressHTML += `<div style="font-size: 11px; color: #7f8c8d; text-align: center;">`;
+        progressHTML += `Part-scores: NS ${breakdown.partScores.NS}/100 | EW ${breakdown.partScores.EW}/100`;
+        progressHTML += `</div>`;
+        
+        progressHTML += `</div>`;
+        return progressHTML;
+    }
+    
+    /**
+     * Get compact rubber summary for mobile displays
+     */
+    getCompactRubberSummary() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        
+        return {
+            games: `${rubberStatus.gamesWon.NS}-${rubberStatus.gamesWon.EW}`,
+            vulnerability: this.getCurrentVulnerabilityString(),
+            partScores: `${breakdown.partScores.NS}/${breakdown.partScores.EW}`,
+            totals: `${breakdown.totals.NS}-${breakdown.totals.EW}`,
+            isComplete: rubberStatus.rubberComplete,
+            winner: rubberStatus.rubberWinner
+        };
+    }
+    
+    /**
+     * Format vulnerability for display with rubber-specific styling
+     */
+    formatRubberVulnerabilityDisplay(vulnerability) {
+        const vulnConfig = {
+            'None': { text: 'All Fresh', color: '#95a5a6', bgColor: 'rgba(149, 165, 166, 0.1)' },
+            'NS': { text: 'NS Vul', color: '#27ae60', bgColor: 'rgba(39, 174, 96, 0.1)' },
+            'EW': { text: 'EW Vul', color: '#e74c3c', bgColor: 'rgba(231, 76, 60, 0.1)' },
+            'Both': { text: 'Both Vul', color: '#f39c12', bgColor: 'rgba(243, 156, 18, 0.1)' }
+        };
+        
+        const config = vulnConfig[vulnerability] || vulnConfig['None'];
         
         return `
-            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin: 6px 0; font-size: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: bold; color: #f39c12;">
-                    <span>NS ${vulnNS}</span>
-                    <span>EW ${vulnEW}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #e74c3c; font-weight: bold;">Game Points: ${partNS}</span>
-                    <span style="color: #e74c3c; font-weight: bold;">Game Points: ${partEW}</span>
-                </div>
-                <div style="font-size: 10px; color: #2c3e50; margin-bottom: 4px; text-align: center;">
-                    (Below-the-line • Need 100+ for game)
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #3498db; font-weight: bold;">Bonus Points: ${aboveNS}</span>
-                    <span style="color: #3498db; font-weight: bold;">Bonus Points: ${aboveEW}</span>
-                </div>
-                <div style="font-size: 10px; color: #2c3e50; margin-bottom: 6px; text-align: center;">
-                    (Above-the-line • Game/slam/honor bonuses)
-                </div>
-                <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; font-weight: bold; color: #27ae60;">
-                    <span>Total: ${totalNS}</span>
-                    <span>Total: ${totalEW}</span>
+            <span style="
+                color: ${config.color};
+                background: ${config.bgColor};
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-weight: bold;
+                font-size: 11px;
+                border: 1px solid ${config.color};
+            ">
+                ${config.text}
+            </span>
+        `;
+    }
+    
+    /**
+     * Get part-score progress bar HTML
+     */
+    getPartScoreProgressBar(side) {
+        const breakdown = this.getScoringBreakdown();
+        const points = breakdown.partScores[side];
+        const percentage = Math.min(100, (points / 100) * 100);
+        
+        const color = side === 'NS' ? '#3498db' : '#e67e22';
+        const bgColor = side === 'NS' ? 'rgba(52, 152, 219, 0.2)' : 'rgba(230, 126, 34, 0.2)';
+        
+        return `
+            <div style="
+                width: 100%;
+                height: 20px;
+                background: ${bgColor};
+                border-radius: 10px;
+                overflow: hidden;
+                position: relative;
+                margin: 4px 0;
+            ">
+                <div style="
+                    width: ${percentage}%;
+                    height: 100%;
+                    background: ${color};
+                    transition: width 0.3s ease;
+                "></div>
+                <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                ">
+                    ${points}/100
                 </div>
             </div>
         `;
     }
     
-    canGoBack() {
-        return !this.rubberState.rubberComplete;
+    /**
+     * Get detailed contract display for current state
+     */
+    getContractDisplay() {
+        const contract = this.currentContract;
+        let display = '';
+        
+        if (contract.level) {
+            display += contract.level;
+        }
+        if (contract.suit) {
+            display += contract.suit;
+        }
+        if (contract.doubled) {
+            display += ' ' + contract.doubled;
+        }
+        if (contract.declarer) {
+            display += ' by ' + contract.declarer;
+        }
+        if (contract.result) {
+            display += ' = ' + contract.result;
+        }
+        
+        return display || 'No contract yet';
     }
     
-    getHelpContent() {
+    /**
+     * Get current game phase description
+     */
+    getGamePhaseDescription() {
+        if (this.rubberState.rubberComplete) {
+            return `Rubber complete - ${this.rubberState.rubberWinner} wins`;
+        }
+        
+        const totalGames = this.rubberState.gamesWon.NS + this.rubberState.gamesWon.EW;
+        
+        if (totalGames === 0) {
+            return 'First rubber - both sides fresh';
+        } else if (totalGames === 1) {
+            const leader = this.rubberState.gamesWon.NS > this.rubberState.gamesWon.EW ? 'NS' : 'EW';
+            return `Second game - ${leader} leads 1-0`;
+        } else if (totalGames === 2) {
+            if (this.rubberState.gamesWon.NS === 1 && this.rubberState.gamesWon.EW === 1) {
+                return 'Deciding game - rubber tied 1-1';
+            }
+        }
+        
+        return 'Rubber in progress';
+    }
+    
+    /**
+     * Get strategic context for current situation  
+     */
+    getStrategicContext() {
+        const partScorePressure = this.getPartScorePressure();
+        const vulnerability = this.getCurrentVulnerabilityString();
+        const context = [];
+        
+        // Part-score pressure
+        if (partScorePressure.NS.pressure === 'high') {
+            context.push(`NS close to game (${partScorePressure.NS.points}/100)`);
+        }
+        if (partScorePressure.EW.pressure === 'high') {
+            context.push(`EW close to game (${partScorePressure.EW.points}/100)`);
+        }
+        
+        // Vulnerability implications
+        if (vulnerability === 'Both') {
+            context.push('Both sides vulnerable - high stakes');
+        } else if (vulnerability !== 'None') {
+            context.push(`${vulnerability} vulnerable - asymmetric risk`);
+        }
+        
+        // Rubber situation
+        const gamePhase = this.getGamePhaseDescription();
+        if (gamePhase.includes('Deciding game')) {
+            context.push('Rubber deciding game - winner takes all');
+        }
+        
+        return context;
+    }
+    
+    /**
+     * Get formatted deal summary for display
+     */
+    getFormattedDealSummary() {
+        const dealInfo = this.getDealInfo();
+        const gamePhase = this.getGamePhaseDescription();
+        const strategicContext = this.getStrategicContext();
+        
+        let summary = `<div class="deal-summary">`;
+        summary += `<div class="deal-info"><strong>${dealInfo}</strong></div>`;
+        summary += `<div class="game-phase">${gamePhase}</div>`;
+        
+        if (strategicContext.length > 0) {
+            summary += `<div class="strategic-context">`;
+            strategicContext.forEach(context => {
+                summary += `<div class="context-item">• ${context}</div>`;
+            });
+            summary += `</div>`;
+        }
+        
+        summary += `</div>`;
+        return summary;
+    }
+    
+    /**
+     * Get score comparison display
+     */
+    getScoreComparisonDisplay() {
+        const breakdown = this.getScoringBreakdown();
+        const totals = breakdown.totals;
+        const margin = Math.abs(totals.NS - totals.EW);
+        const leader = totals.NS > totals.EW ? 'NS' : totals.EW > totals.NS ? 'EW' : 'Tied';
+        
         return {
-            title: 'Enhanced Rubber Bridge Help',
-            content: `
-                <div class="help-section">
-                    <h4>🏆 Rubber Bridge Scoring (With Examples)</h4>
-                    <p><strong>Key Concept:</strong> Rubber bridge uses two scoring areas - "below the line" and "above the line."</p>
-                    
-                    <p><strong>Below-the-Line (Game Points):</strong></p>
-                    <ul>
-                        <li>Only basic contract points count here</li>
-                        <li>♣/♦: 20 points per trick • ♥/♠: 30 points per trick • NT: 30 + 10 bonus</li>
-                        <li><strong>Game = 100+ below-the-line points</strong></li>
-                    </ul>
-                    
-                    <p><strong>Above-the-Line (Bonus Points):</strong></p>
-                    <ul>
-                        <li>Game bonuses, slam bonuses, doubled bonuses, honors, penalties</li>
-                        <li>These add to your total but don't count toward making game</li>
-                    </ul>
-                    
-                    <p><strong>Example 1 - Making Game:</strong></p>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
-                        4♥ by N = Made exactly (not vulnerable)<br>
-                        • Below line: 4 × 30 = <strong>120 points</strong> → GAME!<br>
-                        • Above line: 300 (game bonus)<br>
-                        • Total: 420 points to NS<br>
-                        • Result: NS wins first game, becomes vulnerable
-                    </div>
-                    
-                    <p><strong>Example 2 - Part Score:</strong></p>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
-                        2♣ by S = Made +1<br>
-                        • Below line: 2 × 20 = <strong>40 points</strong> (not enough for game)<br>
-                        • Above line: 50 (part-game bonus) + 20 (1 overtrick)<br>
-                        • Total: 110 points to NS<br>
-                        • Result: NS has 40 toward next game
-                    </div>
-                    
-                    <p><strong>Example 3 - With Honors:</strong></p>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
-                        3NT by E = Made exactly + 4 Aces<br>
-                        • Below line: 3 × 30 + 10 = <strong>100 points</strong> → GAME!<br>
-                        • Above line: 300 (game bonus) + 150 (4 aces)<br>
-                        • Total: 550 points to EW<br>
-                        • Result: EW wins game, becomes vulnerable
-                    </div>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎯 Game & Rubber Rules (Detailed)</h4>
-                    <ul>
-                        <li><strong>Making Game:</strong> Accumulate 100+ below-the-line points in one or more deals</li>
-                        <li><strong>Game Examples:</strong> 3NT (100), 4♥/♠ (120), 5♣/♦ (100), or smaller contracts that add up</li>
-                        <li><strong>After Game Won:</strong> Part-scores reset to zero, winner becomes vulnerable</li>
-                        <li><strong>Rubber Complete:</strong> First side to win 2 games wins the rubber</li>
-                        <li><strong>Rubber Bonus:</strong> 700 points (2-0 rubber) or 500 points (2-1 rubber)</li>
-                        <li><strong>Vulnerability Effects:</strong> Higher game bonuses (+500 vs +300) and penalties</li>
-                    </ul>
-                    
-                    <p><strong>Visual Score Display:</strong></p>
-                    <ul>
-                        <li><strong>🔴 Red:</strong> Vulnerable (won a game) • <strong>🟢 Green:</strong> Not vulnerable</li>
-                        <li><strong>Game Points:</strong> Red numbers (below-the-line, count toward game)</li>
-                        <li><strong>Bonus Points:</strong> Blue numbers (above-the-line, don't count toward game)</li>
-                        <li><strong>Total:</strong> Green numbers (your actual score)</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🏅 Honor Bonuses (Detailed Explanation)</h4>
-                    <p><strong>What are honors?</strong> In bridge, honors are the top 5 cards of the trump suit: Ace, King, Queen, Jack, and 10. In No Trump contracts, only the four Aces count as honors.</p>
-                    
-                    <p><strong>How honor bonuses work:</strong></p>
-                    <ul>
-                        <li><strong>4 Honors in trump suit:</strong> 100 points (if declarer's side holds A-K-Q-J, A-K-Q-10, A-K-J-10, A-Q-J-10, or K-Q-J-10 of trumps)</li>
-                        <li><strong>5 Honors in trump suit:</strong> 150 points (if declarer's side holds A-K-Q-J-10 of trumps)</li>
-                        <li><strong>4 Aces in No Trump:</strong> 150 points (if declarer's side holds all four Aces)</li>
-                    </ul>
-                    
-                    <p><strong>Important:</strong> Honor bonuses are awarded to the side that holds the honors (declarer + dummy combined), regardless of whether the contract was made or failed. These points go above-the-line and don't count toward making game.</p>
-                    
-                    <p><strong>When to claim:</strong> After each deal, if your side (declarer + dummy) held 4+ honors in the trump suit or 4 aces in NT, click the <strong>Honors</strong> button and select the appropriate bonus.</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>📊 Visual Score Display</h4>
-                    <ul>
-                        <li><strong>🔴/🟢 Vulnerability:</strong> Red=Vulnerable, Green=Not Vulnerable</li>
-                        <li><strong>Game Points:</strong> Below-the-line (contract points)</li>
-                        <li><strong>Bonus Points:</strong> Above-the-line (bonuses, penalties)</li>
-                        <li><strong>Games Won:</strong> Shown in top-right (0-0, 1-0, etc.)</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎮 How to Play</h4>
-                    <ol>
-                        <li>Enter contract: Level → Suit → Declarer</li>
-                        <li>Use X button for doubles/redoubles</li>
-                        <li>Enter result: Made/Plus/Down</li>
-                        <li>Click <strong>Honors</strong> button to claim honor bonuses</li>
-                        <li>Continue until rubber is complete</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>💾 Game Storage & History</h4>
-                    <p><strong>Data Persistence:</strong> Your game scores and history are automatically saved to your browser's local storage and persist between sessions.</p>
-                    
-                    <ul>
-                        <li><strong>Automatic Saving:</strong> Every deal and score is saved immediately</li>
-                        <li><strong>Session Persistence:</strong> Close and reopen the app - your game continues</li>
-                        <li><strong>History Tracking:</strong> Complete deal-by-deal history with contracts and results</li>
-                        <li><strong>Rubber Completion:</strong> When a rubber ends, you can start a new one or continue scoring</li>
-                        <li><strong>Manual Reset:</strong> Use "Return to Menu" in Quit options to reset scores</li>
-                        <li><strong>Browser Storage:</strong> Data stays until you clear browser data or use different device</li>
-                    </ul>
-                    
-                    <p><strong>Viewing History:</strong> Use Quit → Show Scores to see complete game history with deal-by-deal breakdown.</p>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
+            totals: totals,
+            margin: margin,
+            leader: leader,
+            isClose: margin <= 50,
+            isBlowout: margin >= 500
         };
     }
     
+    /**
+     * Get rubber milestone display
+     */
+    getRubberMilestoneDisplay() {
+        const rubberStatus = this.getRubberStatus();
+        const milestones = [];
+        
+        // Game milestones
+        if (rubberStatus.gamesWon.NS === 1 && rubberStatus.gamesWon.EW === 0) {
+            milestones.push({ type: 'game', message: 'NS leads 1-0 in rubber', color: '#27ae60' });
+        } else if (rubberStatus.gamesWon.EW === 1 && rubberStatus.gamesWon.NS === 0) {
+            milestones.push({ type: 'game', message: 'EW leads 1-0 in rubber', color: '#e74c3c' });
+        } else if (rubberStatus.gamesWon.NS === 1 && rubberStatus.gamesWon.EW === 1) {
+            milestones.push({ type: 'tied', message: 'Rubber tied 1-1 - decisive game!', color: '#f39c12' });
+        }
+        
+        // Rubber completion
+        if (rubberStatus.rubberComplete) {
+            const rubberScore = rubberStatus.gamesWon[rubberStatus.rubberWinner] === 2 && 
+                              rubberStatus.gamesWon[rubberStatus.rubberWinner === 'NS' ? 'EW' : 'NS'] === 0 ? '2-0' : '2-1';
+            milestones.push({ 
+                type: 'rubber', 
+                message: `${rubberStatus.rubberWinner} wins rubber ${rubberScore}!`, 
+                color: '#9b59b6' 
+            });
+        }
+        
+        return milestones;
+    }
+    
+    /**
+     * Cleanup when switching modes
+     */
     cleanup() {
-        this.ui.clearVulnerabilityHighlight();
-        this.ui.updateDoubleButton('');
-        this.ui.hideHonorsButton();
-        console.log('🧹 Enhanced Rubber Bridge cleanup completed');
+        console.log('🧹 Rubber Bridge cleanup completed');
+        // Rubber Bridge doesn't have special UI elements to clean up
+    }
+// END SECTION NINE// SECTION TEN - Export and Final Methods
+    /**
+     * Get comprehensive rubber bridge game summary
+     */
+    getGameSummary() {
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+        const stats = this.getRubberStatistics();
+        const partScorePressure = this.getPartScorePressure();
+        
+        return {
+            mode: 'Rubber Bridge',
+            currentStatus: {
+                deal: this.currentDeal,
+                gamesWon: rubberStatus.gamesWon,
+                vulnerability: rubberStatus.vulnerability,
+                partScores: breakdown.partScores,
+                totals: breakdown.totals,
+                rubberComplete: rubberStatus.rubberComplete,
+                rubberWinner: rubberStatus.rubberWinner
+            },
+            statistics: stats,
+            partScorePressure: partScorePressure,
+            rubberComplete: rubberStatus.rubberComplete,
+            recommendations: this.getRubberRecommendations(),
+            breakPoints: this.getRubberBreakPoints(),
+            efficiency: this.calculateRubberEfficiency()
+        };
+    }
+    
+    /**
+     * Get natural break points in the rubber
+     */
+    getRubberBreakPoints() {
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        const breakPoints = [];
+        
+        // Find all game completions
+        history.forEach((deal, index) => {
+            if (deal.rubberScoring && deal.rubberScoring.gameWon) {
+                const gamesWonAtTime = {
+                    NS: history.slice(0, index + 1).filter(d => 
+                        d.rubberScoring && d.rubberScoring.gameWon && 
+                        (d.contract.declarer === 'N' || d.contract.declarer === 'S')
+                    ).length,
+                    EW: history.slice(0, index + 1).filter(d => 
+                        d.rubberScoring && d.rubberScoring.gameWon && 
+                        (d.contract.declarer === 'E' || d.contract.declarer === 'W')
+                    ).length
+                };
+                
+                breakPoints.push({
+                    deal: deal.deal,
+                    type: 'game',
+                    winner: deal.scoringSide,
+                    gamesWon: gamesWonAtTime,
+                    description: `Game won by ${deal.scoringSide}`,
+                    severity: 'minor'
+                });
+            }
+            
+            if (deal.rubberScoring && deal.rubberScoring.rubberComplete) {
+                breakPoints.push({
+                    deal: deal.deal,
+                    type: 'rubber',
+                    winner: deal.rubberScoring.rubberWinner,
+                    description: `Rubber won by ${deal.rubberScoring.rubberWinner}`,
+                    severity: 'major'
+                });
+            }
+        });
+        
+        return breakPoints;
+    }
+    
+    /**
+     * Generate detailed rubber bridge report
+     */
+    generateRubberReport() {
+        const summary = this.getGameSummary();
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        const breakdown = this.getScoringBreakdown();
+        
+        let report = `RUBBER BRIDGE GAME REPORT\n`;
+        report += `Generated: ${new Date().toLocaleString()}\n`;
+        report += `=====================================\n\n`;
+        
+        report += `CURRENT RUBBER STATUS:\n`;
+        report += `Games Won: NS ${summary.currentStatus.gamesWon.NS} - EW ${summary.currentStatus.gamesWon.EW}\n`;
+        report += `Vulnerability: NS ${summary.currentStatus.vulnerability.NS ? 'Vulnerable' : 'Fresh'}, EW ${summary.currentStatus.vulnerability.EW ? 'Vulnerable' : 'Fresh'}\n`;
+        report += `Part Scores: NS ${summary.currentStatus.partScores.NS}/100, EW ${summary.currentStatus.partScores.EW}/100\n`;
+        report += `Total Scores: NS ${summary.currentStatus.totals.NS}, EW ${summary.currentStatus.totals.EW}\n`;
+        if (summary.rubberComplete) {
+            report += `RUBBER COMPLETE - Winner: ${summary.currentStatus.rubberWinner}\n`;
+        }
+        report += `\n`;
+        
+        report += `RUBBER STATISTICS:\n`;
+        report += `Total Deals: ${summary.statistics.totalDeals}\n`;
+        report += `Contracts Made: ${summary.statistics.contractsMade}\n`;
+        report += `Contracts Failed: ${summary.statistics.contractsFailed}\n`;
+        report += `Honor Bonuses: ${summary.statistics.honorBonuses} (${summary.statistics.honorBonusValue} points)\n`;
+        report += `Slams Bid: ${summary.statistics.slamsBid}\n`;
+        report += `Doubles Played: ${summary.statistics.doublesPlayed}\n`;
+        report += `Rubber Efficiency: ${(summary.efficiency * 100).toFixed(1)}% (games per deal)\n\n`;
+        
+        if (summary.breakPoints.length > 0) {
+            report += `BREAK POINTS:\n`;
+            summary.breakPoints.forEach(bp => {
+                report += `Deal ${bp.deal}: ${bp.description}\n`;
+            });
+            report += `\n`;
+        }
+        
+        report += `DEAL HISTORY:\n`;
+        report += `Deal | Contract | Result | Score | Below | Above | Notes\n`;
+        report += `-----|----------|--------|-------|-------|-------|------\n`;
+        
+        let dealNumber = 1;
+        history.forEach(deal => {
+            if (deal.honorBonus) {
+                report += `     | Honor Bonus | +${deal.score} | ${deal.score} |   0   | ${deal.score} | ${deal.scoringSide}\n`;
+            } else if (deal.rubberBonus) {
+                report += `     | Rubber Bonus | +${deal.score} | ${deal.score} |   0   | ${deal.score} | ${deal.scoringSide} wins\n`;
+            } else {
+                const contract = deal.contract;
+                const contractStr = `${contract.level}${contract.suit}${contract.doubled || ''}`;
+                const rubberScoring = deal.rubberScoring || {};
+                const notes = rubberScoring.gameWon ? 'GAME!' : '';
+                
+                report += `${dealNumber.toString().padStart(4)} | ${contractStr.padEnd(8)} | ${contract.result.padEnd(6)} | ${deal.score.toString().padStart(5)} | ${(rubberScoring.belowLine || 0).toString().padStart(5)} | ${(rubberScoring.aboveLine || 0).toString().padStart(5)} | ${notes}\n`;
+                dealNumber++;
+            }
+        });
+        
+        return report;
+    }
+    
+    /**
+     * Setup teaching scenarios for rubber bridge
+     */
+    setupTeachingScenario(scenario) {
+        const scenarios = {
+            'fresh-rubber': {
+                description: 'Start a fresh rubber - both sides non-vulnerable',
+                setup: () => this.resetRubber(),
+                setupMessage: 'Fresh rubber started - both sides non-vulnerable'
+            },
+            'game-point': {
+                description: 'Game point situation - one side needs one game to win rubber',
+                setup: () => {
+                    this.resetRubber();
+                    this.rubberState.gamesWon.NS = 1;
+                    this.rubberState.gamesWon.EW = 1;
+                    this.rubberState.vulnerability.NS = true;
+                    this.rubberState.vulnerability.EW = true;
+                },
+                setupMessage: 'Game point! Both sides vulnerable - next game wins rubber'
+            },
+            'part-score-pressure': {
+                description: 'Part-score pressure - both sides have significant part-scores',
+                setup: () => {
+                    this.resetRubber();
+                    this.rubberState.partScores.NS = 60;
+                    this.rubberState.partScores.EW = 70;
+                    this.rubberState.belowLineScores.NS = 60;
+                    this.rubberState.belowLineScores.EW = 70;
+                    this.updateGameStateScores();
+                },
+                setupMessage: 'Part-score pressure! NS: 60/100, EW: 70/100'
+            },
+            'vulnerability-demo': {
+                description: 'Demonstrate vulnerability effects - one side vulnerable',
+                setup: () => {
+                    this.resetRubber();
+                    this.rubberState.gamesWon.NS = 1;
+                    this.rubberState.vulnerability.NS = true;
+                },
+                setupMessage: 'Vulnerability demo - NS vulnerable, EW fresh'
+            }
+        };
+        
+        const config = scenarios[scenario];
+        if (!config) {
+            console.warn('Unknown rubber bridge teaching scenario:', scenario);
+            return false;
+        }
+        
+        config.setup();
+        this.resetContract();
+        this.inputState = 'level_selection';
+        this.updateDisplay();
+        
+        console.log(`📚 Teaching scenario: ${config.description}`);
+        this.bridgeApp.showMessage(config.setupMessage, 'info');
+        
+        return true;
+    }
+    
+    /**
+     * Calculate rubber bridge lesson value
+     */
+    calculateLessonValue() {
+        const stats = this.getRubberStatistics();
+        const partScorePressure = this.getPartScorePressure();
+        const rubberStatus = this.getRubberStatus();
+        
+        let lessonValue = 0;
+        
+        // Basic engagement
+        lessonValue += stats.totalDeals * 2;
+        
+        // Learning bonuses
+        if (stats.honorBonuses > 0) lessonValue += 10; // Honor bonus understanding
+        if (stats.slamsBid > 0) lessonValue += 15; // Slam bidding experience
+        if (stats.doublesPlayed > 0) lessonValue += 8; // Doubling experience
+        
+        // Strategic understanding
+        if (partScorePressure.NS.pressure === 'high' || partScorePressure.EW.pressure === 'high') {
+            lessonValue += 12; // Part-score pressure experience
+        }
+        
+        if (rubberStatus.gamesWon.NS > 0 && rubberStatus.gamesWon.EW > 0) {
+            lessonValue += 20; // Competitive rubber experience
+        }
+        
+        if (rubberStatus.rubberComplete) {
+            lessonValue += 25; // Complete rubber experience
+        }
+        
+        return Math.min(100, lessonValue); // Cap at 100
+    }
+    
+    /**
+     * Get rubber bridge insights for improvement
+     */
+    getRubberInsights() {
+        const stats = this.getRubberStatistics();
+        const efficiency = this.calculateRubberEfficiency();
+        const insights = [];
+        
+        if (efficiency < 0.3) {
+            insights.push({
+                type: 'efficiency',
+                message: 'Consider more aggressive game bidding',
+                explanation: 'Low games-per-deal ratio suggests conservative bidding'
+            });
+        }
+        
+        if (stats.honorBonuses === 0 && stats.totalDeals > 5) {
+            insights.push({
+                type: 'honors',
+                message: 'Remember to claim honor bonuses',
+                explanation: 'Honor bonuses can add significant points above the line'
+            });
+        }
+        
+        if (stats.slamsBid === 0 && stats.totalDeals > 10) {
+            insights.push({
+                type: 'slams',
+                message: 'Consider bidding slams with strong hands',
+                explanation: 'Slam bonuses are substantial in rubber bridge'
+            });
+        }
+        
+        if (stats.contractsMade / stats.totalDeals < 0.5) {
+            insights.push({
+                type: 'bidding',
+                message: 'Consider more conservative bidding',
+                explanation: 'High failure rate suggests overbidding'
+            });
+        }
+        
+        return insights;
+    }
+    
+    /**
+     * Export comprehensive rubber bridge session data
+     */
+    exportRubberSession() {
+        const gameData = this.exportRubberData();
+        const sessionSummary = this.getGameSummary();
+        const recommendations = this.getRubberRecommendations();
+        const insights = this.getRubberInsights();
+        
+        return {
+            ...gameData,
+            sessionSummary: sessionSummary,
+            recommendations: recommendations,
+            insights: insights,
+            lessonValue: this.calculateLessonValue(),
+            textReport: this.generateRubberReport(),
+            exportTimestamp: Date.now()
+        };
+    }
+    
+    /**
+     * Import rubber bridge session data
+     */
+    importRubberSession(sessionData) {
+        try {
+            if (sessionData.mode !== 'rubber' || !sessionData.rubberState) {
+                throw new Error('Invalid rubber bridge session data');
+            }
+            
+            // Restore rubber state
+            this.rubberState = {
+                ...this.rubberState,
+                ...sessionData.rubberState
+            };
+            
+            // Restore game state
+            if (sessionData.gameState) {
+                this.currentDeal = sessionData.gameState.currentDeal || 1;
+                this.gameState.scores = sessionData.gameState.scoreBreakdown?.totals || { NS: 0, EW: 0 };
+            }
+            
+            // Restore history if available
+            if (sessionData.history && Array.isArray(sessionData.history)) {
+                this.gameState.history = sessionData.history.map(deal => ({
+                    ...deal,
+                    mode: 'rubber'
+                }));
+            }
+            
+            // Update display
+            this.updateDisplay();
+            
+            console.log('✅ Rubber bridge session imported successfully');
+            return { success: true, message: 'Session imported successfully' };
+            
+        } catch (error) {
+            console.error('❌ Failed to import rubber bridge session:', error);
+            return { success: false, message: 'Failed to import session: ' + error.message };
+        }
+    }
+    
+    /**
+     * Validate rubber bridge session data
+     */
+    validateSessionData(sessionData) {
+        const issues = [];
+        
+        // Check basic structure
+        if (!sessionData || typeof sessionData !== 'object') {
+            issues.push('Invalid session data format');
+            return { valid: false, issues };
+        }
+        
+        if (sessionData.mode !== 'rubber') {
+            issues.push('Not a rubber bridge session');
+        }
+        
+        if (!sessionData.rubberState) {
+            issues.push('Missing rubber state data');
+        } else {
+            // Validate rubber state
+            const rs = sessionData.rubberState;
+            
+            if (!rs.gamesWon || typeof rs.gamesWon.NS !== 'number' || typeof rs.gamesWon.EW !== 'number') {
+                issues.push('Invalid games won data');
+            }
+            
+            if (rs.gamesWon.NS > 2 || rs.gamesWon.EW > 2 || rs.gamesWon.NS < 0 || rs.gamesWon.EW < 0) {
+                issues.push('Games won values out of range (0-2)');
+            }
+            
+            if (!rs.vulnerability || typeof rs.vulnerability.NS !== 'boolean' || typeof rs.vulnerability.EW !== 'boolean') {
+                issues.push('Invalid vulnerability data');
+            }
+        }
+        
+        if (sessionData.history && !Array.isArray(sessionData.history)) {
+            issues.push('History data is not an array');
+        }
+        
+        return {
+            valid: issues.length === 0,
+            issues: issues
+        };
+    }
+    
+    /**
+     * Create rubber bridge backup data
+     */
+    createBackup() {
+        return {
+            timestamp: Date.now(),
+            version: '1.0',
+            mode: 'rubber',
+            rubberState: JSON.parse(JSON.stringify(this.rubberState)),
+            currentDeal: this.currentDeal,
+            currentContract: JSON.parse(JSON.stringify(this.currentContract)),
+            inputState: this.inputState,
+            resultMode: this.resultMode,
+            gameState: {
+                scores: { ...this.gameState.scores },
+                history: this.gameState.history.filter(deal => deal.mode === 'rubber'),
+                currentDeal: this.currentDeal
+            }
+        };
+    }
+    
+    /**
+     * Restore from rubber bridge backup
+     */
+    restoreFromBackup(backupData) {
+        try {
+            const validation = this.validateSessionData(backupData);
+            if (!validation.valid) {
+                throw new Error('Invalid backup data: ' + validation.issues.join(', '));
+            }
+            
+            // Restore state
+            this.rubberState = { ...backupData.rubberState };
+            this.currentDeal = backupData.currentDeal || 1;
+            this.currentContract = { ...backupData.currentContract };
+            this.inputState = backupData.inputState || 'level_selection';
+            this.resultMode = backupData.resultMode || null;
+            
+            // Restore game state
+            if (backupData.gameState) {
+                this.gameState.scores = { ...backupData.gameState.scores };
+                this.gameState.history = [...backupData.gameState.history];
+                this.gameState.currentDeal = backupData.gameState.currentDeal;
+            }
+            
+            this.updateDisplay();
+            
+            return { success: true, message: 'Backup restored successfully' };
+            
+        } catch (error) {
+            console.error('❌ Failed to restore backup:', error);
+            return { success: false, message: 'Failed to restore backup: ' + error.message };
+        }
+    }
+    
+    /**
+     * Get rubber bridge performance analytics
+     */
+    getPerformanceAnalytics() {
+        const stats = this.getRubberStatistics();
+        const breakdown = this.getScoringBreakdown();
+        const rubberStatus = this.getRubberStatus();
+        const efficiency = this.calculateRubberEfficiency();
+        
+        return {
+            overall: {
+                totalDeals: stats.totalDeals,
+                rubbersCompleted: stats.rubbersCompleted,
+                efficiency: efficiency,
+                lessonValue: this.calculateLessonValue()
+            },
+            contracts: {
+                made: stats.contractsMade,
+                failed: stats.contractsFailed,
+                successRate: stats.totalDeals > 0 ? (stats.contractsMade / stats.totalDeals) * 100 : 0,
+                doublesPlayed: stats.doublesPlayed,
+                slamsBid: stats.slamsBid
+            },
+            bonuses: {
+                honorBonuses: stats.honorBonuses,
+                honorBonusValue: stats.honorBonusValue,
+                rubberBonusValue: stats.rubberBonusValue,
+                totalBonusValue: stats.honorBonusValue + stats.rubberBonusValue
+            },
+            currentRubber: {
+                gamesWon: rubberStatus.gamesWon,
+                partScores: breakdown.partScores,
+                totals: breakdown.totals,
+                isComplete: rubberStatus.rubberComplete,
+                winner: rubberStatus.rubberWinner
+            },
+            insights: this.getRubberInsights(),
+            recommendations: this.getRubberRecommendations()
+        };
+    }
+    
+    /**
+     * Generate rubber bridge learning report
+     */
+    generateLearningReport() {
+        const analytics = this.getPerformanceAnalytics();
+        const insights = this.getRubberInsights();
+        
+        let report = `RUBBER BRIDGE LEARNING REPORT\n`;
+        report += `Generated: ${new Date().toLocaleString()}\n`;
+        report += `=====================================\n\n`;
+        
+        report += `PERFORMANCE SUMMARY:\n`;
+        report += `Lesson Value: ${analytics.overall.lessonValue}/100\n`;
+        report += `Deals Played: ${analytics.overall.totalDeals}\n`;
+        report += `Rubber Efficiency: ${(analytics.overall.efficiency * 100).toFixed(1)}%\n`;
+        report += `Contract Success Rate: ${analytics.contracts.successRate.toFixed(1)}%\n\n`;
+        
+        report += `LEARNING AREAS:\n`;
+        if (insights.length > 0) {
+            insights.forEach(insight => {
+                report += `• ${insight.type.toUpperCase()}: ${insight.message}\n`;
+                report += `  ${insight.explanation}\n\n`;
+            });
+        } else {
+            report += `• Excellent performance across all areas!\n\n`;
+        }
+        
+        report += `BONUS TRACKING:\n`;
+        report += `Honor Bonuses Claimed: ${analytics.bonuses.honorBonuses} (${analytics.bonuses.honorBonusValue} points)\n`;
+        report += `Rubber Bonuses Earned: ${analytics.bonuses.rubberBonusValue} points\n`;
+        report += `Total Bonus Value: ${analytics.bonuses.totalBonusValue} points\n\n`;
+        
+        if (analytics.currentRubber.isComplete) {
+            report += `CURRENT RUBBER: COMPLETE\n`;
+            report += `Winner: ${analytics.currentRubber.winner}\n`;
+            report += `Final Score: NS ${analytics.currentRubber.totals.NS} - EW ${analytics.currentRubber.totals.EW}\n`;
+        } else {
+            report += `CURRENT RUBBER: IN PROGRESS\n`;
+            report += `Games Won: NS ${analytics.currentRubber.gamesWon.NS} - EW ${analytics.currentRubber.gamesWon.EW}\n`;
+            report += `Part Scores: NS ${analytics.currentRubber.partScores.NS}/100 - EW ${analytics.currentRubber.partScores.EW}/100\n`;
+        }
+        
+        return report;
+    }
+    
+    /**
+     * Final cleanup and module completion
+     */
+    destroy() {
+        console.log('🎩 Destroying Rubber Bridge mode...');
+        
+        // Clean up any event listeners
+        this.cleanup();
+        
+        // Clear references
+        this.bridgeApp = null;
+        this.gameState = null;
+        this.rubberState = null;
+        this.currentContract = null;
+        
+        console.log('✅ Rubber Bridge mode destroyed successfully');
+    }
+    
+    /**
+     * Get module information
+     */
+    getModuleInfo() {
+        return {
+            name: 'Rubber Bridge',
+            displayName: '🎩 Rubber Bridge',
+            version: '1.0',
+            description: 'Classic rubber bridge with above/below line scoring',
+            features: [
+                'Above/below the line scoring system',
+                'Game completion at 100+ below-line points',
+                'Vulnerability after winning games',
+                'Rubber completion (best of 3 games)',
+                'Honor bonuses for A-K-Q-J-10',
+                'Rubber bonuses: 500 (2-1) or 700 (2-0) points',
+                'Part-score building across deals',
+                'Teaching scenarios and analytics',
+                'Mobile optimization with Pixel 9a fixes'
+            ],
+            author: 'Bridge Modes Calculator',
+            lastModified: new Date().toISOString()
+        };
     }
 }
 
-export default RubberBridge;
+// Export for the new modular system
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = RubberBridgeMode;
+} else if (typeof window !== 'undefined') {
+    window.RubberBridgeMode = RubberBridgeMode;
+}
+
+console.log('🎩 Rubber Bridge module loaded successfully with classic above/below line scoring');
+// END SECTION TEN - RUBBER BRIDGE MODULE COMPLETE
+
