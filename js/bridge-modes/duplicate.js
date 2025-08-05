@@ -49,7 +49,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         this.initialize();
     }
 // END SECTION ONE
-// SECTION TWO - Core Methods
+// SECTION TWO - Core Methods (FIXED FOR BUTTON INPUT)
     /**
      * Initialize movements for different pair counts
      */
@@ -152,14 +152,14 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Handle user input - integration with new system
+     * Handle user input - FIXED FOR BUTTON-BASED TRAVELER
      */
     handleInput(value) {
         console.log(`🎮 Duplicate Bridge input: ${value} in state: ${this.inputState}`);
         
-        // Skip input if traveler popup is active
-        if (this.traveler.isActive) {
-            console.log('🚫 Input blocked - traveler popup active');
+        // Route traveler input to traveler handler - FIXED: Check inputState instead of traveler.isActive
+        if (this.inputState === 'traveler_entry') {
+            this.handleTravelerInput(value);
             return;
         }
         
@@ -235,8 +235,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         return false;
     }
-// END SECTION TWO
-// SECTION THREE - Action Handlers (MOBILE BOARD LIST VERSION)
+// END SECTION TWO// SECTION THREE - Action Handlers (MOBILE BOARD LIST VERSION)
 
     /**
      * Show board selector popup - MOBILE BOARD LIST (NO DROPDOWN)
@@ -554,18 +553,36 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
     }
 // END SECTION THREE
-// SECTION FOUR - Scoring Logic (FINAL FIXED VERSION)
+// SECTION FOUR - Button-Based Traveler System (Chicago Style Result Entry)
     /**
-     * Open specific traveler for a board
+     * Open traveler using button-based input (like Chicago Bridge)
+     */
+    openTravelerPopup(boardNumber = null) {
+        if (this.traveler.isActive) {
+            console.log('🚫 Traveler already active');
+            return;
+        }
+        
+        if (boardNumber) {
+            this.openSpecificTraveler(boardNumber);
+        } else {
+            this.showBoardSelectorPopup();
+        }
+    }
+    
+    /**
+     * Open specific traveler for a board using button system
      */
     openSpecificTraveler(boardNumber) {
         this.traveler.isActive = true;
         this.traveler.boardNumber = boardNumber;
         this.traveler.data = this.generateTravelerRows(boardNumber);
+        this.currentResultIndex = 0;
         
-        this.showSpecificTravelerPopup();
+        // Initialize first result entry
+        this.initializeTravelerResult();
         
-        console.log(`📊 Opened traveler for Board ${boardNumber}`);
+        console.log(`📊 Opened button-based traveler for Board ${boardNumber}`);
     }
     
     /**
@@ -579,757 +596,454 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         return instances.map((instance) => ({
             nsPair: instance.ns,
             ewPair: instance.ew,
-            level: '',
-            suit: '',
-            declarer: '',
+            level: null,
+            suit: null,
+            declarer: null,
             double: '',
-            tricks: '',
+            result: null, // Will be '=', '+1', '+2', '-1', '-2', etc.
             nsScore: null,
             ewScore: null,
-            matchpoints: { ns: 0, ew: 0 } // For matchpoint calculation
+            matchpoints: { ns: 0, ew: 0 },
+            isComplete: false
         }));
     }
     
     /**
-     * Show specific traveler popup - MOBILE REWRITE WITH SCROLLING FIXES
+     * Initialize traveler result entry state
      */
-    showSpecificTravelerPopup() {
-        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
-        const vulnDisplay = { 'None': 'None Vul', 'NS': 'NS Vulnerable', 'EW': 'EW Vulnerable', 'Both': 'Both Vulnerable' };
+    initializeTravelerResult() {
+        // Set traveler input state
+        this.travelerInputState = 'level_selection';
+        this.resultMode = null; // 'plus' or 'down'
         
-        const popup = document.createElement('div');
-        popup.id = 'travelerPopup';
-        popup.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); z-index: 1000; 
-            display: flex; align-items: center; justify-content: center;
-            -webkit-overflow-scrolling: touch;
-            overflow: hidden;
-        `;
+        // Override main input state
+        this.inputState = 'traveler_entry';
         
-        popup.innerHTML = `
-            <div style="
-                background: white; 
-                padding: 15px; 
-                border-radius: 8px; 
-                width: 95%; 
-                height: 90%; 
-                color: #2c3e50;
-                display: flex;
-                flex-direction: column;
-                min-width: 300px;
-                overflow: hidden;
-            ">
-                <div style="
-                    text-align: center; 
-                    margin-bottom: 15px; 
-                    flex-shrink: 0;
-                    background: white; 
-                    z-index: 10; 
-                    padding-bottom: 10px;
-                    border-bottom: 2px solid #ecf0f1;
-                ">
-                    <h3 style="margin: 0; color: #2c3e50; font-size: 18px;">📊 Board ${this.traveler.boardNumber}</h3>
-                    <div style="color: #e74c3c; font-weight: bold; font-size: 14px;">${vulnDisplay[vulnerability]}</div>
-                </div>
-                
-                <div id="travelerResults" style="
-                    flex: 1;
-                    overflow-y: auto;
-                    -webkit-overflow-scrolling: touch;
-                    transform: translateZ(0);
-                    will-change: scroll-position;
-                    overflow-anchor: none;
-                    padding-right: 5px;
-                ">
-                    ${this.getMobileTravelerHTML()}
-                </div>
-                
-                <div style="
-                    text-align: center; 
-                    margin-top: 15px; 
-                    flex-shrink: 0;
-                    background: white; 
-                    padding-top: 15px;
-                    border-top: 2px solid #ecf0f1;
-                ">
-                    <button onclick="window.duplicateBridge.saveTravelerData()" style="
-                        background: #27ae60; color: white; border: none; 
-                        padding: 12px 18px; border-radius: 6px; margin: 5px;
-                        font-size: 14px; font-weight: bold; cursor: pointer;
-                        min-height: 44px; min-width: 100px;
-                        touch-action: manipulation; user-select: none;
-                    ">💾 Save</button>
-                    <button onclick="window.duplicateBridge.closeTravelerPopup()" style="
-                        background: #e74c3c; color: white; border: none; 
-                        padding: 12px 18px; border-radius: 6px; margin: 5px;
-                        font-size: 14px; font-weight: bold; cursor: pointer;
-                        min-height: 44px; min-width: 100px;
-                        touch-action: manipulation; user-select: none;
-                    ">❌ Cancel</button>
-                </div>
-            </div>
-        `;
+        // Update display to show traveler interface
+        this.updateDisplay();
         
-        document.body.appendChild(popup);
-        
-        // Setup mobile-optimized handlers
-        setTimeout(() => {
-            this.setupMobileTravelerEvents();
-            this.setupMobilePopupButtons();
-            this.applyPixelScrollingFixes();
-        }, 100);
-        
-        console.log('📊 Mobile traveler popup created with Pixel fixes');
+        console.log(`📋 Initialized traveler entry for pair ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
     }
     
     /**
-     * Apply Pixel 9a specific scrolling fixes
+     * Handle traveler input using Chicago Bridge style
      */
-    applyPixelScrollingFixes() {
-        const scrollContainer = document.getElementById('travelerResults');
-        if (!scrollContainer) return;
+    handleTravelerInput(value) {
+        console.log(`🎮 Traveler input: ${value} in state: ${this.travelerInputState}`);
         
-        console.log('🔧 Applying Pixel 9a scrolling fixes to traveler...');
-        
-        // Enhanced scroll container fixes
-        scrollContainer.style.height = '100%';
-        scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
-        scrollContainer.style.webkitOverflowScrolling = 'touch';
-        scrollContainer.style.transform = 'translateZ(0)';
-        scrollContainer.style.willChange = 'scroll-position';
-        scrollContainer.style.overflowAnchor = 'none';
-        
-        // Enhanced scrollbar visibility
-        const scrollbarStyle = document.createElement('style');
-        scrollbarStyle.textContent = `
-            #travelerResults::-webkit-scrollbar {
-                width: 12px !important;
-                background: rgba(255, 255, 255, 0.2) !important;
-            }
-            #travelerResults::-webkit-scrollbar-thumb {
-                background: rgba(52, 152, 219, 0.6) !important;
-                border-radius: 6px !important;
-                border: 2px solid rgba(255, 255, 255, 0.1) !important;
-            }
-            #travelerResults::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.05) !important;
-                border-radius: 6px !important;
-            }
-        `;
-        document.head.appendChild(scrollbarStyle);
-        
-        // Test scrolling and add fallback if needed
-        setTimeout(() => {
-            const testScroll = () => {
-                const initialScrollTop = scrollContainer.scrollTop;
-                scrollContainer.scrollTop = 50;
-                
-                setTimeout(() => {
-                    const newScrollTop = scrollContainer.scrollTop;
-                    console.log(`📱 Scroll test - Initial: ${initialScrollTop}, Set: 50, Actual: ${newScrollTop}`);
-                    
-                    if (newScrollTop === initialScrollTop && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
-                        console.warn('⚠️ Scrolling not working - applying touch handlers');
-                        this.addTouchScrollHandlers(scrollContainer);
-                    }
-                    
-                    scrollContainer.scrollTop = 0;
-                }, 100);
-            };
-            
-            testScroll();
-        }, 200);
-    }
-    
-    /**
-     * Add manual touch scroll handlers for problematic devices
-     */
-    addTouchScrollHandlers(container) {
-        let touchStartY = null;
-        let isScrolling = false;
-        
-        container.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            isScrolling = false;
-            console.log('📱 Touch scroll start');
-        }, { passive: true });
-        
-        container.addEventListener('touchmove', (e) => {
-            if (touchStartY !== null) {
-                const touchY = e.touches[0].clientY;
-                const deltaY = touchStartY - touchY;
-                
-                if (Math.abs(deltaY) > 5) {
-                    isScrolling = true;
-                    const newScrollTop = container.scrollTop + deltaY * 0.8;
-                    const maxScroll = container.scrollHeight - container.clientHeight;
-                    
-                    container.scrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
-                    touchStartY = touchY;
-                }
-            }
-        }, { passive: true });
-        
-        container.addEventListener('touchend', () => {
-            touchStartY = null;
-            isScrolling = false;
-        }, { passive: true });
-        
-        // Add visual indicator
-        const scrollHint = document.createElement('div');
-        scrollHint.innerHTML = '👆 Swipe to scroll';
-        scrollHint.style.cssText = `
-            position: absolute;
-            top: 60px;
-            right: 15px;
-            background: rgba(52, 152, 219, 0.9);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            z-index: 100;
-            pointer-events: none;
-        `;
-        container.parentElement.style.position = 'relative';
-        container.parentElement.appendChild(scrollHint);
-        
-        setTimeout(() => {
-            scrollHint.style.transition = 'opacity 1s ease';
-            scrollHint.style.opacity = '0';
-            setTimeout(() => scrollHint.remove(), 1000);
-        }, 3000);
-        
-        console.log('✅ Touch scroll handlers added');
-    }
-    
-    /**
-     * Generate mobile-optimized traveler HTML - ONE RESULT AT A TIME
-     */
-    getMobileTravelerHTML() {
-        let html = '';
-        
-        this.traveler.data.forEach((row, index) => {
-            html += `
-                <div class="result-card" data-index="${index}" style="
-                    background: rgba(52, 152, 219, 0.1);
-                    border: 2px solid #3498db;
-                    border-radius: 8px;
-                    padding: 15px;
-                    margin: 10px 0;
-                    position: relative;
-                ">
-                    <div style="
-                        background: #3498db;
-                        color: white;
-                        padding: 8px;
-                        border-radius: 6px;
-                        margin: -15px -15px 15px -15px;
-                        font-weight: bold;
-                        text-align: center;
-                    ">
-                        Pairs ${row.nsPair} (NS) vs ${row.ewPair} (EW)
-                    </div>
-                    
-                    <!-- Contract Entry -->
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">
-                            📋 Contract:
-                        </label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-                            <div>
-                                <label style="font-size: 12px; color: #7f8c8d;">Level:</label>
-                                <div class="mobile-select" data-field="level" data-row="${index}" style="
-                                    background: white;
-                                    border: 2px solid #bdc3c7;
-                                    border-radius: 6px;
-                                    padding: 12px;
-                                    text-align: center;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                    min-height: 44px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                ">${row.level || 'Select'}</div>
-                            </div>
-                            <div>
-                                <label style="font-size: 12px; color: #7f8c8d;">Suit:</label>
-                                <div class="mobile-select" data-field="suit" data-row="${index}" style="
-                                    background: white;
-                                    border: 2px solid #bdc3c7;
-                                    border-radius: 6px;
-                                    padding: 12px;
-                                    text-align: center;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                    min-height: 44px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                ">${row.suit || 'Select'}</div>
-                            </div>
-                            <div>
-                                <label style="font-size: 12px; color: #7f8c8d;">Declarer:</label>
-                                <div class="mobile-select" data-field="declarer" data-row="${index}" style="
-                                    background: white;
-                                    border: 2px solid #bdc3c7;
-                                    border-radius: 6px;
-                                    padding: 12px;
-                                    text-align: center;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                    min-height: 44px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                ">${row.declarer || 'Select'}</div>
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div>
-                                <label style="font-size: 12px; color: #7f8c8d;">Double:</label>
-                                <div class="mobile-select" data-field="double" data-row="${index}" style="
-                                    background: white;
-                                    border: 2px solid #bdc3c7;
-                                    border-radius: 6px;
-                                    padding: 12px;
-                                    text-align: center;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                    min-height: 44px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                ">${row.double || 'None'}</div>
-                            </div>
-                            <div>
-                                <label style="font-size: 12px; color: #7f8c8d;">Result:</label>
-                                <div class="mobile-select" data-field="tricks" data-row="${index}" style="
-                                    background: white;
-                                    border: 2px solid #bdc3c7;
-                                    border-radius: 6px;
-                                    padding: 12px;
-                                    text-align: center;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                    min-height: 44px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                ">${this.formatTricksDisplay(row)}</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Score Display -->
-                    <div style="
-                        background: rgba(39, 174, 96, 0.1);
-                        border: 1px solid #27ae60;
-                        border-radius: 6px;
-                        padding: 10px;
-                        text-align: center;
-                    ">
-                        <div style="font-weight: bold; margin-bottom: 5px; color: #2c3e50;">Scores:</div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div>
-                                <div style="font-size: 12px; color: #7f8c8d;">NS Score:</div>
-                                <div id="nsScore_${index}" style="font-weight: bold; font-size: 16px; color: #27ae60;">
-                                    ${row.nsScore !== null ? row.nsScore : '-'}
-                                </div>
-                            </div>
-                            <div>
-                                <div style="font-size: 12px; color: #7f8c8d;">EW Score:</div>
-                                <div id="ewScore_${index}" style="font-weight: bold; font-size: 16px; color: #e74c3c;">
-                                    ${row.ewScore !== null ? row.ewScore : '-'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        return html;
-    }
-    
-    /**
-     * Format tricks display based on contract level
-     */
-    formatTricksDisplay(row) {
-        if (!row.level || row.tricks === '') {
-            return 'Select';
+        // Handle back navigation first
+        if (value === 'BACK') {
+            this.handleTravelerBack();
+            return;
         }
         
-        const level = parseInt(row.level);
-        const expectedTricks = 6 + level;
-        const actualTricks = parseInt(row.tricks);
-        const difference = actualTricks - expectedTricks;
+        const currentResult = this.traveler.data[this.currentResultIndex];
         
-        if (difference === 0) {
-            return '= (Made exactly)';
-        } else if (difference > 0) {
-            return `+${difference} (${actualTricks} tricks)`;
+        switch (this.travelerInputState) {
+            case 'level_selection':
+                this.handleTravelerLevelSelection(value, currentResult);
+                break;
+            case 'suit_selection':
+                this.handleTravelerSuitSelection(value, currentResult);
+                break;
+            case 'declarer_selection':
+                this.handleTravelerDeclarerSelection(value, currentResult);
+                break;
+            case 'result_type_selection':
+                this.handleTravelerResultTypeSelection(value, currentResult);
+                break;
+            case 'result_number_selection':
+                this.handleTravelerResultNumberSelection(value, currentResult);
+                break;
+            case 'result_complete':
+                this.handleTravelerResultComplete(value);
+                break;
+            default:
+                console.warn(`🚫 Unhandled traveler input state: ${this.travelerInputState}`);
+        }
+        
+        this.updateDisplay();
+    }
+    
+    /**
+     * Handle level selection in traveler (1-7)
+     */
+    handleTravelerLevelSelection(value, currentResult) {
+        if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
+            currentResult.level = parseInt(value);
+            this.travelerInputState = 'suit_selection';
+            console.log(`📊 Traveler level selected: ${currentResult.level}`);
+        }
+    }
+    
+    /**
+     * Handle suit selection in traveler
+     */
+    handleTravelerSuitSelection(value, currentResult) {
+        if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
+            currentResult.suit = value;
+            this.travelerInputState = 'declarer_selection';
+            console.log(`♠ Traveler suit selected: ${currentResult.suit}`);
+        }
+    }
+    
+    /**
+     * Handle declarer selection and doubling in traveler
+     */
+    handleTravelerDeclarerSelection(value, currentResult) {
+        if (['N', 'S', 'E', 'W'].includes(value)) {
+            currentResult.declarer = value;
+            this.travelerInputState = 'result_type_selection';
+            console.log(`👤 Traveler declarer selected: ${currentResult.declarer}`);
+            
+        } else if (value === 'X') {
+            this.handleTravelerDoubling(currentResult);
+        } else if (['MADE', 'PLUS', 'DOWN'].includes(value)) {
+            // Only advance to result if declarer is selected
+            if (currentResult.declarer) {
+                this.travelerInputState = 'result_type_selection';
+                this.handleTravelerResultTypeSelection(value, currentResult);
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Handle doubling in traveler (X/XX cycling)
+     */
+    handleTravelerDoubling(currentResult) {
+        if (currentResult.double === '') {
+            currentResult.double = 'X';
+        } else if (currentResult.double === 'X') {
+            currentResult.double = 'XX';
         } else {
-            return `${difference} (${actualTricks} tricks)`;
+            currentResult.double = '';
+        }
+        
+        console.log(`💥 Traveler double state: ${currentResult.double || 'None'}`);
+    }
+    
+    /**
+     * Handle result type selection (Made/Plus/Down) - Chicago Style
+     */
+    handleTravelerResultTypeSelection(value, currentResult) {
+        if (value === 'MADE') {
+            currentResult.result = '=';
+            this.calculateTravelerScore(this.currentResultIndex);
+            currentResult.isComplete = true;
+            this.travelerInputState = 'result_complete';
+            console.log(`✅ Contract made exactly`);
+            
+        } else if (value === 'DOWN') {
+            this.resultMode = 'down';
+            this.travelerInputState = 'result_number_selection';
+            console.log(`📉 Contract failed - selecting undertricks`);
+            
+        } else if (value === 'PLUS') {
+            this.resultMode = 'plus';
+            this.travelerInputState = 'result_number_selection';
+            console.log(`📈 Contract made with overtricks - selecting number`);
         }
     }
     
     /**
-     * Setup mobile traveler events - TOUCH OPTIMIZED
+     * Handle result number selection (overtricks/undertricks) - Chicago Style
      */
-    setupMobileTravelerEvents() {
-        const selectElements = document.querySelectorAll('.mobile-select');
-        
-        console.log('📱 Setting up mobile traveler events');
-        
-        selectElements.forEach(element => {
-            const field = element.dataset.field;
-            const rowIndex = parseInt(element.dataset.row);
+    handleTravelerResultNumberSelection(value, currentResult) {
+        if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
+            const num = parseInt(value);
             
-            // Enhanced touch properties
-            element.style.touchAction = 'manipulation';
-            element.style.userSelect = 'none';
-            element.style.webkitTapHighlightColor = 'transparent';
-            
-            const selectHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            if (this.resultMode === 'down') {
+                currentResult.result = `-${num}`;
+                console.log(`📉 Contract failed by ${num} tricks`);
                 
-                console.log(`📱 Opening ${field} selector for row ${rowIndex}`);
-                
-                // Visual feedback
-                element.style.transform = 'scale(0.95)';
-                element.style.opacity = '0.8';
-                
-                setTimeout(() => {
-                    element.style.transform = '';
-                    element.style.opacity = '';
-                    this.showMobileFieldSelector(field, rowIndex, element);
-                }, 100);
-            };
-            
-            // Add multiple event types
-            element.addEventListener('click', selectHandler);
-            element.addEventListener('touchend', selectHandler, { passive: false });
-            
-            // Touch start feedback
-            element.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                element.style.transform = 'scale(0.95)';
-                element.style.opacity = '0.8';
-            }, { passive: false });
-        });
-        
-        console.log(`✅ Mobile traveler events setup for ${selectElements.length} selectors`);
-    }
-    
-    /**
-     * Show mobile field selector popup - WITH ENHANCED SCROLLING
-     */
-    showMobileFieldSelector(field, rowIndex, targetElement) {
-        const options = this.getFieldOptions(field, rowIndex);
-        const currentValue = this.traveler.data[rowIndex][field];
-        
-        const selectorPopup = document.createElement('div');
-        selectorPopup.id = 'fieldSelectorPopup';
-        selectorPopup.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 2000; 
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-        `;
-        
-        selectorPopup.innerHTML = `
-            <div style="
-                background: white; 
-                padding: 20px; 
-                border-radius: 8px; 
-                width: 90%; 
-                height: 80%;
-                color: #2c3e50;
-                min-width: 250px;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            ">
-                <h4 style="margin: 0 0 15px 0; text-align: center; flex-shrink: 0;">
-                    Select ${field === 'tricks' ? 'Result' : field.charAt(0).toUpperCase() + field.slice(1)}
-                </h4>
-                
-                <div id="optionsContainer" style="
-                    flex: 1;
-                    overflow-y: auto;
-                    -webkit-overflow-scrolling: touch;
-                    transform: translateZ(0);
-                    will-change: scroll-position;
-                    padding-right: 5px;
-                ">
-                    ${options.map(option => `
-                        <div class="option-item" data-value="${option.value}" style="
-                            background: ${currentValue === option.value ? '#3498db' : 'rgba(52, 152, 219, 0.1)'};
-                            color: ${currentValue === option.value ? 'white' : '#2c3e50'};
-                            border: 2px solid #3498db;
-                            border-radius: 6px;
-                            padding: 12px;
-                            margin: 5px 0;
-                            text-align: center;
-                            font-weight: bold;
-                            cursor: pointer;
-                            min-height: 44px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            touch-action: manipulation;
-                            user-select: none;
-                        ">${option.label}</div>
-                    `).join('')}
-                </div>
-                
-                <div style="text-align: center; margin-top: 15px; flex-shrink: 0;">
-                    <button onclick="this.parentElement.parentElement.remove()" style="
-                        background: #e74c3c; color: white; border: none; 
-                        padding: 10px 20px; border-radius: 6px;
-                        font-weight: bold; min-height: 44px;
-                        touch-action: manipulation;
-                    ">Cancel</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(selectorPopup);
-        
-        // Apply scrolling fixes to options container
-        setTimeout(() => {
-            this.setupOptionScrolling();
-            this.setupOptionSelection(rowIndex, targetElement);
-        }, 100);
-    }
-    
-    /**
-     * Setup enhanced scrolling for options container
-     */
-    setupOptionScrolling() {
-        const container = document.getElementById('optionsContainer');
-        if (!container) return;
-        
-        // Apply same fixes as main traveler
-        container.style.overflowY = 'scroll';
-        container.style.webkitOverflowScrolling = 'touch';
-        container.style.transform = 'translateZ(0)';
-        container.style.willChange = 'scroll-position';
-        
-        // Enhanced scrollbar for options
-        const optionScrollStyle = document.createElement('style');
-        optionScrollStyle.textContent = `
-            #optionsContainer::-webkit-scrollbar {
-                width: 8px !important;
-                background: rgba(255, 255, 255, 0.2) !important;
-            }
-            #optionsContainer::-webkit-scrollbar-thumb {
-                background: rgba(52, 152, 219, 0.6) !important;
-                border-radius: 4px !important;
-            }
-        `;
-        document.head.appendChild(optionScrollStyle);
-        
-        // Test and add manual handlers if needed
-        setTimeout(() => {
-            const testScrollTop = container.scrollTop;
-            container.scrollTop = 20;
-            
-            setTimeout(() => {
-                if (container.scrollTop === testScrollTop && container.scrollHeight > container.clientHeight) {
-                    console.log('📱 Adding manual scroll for options');
-                    this.addTouchScrollHandlers(container);
-                }
-                container.scrollTop = 0;
-            }, 50);
-        }, 100);
-    }
-    
-    /**
-     * Setup option selection events - FIXED VERSION
-     */
-    setupOptionSelection(rowIndex, targetElement) {
-        const optionItems = document.querySelectorAll('.option-item');
-        const field = targetElement.dataset.field;
-        
-        console.log(`📱 Setting up option selection for field: ${field}, row: ${rowIndex}`);
-        
-        optionItems.forEach(item => {
-            const value = item.dataset.value;
-            
-            const optionHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log(`📱 Selected ${field} = ${value} for row ${rowIndex}`);
-                
-                // Update data
-                this.traveler.data[rowIndex][field] = value;
-                
-                // Update display based on field type
-                if (field === 'tricks') {
-                    // For tricks, use smart formatting
-                    const row = this.traveler.data[rowIndex];
-                    targetElement.textContent = this.formatTricksDisplay(row);
+            } else if (this.resultMode === 'plus') {
+                // Validate overtricks don't exceed maximum possible
+                const maxOvertricks = 13 - (6 + currentResult.level);
+                if (num <= maxOvertricks) {
+                    currentResult.result = `+${num}`;
+                    console.log(`📈 Contract made with ${num} overtricks`);
                 } else {
-                    // For other fields, use the label from the option
-                    targetElement.textContent = this.getDisplayLabel(field, value);
+                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                    return;
                 }
-                
-                // Update visual state
-                targetElement.style.background = value ? 'rgba(39, 174, 96, 0.1)' : 'white';
-                targetElement.style.borderColor = value ? '#27ae60' : '#bdc3c7';
-                
-                // Auto-calculate if row is complete
-                const row = this.traveler.data[rowIndex];
-                if (row.level && row.suit && row.declarer && row.tricks !== '') {
-                    console.log(`🧮 Auto-calculating score for row ${rowIndex}`);
-                    setTimeout(() => {
-                        this.calculateScore(rowIndex);
-                    }, 100);
-                }
-                
-                // Close popup
-                const popup = document.getElementById('fieldSelectorPopup');
-                if (popup) popup.remove();
-                
-                console.log(`✅ Updated ${field} successfully`);
-            };
+            }
             
-            // Add multiple event types for maximum compatibility
-            item.addEventListener('click', optionHandler);
-            item.addEventListener('touchend', optionHandler, { passive: false });
-            
-            // Touch feedback
-            item.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                item.style.transform = 'scale(0.95)';
-                item.style.opacity = '0.8';
-            }, { passive: false });
-            
-            item.addEventListener('touchcancel', () => {
-                item.style.transform = '';
-                item.style.opacity = '';
-            }, { passive: true });
-            
-            // Reset on touchend
-            item.addEventListener('touchend', () => {
-                setTimeout(() => {
-                    item.style.transform = '';
-                    item.style.opacity = '';
-                }, 100);
-            }, { passive: false });
-        });
-        
-        console.log(`✅ Option selection setup complete for ${optionItems.length} options`);
-    }
-    
-    /**
-     * Get display label for field value
-     */
-    getDisplayLabel(field, value) {
-        if (!value) return 'Select';
-        
-        switch (field) {
-            case 'level':
-                return value;
-            case 'suit':
-                const suitNames = { '♣': '♣', '♦': '♦', '♥': '♥', '♠': '♠', 'NT': 'NT' };
-                return suitNames[value] || value;
-            case 'declarer':
-                return value;
-            case 'double':
-                return value || 'None';
-            default:
-                return value;
+            // Calculate score and complete result
+            this.calculateTravelerScore(this.currentResultIndex);
+            currentResult.isComplete = true;
+            this.travelerInputState = 'result_complete';
         }
     }
     
     /**
-     * Get options for each field - SMART TRICKS VERSION
+     * Handle result complete actions
      */
-    getFieldOptions(field, rowIndex) {
-        switch (field) {
-            case 'level':
-                return [
-                    { value: '1', label: '1' },
-                    { value: '2', label: '2' },
-                    { value: '3', label: '3' },
-                    { value: '4', label: '4' },
-                    { value: '5', label: '5' },
-                    { value: '6', label: '6' },
-                    { value: '7', label: '7' }
-                ];
-            case 'suit':
-                return [
-                    { value: '♣', label: '♣ Clubs' },
-                    { value: '♦', label: '♦ Diamonds' },
-                    { value: '♥', label: '♥ Hearts' },
-                    { value: '♠', label: '♠ Spades' },
-                    { value: 'NT', label: 'NT No Trump' }
-                ];
-            case 'declarer':
-                return [
-                    { value: 'N', label: 'N (North)' },
-                    { value: 'S', label: 'S (South)' },
-                    { value: 'E', label: 'E (East)' },
-                    { value: 'W', label: 'W (West)' }
-                ];
-            case 'double':
-                return [
-                    { value: '', label: 'None' },
-                    { value: 'X', label: 'X (Doubled)' },
-                    { value: 'XX', label: 'XX (Redoubled)' }
-                ];
-            case 'tricks':
-                return this.getSmartTricksOptions(rowIndex);
+    handleTravelerResultComplete(value) {
+        console.log(`🎮 Result complete action: ${value}`);
+        
+        if (value === 'DEAL') {
+            // Move to next result
+            this.nextTravelerResult();
+        }
+    }
+    
+    /**
+     * Move to next traveler result
+     */
+    nextTravelerResult() {
+        if (this.currentResultIndex < this.traveler.data.length - 1) {
+            // Move to next pair
+            this.currentResultIndex++;
+            this.travelerInputState = 'level_selection';
+            this.resultMode = null;
+            console.log(`➡️ Moving to next pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
+        } else {
+            // All results entered - save and close
+            this.saveTravelerData();
+        }
+    }
+    
+    /**
+     * Go to previous traveler result
+     */
+    previousTravelerResult() {
+        if (this.currentResultIndex > 0) {
+            this.currentResultIndex--;
+            
+            // Reset input state based on current result completion
+            const currentResult = this.traveler.data[this.currentResultIndex];
+            if (currentResult.isComplete) {
+                this.travelerInputState = 'result_complete';
+            } else if (currentResult.result) {
+                this.travelerInputState = 'result_complete';
+            } else if (currentResult.declarer) {
+                this.travelerInputState = 'result_type_selection';
+            } else if (currentResult.suit) {
+                this.travelerInputState = 'declarer_selection';
+            } else if (currentResult.level) {
+                this.travelerInputState = 'suit_selection';
+            } else {
+                this.travelerInputState = 'level_selection';
+            }
+            
+            console.log(`⬅️ Moving to previous pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
+        }
+    }
+    
+    /**
+     * Clear current traveler result
+     */
+    clearCurrentTravelerResult() {
+        const currentResult = this.traveler.data[this.currentResultIndex];
+        
+        currentResult.level = null;
+        currentResult.suit = null;
+        currentResult.declarer = null;
+        currentResult.double = '';
+        currentResult.result = null;
+        currentResult.nsScore = null;
+        currentResult.ewScore = null;
+        currentResult.isComplete = false;
+        
+        this.travelerInputState = 'level_selection';
+        this.resultMode = null;
+        
+        console.log(`🧹 Cleared current traveler result`);
+    }
+    
+    /**
+     * Get active buttons for traveler input - Chicago Style
+     */
+    getTravelerActiveButtons() {
+        const currentResult = this.traveler.data[this.currentResultIndex];
+        
+        console.log(`🔍 Getting buttons for state: ${this.travelerInputState}`);
+        
+        switch (this.travelerInputState) {
+            case 'level_selection':
+                return ['1', '2', '3', '4', '5', '6', '7'];
+                
+            case 'suit_selection':
+                return ['♣', '♦', '♥', '♠', 'NT'];
+                
+            case 'declarer_selection':
+                const buttons = ['N', 'S', 'E', 'W', 'X'];
+                // If declarer is selected, also allow result buttons
+                if (currentResult.declarer) {
+                    buttons.push('MADE', 'PLUS', 'DOWN');
+                }
+                return buttons;
+                
+            case 'result_type_selection':
+                return ['MADE', 'PLUS', 'DOWN'];
+                
+            case 'result_number_selection':
+                if (this.resultMode === 'down') {
+                    return ['1', '2', '3', '4', '5', '6', '7'];
+                } else if (this.resultMode === 'plus') {
+                    const maxOvertricks = Math.min(6, 13 - (6 + currentResult.level));
+                    const buttons = [];
+                    for (let i = 1; i <= maxOvertricks; i++) {
+                        buttons.push(i.toString());
+                    }
+                    return buttons;
+                }
+                break;
+                
+            case 'result_complete':
+                const completeButtons = ['DEAL'];
+                console.log('🎯 Returning result complete buttons:', completeButtons); 
+                return completeButtons;
+                
             default:
+                console.warn(`Unknown traveler input state: ${this.travelerInputState}`);
                 return [];
         }
     }
     
     /**
-     * Get smart tricks options based on contract level
+     * Handle traveler back navigation - Chicago Style
      */
-    getSmartTricksOptions(rowIndex) {
-        const row = this.traveler.data[rowIndex];
-        const level = parseInt(row.level);
+    handleTravelerBack() {
+        const currentResult = this.traveler.data[this.currentResultIndex];
         
-        if (!level) {
-            return [{ value: '', label: 'Select contract level first' }];
+        console.log(`🔙 Traveler back from state: ${this.travelerInputState}`);
+        
+        switch (this.travelerInputState) {
+            case 'suit_selection':
+                this.travelerInputState = 'level_selection';
+                currentResult.level = null;
+                break;
+                
+            case 'declarer_selection':
+                this.travelerInputState = 'suit_selection';
+                currentResult.suit = null;
+                currentResult.double = '';
+                break;
+                
+            case 'result_type_selection':
+                this.travelerInputState = 'declarer_selection';
+                currentResult.declarer = null;
+                break;
+                
+            case 'result_number_selection':
+                this.travelerInputState = 'result_type_selection';
+                this.resultMode = null;
+                break;
+                
+            case 'result_complete':
+                // Go back to result entry
+                if (currentResult.result && (currentResult.result.startsWith('+') || currentResult.result.startsWith('-'))) {
+                    this.travelerInputState = 'result_number_selection';
+                    // Set result mode based on current result
+                    this.resultMode = currentResult.result.startsWith('+') ? 'plus' : 'down';
+                } else {
+                    this.travelerInputState = 'result_type_selection';
+                }
+                currentResult.result = null;
+                currentResult.nsScore = null;
+                currentResult.ewScore = null;
+                currentResult.isComplete = false;
+                break;
+                
+            case 'level_selection':
+                if (this.currentResultIndex > 0) {
+                    this.previousTravelerResult();
+                } else {
+                    // Close traveler
+                    this.closeTraveler();
+                }
+                break;
         }
-        
-        const expectedTricks = 6 + level;
-        const options = [];
-        
-        // Add options from 1 to 13 tricks
-        for (let tricks = 1; tricks <= 13; tricks++) {
-            const difference = tricks - expectedTricks;
-            let label;
-            
-            if (difference === 0) {
-                label = `${tricks} tricks (= Made exactly)`;
-            } else if (difference > 0) {
-                label = `${tricks} tricks (+${difference} overtricks)`;
-            } else {
-                label = `${tricks} tricks (${difference} down)`;
-            }
-            
-            options.push({ value: tricks.toString(), label });
-        }
-        
-        return options;
     }
     
     /**
-     * Calculate score for a specific traveler row - Standard Duplicate Scoring
+     * Save traveler data and close
      */
-    calculateScore(rowIndex) {
+    saveTravelerData() {
+        // Calculate matchpoints for all results
+        this.calculateMatchpoints();
+        
+        // Mark board as completed if at least one result is entered
+        const hasResults = this.traveler.data.some(row => 
+            row.nsScore !== null || row.ewScore !== null
+        );
+        
+        if (hasResults) {
+            this.session.boards[this.traveler.boardNumber].completed = true;
+            this.session.boards[this.traveler.boardNumber].results = [...this.traveler.data];
+            
+            console.log(`💾 Saved traveler data for Board ${this.traveler.boardNumber}`);
+            this.bridgeApp.showMessage(`Board ${this.traveler.boardNumber} saved!`, 'success');
+        } else {
+            console.log('⚠️ No results to save');
+            this.bridgeApp.showMessage('Enter at least one result before saving', 'warning');
+        }
+        
+        this.closeTraveler();
+    }
+    
+    /**
+     * Close traveler and return to board selection
+     */
+    closeTraveler() {
+        this.traveler.isActive = false;
+        this.traveler.boardNumber = null;
+        this.traveler.data = [];
+        this.currentResultIndex = 0;
+        this.travelerInputState = 'level_selection';
+        this.resultMode = null;
+        
+        // Return to board selection state
+        this.inputState = 'board_selection';
+        
+        this.updateDisplay();
+        
+        console.log('📊 Traveler closed, returned to board selection');
+    }
+    
+    /**
+     * Get current traveler progress info
+     */
+    getCurrentTravelerProgress() {
+        if (!this.traveler.isActive) return null;
+        
+        const current = this.currentResultIndex + 1;
+        const total = this.traveler.data.length;
+        const currentResult = this.traveler.data[this.currentResultIndex];
+        
+        return {
+            current: current,
+            total: total,
+            nsPair: currentResult.nsPair,
+            ewPair: currentResult.ewPair,
+            isComplete: currentResult.isComplete,
+            contractSoFar: this.getTravelerContractDisplay(currentResult)
+        };
+    }
+    
+    /**
+     * Get contract display for current traveler result - Chicago Style
+     */
+    getTravelerContractDisplay(result) {
+        let contract = '';
+        
+        if (result.level) contract += result.level;
+        if (result.suit) contract += result.suit;
+        if (result.double) contract += ` ${result.double}`;
+        if (result.declarer) contract += ` by ${result.declarer}`;
+        if (result.result) contract += ` ${result.result}`;
+        
+        return contract || 'No contract yet';
+    }
+    
+    /**
+     * Calculate score for a specific traveler row - Standard Duplicate Scoring (Chicago Style)
+     */
+    calculateTravelerScore(rowIndex) {
         const row = this.traveler.data[rowIndex];
-        if (!row.level || !row.suit || !row.declarer || row.tricks === '') return;
+        if (!row.level || !row.suit || !row.declarer || !row.result) return;
         
         console.log(`🧮 Calculating duplicate score for row ${rowIndex}:`, row);
         
@@ -1340,16 +1054,14 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         const isVulnerable = this.isDeclarerVulnerable(this.traveler.boardNumber, row.declarer);
         
         const level = parseInt(row.level);
-        const tricks = parseInt(row.tricks);
-        const needed = 6 + level;
-        const result = tricks - needed;
         const isDoubled = row.double === 'X';
         const isRedoubled = row.double === 'XX';
         
         let score = 0;
         
-        if (result >= 0) {
-            // Contract made - Standard bridge scoring
+        // Parse result (=, +1, +2, -1, -2, etc.)
+        if (row.result === '=' || row.result.startsWith('+')) {
+            // Contract made
             const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
             let basicScore = level * suitPoints[row.suit];
             if (row.suit === 'NT') basicScore += 10; // NT first trick bonus
@@ -1362,12 +1074,13 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             score = basicScore;
             
             // Add overtricks
-            if (result > 0) {
+            if (row.result.startsWith('+')) {
+                const overtricks = parseInt(row.result.substring(1));
                 if (isDoubled || isRedoubled) {
                     const overtrickValue = isVulnerable ? 200 : 100;
-                    score += result * overtrickValue * (isRedoubled ? 2 : 1);
+                    score += overtricks * overtrickValue * (isRedoubled ? 2 : 1);
                 } else {
-                    score += result * suitPoints[row.suit];
+                    score += overtricks * suitPoints[row.suit];
                 }
             }
             
@@ -1389,9 +1102,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 score += isVulnerable ? 1500 : 1000;
             }
             
-        } else {
-            // Contract failed - Penalty scoring
-            const undertricks = Math.abs(result);
+        } else if (row.result.startsWith('-')) {
+            // Contract failed
+            const undertricks = parseInt(row.result.substring(1));
             
             if (isDoubled || isRedoubled) {
                 let penalty = 0;
@@ -1410,7 +1123,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             }
         }
         
-        // Assign scores to pairs (in duplicate, no negative scores shown)
+        // Assign scores to pairs (in duplicate, show actual points earned)
         if (declarerSide === 'NS') {
             if (score >= 0) {
                 row.nsScore = score;
@@ -1430,40 +1143,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
         
         console.log(`✅ Calculated scores: NS=${row.nsScore}, EW=${row.ewScore}`);
-        
-        // Update display
-        this.updateScoreDisplay(rowIndex);
-    }
-    
-    /**
-     * Update score display in traveler table
-     */
-    updateScoreDisplay(rowIndex) {
-        const row = this.traveler.data[rowIndex];
-        const nsSpan = document.getElementById(`nsScore_${rowIndex}`);
-        const ewSpan = document.getElementById(`ewScore_${rowIndex}`);
-        
-        if (nsSpan) nsSpan.textContent = row.nsScore || '-';
-        if (ewSpan) ewSpan.textContent = row.ewScore || '-';
-    }
-    
-    /**
-     * Calculate all scores and matchpoints
-     */
-    calculateAllScores() {
-        console.log('🧮 Calculating all scores and matchpoints');
-        
-        // First calculate all individual scores
-        this.traveler.data.forEach((row, index) => {
-            if (row.level && row.suit && row.declarer && row.tricks !== '') {
-                this.calculateScore(index);
-            }
-        });
-        
-        // Then calculate matchpoints
-        this.calculateMatchpoints();
-        
-        this.bridgeApp.showMessage('All scores calculated!', 'success');
     }
     
     /**
@@ -1479,16 +1158,14 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             return;
         }
         
-        const maxMatchpoints = (completedResults.length - 1) * 2;
-        
-        // Calculate NS matchpoints
+        // Calculate NS matchpoints by comparing NS scores
         completedResults.forEach(row => {
             let nsMatchpoints = 0;
             let ewMatchpoints = 0;
             
             completedResults.forEach(otherRow => {
                 if (row !== otherRow) {
-                    // Compare NS scores
+                    // Compare NS scores (higher is better)
                     if (row.nsScore > otherRow.nsScore) {
                         nsMatchpoints += 2;
                     } else if (row.nsScore === otherRow.nsScore) {
@@ -1507,52 +1184,80 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Save traveler data to board
+     * Get scoring summary for current traveler result
      */
-    saveTravelerData() {
-        // Mark board as completed if at least one result is entered
-        const hasResults = this.traveler.data.some(row => 
-            row.nsScore !== null || row.ewScore !== null
-        );
+    getTravelerScoringSummary() {
+        if (!this.traveler.isActive) return null;
         
-        if (hasResults) {
-            this.session.boards[this.traveler.boardNumber].completed = true;
-            this.session.boards[this.traveler.boardNumber].results = [...this.traveler.data];
-            
-            console.log(`💾 Saved traveler data for Board ${this.traveler.boardNumber}`);
-            this.bridgeApp.showMessage(`Board ${this.traveler.boardNumber} saved!`, 'success');
-        } else {
-            console.log('⚠️ No results to save');
-            this.bridgeApp.showMessage('Enter at least one result before saving', 'warning');
-        }
+        const currentResult = this.traveler.data[this.currentResultIndex];
+        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
         
-        this.closeTravelerPopup();
+        return {
+            boardNumber: this.traveler.boardNumber,
+            vulnerability: vulnerability,
+            vulnerabilityDisplay: this.getVulnerabilityDisplay(vulnerability),
+            currentResult: currentResult,
+            scores: {
+                ns: currentResult.nsScore,
+                ew: currentResult.ewScore
+            },
+            isComplete: currentResult.isComplete
+        };
     }
     
     /**
-     * Close traveler popup and cleanup
+     * Get vulnerability display text
      */
-    closeTravelerPopup() {
-        const popup = document.getElementById('travelerPopup');
-        if (popup) {
-            popup.remove();
-            console.log('📊 Traveler popup closed');
-        }
-        
-        // Clean up field selector popup if open
-        const fieldPopup = document.getElementById('fieldSelectorPopup');
-        if (fieldPopup) {
-            fieldPopup.remove();
-        }
-        
-        this.traveler.isActive = false;
-        this.traveler.boardNumber = null;
-        this.traveler.data = [];
-        
-        this.updateDisplay();
+    getVulnerabilityDisplay(vulnerability) {
+        const displays = {
+            'None': 'None Vulnerable',
+            'NS': 'NS Vulnerable', 
+            'EW': 'EW Vulnerable',
+            'Both': 'Both Vulnerable'
+        };
+        return displays[vulnerability] || 'Unknown';
     }
-// END SECTION FOUR
-// SECTION FIVE - Game Management
+    
+    /**
+     * Get board vulnerability using standard duplicate cycle
+     */
+    getBoardVulnerability(boardNumber) {
+        const cycle = (boardNumber - 1) % 16;
+        const vulns = ['None', 'NS', 'EW', 'Both', 'EW', 'Both', 'None', 'NS', 
+                      'NS', 'EW', 'Both', 'None', 'Both', 'None', 'NS', 'EW'];
+        return vulns[cycle];
+    }
+    
+    /**
+     * Check if declarer is vulnerable for scoring
+     */
+    isDeclarerVulnerable(boardNumber, declarer) {
+        const vulnerability = this.getBoardVulnerability(boardNumber);
+        
+        if (vulnerability === 'None') return false;
+        if (vulnerability === 'Both') return true;
+        
+        const isNS = declarer === 'N' || declarer === 'S';
+        
+        if (vulnerability === 'NS') return isNS;
+        if (vulnerability === 'EW') return !isNS;
+        
+        return false;
+    }
+    
+    /**
+     * Get vulnerability color for display
+     */
+    getVulnerabilityColor(vulnerability) {
+        const colors = {
+            'None': '#95a5a6',
+            'NS': '#27ae60',
+            'EW': '#e74c3c', 
+            'Both': '#f39c12'
+        };
+        return colors[vulnerability] || '#95a5a6';
+    }
+// END SECTION FOUR// SECTION FIVE - Game Management
     /**
      * Show movement popup with mobile-optimized table
      */
@@ -3812,170 +3517,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         return recovered;
     }
 // END SECTION EIGHT
-// SECTION NINE - Display Content Methods (FIXED VERSION)
+// SECTION NINE - Display Content Methods (CHICAGO STYLE VERSION)
     /**
-     * Get board selection display content - FIXED FOR MOBILE LAYOUT
-     */
-    getBoardSelectionContent() {
-        const completionStatus = this.getCompletionStatus();
-        const isComplete = completionStatus.percentage === 100;
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display">
-                    ${completionStatus.completed}/${completionStatus.total}
-                    <div style="font-size: 10px; color: #95a5a6;">${completionStatus.percentage}%</div>
-                </div>
-            </div>
-            <div class="game-content">
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
-                        ${isComplete ? '🎉 Session Complete!' : '📊 Board Entry'}
-                    </h3>
-                </div>
-                
-                ${this.getCompactBoardProgressDisplay()}
-                
-                <div style="text-align: center; margin: 15px 0;">
-                    <button id="selectBoardBtn" style="
-                        background: linear-gradient(135deg, #3498db, #2980b9); 
-                        color: white; 
-                        border: none; 
-                        padding: 12px 20px; 
-                        border-radius: 6px; 
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: bold;
-                        box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
-                        min-height: 44px;
-                        min-width: 160px;
-                    ">
-                        📋 Select Board
-                    </button>
-                </div>
-                
-                ${isComplete ? `
-                    <div style="
-                        background: rgba(39, 174, 96, 0.1); 
-                        padding: 10px; 
-                        border-radius: 6px; 
-                        border-left: 3px solid #27ae60;
-                        text-align: center;
-                        margin-top: 10px;
-                    ">
-                        <div style="color: #27ae60; font-weight: bold; font-size: 13px;">
-                            ✅ All boards completed!
-                        </div>
-                    </div>
-                ` : `
-                    <div style="
-                        background: rgba(241, 196, 15, 0.1); 
-                        padding: 8px; 
-                        border-radius: 4px; 
-                        border-left: 3px solid #f1c40f;
-                        margin-top: 10px;
-                    ">
-                        <div style="color: #2c3e50; font-size: 11px; text-align: center;">
-                            💡 <strong>Tip:</strong> Enter results after each round
-                        </div>
-                    </div>
-                `}
-            </div>
-            <div class="current-state">
-                ${isComplete ? 'All boards complete - Press RESULTS' : 'Select board to enter results'}
-            </div>
-        `;
-    }
-    
-    /**
-     * Get compact board progress display - MOBILE OPTIMIZED
-     */
-    getCompactBoardProgressDisplay() {
-        const boardStatus = this.getBoardStatus();
-        const totalBoards = boardStatus.length;
-        
-        if (totalBoards === 0) {
-            return '<div style="text-align: center; color: #7f8c8d; font-size: 12px;">No boards configured</div>';
-        }
-        
-        const completedBoards = boardStatus.filter(b => b.completed);
-        const incompleteBoards = boardStatus.filter(b => !b.completed);
-        
-        return `
-            <div style="margin: 10px 0;">
-                <div style="
-                    background: rgba(52, 152, 219, 0.1);
-                    padding: 8px;
-                    border-radius: 4px;
-                    margin-bottom: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #2c3e50; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
-                        📊 ${completedBoards.length}/${totalBoards} Complete
-                    </div>
-                    <div style="
-                        background: #ecf0f1;
-                        height: 12px;
-                        border-radius: 6px;
-                        overflow: hidden;
-                        position: relative;
-                    ">
-                        <div style="
-                            background: linear-gradient(135deg, #27ae60, #2ecc71);
-                            height: 100%;
-                            width: ${(completedBoards.length / totalBoards) * 100}%;
-                            border-radius: 6px;
-                        "></div>
-                    </div>
-                </div>
-                
-                <div style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-                    gap: 4px;
-                    max-height: 120px;
-                    overflow-y: auto;
-                ">
-                    ${boardStatus.map(board => {
-                        const statusIcon = board.completed ? '✅' : '⭕';
-                        const vulnColor = this.getVulnerabilityColor(board.vulnerability);
-                        const vulnAbbrev = { 'None': 'NV', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
-                        
-                        return `
-                            <div style="
-                                background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(149, 165, 166, 0.1)'};
-                                border: 1px solid ${board.completed ? '#27ae60' : '#bdc3c7'};
-                                border-radius: 4px;
-                                padding: 4px;
-                                text-align: center;
-                                font-size: 9px;
-                            ">
-                                <div style="font-weight: bold; margin-bottom: 2px;">
-                                    B${board.number} ${statusIcon}
-                                </div>
-                                <div style="
-                                    color: ${vulnColor}; 
-                                    font-size: 8px; 
-                                    font-weight: bold;
-                                    background: rgba(255,255,255,0.8);
-                                    padding: 1px 2px;
-                                    border-radius: 4px;
-                                ">
-                                    ${vulnAbbrev[board.vulnerability]}
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-    }
-
-    // ... Keep all other methods from Section 9 unchanged ...
-    
-    /**
-     * Get display content for current state - DUPLICATE BRIDGE ENHANCED
+     * Get display content for current state - UPDATED WITH TRAVELER ENTRY
      */
     getDisplayContent() {
         switch (this.inputState) {
@@ -3987,6 +3531,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 
             case 'board_selection':
                 return this.getBoardSelectionContent();
+                
+            case 'traveler_entry':
+                return this.getTravelerEntryContent();
                 
             case 'results':
                 return this.getResultsContent();
@@ -4077,6 +3624,159 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
+     * Get board selection display content - FIXED FOR MOBILE LAYOUT
+     */
+    getBoardSelectionContent() {
+        const completionStatus = this.getCompletionStatus();
+        const isComplete = completionStatus.percentage === 100;
+        
+        return `
+            <div class="title-score-row">
+                <div class="mode-title">${this.displayName}</div>
+                <div class="score-display">
+                    ${completionStatus.completed}/${completionStatus.total}
+                    <div style="font-size: 10px; color: #95a5a6;">${completionStatus.percentage}%</div>
+                </div>
+            </div>
+            <div class="game-content">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
+                        ${isComplete ? '🎉 Session Complete!' : '📊 Board Entry'}
+                    </h3>
+                </div>
+                
+                ${this.getCompactBoardProgressDisplay()}
+                
+                <div style="text-align: center; margin: 15px 0;">
+                    <button id="selectBoardBtn" style="
+                        background: linear-gradient(135deg, #3498db, #2980b9); 
+                        color: white; 
+                        border: none; 
+                        padding: 12px 20px; 
+                        border-radius: 6px; 
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: bold;
+                        box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+                        min-height: 44px;
+                        min-width: 160px;
+                    ">
+                        📋 Select Board
+                    </button>
+                </div>
+                
+                ${isComplete ? `
+                    <div style="
+                        background: rgba(39, 174, 96, 0.1); 
+                        padding: 10px; 
+                        border-radius: 6px; 
+                        border-left: 3px solid #27ae60;
+                        text-align: center;
+                        margin-top: 10px;
+                    ">
+                        <div style="color: #27ae60; font-weight: bold; font-size: 13px;">
+                            ✅ All boards completed!
+                        </div>
+                    </div>
+                ` : `
+                    <div style="
+                        background: rgba(241, 196, 15, 0.1); 
+                        padding: 8px; 
+                        border-radius: 4px; 
+                        border-left: 3px solid #f1c40f;
+                        margin-top: 10px;
+                    ">
+                        <div style="color: #2c3e50; font-size: 11px; text-align: center;">
+                            💡 <strong>Tip:</strong> Enter results after each round
+                        </div>
+                    </div>
+                `}
+            </div>
+            <div class="current-state">
+                ${isComplete ? 'All boards complete - Press RESULTS' : 'Select board to enter results'}
+            </div>
+        `;
+    }
+    
+    /**
+     * Get display content for traveler entry state - TRAVELER DISPLAY METHOD
+     */
+    getTravelerEntryContent() {
+        if (!this.traveler.isActive) {
+            return '<div class="current-state">Traveler not active</div>';
+        }
+        
+        const progress = this.getCurrentTravelerProgress();
+        const scoringSummary = this.getTravelerScoringSummary();
+        const vulnerability = scoringSummary.vulnerabilityDisplay;
+        
+        // Get current result for contract display
+        const currentResult = this.traveler.data[this.currentResultIndex];
+        const contractDisplay = this.getTravelerContractDisplay(currentResult);
+        
+        let statePrompt = '';
+        switch (this.travelerInputState) {
+            case 'level_selection':
+                statePrompt = 'Select bid level (1-7)';
+                break;
+            case 'suit_selection':
+                statePrompt = 'Select suit';
+                break;
+            case 'declarer_selection':
+                statePrompt = 'Select declarer (N/S/E/W) or X for double';
+                break;
+            case 'tricks_selection':
+                statePrompt = `Select tricks taken (0-9, press 0 for ${currentResult.tricks >= 10 ? currentResult.tricks + 1 : '10+'})`;
+                break;
+            case 'result_complete':
+                statePrompt = 'Press Deal for next pair';
+                break;
+            default:
+                statePrompt = 'Traveler entry';
+        }
+        
+        return `
+            <div class="title-score-row">
+                <div class="mode-title">🏆 Board ${this.traveler.boardNumber}</div>
+                <div class="score-display">
+                    Pair ${progress.current}/${progress.total}
+                </div>
+            </div>
+            <div class="game-content">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">
+                        ${vulnerability}
+                    </div>
+                    <div style="color: #3498db; font-size: 12px; margin-top: 2px;">
+                        Pairs ${progress.nsPair} (NS) vs ${progress.ewPair} (EW)  
+                    </div>
+                </div>
+                
+                <div style="margin: 10px 0; padding: 8px; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
+                    <div style="font-size: 12px; color: #2c3e50;">
+                        <strong>Contract:</strong> ${contractDisplay}
+                    </div>
+                </div>
+                
+                ${currentResult.nsScore !== null || currentResult.ewScore !== null ? `
+                    <div style="
+                        background: rgba(39, 174, 96, 0.1); 
+                        padding: 8px; 
+                        border-radius: 4px; 
+                        margin: 8px 0;
+                        text-align: center;
+                    ">
+                        <div style="color: #27ae60; font-weight: bold; font-size: 12px;">
+                            Score: NS ${currentResult.nsScore || 0} • EW ${currentResult.ewScore || 0}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="current-state">${statePrompt}</div>
+        `;
+    }
+    
+    /**
      * Get results display content
      */
     getResultsContent() {
@@ -4123,6 +3823,90 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
             </div>
             <div class="current-state">Tournament complete - Use BACK to continue or review results</div>
+        `;
+    }
+    
+    /**
+     * Get compact board progress display - MOBILE OPTIMIZED
+     */
+    getCompactBoardProgressDisplay() {
+        const boardStatus = this.getBoardStatus();
+        const totalBoards = boardStatus.length;
+        
+        if (totalBoards === 0) {
+            return '<div style="text-align: center; color: #7f8c8d; font-size: 12px;">No boards configured</div>';
+        }
+        
+        const completedBoards = boardStatus.filter(b => b.completed);
+        const incompleteBoards = boardStatus.filter(b => !b.completed);
+        
+        return `
+            <div style="margin: 10px 0;">
+                <div style="
+                    background: rgba(52, 152, 219, 0.1);
+                    padding: 8px;
+                    border-radius: 4px;
+                    margin-bottom: 10px;
+                    text-align: center;
+                ">
+                    <div style="color: #2c3e50; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
+                        📊 ${completedBoards.length}/${totalBoards} Complete
+                    </div>
+                    <div style="
+                        background: #ecf0f1;
+                        height: 12px;
+                        border-radius: 6px;
+                        overflow: hidden;
+                        position: relative;
+                    ">
+                        <div style="
+                            background: linear-gradient(135deg, #27ae60, #2ecc71);
+                            height: 100%;
+                            width: ${(completedBoards.length / totalBoards) * 100}%;
+                            border-radius: 6px;
+                        "></div>
+                    </div>
+                </div>
+                
+                <div style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+                    gap: 4px;
+                    max-height: 120px;
+                    overflow-y: auto;
+                ">
+                    ${boardStatus.map(board => {
+                        const statusIcon = board.completed ? '✅' : '⭕';
+                        const vulnColor = this.getVulnerabilityColor(board.vulnerability);
+                        const vulnAbbrev = { 'None': 'NV', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
+                        
+                        return `
+                            <div style="
+                                background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(149, 165, 166, 0.1)'};
+                                border: 1px solid ${board.completed ? '#27ae60' : '#bdc3c7'};
+                                border-radius: 4px;
+                                padding: 4px;
+                                text-align: center;
+                                font-size: 9px;
+                            ">
+                                <div style="font-weight: bold; margin-bottom: 2px;">
+                                    B${board.number} ${statusIcon}
+                                </div>
+                                <div style="
+                                    color: ${vulnColor}; 
+                                    font-size: 8px; 
+                                    font-weight: bold;
+                                    background: rgba(255,255,255,0.8);
+                                    padding: 1px 2px;
+                                    border-radius: 4px;
+                                ">
+                                    ${vulnAbbrev[board.vulnerability]}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
         `;
     }
     
@@ -4202,7 +3986,133 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             return total;
         }, 0);
     }
-// END SECTION NINE// SECTION TEN - Export and Final Methods
+    
+    /**
+     * Update display with enhanced state management
+     */
+    updateDisplay() {
+        const content = this.getDisplayContent();
+        const display = document.getElementById('display');
+        if (display) {
+            display.innerHTML = content;
+        }
+        
+        // Update button states
+        const activeButtons = this.getActiveButtons();
+        this.bridgeApp.updateButtonStates(activeButtons);
+        
+        // Setup board selection button if in board_selection state
+        if (this.inputState === 'board_selection') {
+            setTimeout(() => {
+                this.setupBoardSelectionButton();
+            }, 100);
+        }
+        
+        console.log(`🔄 Display updated for state: ${this.inputState}`);
+        
+        // Debug log for traveler state
+        if (this.inputState === 'traveler_entry') {
+            console.log(`🔍 Traveler state - boardNumber: ${this.traveler.boardNumber}, inputState: ${this.travelerInputState}`);
+        }
+    }
+    
+    /**
+     * Get active buttons for current state with enhanced logic - UPDATED
+     */
+    getActiveButtons() {
+        // Handle traveler input buttons
+        if (this.inputState === 'traveler_entry') {
+            const travelerButtons = this.getTravelerActiveButtons();
+            
+            // Always add BACK for traveler
+            if (!travelerButtons.includes('BACK')) {
+                travelerButtons.push('BACK');
+            }
+            
+            return travelerButtons;
+        }
+        
+        // No buttons active when traveler popup is open (shouldn't happen with button system)
+        if (this.traveler.isActive && this.inputState !== 'traveler_entry') {
+            return [];
+        }
+        
+        switch (this.inputState) {
+            case 'pairs_setup':
+                return ['4', '6', '8'];
+                
+            case 'movement_confirm':
+                return ['1', '2', 'BACK'];
+                
+            case 'board_selection':
+                const buttons = ['BACK'];
+                
+                // Only show RESULTS if all boards are complete
+                if (this.areAllBoardsComplete()) {
+                    buttons.push('RESULTS');
+                }
+                
+                return buttons;
+                
+            case 'results':
+                return ['BACK'];
+                
+            default:
+                return [];
+        }
+    }
+    
+    /**
+     * Setup board selection button with mobile enhancements
+     */
+    setupBoardSelectionButton() {
+        const selectBtn = document.getElementById('selectBoardBtn');
+        if (!selectBtn) return;
+        
+        console.log('📱 Setting up board selection button with mobile enhancements');
+        
+        // Remove any existing handlers
+        selectBtn.onclick = null;
+        
+        const boardSelectHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('📋 Board selection button pressed');
+            
+            // Visual feedback
+            selectBtn.style.transform = 'scale(0.95)';
+            selectBtn.style.opacity = '0.8';
+            
+            setTimeout(() => {
+                selectBtn.style.transform = '';
+                selectBtn.style.opacity = '';
+                this.openTravelerPopup();
+            }, 100);
+        };
+        
+        // Enhanced mobile properties
+        selectBtn.style.touchAction = 'manipulation';
+        selectBtn.style.userSelect = 'none';
+        selectBtn.style.webkitTapHighlightColor = 'transparent';
+        selectBtn.style.cursor = 'pointer';
+        selectBtn.style.minHeight = '44px';
+        
+        // Add both event types for maximum compatibility
+        selectBtn.addEventListener('click', boardSelectHandler);
+        selectBtn.addEventListener('touchend', boardSelectHandler, { passive: false });
+        
+        // Touch start feedback
+        selectBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            selectBtn.style.transform = 'scale(0.95)';
+            selectBtn.style.opacity = '0.8';
+        }, { passive: false });
+        
+        console.log('✅ Board selection button mobile enhancement complete');
+    }
+// END SECTION NINE 
+// SECTION TEN
     /**
      * Get comprehensive duplicate bridge session summary
      */
