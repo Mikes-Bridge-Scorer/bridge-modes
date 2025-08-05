@@ -390,24 +390,32 @@ getBoardListHTML() {
 }
 
 /**
- * Setup board list touch events - COMPREHENSIVE MOBILE SUPPORT WITH FIXES
+ * Setup board list touch events - COMPREHENSIVE MOBILE SUPPORT WITH SCROLL/TAP DISCRIMINATION
  */
 setupBoardListEvents() {
     const boardItems = document.querySelectorAll('.board-list-item');
     const cancelBtn = document.getElementById('cancelBoardBtn');
     const refreshBtn = document.getElementById('refreshScrollBtn');
     
-    console.log('📱 Setting up board list touch events');
+    console.log('📱 Setting up board list touch events with scroll/tap discrimination');
     
-    // BOARD ITEM HANDLERS
+    // BOARD ITEM HANDLERS WITH SCROLL/TAP DISCRIMINATION
     boardItems.forEach(item => {
         const boardNumber = parseInt(item.dataset.board);
+        
+        // Touch state tracking for scroll vs tap discrimination
+        let touchStartTime = 0;
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let hasMoved = false;
+        const MOVE_THRESHOLD = 10; // pixels
+        const TAP_MAX_DURATION = 500; // milliseconds
         
         const selectHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
             
-            console.log(`📱 Board ${boardNumber} selected`);
+            console.log(`📱 Board ${boardNumber} selected via tap`);
             
             // Visual feedback
             item.style.transform = 'scale(0.98)';
@@ -425,22 +433,71 @@ setupBoardListEvents() {
             }, 150);
         };
         
-        // Add multiple event types for maximum compatibility
-        item.addEventListener('click', selectHandler);
-        item.addEventListener('touchend', selectHandler, { passive: false });
-        
-        // Touch start feedback
+        // Touch start - record initial position and time
         item.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+            touchStartTime = Date.now();
+            touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
+            hasMoved = false;
+            
+            // Visual feedback for potential tap
             item.style.transform = 'scale(0.98)';
             item.style.opacity = '0.8';
+            
+            console.log(`📱 Touch start on Board ${boardNumber}`);
         }, { passive: false });
         
-        // Reset on touch cancel
+        // Touch move - check if this is scrolling
+        item.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const currentX = e.touches[0].clientX;
+            const moveY = Math.abs(currentY - touchStartY);
+            const moveX = Math.abs(currentX - touchStartX);
+            
+            // If moved beyond threshold, this is scrolling, not a tap
+            if (moveY > MOVE_THRESHOLD || moveX > MOVE_THRESHOLD) {
+                hasMoved = true;
+                
+                // Reset visual feedback - this is scrolling
+                item.style.transform = '';
+                item.style.opacity = '';
+                
+                console.log(`📱 Scroll detected on Board ${boardNumber} - moveY: ${moveY}, moveX: ${moveX}`);
+            }
+        }, { passive: true });
+        
+        // Touch end - determine if this was a tap or scroll
+        item.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // Reset visual feedback
+            item.style.transform = '';
+            item.style.opacity = '';
+            
+            // Only trigger selection if:
+            // 1. Touch didn't move beyond threshold (not scrolling)
+            // 2. Touch duration was reasonable for a tap
+            if (!hasMoved && touchDuration < TAP_MAX_DURATION) {
+                console.log(`📱 Valid tap detected on Board ${boardNumber} - duration: ${touchDuration}ms`);
+                selectHandler(e);
+            } else {
+                console.log(`📱 Scroll gesture ignored on Board ${boardNumber} - moved: ${hasMoved}, duration: ${touchDuration}ms`);
+            }
+        }, { passive: false });
+        
+        // Touch cancel - reset state
         item.addEventListener('touchcancel', () => {
             item.style.transform = '';
             item.style.opacity = '';
+            hasMoved = false;
+            console.log(`📱 Touch cancelled on Board ${boardNumber}`);
         }, { passive: true });
+        
+        // Click handler for desktop
+        item.addEventListener('click', selectHandler);
     });
     
     // CANCEL BUTTON - FIXED
@@ -805,7 +862,8 @@ openTravelerPopup(boardNumber = null) {
         this.showBoardSelectorPopup();
     }
 }
-// END SECTION THREE// SECTION FOUR - Button-Based Traveler System (All Issues Fixed)
+// END SECTION THREE
+// SECTION FOUR - Button-Based Traveler System (All Issues Fixed)
     /**
      * Open traveler using button-based input (like Chicago Bridge)
      */
