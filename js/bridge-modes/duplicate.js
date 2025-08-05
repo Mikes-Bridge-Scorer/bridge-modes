@@ -235,10 +235,11 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         return false;
     }
-// END SECTION TWO// SECTION THREE - Action Handlers (MOBILE BOARD LIST VERSION)
+// END SECTION TWO
+// SECTION THREE - Action Handlers (MOBILE BOARD LIST WITH FIXES)
 
     /**
-     * Show board selector popup - MOBILE BOARD LIST (NO DROPDOWN)
+     * Show board selector popup - MOBILE BOARD LIST WITH CANCEL FIX
      */
     showBoardSelectorPopup() {
         const popup = document.createElement('div');
@@ -272,9 +273,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     ${this.getBoardListHTML()}
                 </div>
                 
-                <div style="text-align: center; margin-top: 15px;">
-                    <button id="cancelBoardBtn" style="
-                        background: #e74c3c; 
+                <div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button id="refreshScrollBtn" style="
+                        background: #3498db; 
                         color: white; 
                         border: none; 
                         padding: 12px 20px; 
@@ -284,6 +285,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         cursor: pointer;
                         font-weight: bold;
                         min-width: 120px;
+                        touch-action: manipulation;
+                        user-select: none;
                     ">❌ Cancel</button>
                 </div>
             </div>
@@ -300,17 +303,22 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Generate board list HTML - MOBILE TOUCH OPTIMIZED
+     * Generate board list HTML - MOBILE TOUCH OPTIMIZED WITH RESULT STATUS
      */
     getBoardListHTML() {
         let html = '';
         
         for (let i = 1; i <= this.session.movement.totalBoards; i++) {
             const board = this.session.boards[i];
-            const status = board.completed ? '✅' : '⭕';
+            const statusIcon = board.completed ? '✅' : '⭕';
             const vulnerability = board.vulnerability;
             const vulnDisplay = { 'None': 'None', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
             const vulnColor = this.getVulnerabilityColor(vulnerability);
+            
+            // FIXED: Proper result status display
+            const resultStatus = board.hasResults ? 
+                `${board.resultCount || 0} results entered` : 
+                'No results yet';
             
             html += `
                 <div class="board-list-item" data-board="${i}" style="
@@ -331,10 +339,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform=''">
                     <div style="flex: 1;">
                         <div style="font-weight: bold; font-size: 16px; color: #2c3e50;">
-                            Board ${i} ${status}
+                            Board ${i} ${statusIcon}
                         </div>
                         <div style="font-size: 12px; color: #7f8c8d;">
-                            ${board.hasResults ? `${board.resultCount || 0} results entered` : 'No results yet'}
+                            ${resultStatus}
                         </div>
                     </div>
                     <div style="
@@ -357,11 +365,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Setup board list touch events - COMPREHENSIVE MOBILE SUPPORT
+     * Setup board list touch events - COMPREHENSIVE MOBILE SUPPORT WITH FIXES
      */
     setupBoardListEvents() {
         const boardItems = document.querySelectorAll('.board-list-item');
         const cancelBtn = document.getElementById('cancelBoardBtn');
+        const refreshBtn = document.getElementById('refreshScrollBtn');
         
         console.log('📱 Setting up board list touch events');
         
@@ -409,7 +418,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             }, { passive: true });
         });
         
-        // CANCEL BUTTON
+        // CANCEL BUTTON - FIXED
         if (cancelBtn) {
             const cancelHandler = (e) => {
                 e.preventDefault();
@@ -440,13 +449,111 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             }, { passive: false });
         }
         
+        // REFRESH SCROLL BUTTON - NEW
+        if (refreshBtn) {
+            const refreshHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔄 Refresh scroll button pressed');
+                this.refreshBoardListScroll();
+            };
+            
+            refreshBtn.style.touchAction = 'manipulation';
+            refreshBtn.style.userSelect = 'none';
+            refreshBtn.style.webkitTapHighlightColor = 'transparent';
+            
+            refreshBtn.addEventListener('click', refreshHandler);
+            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
+            
+            // Touch feedback
+            refreshBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                refreshBtn.style.transform = 'scale(0.95)';
+                refreshBtn.style.opacity = '0.8';
+            }, { passive: false });
+            
+            refreshBtn.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    refreshBtn.style.transform = '';
+                    refreshBtn.style.opacity = '';
+                }, 100);
+            }, { passive: false });
+        }
+        
         console.log(`✅ Board list events setup complete for ${boardItems.length} boards`);
     }
     
-    // Keep all other methods from Section 3 unchanged, just replace these three methods:
-    // - showBoardSelectorPopup()
-    // - Add getBoardListHTML()
-    // - Add setupBoardListEvents()
+    /**
+     * Refresh board list scroll - PIXEL 9A FIX
+     */
+    refreshBoardListScroll() {
+        console.log('🔄 Refreshing board list scroll for mobile...');
+        
+        const container = document.getElementById('boardListContainer');
+        if (container) {
+            // Visual feedback
+            container.style.border = '2px solid #27ae60';
+            container.style.transition = 'border-color 0.3s ease';
+            
+            // Force scroll activation
+            container.scrollTop = container.scrollHeight;
+            setTimeout(() => {
+                container.scrollTop = 0;
+            }, 100);
+            
+            // Enhanced mobile scrolling properties
+            container.style.overflowY = 'scroll';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            
+            // Add visible scrollbar for mobile
+            const scrollbarStyle = document.createElement('style');
+            scrollbarStyle.id = 'boardListScrollbarStyle';
+            scrollbarStyle.textContent = `
+                #boardListContainer::-webkit-scrollbar {
+                    width: 12px !important;
+                    background: rgba(255, 255, 255, 0.2) !important;
+                }
+                #boardListContainer::-webkit-scrollbar-thumb {
+                    background: rgba(52, 152, 219, 0.6) !important;
+                    border-radius: 6px !important;
+                    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+                }
+                #boardListContainer::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.05) !important;
+                    border-radius: 6px !important;
+                }
+            `;
+            
+            // Remove existing style if present
+            const existingStyle = document.getElementById('boardListScrollbarStyle');
+            if (existingStyle) existingStyle.remove();
+            
+            document.head.appendChild(scrollbarStyle);
+            
+            setTimeout(() => {
+                container.style.border = '1px solid #bdc3c7';
+            }, 600);
+            
+            console.log('✅ Board list scroll refreshed');
+        }
+    }
+    
+    /**
+     * Close board selector popup
+     */
+    closeBoardSelector() {
+        const popup = document.getElementById('boardSelectorPopup');
+        if (popup) {
+            popup.remove();
+            console.log('📋 Board selector closed');
+        }
+        
+        // Clean up scrollbar styles
+        const scrollbarStyle = document.getElementById('boardListScrollbarStyle');
+        if (scrollbarStyle) scrollbarStyle.remove();
+    }
     
     /**
      * Handle user actions with enhanced mobile support
@@ -541,19 +648,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             this.showBoardSelectorPopup();
         }
     }
-    
-    /**
-     * Close board selector popup
-     */
-    closeBoardSelector() {
-        const popup = document.getElementById('boardSelectorPopup');
-        if (popup) {
-            popup.remove();
-            console.log('📋 Board selector closed');
-        }
-    }
-// END SECTION THREE
-// SECTION FOUR - Button-Based Traveler System (Chicago Style Result Entry)
+// END SECTION THREE: 
+// SECTION FOUR - Button-Based Traveler System (All Issues Fixed)
     /**
      * Open traveler using button-based input (like Chicago Bridge)
      */
@@ -649,6 +745,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             case 'declarer_selection':
                 this.handleTravelerDeclarerSelection(value, currentResult);
                 break;
+            case 'double_selection':
+                this.handleTravelerDoubleSelection(value, currentResult);
+                break;
             case 'result_type_selection':
                 this.handleTravelerResultTypeSelection(value, currentResult);
                 break;
@@ -688,23 +787,25 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Handle declarer selection and doubling in traveler
+     * Handle declarer selection in traveler - FIXED: Only declarer here
      */
     handleTravelerDeclarerSelection(value, currentResult) {
         if (['N', 'S', 'E', 'W'].includes(value)) {
             currentResult.declarer = value;
-            this.travelerInputState = 'result_type_selection';
+            this.travelerInputState = 'double_selection';  // FIXED: Go to double selection
             console.log(`👤 Traveler declarer selected: ${currentResult.declarer}`);
-            
-        } else if (value === 'X') {
+        }
+    }
+    
+    /**
+     * Handle double selection - NEW STATE AFTER DECLARER
+     */
+    handleTravelerDoubleSelection(value, currentResult) {
+        if (value === 'X') {
             this.handleTravelerDoubling(currentResult);
         } else if (['MADE', 'PLUS', 'DOWN'].includes(value)) {
-            // Only advance to result if declarer is selected
-            if (currentResult.declarer) {
-                this.travelerInputState = 'result_type_selection';
-                this.handleTravelerResultTypeSelection(value, currentResult);
-                return;
-            }
+            this.travelerInputState = 'result_type_selection';
+            this.handleTravelerResultTypeSelection(value, currentResult);
         }
     }
     
@@ -805,55 +906,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Go to previous traveler result
-     */
-    previousTravelerResult() {
-        if (this.currentResultIndex > 0) {
-            this.currentResultIndex--;
-            
-            // Reset input state based on current result completion
-            const currentResult = this.traveler.data[this.currentResultIndex];
-            if (currentResult.isComplete) {
-                this.travelerInputState = 'result_complete';
-            } else if (currentResult.result) {
-                this.travelerInputState = 'result_complete';
-            } else if (currentResult.declarer) {
-                this.travelerInputState = 'result_type_selection';
-            } else if (currentResult.suit) {
-                this.travelerInputState = 'declarer_selection';
-            } else if (currentResult.level) {
-                this.travelerInputState = 'suit_selection';
-            } else {
-                this.travelerInputState = 'level_selection';
-            }
-            
-            console.log(`⬅️ Moving to previous pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
-        }
-    }
-    
-    /**
-     * Clear current traveler result
-     */
-    clearCurrentTravelerResult() {
-        const currentResult = this.traveler.data[this.currentResultIndex];
-        
-        currentResult.level = null;
-        currentResult.suit = null;
-        currentResult.declarer = null;
-        currentResult.double = '';
-        currentResult.result = null;
-        currentResult.nsScore = null;
-        currentResult.ewScore = null;
-        currentResult.isComplete = false;
-        
-        this.travelerInputState = 'level_selection';
-        this.resultMode = null;
-        
-        console.log(`🧹 Cleared current traveler result`);
-    }
-    
-    /**
-     * Get active buttons for traveler input - Chicago Style
+     * Get active buttons for traveler input - FIXED FOR NEW STATES
      */
     getTravelerActiveButtons() {
         const currentResult = this.traveler.data[this.currentResultIndex];
@@ -868,12 +921,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 return ['♣', '♦', '♥', '♠', 'NT'];
                 
             case 'declarer_selection':
-                const buttons = ['N', 'S', 'E', 'W', 'X'];
-                // If declarer is selected, also allow result buttons
-                if (currentResult.declarer) {
-                    buttons.push('MADE', 'PLUS', 'DOWN');
-                }
-                return buttons;
+                return ['N', 'S', 'E', 'W'];  // FIXED: Only declarer buttons
+                
+            case 'double_selection':  // NEW STATE
+                return ['X', 'MADE', 'PLUS', 'DOWN'];
                 
             case 'result_type_selection':
                 return ['MADE', 'PLUS', 'DOWN'];
@@ -892,9 +943,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 break;
                 
             case 'result_complete':
-                const completeButtons = ['DEAL'];
-                console.log('🎯 Returning result complete buttons:', completeButtons); 
-                return completeButtons;
+                return ['DEAL'];
                 
             default:
                 console.warn(`Unknown traveler input state: ${this.travelerInputState}`);
@@ -903,7 +952,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Handle traveler back navigation - Chicago Style
+     * Handle traveler back navigation - FIXED ALL STATES
      */
     handleTravelerBack() {
         const currentResult = this.traveler.data[this.currentResultIndex];
@@ -914,22 +963,31 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             case 'suit_selection':
                 this.travelerInputState = 'level_selection';
                 currentResult.level = null;
+                console.log('🔙 Back to level selection');
                 break;
                 
             case 'declarer_selection':
                 this.travelerInputState = 'suit_selection';
                 currentResult.suit = null;
+                console.log('🔙 Back to suit selection');
+                break;
+                
+            case 'double_selection':  // NEW STATE
+                this.travelerInputState = 'declarer_selection';
+                currentResult.declarer = null;
                 currentResult.double = '';
+                console.log('🔙 Back to declarer selection');
                 break;
                 
             case 'result_type_selection':
-                this.travelerInputState = 'declarer_selection';
-                currentResult.declarer = null;
+                this.travelerInputState = 'double_selection';
+                console.log('🔙 Back to double selection');
                 break;
                 
             case 'result_number_selection':
                 this.travelerInputState = 'result_type_selection';
                 this.resultMode = null;
+                console.log('🔙 Back to result type selection');
                 break;
                 
             case 'result_complete':
@@ -945,6 +1003,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 currentResult.nsScore = null;
                 currentResult.ewScore = null;
                 currentResult.isComplete = false;
+                console.log('🔙 Back to edit result');
                 break;
                 
             case 'level_selection':
@@ -954,7 +1013,38 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     // Close traveler
                     this.closeTraveler();
                 }
+                console.log('🔙 Back from level selection');
                 break;
+                
+            default:
+                console.warn(`🚫 Unhandled back navigation from state: ${this.travelerInputState}`);
+        }
+    }
+    
+    /**
+     * Go to previous traveler result
+     */
+    previousTravelerResult() {
+        if (this.currentResultIndex > 0) {
+            this.currentResultIndex--;
+            
+            // Reset input state based on current result completion
+            const currentResult = this.traveler.data[this.currentResultIndex];
+            if (currentResult.isComplete) {
+                this.travelerInputState = 'result_complete';
+            } else if (currentResult.result) {
+                this.travelerInputState = 'result_complete';
+            } else if (currentResult.declarer) {
+                this.travelerInputState = 'double_selection';
+            } else if (currentResult.suit) {
+                this.travelerInputState = 'declarer_selection';
+            } else if (currentResult.level) {
+                this.travelerInputState = 'suit_selection';
+            } else {
+                this.travelerInputState = 'level_selection';
+            }
+            
+            console.log(`⬅️ Moving to previous pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
         }
     }
     
@@ -973,6 +1063,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         if (hasResults) {
             this.session.boards[this.traveler.boardNumber].completed = true;
             this.session.boards[this.traveler.boardNumber].results = [...this.traveler.data];
+            this.session.boards[this.traveler.boardNumber].hasResults = true;  // FIXED: Add hasResults flag
+            this.session.boards[this.traveler.boardNumber].resultCount = this.traveler.data.filter(r => r.isComplete).length;
             
             console.log(`💾 Saved traveler data for Board ${this.traveler.boardNumber}`);
             this.bridgeApp.showMessage(`Board ${this.traveler.boardNumber} saved!`, 'success');
@@ -1184,6 +1276,23 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
+     * Get board status with enhanced information - FIXED RESULT DISPLAY
+     */
+    getBoardStatus() {
+        if (!this.session.isSetup) {
+            return [];
+        }
+        
+        return Object.values(this.session.boards).map(board => ({
+            number: board.number,
+            vulnerability: board.vulnerability,
+            completed: board.completed,
+            resultCount: board.results ? board.results.filter(r => r.isComplete).length : 0,
+            hasResults: board.hasResults || (board.results && board.results.some(r => r.nsScore !== null || r.ewScore !== null))
+        }));
+    }
+    
+    /**
      * Get scoring summary for current traveler result
      */
     getTravelerScoringSummary() {
@@ -1257,547 +1366,582 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         };
         return colors[vulnerability] || '#95a5a6';
     }
-// END SECTION FOUR// SECTION FIVE - Game Management
-    /**
-     * Show movement popup with mobile-optimized table
-     */
-    showMovementPopup() {
-        const movement = this.session.movement;
-        
-        const popup = document.createElement('div');
-        popup.id = 'movementPopup';
-        popup.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); z-index: 1000; 
-            display: flex; align-items: center; justify-content: center;
+// SECTION FIVE - Game Management (COMPLETE FIXED VERSION)
+
+/**
+ * Show movement popup with mobile-optimized table
+ */
+showMovementPopup() {
+    const movement = this.session.movement;
+    
+    const popup = document.createElement('div');
+    popup.id = 'movementPopup';
+    popup.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.85); z-index: 1000; 
+        display: flex; align-items: center; justify-content: center;
+        -webkit-overflow-scrolling: touch;
+    `;
+    
+    popup.innerHTML = `
+        <div style="
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            max-width: 95%; 
+            max-height: 85%; 
+            overflow: auto; 
+            color: #2c3e50;
             -webkit-overflow-scrolling: touch;
-        `;
-        
-        popup.innerHTML = `
-            <div style="
-                background: white; 
-                padding: 20px; 
-                border-radius: 8px; 
-                max-width: 95%; 
-                max-height: 85%; 
-                overflow: auto; 
-                color: #2c3e50;
-                -webkit-overflow-scrolling: touch;
-            ">
-                <div style="text-align: center; margin-bottom: 20px; position: sticky; top: 0; background: white; z-index: 10;">
-                    <h3 style="margin: 0; color: #2c3e50;">🏆 ${movement.description}</h3>
-                    <div style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">
-                        ${movement.pairs} pairs • ${movement.tables} tables • ${movement.rounds} rounds
-                    </div>
-                </div>
-                
-                ${this.getMovementTableHTML()}
-                
-                <div style="text-align: center; margin-top: 20px; position: sticky; bottom: 0; background: white; padding-top: 15px;">
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                        background: #3498db; color: white; border: none; 
-                        padding: 12px 24px; border-radius: 6px; margin: 5px;
-                        font-size: 16px; cursor: pointer; font-weight: bold;
-                        min-height: 44px; min-width: 100px;
-                        touch-action: manipulation; user-select: none;
-                    ">📋 Close</button>
-                    <button onclick="
-                        this.parentElement.parentElement.parentElement.remove(); 
-                        window.duplicateBridge.handleAction('2');
-                    " style="
-                        background: #27ae60; color: white; border: none; 
-                        padding: 12px 24px; border-radius: 6px; margin: 5px;
-                        font-size: 16px; cursor: pointer; font-weight: bold;
-                        min-height: 44px; min-width: 100px;
-                        touch-action: manipulation; user-select: none;
-                    ">✅ Confirm & Start</button>
+        ">
+            <div style="text-align: center; margin-bottom: 20px; position: sticky; top: 0; background: white; z-index: 10;">
+                <h3 style="margin: 0; color: #2c3e50;">🏆 ${movement.description}</h3>
+                <div style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">
+                    ${movement.pairs} pairs • ${movement.tables} tables • ${movement.rounds} rounds
                 </div>
             </div>
-        `;
-        
-        document.body.appendChild(popup);
-        
-        // Setup mobile button enhancements
-        setTimeout(() => {
-            this.setupMobilePopupButtons();
-        }, 100);
-        
-        console.log('🏆 Movement popup displayed with mobile optimization');
+            
+            ${this.getMovementTableHTML()}
+            
+            <div style="text-align: center; margin-top: 20px; position: sticky; bottom: 0; background: white; padding-top: 15px;">
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                    background: #3498db; color: white; border: none; 
+                    padding: 12px 24px; border-radius: 6px; margin: 5px;
+                    font-size: 16px; cursor: pointer; font-weight: bold;
+                    min-height: 44px; min-width: 100px;
+                    touch-action: manipulation; user-select: none;
+                ">📋 Close</button>
+                <button onclick="
+                    this.parentElement.parentElement.parentElement.remove(); 
+                    window.duplicateBridge.handleAction('2');
+                " style="
+                    background: #27ae60; color: white; border: none; 
+                    padding: 12px 24px; border-radius: 6px; margin: 5px;
+                    font-size: 16px; cursor: pointer; font-weight: bold;
+                    min-height: 44px; min-width: 100px;
+                    touch-action: manipulation; user-select: none;
+                ">✅ Confirm & Start</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Setup mobile button enhancements
+    setTimeout(() => {
+        this.setupMobilePopupButtons();
+    }, 100);
+    
+    console.log('🏆 Movement popup displayed with mobile optimization');
+}
+
+/**
+ * Generate movement table HTML with responsive design - FIXED VERSION
+ */
+getMovementTableHTML() {
+    const movement = this.session.movement;
+    if (!movement || !movement.movement) {
+        return '<p style="text-align: center; color: #e74c3c;">Movement data not available</p>';
     }
     
-    /**
-     * Generate movement table HTML with responsive design
-     */
-    getMovementTableHTML() {
-        const movement = this.session.movement;
-        if (!movement || !movement.movement) {
-            return '<p style="text-align: center; color: #e74c3c;">Movement data not available</p>';
+    // Group entries by rounds
+    const roundData = {};
+    movement.movement.forEach(entry => {
+        if (!roundData[entry.round]) {
+            roundData[entry.round] = [];
         }
-        
-        // Group entries by rounds
-        const roundData = {};
-        movement.movement.forEach(entry => {
-            if (!roundData[entry.round]) {
-                roundData[entry.round] = [];
-            }
-            roundData[entry.round].push(entry);
-        });
-        
-        let html = `
-            <div style="
-                overflow-x: auto; 
-                margin: 20px 0;
-                -webkit-overflow-scrolling: touch;
-                border: 1px solid #bdc3c7;
-                border-radius: 6px;
+        roundData[entry.round].push(entry);
+    });
+    
+    let html = `
+        <div style="
+            overflow-x: auto; 
+            margin: 20px 0;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+        ">
+            <table style="
+                width: 100%; 
+                border-collapse: collapse; 
+                font-size: 12px; 
+                min-width: 400px;
+                background: white;
             ">
-                <table style="
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    font-size: 12px; 
-                    min-width: 400px;
-                    background: white;
-                ">
-                    <thead style="position: sticky; top: 0; background: #34495e; z-index: 5;">
-                        <tr style="background: #34495e; color: white;">
-                            <th style="padding: 10px 8px; border: 1px solid #2c3e50; font-weight: bold;">Round</th>
-        `;
+                <thead style="position: sticky; top: 0; background: #34495e; z-index: 5;">
+                    <tr style="background: #34495e; color: white;">
+                        <th style="padding: 10px 8px; border: 1px solid #2c3e50; font-weight: bold;">Round</th>
+    `;
+    
+    // Add table headers - FIXED: Use movement.tables instead of hardcoded
+    for (let t = 1; t <= movement.tables; t++) {
+        html += `<th style="padding: 10px 8px; border: 1px solid #2c3e50; font-weight: bold; min-width: 120px;">Table ${t}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+    
+    // Add round data with enhanced styling
+    Object.keys(roundData).sort((a,b) => parseInt(a) - parseInt(b)).forEach((round, roundIndex) => {
+        const bgColor = roundIndex % 2 === 0 ? '#f8f9fa' : 'white';
+        html += `<tr style="background: ${bgColor};">`;
+        html += `<td style="
+            padding: 12px 8px; 
+            border: 1px solid #bdc3c7; 
+            font-weight: bold; 
+            background: #ecf0f1; 
+            text-align: center;
+            color: #2c3e50;
+        ">${round}</td>`;
         
-        // Add table headers
+        const roundEntries = roundData[round];
+        
+        // Add table data with improved formatting - FIXED: Use movement.tables
         for (let t = 1; t <= movement.tables; t++) {
-            html += `<th style="padding: 10px 8px; border: 1px solid #2c3e50; font-weight: bold; min-width: 120px;">Table ${t}</th>`;
-        }
-        html += '</tr></thead><tbody>';
-        
-        // Add round data with enhanced styling
-        Object.keys(roundData).sort((a,b) => parseInt(a) - parseInt(b)).forEach((round, roundIndex) => {
-            const bgColor = roundIndex % 2 === 0 ? '#f8f9fa' : 'white';
-            html += `<tr style="background: ${bgColor};">`;
-            html += `<td style="
-                padding: 12px 8px; 
-                border: 1px solid #bdc3c7; 
-                font-weight: bold; 
-                background: #ecf0f1; 
-                text-align: center;
-                color: #2c3e50;
-            ">${round}</td>`;
-            
-            const roundEntries = roundData[round];
-            
-            // Add table data with improved formatting
-            for (let t = 1; t <= movement.tables; t++) {
-                const entry = roundEntries.find(e => e.table === t);
-                if (entry) {
-                    const boardRange = entry.boards.length > 1 ? 
-                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
-                        entry.boards[0];
-                    
-                    html += `
-                        <td style="
-                            padding: 8px; 
-                            border: 1px solid #bdc3c7; 
-                            text-align: center; 
-                            font-size: 11px;
-                            vertical-align: middle;
-                        ">
-                            <div style="font-weight: bold; color: #27ae60; margin-bottom: 2px;">NS: ${entry.ns}</div>
-                            <div style="font-weight: bold; color: #e74c3c; margin-bottom: 4px;">EW: ${entry.ew}</div>
-                            <div style="
-                                color: #7f8c8d; 
-                                font-size: 10px; 
-                                background: rgba(52, 152, 219, 0.1);
-                                padding: 2px 4px;
-                                border-radius: 3px;
-                                display: inline-block;
-                            ">Boards: ${boardRange}</div>
-                        </td>`;
-                } else {
-                    html += '<td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; color: #bdc3c7;">-</td>';
-                }
+            const entry = roundEntries.find(e => e.table === t);
+            if (entry) {
+                const boardRange = entry.boards.length > 1 ? 
+                    `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : 
+                    entry.boards[0];
+                
+                html += `
+                    <td style="
+                        padding: 8px; 
+                        border: 1px solid #bdc3c7; 
+                        text-align: center; 
+                        font-size: 11px;
+                        vertical-align: middle;
+                    ">
+                        <div style="font-weight: bold; color: #27ae60; margin-bottom: 2px;">NS: ${entry.ns}</div>
+                        <div style="font-weight: bold; color: #e74c3c; margin-bottom: 4px;">EW: ${entry.ew}</div>
+                        <div style="
+                            color: #7f8c8d; 
+                            font-size: 10px; 
+                            background: rgba(52, 152, 219, 0.1);
+                            padding: 2px 4px;
+                            border-radius: 3px;
+                            display: inline-block;
+                        ">Boards: ${boardRange}</div>
+                    </td>`;
+            } else {
+                html += '<td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; color: #bdc3c7;">-</td>';
             }
-            
-            html += '</tr>';
-        });
+        }
         
-        html += '</tbody></table></div>';
-        
-        // Add movement summary
-        html += `
-            <div style="
-                background: rgba(52, 152, 219, 0.1); 
-                padding: 12px; 
-                border-radius: 6px; 
-                margin-top: 15px;
-                border-left: 4px solid #3498db;
-            ">
-                <div style="font-size: 13px; color: #2c3e50;">
-                    <strong>📊 Movement Summary:</strong><br>
-                    • Each pair plays ${movement.totalBoards} boards<br>
-                    • ${movement.rounds} rounds of ${Math.floor(movement.totalBoards / movement.rounds)} boards each<br>
-                    • Estimated time: ${movement.description.match(/~(.+)/)?.[1] || '2-3 hours'}
-                </div>
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table></div>';
+    
+    // Add movement summary
+    html += `
+        <div style="
+            background: rgba(52, 152, 219, 0.1); 
+            padding: 12px; 
+            border-radius: 6px; 
+            margin-top: 15px;
+            border-left: 4px solid #3498db;
+        ">
+            <div style="font-size: 13px; color: #2c3e50;">
+                <strong>📊 Movement Summary:</strong><br>
+                • Each pair plays ${movement.totalBoards} boards<br>
+                • ${movement.rounds} rounds of ${Math.floor(movement.totalBoards / movement.rounds)} boards each<br>
+                • Estimated time: ${movement.description.match(/~(.+)/)?.[1] || '2-3 hours'}
             </div>
-        `;
-        
-        return html;
+        </div>
+    `;
+    
+    return html;
+}
+
+/**
+ * Setup mobile popup button enhancements - COMPREHENSIVE FIX
+ */
+setupMobilePopupButtons() {
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (!isMobile) {
+        console.log('📱 Desktop detected - skipping mobile popup fixes');
+        return;
     }
     
-    /**
-     * Setup mobile popup button enhancements - COMPREHENSIVE FIX
-     */
-    setupMobilePopupButtons() {
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (!isMobile) {
-            console.log('📱 Desktop detected - skipping mobile popup fixes');
-            return;
-        }
-        
-        console.log('📱 Setting up mobile popup button enhancements');
-        
-        setTimeout(() => {
-            const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
-            
-            popups.forEach(popupId => {
-                const popup = document.getElementById(popupId);
-                if (!popup) return;
-                
-                console.log(`📱 Enhancing buttons in ${popupId}`);
-                
-                const buttons = popup.querySelectorAll('button');
-                
-                buttons.forEach((button, index) => {
-                    // Enhanced mobile button properties
-                    button.style.touchAction = 'manipulation';
-                    button.style.userSelect = 'none';
-                    button.style.webkitUserSelect = 'none';
-                    button.style.webkitTapHighlightColor = 'transparent';
-                    button.style.minHeight = '44px';
-                    button.style.minWidth = '44px';
-                    button.style.cursor = 'pointer';
-                    
-                    // Store original handlers
-                    const originalOnclick = button.onclick;
-                    const onclickAttr = button.getAttribute('onclick');
-                    
-                    // Enhanced mobile touch handler
-                    const mobileHandler = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        console.log(`📱 Mobile button pressed: ${button.textContent.trim()}`);
-                        
-                        // Visual feedback
-                        button.style.transform = 'scale(0.95)';
-                        button.style.opacity = '0.8';
-                        
-                        setTimeout(() => {
-                            button.style.transform = '';
-                            button.style.opacity = '';
-                            
-                            // Execute original function
-                            try {
-                                if (originalOnclick) {
-                                    originalOnclick.call(button, e);
-                                } else if (onclickAttr) {
-                                    const func = new Function('event', onclickAttr);
-                                    func.call(button, e);
-                                }
-                            } catch (error) {
-                                console.error('Error executing mobile button handler:', error);
-                            }
-                        }, 100);
-                    };
-                    
-                    // Remove existing handlers and add enhanced ones
-                    button.onclick = null;
-                    button.removeAttribute('onclick');
-                    
-                    button.addEventListener('touchend', mobileHandler, { passive: false });
-                    button.addEventListener('click', mobileHandler);
-                    
-                    // Touch start feedback
-                    button.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        button.style.transform = 'scale(0.95)';
-                        button.style.opacity = '0.8';
-                    }, { passive: false });
-                });
-                
-                console.log(`✅ Enhanced ${buttons.length} buttons in ${popupId}`);
-            });
-        }, 200);
-    }
+    console.log('📱 Setting up mobile popup button enhancements');
     
-    /**
-     * Check if all boards are completed
-     */
-    areAllBoardsComplete() {
-        if (!this.session.isSetup || !this.session.boards) {
-            return false;
-        }
-        
-        return Object.values(this.session.boards).every(board => board.completed);
-    }
-    
-    /**
-     * Get completion status summary
-     */
-    getCompletionStatus() {
-        if (!this.session.isSetup || !this.session.boards) {
-            return { completed: 0, total: 0, percentage: 0 };
-        }
-        
-        const boards = Object.values(this.session.boards);
-        const completed = boards.filter(board => board.completed).length;
-        const total = boards.length;
-        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-        
-        return { completed, total, percentage };
-    }
-    
-    /**
-     * Get board status with enhanced information
-     */
-    getBoardStatus() {
-        if (!this.session.isSetup) {
-            return [];
-        }
-        
-        return Object.values(this.session.boards).map(board => ({
-            number: board.number,
-            vulnerability: board.vulnerability,
-            completed: board.completed,
-            resultCount: board.results ? board.results.length : 0,
-            hasResults: board.results && board.results.some(r => r.nsScore !== null || r.ewScore !== null)
-        }));
-    }
-    
-    /**
-     * Handle back navigation with state management
-     */
-    handleBack() {
-        console.log(`🔙 Back pressed from state: ${this.inputState}`);
-        
-        // Close any active popups first
-        if (this.traveler.isActive) {
-            this.closeTravelerPopup();
-            return true;
-        }
-        
-        // Close any open popups
+    setTimeout(() => {
         const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
-        const openPopup = popups.find(id => document.getElementById(id));
-        if (openPopup) {
-            document.getElementById(openPopup).remove();
-            return true;
-        }
         
-        // Navigate between states
-        switch (this.inputState) {
-            case 'movement_confirm':
-                this.inputState = 'pairs_setup';
-                this.session.pairs = 0;
-                this.session.movement = null;
-                break;
+        popups.forEach(popupId => {
+            const popup = document.getElementById(popupId);
+            if (!popup) return;
+            
+            console.log(`📱 Enhancing buttons in ${popupId}`);
+            
+            const buttons = popup.querySelectorAll('button');
+            
+            buttons.forEach((button, index) => {
+                // Enhanced mobile button properties
+                button.style.touchAction = 'manipulation';
+                button.style.userSelect = 'none';
+                button.style.webkitUserSelect = 'none';
+                button.style.webkitTapHighlightColor = 'transparent';
+                button.style.minHeight = '44px';
+                button.style.minWidth = '44px';
+                button.style.cursor = 'pointer';
                 
-            case 'board_selection':
-                this.inputState = 'movement_confirm';
-                this.session.isSetup = false;
-                this.session.boards = {};
-                break;
+                // Store original handlers
+                const originalOnclick = button.onclick;
+                const onclickAttr = button.getAttribute('onclick');
                 
-            case 'results':
-                this.inputState = 'board_selection';
-                break;
+                // Enhanced mobile touch handler
+                const mobileHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log(`📱 Mobile button pressed: ${button.textContent.trim()}`);
+                    
+                    // Visual feedback
+                    button.style.transform = 'scale(0.95)';
+                    button.style.opacity = '0.8';
+                    
+                    setTimeout(() => {
+                        button.style.transform = '';
+                        button.style.opacity = '';
+                        
+                        // Execute original function
+                        try {
+                            if (originalOnclick) {
+                                originalOnclick.call(button, e);
+                            } else if (onclickAttr) {
+                                const func = new Function('event', onclickAttr);
+                                func.call(button, e);
+                            }
+                        } catch (error) {
+                            console.error('Error executing mobile button handler:', error);
+                        }
+                    }, 100);
+                };
                 
-            default:
-                return false; // Let app handle return to mode selection
-        }
-        
-        this.updateDisplay();
+                // Remove existing handlers and add enhanced ones
+                button.onclick = null;
+                button.removeAttribute('onclick');
+                
+                button.addEventListener('touchend', mobileHandler, { passive: false });
+                button.addEventListener('click', mobileHandler);
+                
+                // Touch start feedback
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    button.style.transform = 'scale(0.95)';
+                    button.style.opacity = '0.8';
+                }, { passive: false });
+            });
+            
+            console.log(`✅ Enhanced ${buttons.length} buttons in ${popupId}`);
+        });
+    }, 200);
+}
+
+/**
+ * Check if all boards are completed - FIXED LOGIC
+ */
+areAllBoardsComplete() {
+    if (!this.session.isSetup || !this.session.boards) {
+        console.log('🔍 Not setup or no boards');
+        return false;
+    }
+    
+    const boards = Object.values(this.session.boards);
+    const totalBoards = boards.length;
+    const completedBoards = boards.filter(board => board.completed).length;
+    
+    console.log(`🔍 Board completion check: ${completedBoards}/${totalBoards} complete`);
+    
+    if (totalBoards === 0) return false;
+    
+    const allComplete = completedBoards === totalBoards;
+    console.log(`🔍 All boards complete: ${allComplete}`);
+    
+    return allComplete;
+}
+
+/**
+ * Get completion status - ENHANCED LOGGING
+ */
+getCompletionStatus() {
+    if (!this.session.isSetup || !this.session.boards) {
+        return { completed: 0, total: 0, percentage: 0 };
+    }
+    
+    const boards = Object.values(this.session.boards);
+    const completed = boards.filter(board => board.completed).length;
+    const total = boards.length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    console.log(`📊 Completion status: ${completed}/${total} (${percentage}%)`);
+    
+    return { completed, total, percentage };
+}
+
+/**
+ * Get board status with enhanced information
+ */
+getBoardStatus() {
+    if (!this.session.isSetup) {
+        return [];
+    }
+    
+    return Object.values(this.session.boards).map(board => ({
+        number: board.number,
+        vulnerability: board.vulnerability,
+        completed: board.completed,
+        resultCount: board.results ? board.results.filter(r => r.isComplete).length : 0,
+        hasResults: board.hasResults || (board.results && board.results.some(r => r.nsScore !== null || r.ewScore !== null))
+    }));
+}
+
+/**
+ * Handle back navigation with state management
+ */
+handleBack() {
+    console.log(`🔙 Back pressed from state: ${this.inputState}`);
+    
+    // Close any active popups first
+    if (this.traveler.isActive) {
+        this.closeTraveler();
         return true;
     }
     
-    /**
-     * Check if back navigation is possible
-     */
-    canGoBack() {
-        return this.inputState !== 'pairs_setup' || this.traveler.isActive;
+    // Close any open popups
+    const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
+    const openPopup = popups.find(id => document.getElementById(id));
+    if (openPopup) {
+        document.getElementById(openPopup).remove();
+        return true;
     }
     
-    /**
-     * Reset session to initial state
-     */
-    resetSession() {
-        console.log('🔄 Resetting duplicate bridge session');
-        
-        this.session = {
-            pairs: 0,
-            movement: null,
-            currentBoard: 1,
-            boards: {},
-            isSetup: false
-        };
-        
-        this.traveler = {
-            isActive: false,
-            boardNumber: null,
-            data: []
-        };
-        
-        this.inputState = 'pairs_setup';
-        
-        // Close any open popups
-        const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
-        popups.forEach(id => {
-            const popup = document.getElementById(id);
-            if (popup) popup.remove();
-        });
-        
-        this.updateDisplay();
+    // Navigate between states
+    switch (this.inputState) {
+        case 'movement_confirm':
+            this.inputState = 'pairs_setup';
+            this.session.pairs = 0;
+            this.session.movement = null;
+            break;
+            
+        case 'board_selection':
+            this.inputState = 'movement_confirm';
+            this.session.isSetup = false;
+            this.session.boards = {};
+            break;
+            
+        case 'results':
+            this.inputState = 'board_selection';
+            break;
+            
+        default:
+            return false; // Let app handle return to mode selection
     }
     
-    /**
-     * Get active buttons for current state with enhanced logic
-     */
-    getActiveButtons() {
-        // No buttons active when traveler popup is open
-        if (this.traveler.isActive) {
+    this.updateDisplay();
+    return true;
+}
+
+/**
+ * Check if back navigation is possible
+ */
+canGoBack() {
+    return this.inputState !== 'pairs_setup' || this.traveler.isActive;
+}
+
+/**
+ * Reset session to initial state
+ */
+resetSession() {
+    console.log('🔄 Resetting duplicate bridge session');
+    
+    this.session = {
+        pairs: 0,
+        movement: null,
+        currentBoard: 1,
+        boards: {},
+        isSetup: false
+    };
+    
+    this.traveler = {
+        isActive: false,
+        boardNumber: null,
+        data: []
+    };
+    
+    this.inputState = 'pairs_setup';
+    
+    // Close any open popups
+    const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
+    popups.forEach(id => {
+        const popup = document.getElementById(id);
+        if (popup) popup.remove();
+    });
+    
+    this.updateDisplay();
+}
+
+/**
+ * Get active buttons for current state with enhanced logic - FIXED RESULTS BUTTON
+ */
+getActiveButtons() {
+    // Handle traveler input buttons
+    if (this.inputState === 'traveler_entry') {
+        const travelerButtons = this.getTravelerActiveButtons();
+        
+        // Always add BACK for traveler
+        if (!travelerButtons.includes('BACK')) {
+            travelerButtons.push('BACK');
+        }
+        
+        return travelerButtons;
+    }
+    
+    // No buttons active when traveler popup is open (shouldn't happen with button system)
+    if (this.traveler.isActive && this.inputState !== 'traveler_entry') {
+        return [];
+    }
+    
+    switch (this.inputState) {
+        case 'pairs_setup':
+            return ['4', '6', '8'];
+            
+        case 'movement_confirm':
+            return ['1', '2', 'BACK'];
+            
+        case 'board_selection':
+            const buttons = ['BACK'];
+            
+            // FIXED: Check for all boards complete properly
+            const completionStatus = this.getCompletionStatus();
+            console.log(`🔍 Completion check: ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)`);
+            
+            if (completionStatus.percentage === 100) {
+                buttons.push('RESULTS');  // FIXED: Add RESULTS button when 100% complete
+                console.log('✅ Adding RESULTS button - all boards complete');
+            }
+            
+            return buttons;
+            
+        case 'results':
+            return ['BACK'];
+            
+        default:
             return [];
-        }
-        
-        switch (this.inputState) {
-            case 'pairs_setup':
-                return ['4', '6', '8'];
-                
-            case 'movement_confirm':
-                return ['1', '2', 'BACK'];
-                
-            case 'board_selection':
-                const buttons = ['BACK'];
-                
-                // Only show RESULTS if all boards are complete
-                if (this.areAllBoardsComplete()) {
-                    buttons.push('RESULTS');
-                }
-                
-                return buttons;
-                
-            case 'results':
-                return ['BACK'];
-                
-            default:
-                return [];
-        }
+    }
+}
+
+/**
+ * Update display with enhanced state management
+ */
+updateDisplay() {
+    const content = this.getDisplayContent();
+    const display = document.getElementById('display');
+    if (display) {
+        display.innerHTML = content;
     }
     
-    /**
-     * Update display with enhanced state management
-     */
-    updateDisplay() {
-        const content = this.getDisplayContent();
-        const display = document.getElementById('display');
-        if (display) {
-            display.innerHTML = content;
-        }
-        
-        // Update button states
-        const activeButtons = this.getActiveButtons();
-        this.bridgeApp.updateButtonStates(activeButtons);
-        
-        // Setup board selection button if in board_selection state
-        if (this.inputState === 'board_selection') {
-            setTimeout(() => {
-                this.setupBoardSelectionButton();
-            }, 100);
-        }
-        
-        console.log(`🔄 Display updated for state: ${this.inputState}`);
+    // Update button states
+    const activeButtons = this.getActiveButtons();
+    this.bridgeApp.updateButtonStates(activeButtons);
+    
+    // Setup board selection button if in board_selection state
+    if (this.inputState === 'board_selection') {
+        setTimeout(() => {
+            this.setupBoardSelectionButton();
+        }, 100);
     }
     
-    /**
-     * Setup board selection button with mobile enhancements
-     */
-    setupBoardSelectionButton() {
-        const selectBtn = document.getElementById('selectBoardBtn');
-        if (!selectBtn) return;
+    console.log(`🔄 Display updated for state: ${this.inputState}`);
+    
+    // Debug log for traveler state
+    if (this.inputState === 'traveler_entry') {
+        console.log(`🔍 Traveler state - boardNumber: ${this.traveler.boardNumber}, inputState: ${this.travelerInputState}`);
+    }
+}
+
+/**
+ * Setup board selection button with mobile enhancements
+ */
+setupBoardSelectionButton() {
+    const selectBtn = document.getElementById('selectBoardBtn');
+    if (!selectBtn) return;
+    
+    console.log('📱 Setting up board selection button with mobile enhancements');
+    
+    // Remove any existing handlers
+    selectBtn.onclick = null;
+    
+    const boardSelectHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         
-        console.log('📱 Setting up board selection button with mobile enhancements');
+        console.log('📋 Board selection button pressed');
         
-        // Remove any existing handlers
-        selectBtn.onclick = null;
+        // Visual feedback
+        selectBtn.style.transform = 'scale(0.95)';
+        selectBtn.style.opacity = '0.8';
         
-        const boardSelectHandler = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('📋 Board selection button pressed');
-            
-            // Visual feedback
-            selectBtn.style.transform = 'scale(0.95)';
-            selectBtn.style.opacity = '0.8';
-            
-            setTimeout(() => {
-                selectBtn.style.transform = '';
-                selectBtn.style.opacity = '';
-                this.openTravelerPopup();
-            }, 100);
-        };
-        
-        // Enhanced mobile properties
-        selectBtn.style.touchAction = 'manipulation';
-        selectBtn.style.userSelect = 'none';
-        selectBtn.style.webkitTapHighlightColor = 'transparent';
-        selectBtn.style.cursor = 'pointer';
-        selectBtn.style.minHeight = '44px';
-        
-        // Add both event types for maximum compatibility
-        selectBtn.addEventListener('click', boardSelectHandler);
-        selectBtn.addEventListener('touchend', boardSelectHandler, { passive: false });
-        
-        // Touch start feedback
-        selectBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            selectBtn.style.transform = 'scale(0.95)';
-            selectBtn.style.opacity = '0.8';
-        }, { passive: false });
-        
-        console.log('✅ Board selection button mobile enhancement complete');
+        setTimeout(() => {
+            selectBtn.style.transform = '';
+            selectBtn.style.opacity = '';
+            this.openTravelerPopup();
+        }, 100);
+    };
+    
+    // Enhanced mobile properties
+    selectBtn.style.touchAction = 'manipulation';
+    selectBtn.style.userSelect = 'none';
+    selectBtn.style.webkitTapHighlightColor = 'transparent';
+    selectBtn.style.cursor = 'pointer';
+    selectBtn.style.minHeight = '44px';
+    
+    // Add both event types for maximum compatibility
+    selectBtn.addEventListener('click', boardSelectHandler);
+    selectBtn.addEventListener('touchend', boardSelectHandler, { passive: false });
+    
+    // Touch start feedback
+    selectBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        selectBtn.style.transform = 'scale(0.95)';
+        selectBtn.style.opacity = '0.8';
+    }, { passive: false });
+    
+    console.log('✅ Board selection button mobile enhancement complete');
+}
+
+/**
+ * Validate session state for consistency
+ */
+validateSessionState() {
+    const issues = [];
+    
+    // Check if session is properly initialized
+    if (this.inputState !== 'pairs_setup' && !this.session.movement) {
+        issues.push('Movement not selected but not in setup state');
     }
     
-    /**
-     * Validate session state for consistency
-     */
-    validateSessionState() {
-        const issues = [];
-        
-        // Check if session is properly initialized
-        if (this.inputState !== 'pairs_setup' && !this.session.movement) {
-            issues.push('Movement not selected but not in setup state');
-        }
-        
-        // Check if boards are setup when expected
-        if (this.inputState === 'board_selection' && !this.session.isSetup) {
-            issues.push('In board selection but boards not setup');
-        }
-        
-        // Check for orphaned popups
-        const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
-        const openPopups = popups.filter(id => document.getElementById(id));
-        if (openPopups.length > 1) {
-            issues.push(`Multiple popups open: ${openPopups.join(', ')}`);
-        }
-        
-        if (issues.length > 0) {
-            console.warn('🚨 Duplicate Bridge session validation issues:', issues);
-            return { valid: false, issues };
-        }
-        
-        console.log('✅ Duplicate Bridge session validation passed');
-        return { valid: true, issues: [] };
+    // Check if boards are setup when expected
+    if (this.inputState === 'board_selection' && !this.session.isSetup) {
+        issues.push('In board selection but boards not setup');
     }
-// END SECTION FIVE
-// SECTION SIX - Help and Quit Methods
+    
+    // Check for orphaned popups
+    const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
+    const openPopups = popups.filter(id => document.getElementById(id));
+    if (openPopups.length > 1) {
+        issues.push(`Multiple popups open: ${openPopups.join(', ')}`);
+    }
+    
+    if (issues.length > 0) {
+        console.warn('🚨 Duplicate Bridge session validation issues:', issues);
+        return { valid: false, issues };
+    }
+    
+    console.log('✅ Duplicate Bridge session validation passed');
+    return { valid: true, issues: [] };
+}
+// END SECTION FIVE// SECTION SIX - Help and Quit Methods
     /**
      * Get help content specific to Duplicate Bridge
      */
@@ -1928,83 +2072,69 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         this.bridgeApp.showModal(helpContent.title, helpContent.content);
     }
     
-    /**
-     * Show Duplicate Bridge specific quit options
-     */
-    showQuit() {
-        const completionStatus = this.getCompletionStatus();
-        const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
-        
-        let sessionContent = '';
-        if (this.session.isSetup) {
-            const movement = this.session.movement;
-            sessionContent = `
-                <div class="help-section">
-                    <h4>🏆 Current Session Status</h4>
-                    <p><strong>Movement:</strong> ${movement.description}</p>
-                    <p><strong>Pairs:</strong> ${movement.pairs} pairs</p>
-                    <p><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
-                    <p><strong>State:</strong> ${this.getReadableState()}</p>
-                    ${completionStatus.percentage === 100 ? 
-                        '<p style="color: #27ae60; font-weight: bold;">✅ All boards complete!</p>' : 
-                        '<p style="color: #f39c12;">⏳ Session in progress...</p>'
-                    }
-                </div>
-            `;
-        } else {
-            sessionContent = `
-                <div class="help-section">
-                    <h4>🎯 Session Setup</h4>
-                    <p>Session not yet configured. You can:</p>
-                    <ul>
-                        <li>Continue setting up your duplicate session</li>
-                        <li>Start a new session</li>
-                        <li>Return to main menu</li>
-                    </ul>
-                </div>
-            `;
-        }
-        
-        let licenseSection = '';
-        if (licenseStatus.status === 'trial') {
-            licenseSection = `
-                <div class="help-section">
-                    <h4>📅 License Status</h4>
-                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
-                </div>
-            `;
-        }
-        
-        const content = `
-            ${sessionContent}
-            ${licenseSection}
+   /**
+ * Show Duplicate Bridge specific quit options - SHORTENED FOR MOBILE
+ */
+showQuit() {
+    const completionStatus = this.getCompletionStatus();
+    const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
+    const cycleInfo = this.getCycleInfo ? this.getCycleInfo() : null;
+    
+    let sessionContent = '';
+    if (this.session.isSetup) {
+        const movement = this.session.movement;
+        sessionContent = `
             <div class="help-section">
-                <h4>🎮 Session Options</h4>
-                <p>What would you like to do?</p>
+                <h4>📊 Current Session Status</h4>
+                <p><strong>Movement:</strong> ${movement.description}</p>
+                <p><strong>Pairs:</strong> ${movement.pairs} pairs</p>
+                <p><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
+                ${completionStatus.percentage === 100 ? 
+                    '<p style="color: #27ae60; font-weight: bold;">✅ All boards complete!</p>' : 
+                    '<p style="color: #f39c12;">⏳ Session in progress...</p>'
+                }
             </div>
         `;
-        
-        const buttons = [
-            { text: 'Continue Session', action: () => {}, class: 'continue-btn' }
-        ];
-        
-        if (this.session.isSetup && completionStatus.completed > 0) {
-            buttons.push({ text: 'Show Progress', action: () => this.showSessionProgress(), class: 'progress-btn' });
-        }
-        
-        if (this.session.isSetup) {
-            buttons.push({ text: 'Reset Session', action: () => this.confirmResetSession(), class: 'reset-btn' });
-        } else {
-            buttons.push({ text: 'New Session', action: () => this.resetSession(), class: 'new-session-btn' });
-        }
-        
-        buttons.push(
-            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
-        );
-        
-        this.bridgeApp.showModal('🏆 Duplicate Bridge Options', content, buttons);
+    } else {
+        sessionContent = `
+            <div class="help-section">
+                <h4>🎯 Session Setup</h4>
+                <p>Session not yet configured.</p>
+            </div>
+        `;
     }
+    
+    // SHORTENED: Remove license section for mobile
+    
+    const content = `
+        ${sessionContent}
+        <div class="help-section">
+            <h4>🎮 Session Options</h4>
+            <p>What would you like to do?</p>
+        </div>
+    `;
+    
+    const buttons = [
+        { text: 'Continue Session', action: () => {}, class: 'continue-btn' }
+    ];
+    
+    if (this.session.isSetup && completionStatus.completed > 0) {
+        buttons.push({ text: 'Show Progress', action: () => this.showSessionProgress(), class: 'progress-btn' });
+    }
+    
+    if (this.session.isSetup) {
+        buttons.push({ text: 'Reset Session', action: () => this.confirmResetSession(), class: 'reset-btn' });
+    } else {
+        buttons.push({ text: 'New Session', action: () => this.resetSession(), class: 'new-session-btn' });
+    }
+    
+    buttons.push(
+        { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
+        { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
+    );
+    
+    this.bridgeApp.showModal('🏆 Duplicate Bridge Options', content, buttons);
+}
     
     /**
      * Get readable state description
@@ -4016,51 +4146,55 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
     }
     
-    /**
-     * Get active buttons for current state with enhanced logic - UPDATED
-     */
-    getActiveButtons() {
-        // Handle traveler input buttons
-        if (this.inputState === 'traveler_entry') {
-            const travelerButtons = this.getTravelerActiveButtons();
+/**
+ * Get active buttons for current state with enhanced logic - FIXED RESULTS BUTTON
+ */
+getActiveButtons() {
+    // Handle traveler input buttons
+    if (this.inputState === 'traveler_entry') {
+        const travelerButtons = this.getTravelerActiveButtons();
+        
+        // Always add BACK for traveler
+        if (!travelerButtons.includes('BACK')) {
+            travelerButtons.push('BACK');
+        }
+        
+        return travelerButtons;
+    }
+    
+    // No buttons active when traveler popup is open (shouldn't happen with button system)
+    if (this.traveler.isActive && this.inputState !== 'traveler_entry') {
+        return [];
+    }
+    
+    switch (this.inputState) {
+        case 'pairs_setup':
+            return ['4', '6', '8'];
             
-            // Always add BACK for traveler
-            if (!travelerButtons.includes('BACK')) {
-                travelerButtons.push('BACK');
+        case 'movement_confirm':
+            return ['1', '2', 'BACK'];
+            
+        case 'board_selection':
+            const buttons = ['BACK'];
+            
+            // FIXED: Check for all boards complete properly
+            const completionStatus = this.getCompletionStatus();
+            console.log(`🔍 Completion check: ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)`);
+            
+            if (completionStatus.percentage === 100) {
+                buttons.push('RESULTS');  // FIXED: Add RESULTS button when 100% complete
+                console.log('✅ Adding RESULTS button - all boards complete');
             }
             
-            return travelerButtons;
-        }
-        
-        // No buttons active when traveler popup is open (shouldn't happen with button system)
-        if (this.traveler.isActive && this.inputState !== 'traveler_entry') {
+            return buttons;
+            
+        case 'results':
+            return ['BACK'];
+            
+        default:
             return [];
-        }
-        
-        switch (this.inputState) {
-            case 'pairs_setup':
-                return ['4', '6', '8'];
-                
-            case 'movement_confirm':
-                return ['1', '2', 'BACK'];
-                
-            case 'board_selection':
-                const buttons = ['BACK'];
-                
-                // Only show RESULTS if all boards are complete
-                if (this.areAllBoardsComplete()) {
-                    buttons.push('RESULTS');
-                }
-                
-                return buttons;
-                
-            case 'results':
-                return ['BACK'];
-                
-            default:
-                return [];
-        }
     }
+}
     
     /**
      * Setup board selection button with mobile enhancements
