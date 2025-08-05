@@ -236,420 +236,576 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         return false;
     }
 // END SECTION TWO
-// SECTION THREE - Action Handlers (MOBILE BOARD LIST WITH FIXES)
+// SECTION THREE - Action Handlers (MOBILE BOARD LIST WITH COMPREHENSIVE SCROLLING FIXES)
 
-    /**
-     * Show board selector popup - MOBILE BOARD LIST WITH CANCEL FIX
-     */
-    showBoardSelectorPopup() {
-        const popup = document.createElement('div');
-        popup.id = 'boardSelectorPopup';
-        popup.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); z-index: 1000; 
-            display: flex; align-items: center; justify-content: center;
-            -webkit-overflow-scrolling: touch;
-        `;
-        
-        popup.innerHTML = `
-            <div style="
-                background: white; 
-                padding: 20px; 
-                border-radius: 8px; 
-                max-width: 90%; 
-                max-height: 80%; 
-                overflow: auto; 
-                color: #2c3e50;
-                min-width: 280px;
+/**
+ * Show board selector popup - MOBILE BOARD LIST WITH PIXEL 9A SCROLLING FIX
+ */
+showBoardSelectorPopup() {
+    const popup = document.createElement('div');
+    popup.id = 'boardSelectorPopup';
+    popup.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.8); z-index: 1000; 
+        display: flex; align-items: center; justify-content: center;
+        -webkit-overflow-scrolling: touch;
+    `;
+    
+    popup.innerHTML = `
+        <div style="
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            max-width: 90%; 
+            max-height: 85%; 
+            overflow: hidden; 
+            color: #2c3e50;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+        ">
+            <h3 style="text-align: center; margin: 0 0 15px 0; color: #2c3e50;">📋 Select Board</h3>
+            
+            <div id="boardListContainer" style="
+                height: 350px;
+                overflow-y: scroll;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                margin: 15px 0;
+                border: 1px solid #bdc3c7;
+                border-radius: 6px;
+                background: rgba(255,255,255,0.95);
+                transform: translateZ(0);
+                will-change: scroll-position;
+                position: relative;
             ">
-                <h3 style="text-align: center; margin: 0 0 15px 0; color: #2c3e50;">📋 Select Board</h3>
+                ${this.getBoardListHTML()}
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button id="cancelBoardBtn" style="
+                    background: #e74c3c; 
+                    color: white; 
+                    border: none; 
+                    padding: 12px 20px; 
+                    border-radius: 6px; 
+                    min-height: 44px; 
+                    font-size: 14px; 
+                    cursor: pointer;
+                    font-weight: bold;
+                    min-width: 120px;
+                    touch-action: manipulation;
+                    user-select: none;
+                ">❌ Cancel</button>
                 
-                <div id="boardListContainer" style="
-                    max-height: 300px;
-                    overflow-y: auto;
-                    -webkit-overflow-scrolling: touch;
-                    margin: 15px 0;
-                ">
-                    ${this.getBoardListHTML()}
+                <button id="refreshScrollBtn" style="
+                    background: #3498db; 
+                    color: white; 
+                    border: none; 
+                    padding: 12px 20px; 
+                    border-radius: 6px; 
+                    min-height: 44px; 
+                    font-size: 14px; 
+                    cursor: pointer;
+                    font-weight: bold;
+                    min-width: 120px;
+                    touch-action: manipulation;
+                    user-select: none;
+                ">🔄 Fix Scroll</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Setup board list handlers with enhanced mobile scrolling
+    setTimeout(() => {
+        this.setupBoardListEvents();
+        this.applyBoardListScrollingFixes(); // Apply the scrolling fix immediately
+    }, 100);
+    
+    console.log('📋 Board list popup created with comprehensive mobile scrolling fixes');
+}
+
+/**
+ * Generate board list HTML - MOBILE TOUCH OPTIMIZED WITH RESULT STATUS
+ */
+getBoardListHTML() {
+    let html = '';
+    
+    for (let i = 1; i <= this.session.movement.totalBoards; i++) {
+        const board = this.session.boards[i];
+        const statusIcon = board.completed ? '✅' : '⭕';
+        const vulnerability = board.vulnerability;
+        const vulnDisplay = { 'None': 'None', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
+        const vulnColor = this.getVulnerabilityColor(vulnerability);
+        
+        // FIXED: Proper result status display
+        const resultStatus = board.hasResults ? 
+            `${board.resultCount || 0} results entered` : 
+            'No results yet';
+        
+        html += `
+            <div class="board-list-item" data-board="${i}" style="
+                background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(52, 152, 219, 0.1)'};
+                border: 2px solid ${board.completed ? '#27ae60' : '#3498db'};
+                border-radius: 8px;
+                padding: 12px;
+                margin: 8px;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                min-height: 50px;
+                transition: all 0.2s ease;
+                touch-action: manipulation;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform=''">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; font-size: 16px; color: #2c3e50;">
+                        Board ${i} ${statusIcon}
+                    </div>
+                    <div style="font-size: 12px; color: #7f8c8d;">
+                        ${resultStatus}
+                    </div>
                 </div>
-                
-                <div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                    <button id="refreshScrollBtn" style="
-                        background: #3498db; 
-                        color: white; 
-                        border: none; 
-                        padding: 12px 20px; 
-                        border-radius: 6px; 
-                        min-height: 44px; 
-                        font-size: 14px; 
-                        cursor: pointer;
-                        font-weight: bold;
-                        min-width: 120px;
-                        touch-action: manipulation;
-                        user-select: none;
-                    ">❌ Cancel</button>
+                <div style="
+                    background: ${vulnColor};
+                    color: white;
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    min-width: 50px;
+                    text-align: center;
+                ">
+                    ${vulnDisplay[vulnerability]}
                 </div>
             </div>
         `;
-        
-        document.body.appendChild(popup);
-        
-        // Setup board list handlers
-        setTimeout(() => {
-            this.setupBoardListEvents();
-        }, 100);
-        
-        console.log('📋 Board list popup created (mobile-friendly)');
     }
     
-    /**
-     * Generate board list HTML - MOBILE TOUCH OPTIMIZED WITH RESULT STATUS
-     */
-    getBoardListHTML() {
-        let html = '';
-        
-        for (let i = 1; i <= this.session.movement.totalBoards; i++) {
-            const board = this.session.boards[i];
-            const statusIcon = board.completed ? '✅' : '⭕';
-            const vulnerability = board.vulnerability;
-            const vulnDisplay = { 'None': 'None', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
-            const vulnColor = this.getVulnerabilityColor(vulnerability);
-            
-            // FIXED: Proper result status display
-            const resultStatus = board.hasResults ? 
-                `${board.resultCount || 0} results entered` : 
-                'No results yet';
-            
-            html += `
-                <div class="board-list-item" data-board="${i}" style="
-                    background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(52, 152, 219, 0.1)'};
-                    border: 2px solid ${board.completed ? '#27ae60' : '#3498db'};
-                    border-radius: 8px;
-                    padding: 12px;
-                    margin: 8px 0;
-                    cursor: pointer;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    min-height: 50px;
-                    transition: all 0.2s ease;
-                    touch-action: manipulation;
-                    user-select: none;
-                    -webkit-tap-highlight-color: transparent;
-                " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform=''">
-                    <div style="flex: 1;">
-                        <div style="font-weight: bold; font-size: 16px; color: #2c3e50;">
-                            Board ${i} ${statusIcon}
-                        </div>
-                        <div style="font-size: 12px; color: #7f8c8d;">
-                            ${resultStatus}
-                        </div>
-                    </div>
-                    <div style="
-                        background: ${vulnColor};
-                        color: white;
-                        padding: 6px 12px;
-                        border-radius: 20px;
-                        font-size: 12px;
-                        font-weight: bold;
-                        min-width: 50px;
-                        text-align: center;
-                    ">
-                        ${vulnDisplay[vulnerability]}
-                    </div>
-                </div>
-            `;
-        }
-        
-        return html;
-    }
+    return html;
+}
+
+/**
+ * Setup board list touch events - COMPREHENSIVE MOBILE SUPPORT WITH FIXES
+ */
+setupBoardListEvents() {
+    const boardItems = document.querySelectorAll('.board-list-item');
+    const cancelBtn = document.getElementById('cancelBoardBtn');
+    const refreshBtn = document.getElementById('refreshScrollBtn');
     
-    /**
-     * Setup board list touch events - COMPREHENSIVE MOBILE SUPPORT WITH FIXES
-     */
-    setupBoardListEvents() {
-        const boardItems = document.querySelectorAll('.board-list-item');
-        const cancelBtn = document.getElementById('cancelBoardBtn');
-        const refreshBtn = document.getElementById('refreshScrollBtn');
+    console.log('📱 Setting up board list touch events');
+    
+    // BOARD ITEM HANDLERS
+    boardItems.forEach(item => {
+        const boardNumber = parseInt(item.dataset.board);
         
-        console.log('📱 Setting up board list touch events');
-        
-        // BOARD ITEM HANDLERS
-        boardItems.forEach(item => {
-            const boardNumber = parseInt(item.dataset.board);
+        const selectHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             
-            const selectHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log(`📱 Board ${boardNumber} selected`);
-                
-                // Visual feedback
-                item.style.transform = 'scale(0.98)';
-                item.style.opacity = '0.8';
-                
-                setTimeout(() => {
-                    item.style.transform = '';
-                    item.style.opacity = '';
-                    
-                    // Close popup and open traveler
-                    this.closeBoardSelector();
-                    setTimeout(() => {
-                        this.openSpecificTraveler(boardNumber);
-                    }, 100);
-                }, 150);
-            };
+            console.log(`📱 Board ${boardNumber} selected`);
             
-            // Add multiple event types for maximum compatibility
-            item.addEventListener('click', selectHandler);
-            item.addEventListener('touchend', selectHandler, { passive: false });
+            // Visual feedback
+            item.style.transform = 'scale(0.98)';
+            item.style.opacity = '0.8';
             
-            // Touch start feedback
-            item.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                item.style.transform = 'scale(0.98)';
-                item.style.opacity = '0.8';
-            }, { passive: false });
-            
-            // Reset on touch cancel
-            item.addEventListener('touchcancel', () => {
+            setTimeout(() => {
                 item.style.transform = '';
                 item.style.opacity = '';
-            }, { passive: true });
-        });
-        
-        // CANCEL BUTTON - FIXED
-        if (cancelBtn) {
-            const cancelHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('📱 Cancel button pressed');
+                
+                // Close popup and open traveler
                 this.closeBoardSelector();
-            };
-            
-            cancelBtn.style.touchAction = 'manipulation';
-            cancelBtn.style.userSelect = 'none';
-            cancelBtn.style.webkitTapHighlightColor = 'transparent';
-            
-            cancelBtn.addEventListener('click', cancelHandler);
-            cancelBtn.addEventListener('touchend', cancelHandler, { passive: false });
-            
-            // Touch feedback for cancel button
-            cancelBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                cancelBtn.style.transform = 'scale(0.95)';
-                cancelBtn.style.opacity = '0.8';
-            }, { passive: false });
-            
-            cancelBtn.addEventListener('touchend', () => {
                 setTimeout(() => {
-                    cancelBtn.style.transform = '';
-                    cancelBtn.style.opacity = '';
+                    this.openSpecificTraveler(boardNumber);
                 }, 100);
-            }, { passive: false });
-        }
+            }, 150);
+        };
         
-        // REFRESH SCROLL BUTTON - NEW
-        if (refreshBtn) {
-            const refreshHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔄 Refresh scroll button pressed');
-                this.refreshBoardListScroll();
-            };
-            
-            refreshBtn.style.touchAction = 'manipulation';
-            refreshBtn.style.userSelect = 'none';
-            refreshBtn.style.webkitTapHighlightColor = 'transparent';
-            
-            refreshBtn.addEventListener('click', refreshHandler);
-            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
-            
-            // Touch feedback
-            refreshBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-            }, { passive: false });
-            
-            refreshBtn.addEventListener('touchend', () => {
-                setTimeout(() => {
-                    refreshBtn.style.transform = '';
-                    refreshBtn.style.opacity = '';
-                }, 100);
-            }, { passive: false });
-        }
+        // Add multiple event types for maximum compatibility
+        item.addEventListener('click', selectHandler);
+        item.addEventListener('touchend', selectHandler, { passive: false });
         
-        console.log(`✅ Board list events setup complete for ${boardItems.length} boards`);
+        // Touch start feedback
+        item.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            item.style.transform = 'scale(0.98)';
+            item.style.opacity = '0.8';
+        }, { passive: false });
+        
+        // Reset on touch cancel
+        item.addEventListener('touchcancel', () => {
+            item.style.transform = '';
+            item.style.opacity = '';
+        }, { passive: true });
+    });
+    
+    // CANCEL BUTTON - FIXED
+    if (cancelBtn) {
+        const cancelHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Cancel button pressed');
+            this.closeBoardSelector();
+        };
+        
+        cancelBtn.style.touchAction = 'manipulation';
+        cancelBtn.style.userSelect = 'none';
+        cancelBtn.style.webkitTapHighlightColor = 'transparent';
+        
+        cancelBtn.addEventListener('click', cancelHandler);
+        cancelBtn.addEventListener('touchend', cancelHandler, { passive: false });
+        
+        // Touch feedback for cancel button
+        cancelBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            cancelBtn.style.transform = 'scale(0.95)';
+            cancelBtn.style.opacity = '0.8';
+        }, { passive: false });
+        
+        cancelBtn.addEventListener('touchend', () => {
+            setTimeout(() => {
+                cancelBtn.style.transform = '';
+                cancelBtn.style.opacity = '';
+            }, 100);
+        }, { passive: false });
     }
     
-    /**
-     * Refresh board list scroll - PIXEL 9A FIX
-     */
-    refreshBoardListScroll() {
-        console.log('🔄 Refreshing board list scroll for mobile...');
+    // REFRESH SCROLL BUTTON - NEW
+    if (refreshBtn) {
+        const refreshHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔄 Refresh scroll button pressed');
+            this.refreshBoardListScroll();
+        };
         
-        const container = document.getElementById('boardListContainer');
-        if (container) {
-            // Visual feedback
-            container.style.border = '2px solid #27ae60';
-            container.style.transition = 'border-color 0.3s ease';
-            
-            // Force scroll activation
-            container.scrollTop = container.scrollHeight;
+        refreshBtn.style.touchAction = 'manipulation';
+        refreshBtn.style.userSelect = 'none';
+        refreshBtn.style.webkitTapHighlightColor = 'transparent';
+        
+        refreshBtn.addEventListener('click', refreshHandler);
+        refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
+        
+        // Touch feedback
+        refreshBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            refreshBtn.style.transform = 'scale(0.95)';
+            refreshBtn.style.opacity = '0.8';
+        }, { passive: false });
+        
+        refreshBtn.addEventListener('touchend', () => {
             setTimeout(() => {
+                refreshBtn.style.transform = '';
+                refreshBtn.style.opacity = '';
+            }, 100);
+        }, { passive: false });
+    }
+    
+    console.log(`✅ Board list events setup complete for ${boardItems.length} boards`);
+}
+
+/**
+ * Apply comprehensive mobile scrolling fixes - PIXEL 9A SPECIFIC
+ */
+applyBoardListScrollingFixes() {
+    if (!this.isMobile) {
+        console.log('📱 Desktop detected - skipping mobile scrolling fixes');
+        return;
+    }
+    
+    console.log('🔧 Applying comprehensive mobile scrolling fixes for board list...');
+    
+    const container = document.getElementById('boardListContainer');
+    const modal = document.querySelector('#boardSelectorPopup > div');
+    
+    if (container && modal) {
+        // Enhanced modal fixes
+        modal.style.maxHeight = '90vh';
+        modal.style.display = 'flex';
+        modal.style.flexDirection = 'column';
+        modal.style.overflow = 'hidden';
+        
+        // Enhanced container fixes
+        container.style.height = '350px'; // Fixed height
+        container.style.overflowY = 'scroll'; // Force scroll
+        container.style.overflowX = 'hidden';
+        container.style.webkitOverflowScrolling = 'touch';
+        container.style.transform = 'translateZ(0)';
+        container.style.willChange = 'scroll-position';
+        container.style.overflowAnchor = 'none';
+        container.style.position = 'relative';
+        
+        // Enhanced scrollbar visibility
+        const scrollbarStyle = document.createElement('style');
+        scrollbarStyle.id = 'boardListScrollbarStyle';
+        scrollbarStyle.textContent = `
+            #boardListContainer::-webkit-scrollbar {
+                width: 12px !important;
+                background: rgba(255, 255, 255, 0.2) !important;
+            }
+            #boardListContainer::-webkit-scrollbar-thumb {
+                background: rgba(52, 152, 219, 0.6) !important;
+                border-radius: 6px !important;
+                border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            }
+            #boardListContainer::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.05) !important;
+                border-radius: 6px !important;
+            }
+            #boardListContainer::-webkit-scrollbar-thumb:hover {
+                background: rgba(52, 152, 219, 0.8) !important;
+            }
+        `;
+        
+        // Remove existing style if present
+        const existingStyle = document.getElementById('boardListScrollbarStyle');
+        if (existingStyle) existingStyle.remove();
+        
+        document.head.appendChild(scrollbarStyle);
+        
+        // Test scrolling functionality
+        const testScroll = () => {
+            const initialScrollTop = container.scrollTop;
+            container.scrollTop = 50;
+            
+            setTimeout(() => {
+                const newScrollTop = container.scrollTop;
+                console.log(`📱 Scroll test - Initial: ${initialScrollTop}, Set: 50, Actual: ${newScrollTop}`);
+                console.log(`📱 Container - Height: ${container.clientHeight}, ScrollHeight: ${container.scrollHeight}`);
+                
+                if (newScrollTop === initialScrollTop && container.scrollHeight > container.clientHeight) {
+                    console.warn('⚠️ Scrolling may not be working - applying fallback fixes');
+                    
+                    // Visual feedback for scroll issues
+                    container.style.border = '3px solid #e74c3c';
+                    container.style.boxShadow = 'inset 0 0 15px rgba(231, 76, 60, 0.3)';
+                    
+                    // Add scroll hint
+                    const scrollHint = document.createElement('div');
+                    scrollHint.innerHTML = '👆 Touch and drag to scroll boards';
+                    scrollHint.style.cssText = `
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        background: rgba(231, 76, 60, 0.9);
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-size: 11px;
+                        z-index: 200;
+                        pointer-events: none;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    `;
+                    container.appendChild(scrollHint);
+                    
+                    // Fade out hint after 4 seconds
+                    setTimeout(() => {
+                        scrollHint.style.transition = 'opacity 1s ease';
+                        scrollHint.style.opacity = '0';
+                        setTimeout(() => scrollHint.remove(), 1000);
+                    }, 4000);
+                } else {
+                    console.log('✅ Board list scrolling appears to be working correctly');
+                }
+                
+                // Reset scroll position
                 container.scrollTop = 0;
             }, 100);
-            
-            // Enhanced mobile scrolling properties
-            container.style.overflowY = 'scroll';
-            container.style.webkitOverflowScrolling = 'touch';
-            container.style.transform = 'translateZ(0)';
-            container.style.willChange = 'scroll-position';
-            
-            // Add visible scrollbar for mobile
-            const scrollbarStyle = document.createElement('style');
-            scrollbarStyle.id = 'boardListScrollbarStyle';
-            scrollbarStyle.textContent = `
-                #boardListContainer::-webkit-scrollbar {
-                    width: 12px !important;
-                    background: rgba(255, 255, 255, 0.2) !important;
-                }
-                #boardListContainer::-webkit-scrollbar-thumb {
-                    background: rgba(52, 152, 219, 0.6) !important;
-                    border-radius: 6px !important;
-                    border: 2px solid rgba(255, 255, 255, 0.1) !important;
-                }
-                #boardListContainer::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.05) !important;
-                    border-radius: 6px !important;
-                }
-            `;
-            
-            // Remove existing style if present
-            const existingStyle = document.getElementById('boardListScrollbarStyle');
-            if (existingStyle) existingStyle.remove();
-            
-            document.head.appendChild(scrollbarStyle);
-            
-            setTimeout(() => {
-                container.style.border = '1px solid #bdc3c7';
-            }, 600);
-            
-            console.log('✅ Board list scroll refreshed');
-        }
-    }
-    
-    /**
-     * Close board selector popup
-     */
-    closeBoardSelector() {
-        const popup = document.getElementById('boardSelectorPopup');
-        if (popup) {
-            popup.remove();
-            console.log('📋 Board selector closed');
-        }
+        };
         
-        // Clean up scrollbar styles
-        const scrollbarStyle = document.getElementById('boardListScrollbarStyle');
-        if (scrollbarStyle) scrollbarStyle.remove();
-    }
-    
-    /**
-     * Handle user actions with enhanced mobile support
-     */
-    handleAction(value) {
-        switch (this.inputState) {
-            case 'pairs_setup':
-                this.handlePairsSetup(value);
-                break;
-            case 'movement_confirm':
-                this.handleMovementConfirm(value);
-                break;
-            case 'board_selection':
-                this.handleBoardSelection(value);
-                break;
-            case 'results':
-                this.handleResults(value);
-                break;
-        }
+        testScroll();
         
-        this.updateDisplay();
-    }
-    
-    /**
-     * Handle pairs setup selection
-     */
-    handlePairsSetup(value) {
-        // Handle special case for 10+ pairs (not implemented yet)
-        const pairCount = value === '0' ? 10 : parseInt(value);
+        // Enhanced touch event handlers for problematic devices
+        let touchStartY = null;
+        let isScrolling = false;
         
-        if (this.movements[pairCount]) {
-            this.session.pairs = pairCount;
-            this.session.movement = this.movements[pairCount];
-            this.inputState = 'movement_confirm';
-            console.log(`✅ Selected ${pairCount} pairs`);
-        } else {
-            console.warn(`⚠️ Movement for ${pairCount} pairs not available`);
-            this.bridgeApp.showMessage(`Movement for ${pairCount} pairs not available yet`, 'warning');
-        }
-    }
-    
-    /**
-     * Handle movement confirmation
-     */
-    handleMovementConfirm(value) {
-        if (value === '1') {
-            // Show movement details
-            this.showMovementPopup();
-        } else if (value === '2') {
-            // Confirm and setup boards
-            this.setupBoards();
-            this.inputState = 'board_selection';
-            console.log('✅ Movement confirmed, boards setup complete');
-        }
-    }
-    
-    /**
-     * Handle board selection actions
-     */
-    handleBoardSelection(value) {
-        if (value === 'RESULTS') {
-            if (this.areAllBoardsComplete()) {
-                this.inputState = 'results';
-                console.log('📊 Moving to results display');
-            } else {
-                this.bridgeApp.showMessage('Complete all boards before viewing results', 'warning');
+        container.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
+            console.log('📱 Board list touch scroll start');
+        }, { passive: true });
+        
+        container.addEventListener('touchmove', (e) => {
+            if (touchStartY !== null) {
+                const touchY = e.touches[0].clientY;
+                const deltaY = touchStartY - touchY;
+                
+                // Only handle if significant movement
+                if (Math.abs(deltaY) > 5) {
+                    isScrolling = true;
+                    const newScrollTop = container.scrollTop + deltaY * 0.8;
+                    const maxScroll = container.scrollHeight - container.clientHeight;
+                    
+                    container.scrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+                    touchStartY = touchY;
+                    
+                    console.log(`📱 Board list touch scroll: ${container.scrollTop}/${maxScroll}`);
+                }
             }
-        }
-        // Board selection through popup is handled separately
-    }
-    
-    /**
-     * Handle results display actions
-     */
-    handleResults(value) {
-        // Results state actions handled here
-        console.log('📊 Results action:', value);
-    }
-    
-    /**
-     * Open traveler popup - can be called directly or with board selection
-     */
-    openTravelerPopup(boardNumber = null) {
-        if (this.traveler.isActive) {
-            console.log('🚫 Traveler already active');
-            return;
-        }
+        }, { passive: true });
         
-        if (boardNumber) {
-            this.openSpecificTraveler(boardNumber);
+        container.addEventListener('touchend', () => {
+            touchStartY = null;
+            if (isScrolling) {
+                console.log('📱 Board list touch scroll completed');
+            }
+            isScrolling = false;
+        }, { passive: true });
+        
+        console.log('✅ Comprehensive mobile scrolling fixes applied for board list');
+    } else {
+        console.warn('⚠️ Could not find board list container or modal for scrolling fixes');
+    }
+}
+
+/**
+ * Refresh board list scroll - PIXEL 9A FIX
+ */
+refreshBoardListScroll() {
+    console.log('🔄 Refreshing board list scroll for mobile...');
+    
+    const container = document.getElementById('boardListContainer');
+    if (container) {
+        // Visual feedback
+        container.style.border = '2px solid #27ae60';
+        container.style.transition = 'border-color 0.3s ease';
+        
+        // Force scroll activation by scrolling to bottom and back
+        container.scrollTop = container.scrollHeight;
+        setTimeout(() => {
+            container.scrollTop = 0;
+        }, 100);
+        
+        // Re-apply scrolling properties
+        container.style.overflowY = 'scroll';
+        container.style.webkitOverflowScrolling = 'touch';
+        container.style.transform = 'translateZ(0)';
+        container.style.willChange = 'scroll-position';
+        
+        // Re-apply scrollbar styles
+        this.applyBoardListScrollingFixes();
+        
+        setTimeout(() => {
+            container.style.border = '1px solid #bdc3c7';
+        }, 600);
+        
+        console.log('✅ Board list scroll refreshed');
+    }
+}
+
+/**
+ * Close board selector popup
+ */
+closeBoardSelector() {
+    const popup = document.getElementById('boardSelectorPopup');
+    if (popup) {
+        popup.remove();
+        console.log('📋 Board selector closed');
+    }
+    
+    // Clean up scrollbar styles
+    const scrollbarStyle = document.getElementById('boardListScrollbarStyle');
+    if (scrollbarStyle) scrollbarStyle.remove();
+}
+
+/**
+ * Handle user actions with enhanced mobile support
+ */
+handleAction(value) {
+    switch (this.inputState) {
+        case 'pairs_setup':
+            this.handlePairsSetup(value);
+            break;
+        case 'movement_confirm':
+            this.handleMovementConfirm(value);
+            break;
+        case 'board_selection':
+            this.handleBoardSelection(value);
+            break;
+        case 'results':
+            this.handleResults(value);
+            break;
+    }
+    
+    this.updateDisplay();
+}
+
+/**
+ * Handle pairs setup selection
+ */
+handlePairsSetup(value) {
+    // Handle special case for 10+ pairs (not implemented yet)
+    const pairCount = value === '0' ? 10 : parseInt(value);
+    
+    if (this.movements[pairCount]) {
+        this.session.pairs = pairCount;
+        this.session.movement = this.movements[pairCount];
+        this.inputState = 'movement_confirm';
+        console.log(`✅ Selected ${pairCount} pairs`);
+    } else {
+        console.warn(`⚠️ Movement for ${pairCount} pairs not available`);
+        this.bridgeApp.showMessage(`Movement for ${pairCount} pairs not available yet`, 'warning');
+    }
+}
+
+/**
+ * Handle movement confirmation
+ */
+handleMovementConfirm(value) {
+    if (value === '1') {
+        // Show movement details
+        this.showMovementPopup();
+    } else if (value === '2') {
+        // Confirm and setup boards
+        this.setupBoards();
+        this.inputState = 'board_selection';
+        console.log('✅ Movement confirmed, boards setup complete');
+    }
+}
+
+/**
+ * Handle board selection actions
+ */
+handleBoardSelection(value) {
+    if (value === 'RESULTS') {
+        if (this.areAllBoardsComplete()) {
+            this.inputState = 'results';
+            console.log('📊 Moving to results display');
         } else {
-            this.showBoardSelectorPopup();
+            this.bridgeApp.showMessage('Complete all boards before viewing results', 'warning');
         }
     }
-// END SECTION THREE: 
-// SECTION FOUR - Button-Based Traveler System (All Issues Fixed)
+    // Board selection through popup is handled separately
+}
+
+/**
+ * Handle results display actions
+ */
+handleResults(value) {
+    // Results state actions handled here
+    console.log('📊 Results action:', value);
+}
+
+/**
+ * Open traveler popup - can be called directly or with board selection
+ */
+openTravelerPopup(boardNumber = null) {
+    if (this.traveler.isActive) {
+        console.log('🚫 Traveler already active');
+        return;
+    }
+    
+    if (boardNumber) {
+        this.openSpecificTraveler(boardNumber);
+    } else {
+        this.showBoardSelectorPopup();
+    }
+}
+// END SECTION THREE// SECTION FOUR - Button-Based Traveler System (All Issues Fixed)
     /**
      * Open traveler using button-based input (like Chicago Bridge)
      */
