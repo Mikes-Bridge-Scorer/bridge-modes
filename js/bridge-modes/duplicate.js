@@ -863,92 +863,108 @@ openTravelerPopup(boardNumber = null) {
     }
 }
 // END SECTION THREE
-// SECTION FOUR - Button-Based Traveler System (All Issues Fixed)
-    /**
-     * Open traveler using button-based input (like Chicago Bridge)
-     */
-    openTravelerPopup(boardNumber = null) {
-        if (this.traveler.isActive) {
-            console.log('🚫 Traveler already active');
-            return;
-        }
-        
-        if (boardNumber) {
-            this.openSpecificTraveler(boardNumber);
-        } else {
-            this.showBoardSelectorPopup();
-        }
+// SECTION FOUR - Button-Based Traveler System (COMPLETE VERSION)
+
+/**
+ * Open traveler using button-based input (like Chicago Bridge)
+ */
+openTravelerPopup(boardNumber = null) {
+    if (this.traveler.isActive) {
+        console.log('🚫 Traveler already active');
+        return;
     }
     
-    /**
-     * Open specific traveler for a board using button system
-     */
-    openSpecificTraveler(boardNumber) {
-        this.traveler.isActive = true;
-        this.traveler.boardNumber = boardNumber;
-        this.traveler.data = this.generateTravelerRows(boardNumber);
-        this.currentResultIndex = 0;
-        
-        // Initialize first result entry
-        this.initializeTravelerResult();
-        
-        console.log(`📊 Opened button-based traveler for Board ${boardNumber}`);
+    if (boardNumber) {
+        this.openSpecificTraveler(boardNumber);
+    } else {
+        this.showBoardSelectorPopup();
+    }
+}
+
+/**
+ * Open specific traveler for a board using button system
+ */
+openSpecificTraveler(boardNumber) {
+    this.traveler.isActive = true;
+    this.traveler.boardNumber = boardNumber;
+    this.traveler.data = this.generateTravelerRows(boardNumber);
+    this.currentResultIndex = 0;
+    
+    // Initialize first result entry
+    this.initializeTravelerResult();
+    
+    console.log(`📊 Opened button-based traveler for Board ${boardNumber}`);
+}
+
+/**
+ * Generate traveler rows based on movement
+ */
+generateTravelerRows(boardNumber) {
+    const instances = this.session.movement.movement.filter(entry => 
+        entry.boards && entry.boards.includes(boardNumber)
+    );
+    
+    return instances.map((instance) => ({
+        nsPair: instance.ns,
+        ewPair: instance.ew,
+        level: null,
+        suit: null,
+        declarer: null,
+        double: '',
+        result: null, // Will be '=', '+1', '+2', '-1', '-2', etc.
+        nsScore: null,
+        ewScore: null,
+        matchpoints: { ns: 0, ew: 0 },
+        isComplete: false
+    }));
+}
+
+/**
+ * Initialize traveler result entry state
+ */
+initializeTravelerResult() {
+    // Set traveler input state
+    this.travelerInputState = 'level_selection';
+    this.resultMode = null; // 'plus' or 'down'
+    
+    // Override main input state
+    this.inputState = 'traveler_entry';
+    
+    // Update display to show traveler interface
+    this.updateDisplay();
+    
+    console.log(`📋 Initialized traveler entry for pair ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
+}
+
+/**
+ * Handle traveler input using Chicago Bridge style - ENHANCED ERROR HANDLING
+ */
+handleTravelerInput(value) {
+    console.log(`🎮 Traveler input: ${value} in state: ${this.travelerInputState}`);
+    
+    // Safety check - ensure traveler is active
+    if (!this.traveler.isActive || !this.traveler.data || this.currentResultIndex >= this.traveler.data.length) {
+        console.error('⚠️ Invalid traveler state - closing');
+        this.closeTraveler();
+        return;
     }
     
-    /**
-     * Generate traveler rows based on movement
-     */
-    generateTravelerRows(boardNumber) {
-        const instances = this.session.movement.movement.filter(entry => 
-            entry.boards && entry.boards.includes(boardNumber)
-        );
-        
-        return instances.map((instance) => ({
-            nsPair: instance.ns,
-            ewPair: instance.ew,
-            level: null,
-            suit: null,
-            declarer: null,
-            double: '',
-            result: null, // Will be '=', '+1', '+2', '-1', '-2', etc.
-            nsScore: null,
-            ewScore: null,
-            matchpoints: { ns: 0, ew: 0 },
-            isComplete: false
-        }));
+    // Handle back navigation first
+    if (value === 'BACK') {
+        this.handleTravelerBack();
+        return;
     }
     
-    /**
-     * Initialize traveler result entry state
-     */
-    initializeTravelerResult() {
-        // Set traveler input state
-        this.travelerInputState = 'level_selection';
-        this.resultMode = null; // 'plus' or 'down'
-        
-        // Override main input state
-        this.inputState = 'traveler_entry';
-        
-        // Update display to show traveler interface
-        this.updateDisplay();
-        
-        console.log(`📋 Initialized traveler entry for pair ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
+    const currentResult = this.traveler.data[this.currentResultIndex];
+    
+    // Safety check for current result
+    if (!currentResult) {
+        console.error('⚠️ No current result available');
+        this.closeTraveler();
+        return;
     }
     
-    /**
-     * Handle traveler input using Chicago Bridge style
-     */
-    handleTravelerInput(value) {
-        console.log(`🎮 Traveler input: ${value} in state: ${this.travelerInputState}`);
-        
-        // Handle back navigation first
-        if (value === 'BACK') {
-            this.handleTravelerBack();
-            return;
-        }
-        
-        const currentResult = this.traveler.data[this.currentResultIndex];
-        
+    try {
         switch (this.travelerInputState) {
             case 'level_selection':
                 this.handleTravelerLevelSelection(value, currentResult);
@@ -973,327 +989,372 @@ openTravelerPopup(boardNumber = null) {
                 break;
             default:
                 console.warn(`🚫 Unhandled traveler input state: ${this.travelerInputState}`);
+                // Don't crash - just log and continue
         }
         
-        this.updateDisplay();
-    }
-    
-    /**
-     * Handle level selection in traveler (1-7)
-     */
-    handleTravelerLevelSelection(value, currentResult) {
-        if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
-            currentResult.level = parseInt(value);
-            this.travelerInputState = 'suit_selection';
-            console.log(`📊 Traveler level selected: ${currentResult.level}`);
-        }
-    }
-    
-    /**
-     * Handle suit selection in traveler
-     */
-    handleTravelerSuitSelection(value, currentResult) {
-        if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
-            currentResult.suit = value;
-            this.travelerInputState = 'declarer_selection';
-            console.log(`♠ Traveler suit selected: ${currentResult.suit}`);
-        }
-    }
-    
-    /**
-     * Handle declarer selection in traveler - FIXED: Only declarer here
-     */
-    handleTravelerDeclarerSelection(value, currentResult) {
-        if (['N', 'S', 'E', 'W'].includes(value)) {
-            currentResult.declarer = value;
-            this.travelerInputState = 'double_selection';  // FIXED: Go to double selection
-            console.log(`👤 Traveler declarer selected: ${currentResult.declarer}`);
-        }
-    }
-    
-    /**
-     * Handle double selection - NEW STATE AFTER DECLARER
-     */
-    handleTravelerDoubleSelection(value, currentResult) {
-        if (value === 'X') {
-            this.handleTravelerDoubling(currentResult);
-        } else if (['MADE', 'PLUS', 'DOWN'].includes(value)) {
-            this.travelerInputState = 'result_type_selection';
-            this.handleTravelerResultTypeSelection(value, currentResult);
-        }
-    }
-    
-    /**
-     * Handle doubling in traveler (X/XX cycling)
-     */
-    handleTravelerDoubling(currentResult) {
-        if (currentResult.double === '') {
-            currentResult.double = 'X';
-        } else if (currentResult.double === 'X') {
-            currentResult.double = 'XX';
-        } else {
-            currentResult.double = '';
-        }
-        
-        console.log(`💥 Traveler double state: ${currentResult.double || 'None'}`);
-    }
-    
-    /**
-     * Handle result type selection (Made/Plus/Down) - Chicago Style
-     */
-    handleTravelerResultTypeSelection(value, currentResult) {
-        if (value === 'MADE') {
-            currentResult.result = '=';
-            this.calculateTravelerScore(this.currentResultIndex);
-            currentResult.isComplete = true;
-            this.travelerInputState = 'result_complete';
-            console.log(`✅ Contract made exactly`);
-            
-        } else if (value === 'DOWN') {
-            this.resultMode = 'down';
-            this.travelerInputState = 'result_number_selection';
-            console.log(`📉 Contract failed - selecting undertricks`);
-            
-        } else if (value === 'PLUS') {
-            this.resultMode = 'plus';
-            this.travelerInputState = 'result_number_selection';
-            console.log(`📈 Contract made with overtricks - selecting number`);
-        }
-    }
-    
-    /**
-     * Handle result number selection (overtricks/undertricks) - Chicago Style
-     */
-    handleTravelerResultNumberSelection(value, currentResult) {
-        if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
-            const num = parseInt(value);
-            
-            if (this.resultMode === 'down') {
-                currentResult.result = `-${num}`;
-                console.log(`📉 Contract failed by ${num} tricks`);
-                
-            } else if (this.resultMode === 'plus') {
-                // Validate overtricks don't exceed maximum possible
-                const maxOvertricks = 13 - (6 + currentResult.level);
-                if (num <= maxOvertricks) {
-                    currentResult.result = `+${num}`;
-                    console.log(`📈 Contract made with ${num} overtricks`);
-                } else {
-                    console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
-                    return;
-                }
+        // Update display safely
+        setTimeout(() => {
+            try {
+                this.updateDisplay();
+            } catch (displayError) {
+                console.error('Display update error in traveler:', displayError);
             }
-            
-            // Calculate score and complete result
-            this.calculateTravelerScore(this.currentResultIndex);
-            currentResult.isComplete = true;
-            this.travelerInputState = 'result_complete';
-        }
-    }
-    
-    /**
-     * Handle result complete actions
-     */
-    handleTravelerResultComplete(value) {
-        console.log(`🎮 Result complete action: ${value}`);
+        }, 10);
         
-        if (value === 'DEAL') {
-            // Move to next result
-            this.nextTravelerResult();
-        }
-    }
-    
-    /**
-     * Move to next traveler result
-     */
-    nextTravelerResult() {
-        if (this.currentResultIndex < this.traveler.data.length - 1) {
-            // Move to next pair
-            this.currentResultIndex++;
-            this.travelerInputState = 'level_selection';
-            this.resultMode = null;
-            console.log(`➡️ Moving to next pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
-        } else {
-            // All results entered - save and close
-            this.saveTravelerData();
-        }
-    }
-    
-    /**
-     * Get active buttons for traveler input - FIXED FOR NEW STATES
-     */
-    getTravelerActiveButtons() {
-        const currentResult = this.traveler.data[this.currentResultIndex];
-        
-        console.log(`🔍 Getting buttons for state: ${this.travelerInputState}`);
-        
-        switch (this.travelerInputState) {
-            case 'level_selection':
-                return ['1', '2', '3', '4', '5', '6', '7'];
-                
-            case 'suit_selection':
-                return ['♣', '♦', '♥', '♠', 'NT'];
-                
-            case 'declarer_selection':
-                return ['N', 'S', 'E', 'W'];  // FIXED: Only declarer buttons
-                
-            case 'double_selection':  // NEW STATE
-                return ['X', 'MADE', 'PLUS', 'DOWN'];
-                
-            case 'result_type_selection':
-                return ['MADE', 'PLUS', 'DOWN'];
-                
-            case 'result_number_selection':
-                if (this.resultMode === 'down') {
-                    return ['1', '2', '3', '4', '5', '6', '7'];
-                } else if (this.resultMode === 'plus') {
-                    const maxOvertricks = Math.min(6, 13 - (6 + currentResult.level));
-                    const buttons = [];
-                    for (let i = 1; i <= maxOvertricks; i++) {
-                        buttons.push(i.toString());
-                    }
-                    return buttons;
-                }
-                break;
-                
-            case 'result_complete':
-                return ['DEAL'];
-                
-            default:
-                console.warn(`Unknown traveler input state: ${this.travelerInputState}`);
-                return [];
-        }
-    }
-    
-    /**
-     * Handle traveler back navigation - FIXED ALL STATES
-     */
-    handleTravelerBack() {
-        const currentResult = this.traveler.data[this.currentResultIndex];
-        
-        console.log(`🔙 Traveler back from state: ${this.travelerInputState}`);
-        
-        switch (this.travelerInputState) {
-            case 'suit_selection':
-                this.travelerInputState = 'level_selection';
-                currentResult.level = null;
-                console.log('🔙 Back to level selection');
-                break;
-                
-            case 'declarer_selection':
-                this.travelerInputState = 'suit_selection';
-                currentResult.suit = null;
-                console.log('🔙 Back to suit selection');
-                break;
-                
-            case 'double_selection':  // NEW STATE
-                this.travelerInputState = 'declarer_selection';
-                currentResult.declarer = null;
-                currentResult.double = '';
-                console.log('🔙 Back to declarer selection');
-                break;
-                
-            case 'result_type_selection':
-                this.travelerInputState = 'double_selection';
-                console.log('🔙 Back to double selection');
-                break;
-                
-            case 'result_number_selection':
-                this.travelerInputState = 'result_type_selection';
-                this.resultMode = null;
-                console.log('🔙 Back to result type selection');
-                break;
-                
-            case 'result_complete':
-                // Go back to result entry
-                if (currentResult.result && (currentResult.result.startsWith('+') || currentResult.result.startsWith('-'))) {
-                    this.travelerInputState = 'result_number_selection';
-                    // Set result mode based on current result
-                    this.resultMode = currentResult.result.startsWith('+') ? 'plus' : 'down';
-                } else {
-                    this.travelerInputState = 'result_type_selection';
-                }
-                currentResult.result = null;
-                currentResult.nsScore = null;
-                currentResult.ewScore = null;
-                currentResult.isComplete = false;
-                console.log('🔙 Back to edit result');
-                break;
-                
-            case 'level_selection':
-                if (this.currentResultIndex > 0) {
-                    this.previousTravelerResult();
-                } else {
-                    // Close traveler
-                    this.closeTraveler();
-                }
-                console.log('🔙 Back from level selection');
-                break;
-                
-            default:
-                console.warn(`🚫 Unhandled back navigation from state: ${this.travelerInputState}`);
-        }
-    }
-    
-    /**
-     * Go to previous traveler result
-     */
-    previousTravelerResult() {
-        if (this.currentResultIndex > 0) {
-            this.currentResultIndex--;
-            
-            // Reset input state based on current result completion
-            const currentResult = this.traveler.data[this.currentResultIndex];
-            if (currentResult.isComplete) {
-                this.travelerInputState = 'result_complete';
-            } else if (currentResult.result) {
-                this.travelerInputState = 'result_complete';
-            } else if (currentResult.declarer) {
-                this.travelerInputState = 'double_selection';
-            } else if (currentResult.suit) {
-                this.travelerInputState = 'declarer_selection';
-            } else if (currentResult.level) {
-                this.travelerInputState = 'suit_selection';
-            } else {
-                this.travelerInputState = 'level_selection';
-            }
-            
-            console.log(`⬅️ Moving to previous pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
-        }
-    }
-    
-    /**
-     * Save traveler data and close
-     */
-    saveTravelerData() {
-        // Calculate matchpoints for all results
-        this.calculateMatchpoints();
-        
-        // Mark board as completed if at least one result is entered
-        const hasResults = this.traveler.data.some(row => 
-            row.nsScore !== null || row.ewScore !== null
-        );
-        
-        if (hasResults) {
-            this.session.boards[this.traveler.boardNumber].completed = true;
-            this.session.boards[this.traveler.boardNumber].results = [...this.traveler.data];
-            this.session.boards[this.traveler.boardNumber].hasResults = true;  // FIXED: Add hasResults flag
-            this.session.boards[this.traveler.boardNumber].resultCount = this.traveler.data.filter(r => r.isComplete).length;
-            
-            console.log(`💾 Saved traveler data for Board ${this.traveler.boardNumber}`);
-            this.bridgeApp.showMessage(`Board ${this.traveler.boardNumber} saved!`, 'success');
-        } else {
-            console.log('⚠️ No results to save');
-            this.bridgeApp.showMessage('Enter at least one result before saving', 'warning');
-        }
-        
+    } catch (error) {
+        console.error('Error handling traveler input:', error);
+        // Don't crash the app - close traveler safely
         this.closeTraveler();
     }
+}
+
+/**
+ * Handle level selection in traveler (1-7)
+ */
+handleTravelerLevelSelection(value, currentResult) {
+    if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
+        currentResult.level = parseInt(value);
+        this.travelerInputState = 'suit_selection';
+        console.log(`📊 Traveler level selected: ${currentResult.level}`);
+    }
+}
+
+/**
+ * Handle suit selection in traveler
+ */
+handleTravelerSuitSelection(value, currentResult) {
+    if (['♣', '♦', '♥', '♠', 'NT'].includes(value)) {
+        currentResult.suit = value;
+        this.travelerInputState = 'declarer_selection';
+        console.log(`♠ Traveler suit selected: ${currentResult.suit}`);
+    }
+}
+
+/**
+ * Handle declarer selection in traveler - FIXED: Only declarer here
+ */
+handleTravelerDeclarerSelection(value, currentResult) {
+    if (['N', 'S', 'E', 'W'].includes(value)) {
+        currentResult.declarer = value;
+        this.travelerInputState = 'double_selection';  // FIXED: Go to double selection
+        console.log(`👤 Traveler declarer selected: ${currentResult.declarer}`);
+    }
+}
+
+/**
+ * Handle double selection - NEW STATE AFTER DECLARER
+ */
+handleTravelerDoubleSelection(value, currentResult) {
+    if (value === 'X') {
+        this.handleTravelerDoubling(currentResult);
+    } else if (['MADE', 'PLUS', 'DOWN'].includes(value)) {
+        this.travelerInputState = 'result_type_selection';
+        this.handleTravelerResultTypeSelection(value, currentResult);
+    }
+}
+
+/**
+ * Handle doubling in traveler (X/XX cycling)
+ */
+handleTravelerDoubling(currentResult) {
+    if (currentResult.double === '') {
+        currentResult.double = 'X';
+    } else if (currentResult.double === 'X') {
+        currentResult.double = 'XX';
+    } else {
+        currentResult.double = '';
+    }
     
-    /**
-     * Close traveler and return to board selection
-     */
-    closeTraveler() {
+    console.log(`💥 Traveler double state: ${currentResult.double || 'None'}`);
+}
+
+/**
+ * Handle result type selection (Made/Plus/Down) - Chicago Style
+ */
+handleTravelerResultTypeSelection(value, currentResult) {
+    if (value === 'MADE') {
+        currentResult.result = '=';
+        this.calculateTravelerScore(this.currentResultIndex);
+        currentResult.isComplete = true;
+        this.travelerInputState = 'result_complete';
+        console.log(`✅ Contract made exactly`);
+        
+    } else if (value === 'DOWN') {
+        this.resultMode = 'down';
+        this.travelerInputState = 'result_number_selection';
+        console.log(`📉 Contract failed - selecting undertricks`);
+        
+    } else if (value === 'PLUS') {
+        this.resultMode = 'plus';
+        this.travelerInputState = 'result_number_selection';
+        console.log(`📈 Contract made with overtricks - selecting number`);
+    }
+}
+
+/**
+ * Handle result number selection (overtricks/undertricks) - Chicago Style
+ */
+handleTravelerResultNumberSelection(value, currentResult) {
+    if (['1', '2', '3', '4', '5', '6', '7'].includes(value)) {
+        const num = parseInt(value);
+        
+        if (this.resultMode === 'down') {
+            currentResult.result = `-${num}`;
+            console.log(`📉 Contract failed by ${num} tricks`);
+            
+        } else if (this.resultMode === 'plus') {
+            // Validate overtricks don't exceed maximum possible
+            const maxOvertricks = 13 - (6 + currentResult.level);
+            if (num <= maxOvertricks) {
+                currentResult.result = `+${num}`;
+                console.log(`📈 Contract made with ${num} overtricks`);
+            } else {
+                console.warn(`⚠️ Invalid overtricks: ${num}, max is ${maxOvertricks}`);
+                return;
+            }
+        }
+        
+        // Calculate score and complete result
+        this.calculateTravelerScore(this.currentResultIndex);
+        currentResult.isComplete = true;
+        this.travelerInputState = 'result_complete';
+    }
+}
+
+/**
+ * Handle result complete actions
+ */
+handleTravelerResultComplete(value) {
+    console.log(`🎮 Result complete action: ${value}`);
+    
+    if (value === 'DEAL') {
+        // Move to next result
+        this.nextTravelerResult();
+    }
+}
+
+/**
+ * Move to next traveler result
+ */
+nextTravelerResult() {
+    if (this.currentResultIndex < this.traveler.data.length - 1) {
+        // Move to next pair
+        this.currentResultIndex++;
+        this.travelerInputState = 'level_selection';
+        this.resultMode = null;
+        console.log(`➡️ Moving to next pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
+    } else {
+        // All results entered - save and close
+        this.saveTravelerData();
+    }
+}
+
+/**
+ * Get active buttons for traveler input - FIXED FOR NEW STATES
+ */
+getTravelerActiveButtons() {
+    const currentResult = this.traveler.data[this.currentResultIndex];
+    
+    console.log(`🔍 Getting buttons for state: ${this.travelerInputState}`);
+    
+    switch (this.travelerInputState) {
+        case 'level_selection':
+            return ['1', '2', '3', '4', '5', '6', '7'];
+            
+        case 'suit_selection':
+            return ['♣', '♦', '♥', '♠', 'NT'];
+            
+        case 'declarer_selection':
+            return ['N', 'S', 'E', 'W'];  // FIXED: Only declarer buttons
+            
+        case 'double_selection':  // NEW STATE
+            return ['X', 'MADE', 'PLUS', 'DOWN'];
+            
+        case 'result_type_selection':
+            return ['MADE', 'PLUS', 'DOWN'];
+            
+        case 'result_number_selection':
+            if (this.resultMode === 'down') {
+                return ['1', '2', '3', '4', '5', '6', '7'];
+            } else if (this.resultMode === 'plus') {
+                const maxOvertricks = Math.min(6, 13 - (6 + currentResult.level));
+                const buttons = [];
+                for (let i = 1; i <= maxOvertricks; i++) {
+                    buttons.push(i.toString());
+                }
+                return buttons;
+            }
+            break;
+            
+        case 'result_complete':
+            return ['DEAL'];
+            
+        default:
+            console.warn(`Unknown traveler input state: ${this.travelerInputState}`);
+            return [];
+    }
+}
+
+/**
+ * Handle traveler back navigation - FIXED ALL STATES WITH STABILITY
+ */
+handleTravelerBack() {
+    const currentResult = this.traveler.data[this.currentResultIndex];
+    
+    console.log(`🔙 Traveler back from state: ${this.travelerInputState}`);
+    
+    // Safety check - ensure we have valid data
+    if (!currentResult) {
+        console.error('⚠️ No current result data - closing traveler');
+        this.closeTraveler();
+        return;
+    }
+    
+    switch (this.travelerInputState) {
+        case 'suit_selection':
+            this.travelerInputState = 'level_selection';
+            currentResult.level = null;
+            console.log('🔙 Back to level selection');
+            break;
+            
+        case 'declarer_selection':
+            this.travelerInputState = 'suit_selection';
+            currentResult.suit = null;
+            console.log('🔙 Back to suit selection');
+            break;
+            
+        case 'double_selection':
+            this.travelerInputState = 'declarer_selection';
+            currentResult.declarer = null;
+            currentResult.double = '';
+            console.log('🔙 Back to declarer selection');
+            break;
+            
+        case 'result_type_selection':
+            this.travelerInputState = 'double_selection';
+            console.log('🔙 Back to double selection');
+            break;
+            
+        case 'result_number_selection':
+            this.travelerInputState = 'result_type_selection';
+            this.resultMode = null;
+            console.log('🔙 Back to result type selection');
+            break;
+            
+        case 'result_complete':
+            // FIXED: Only go back one step to result type selection
+            this.travelerInputState = 'result_type_selection';
+            
+            // Clear the completed result data
+            currentResult.result = null;
+            currentResult.nsScore = null;
+            currentResult.ewScore = null;
+            currentResult.isComplete = false;
+            this.resultMode = null; // Clear result mode
+            
+            console.log('🔙 Back to result type selection from complete');
+            break;
+            
+        case 'level_selection':
+            if (this.currentResultIndex > 0) {
+                // Go to previous result
+                this.previousTravelerResult();
+            } else {
+                // First result - close traveler and return to board selection
+                console.log('🔙 Closing traveler from first result');
+                this.closeTraveler();
+            }
+            break;
+            
+        default:
+            console.warn(`🚫 Unhandled back navigation from state: ${this.travelerInputState}`);
+            // Fallback - try to close traveler safely
+            this.closeTraveler();
+    }
+    
+    // Force a single display update after state change
+    setTimeout(() => {
+        this.updateDisplay();
+    }, 50);
+}
+
+/**
+ * Go to previous traveler result - ENHANCED WITH SAFETY CHECKS
+ */
+previousTravelerResult() {
+    if (this.currentResultIndex > 0) {
+        this.currentResultIndex--;
+        
+        // Reset input state based on current result completion - ENHANCED
+        const currentResult = this.traveler.data[this.currentResultIndex];
+        
+        // Safety check
+        if (!currentResult) {
+            console.error('⚠️ Invalid previous result data');
+            this.closeTraveler();
+            return;
+        }
+        
+        if (currentResult.isComplete) {
+            this.travelerInputState = 'result_complete';
+        } else if (currentResult.result !== null) {
+            // Result partially entered
+            if (currentResult.result.startsWith('+') || currentResult.result.startsWith('-')) {
+                this.travelerInputState = 'result_number_selection';
+                this.resultMode = currentResult.result.startsWith('+') ? 'plus' : 'down';
+            } else {
+                this.travelerInputState = 'result_type_selection';
+            }
+        } else if (currentResult.declarer) {
+            this.travelerInputState = 'double_selection';
+        } else if (currentResult.suit) {
+            this.travelerInputState = 'declarer_selection';
+        } else if (currentResult.level) {
+            this.travelerInputState = 'suit_selection';
+        } else {
+            this.travelerInputState = 'level_selection';
+        }
+        
+        console.log(`⬅️ Moving to previous pair: ${this.currentResultIndex + 1}/${this.traveler.data.length}`);
+    } else {
+        console.log('🔙 Already at first result - cannot go back further');
+    }
+}
+
+/**
+ * Save traveler data and close
+ */
+saveTravelerData() {
+    // Calculate matchpoints for all results
+    this.calculateMatchpoints();
+    
+    // Mark board as completed if at least one result is entered
+    const hasResults = this.traveler.data.some(row => 
+        row.nsScore !== null || row.ewScore !== null
+    );
+    
+    if (hasResults) {
+        this.session.boards[this.traveler.boardNumber].completed = true;
+        this.session.boards[this.traveler.boardNumber].results = [...this.traveler.data];
+        this.session.boards[this.traveler.boardNumber].hasResults = true;  // FIXED: Add hasResults flag
+        this.session.boards[this.traveler.boardNumber].resultCount = this.traveler.data.filter(r => r.isComplete).length;
+        
+        console.log(`💾 Saved traveler data for Board ${this.traveler.boardNumber}`);
+        this.bridgeApp.showMessage(`Board ${this.traveler.boardNumber} saved!`, 'success');
+    } else {
+        console.log('⚠️ No results to save');
+        this.bridgeApp.showMessage('Enter at least one result before saving', 'warning');
+    }
+    
+    this.closeTraveler();
+}
+
+/**
+ * Close traveler and return to board selection - ENHANCED SAFETY
+ */
+closeTraveler() {
+    try {
+        // Clear traveler state safely
         this.traveler.isActive = false;
         this.traveler.boardNumber = null;
         this.traveler.data = [];
@@ -1304,282 +1365,256 @@ openTravelerPopup(boardNumber = null) {
         // Return to board selection state
         this.inputState = 'board_selection';
         
-        this.updateDisplay();
+        console.log('📊 Traveler closed safely, returned to board selection');
         
-        console.log('📊 Traveler closed, returned to board selection');
-    }
-    
-    /**
-     * Get current traveler progress info
-     */
-    getCurrentTravelerProgress() {
-        if (!this.traveler.isActive) return null;
+        // Update display safely
+        setTimeout(() => {
+            try {
+                this.updateDisplay();
+            } catch (displayError) {
+                console.error('Display update error after traveler close:', displayError);
+                // Force a basic display update
+                const display = document.getElementById('display');
+                if (display) {
+                    display.innerHTML = '<div class="current-state">Returning to board selection...</div>';
+                }
+            }
+        }, 50);
         
-        const current = this.currentResultIndex + 1;
-        const total = this.traveler.data.length;
-        const currentResult = this.traveler.data[this.currentResultIndex];
+    } catch (error) {
+        console.error('Error closing traveler:', error);
         
-        return {
-            current: current,
-            total: total,
-            nsPair: currentResult.nsPair,
-            ewPair: currentResult.ewPair,
-            isComplete: currentResult.isComplete,
-            contractSoFar: this.getTravelerContractDisplay(currentResult)
+        // Emergency fallback - reset to safe state
+        this.traveler = {
+            isActive: false,
+            boardNumber: null,
+            data: []
         };
+        this.inputState = 'board_selection';
+        
+        // Try to update display
+        setTimeout(() => {
+            this.updateDisplay();
+        }, 100);
     }
+}
+
+/**
+ * Get current traveler progress info
+ */
+getCurrentTravelerProgress() {
+    if (!this.traveler.isActive) return null;
     
-    /**
-     * Get contract display for current traveler result - Chicago Style
-     */
-    getTravelerContractDisplay(result) {
-        let contract = '';
-        
-        if (result.level) contract += result.level;
-        if (result.suit) contract += result.suit;
-        if (result.double) contract += ` ${result.double}`;
-        if (result.declarer) contract += ` by ${result.declarer}`;
-        if (result.result) contract += ` ${result.result}`;
-        
-        return contract || 'No contract yet';
-    }
+    const current = this.currentResultIndex + 1;
+    const total = this.traveler.data.length;
+    const currentResult = this.traveler.data[this.currentResultIndex];
     
-    /**
-     * Calculate score for a specific traveler row - Standard Duplicate Scoring (Chicago Style)
-     */
-    calculateTravelerScore(rowIndex) {
-        const row = this.traveler.data[rowIndex];
-        if (!row.level || !row.suit || !row.declarer || !row.result) return;
+    return {
+        current: current,
+        total: total,
+        nsPair: currentResult.nsPair,
+        ewPair: currentResult.ewPair,
+        isComplete: currentResult.isComplete,
+        contractSoFar: this.getTravelerContractDisplay(currentResult)
+    };
+}
+
+/**
+ * Get contract display for current traveler result - Chicago Style
+ */
+getTravelerContractDisplay(result) {
+    let contract = '';
+    
+    if (result.level) contract += result.level;
+    if (result.suit) contract += result.suit;
+    if (result.double) contract += ` ${result.double}`;
+    if (result.declarer) contract += ` by ${result.declarer}`;
+    if (result.result) contract += ` ${result.result}`;
+    
+    return contract || 'No contract yet';
+}
+
+/**
+ * Calculate score for a specific traveler row - Standard Duplicate Scoring (Chicago Style)
+ */
+calculateTravelerScore(rowIndex) {
+    const row = this.traveler.data[rowIndex];
+    if (!row.level || !row.suit || !row.declarer || !row.result) return;
+    
+    console.log(`🧮 Calculating duplicate score for row ${rowIndex}:`, row);
+    
+    const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
+    const declarerSide = ['N', 'S'].includes(row.declarer) ? 'NS' : 'EW';
+    
+    // Determine if declarer's side is vulnerable
+    const isVulnerable = this.isDeclarerVulnerable(this.traveler.boardNumber, row.declarer);
+    
+    const level = parseInt(row.level);
+    const isDoubled = row.double === 'X';
+    const isRedoubled = row.double === 'XX';
+    
+    let score = 0;
+    
+    // Parse result (=, +1, +2, -1, -2, etc.)
+    if (row.result === '=' || row.result.startsWith('+')) {
+        // Contract made
+        const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        let basicScore = level * suitPoints[row.suit];
+        if (row.suit === 'NT') basicScore += 10; // NT first trick bonus
         
-        console.log(`🧮 Calculating duplicate score for row ${rowIndex}:`, row);
+        // Apply doubling to basic score
+        if (isDoubled || isRedoubled) {
+            basicScore *= (isRedoubled ? 4 : 2);
+        }
         
-        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
-        const declarerSide = ['N', 'S'].includes(row.declarer) ? 'NS' : 'EW';
+        score = basicScore;
         
-        // Determine if declarer's side is vulnerable
-        const isVulnerable = this.isDeclarerVulnerable(this.traveler.boardNumber, row.declarer);
-        
-        const level = parseInt(row.level);
-        const isDoubled = row.double === 'X';
-        const isRedoubled = row.double === 'XX';
-        
-        let score = 0;
-        
-        // Parse result (=, +1, +2, -1, -2, etc.)
-        if (row.result === '=' || row.result.startsWith('+')) {
-            // Contract made
-            const suitPoints = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
-            let basicScore = level * suitPoints[row.suit];
-            if (row.suit === 'NT') basicScore += 10; // NT first trick bonus
-            
-            // Apply doubling to basic score
+        // Add overtricks
+        if (row.result.startsWith('+')) {
+            const overtricks = parseInt(row.result.substring(1));
             if (isDoubled || isRedoubled) {
-                basicScore *= (isRedoubled ? 4 : 2);
-            }
-            
-            score = basicScore;
-            
-            // Add overtricks
-            if (row.result.startsWith('+')) {
-                const overtricks = parseInt(row.result.substring(1));
-                if (isDoubled || isRedoubled) {
-                    const overtrickValue = isVulnerable ? 200 : 100;
-                    score += overtricks * overtrickValue * (isRedoubled ? 2 : 1);
-                } else {
-                    score += overtricks * suitPoints[row.suit];
-                }
-            }
-            
-            // Game bonus
-            if (basicScore >= 100) {
-                score += isVulnerable ? 500 : 300;
+                const overtrickValue = isVulnerable ? 200 : 100;
+                score += overtricks * overtrickValue * (isRedoubled ? 2 : 1);
             } else {
-                score += 50; // Part-game bonus
-            }
-            
-            // Double bonus
-            if (isDoubled) score += 50;
-            if (isRedoubled) score += 100;
-            
-            // Slam bonuses
-            if (level === 6) { // Small slam
-                score += isVulnerable ? 750 : 500;
-            } else if (level === 7) { // Grand slam
-                score += isVulnerable ? 1500 : 1000;
-            }
-            
-        } else if (row.result.startsWith('-')) {
-            // Contract failed
-            const undertricks = parseInt(row.result.substring(1));
-            
-            if (isDoubled || isRedoubled) {
-                let penalty = 0;
-                for (let i = 1; i <= undertricks; i++) {
-                    if (i === 1) {
-                        penalty += isVulnerable ? 200 : 100;
-                    } else if (i <= 3) {
-                        penalty += isVulnerable ? 300 : 200;
-                    } else {
-                        penalty += 300;
-                    }
-                }
-                score = -penalty * (isRedoubled ? 2 : 1);
-            } else {
-                score = -(undertricks * (isVulnerable ? 100 : 50));
+                score += overtricks * suitPoints[row.suit];
             }
         }
         
-        // Assign scores to pairs (in duplicate, show actual points earned)
-        if (declarerSide === 'NS') {
-            if (score >= 0) {
-                row.nsScore = score;
-                row.ewScore = 0;
-            } else {
-                row.nsScore = 0;
-                row.ewScore = Math.abs(score);
-            }
+        // Game bonus
+        if (basicScore >= 100) {
+            score += isVulnerable ? 500 : 300;
         } else {
-            if (score >= 0) {
-                row.ewScore = score;
-                row.nsScore = 0;
-            } else {
-                row.ewScore = 0;
-                row.nsScore = Math.abs(score);
-            }
+            score += 50; // Part-game bonus
         }
         
-        console.log(`✅ Calculated scores: NS=${row.nsScore}, EW=${row.ewScore}`);
+        // Double bonus
+        if (isDoubled) score += 50;
+        if (isRedoubled) score += 100;
+        
+        // Slam bonuses
+        if (level === 6) { // Small slam
+            score += isVulnerable ? 750 : 500;
+        } else if (level === 7) { // Grand slam
+            score += isVulnerable ? 1500 : 1000;
+        }
+        
+    } else if (row.result.startsWith('-')) {
+        // Contract failed
+        const undertricks = parseInt(row.result.substring(1));
+        
+        if (isDoubled || isRedoubled) {
+            let penalty = 0;
+            for (let i = 1; i <= undertricks; i++) {
+                if (i === 1) {
+                    penalty += isVulnerable ? 200 : 100;
+                } else if (i <= 3) {
+                    penalty += isVulnerable ? 300 : 200;
+                } else {
+                    penalty += 300;
+                }
+            }
+            score = -penalty * (isRedoubled ? 2 : 1);
+        } else {
+            score = -(undertricks * (isVulnerable ? 100 : 50));
+        }
     }
     
-    /**
-     * Calculate matchpoints for all pairs on this board
-     */
-    calculateMatchpoints() {
-        const completedResults = this.traveler.data.filter(row => 
-            row.nsScore !== null && row.ewScore !== null
-        );
-        
-        if (completedResults.length < 2) {
-            console.log('⚠️ Need at least 2 results for matchpoint calculation');
-            return;
+    // Assign scores to pairs (in duplicate, show actual points earned)
+    if (declarerSide === 'NS') {
+        if (score >= 0) {
+            row.nsScore = score;
+            row.ewScore = 0;
+        } else {
+            row.nsScore = 0;
+            row.ewScore = Math.abs(score);
         }
+    } else {
+        if (score >= 0) {
+            row.ewScore = score;
+            row.nsScore = 0;
+        } else {
+            row.ewScore = 0;
+            row.nsScore = Math.abs(score);
+        }
+    }
+    
+    console.log(`✅ Calculated scores: NS=${row.nsScore}, EW=${row.ewScore}`);
+}
+
+/**
+ * Calculate matchpoints for all pairs on this board
+ */
+calculateMatchpoints() {
+    const completedResults = this.traveler.data.filter(row => 
+        row.nsScore !== null && row.ewScore !== null
+    );
+    
+    if (completedResults.length < 2) {
+        console.log('⚠️ Need at least 2 results for matchpoint calculation');
+        return;
+    }
+    
+    // Calculate NS matchpoints by comparing NS scores
+    completedResults.forEach(row => {
+        let nsMatchpoints = 0;
+        let ewMatchpoints = 0;
         
-        // Calculate NS matchpoints by comparing NS scores
-        completedResults.forEach(row => {
-            let nsMatchpoints = 0;
-            let ewMatchpoints = 0;
-            
-            completedResults.forEach(otherRow => {
-                if (row !== otherRow) {
-                    // Compare NS scores (higher is better)
-                    if (row.nsScore > otherRow.nsScore) {
-                        nsMatchpoints += 2;
-                    } else if (row.nsScore === otherRow.nsScore) {
-                        nsMatchpoints += 1;
-                        ewMatchpoints += 1;
-                    } else {
-                        ewMatchpoints += 2;
-                    }
+        completedResults.forEach(otherRow => {
+            if (row !== otherRow) {
+                // Compare NS scores (higher is better)
+                if (row.nsScore > otherRow.nsScore) {
+                    nsMatchpoints += 2;
+                } else if (row.nsScore === otherRow.nsScore) {
+                    nsMatchpoints += 1;
+                    ewMatchpoints += 1;
+                } else {
+                    ewMatchpoints += 2;
                 }
-            });
-            
-            row.matchpoints = { ns: nsMatchpoints, ew: ewMatchpoints };
+            }
         });
         
-        console.log('🏆 Matchpoints calculated for', completedResults.length, 'results');
-    }
+        row.matchpoints = { ns: nsMatchpoints, ew: ewMatchpoints };
+    });
     
-    /**
-     * Get board status with enhanced information - FIXED RESULT DISPLAY
-     */
-    getBoardStatus() {
-        if (!this.session.isSetup) {
-            return [];
-        }
-        
-        return Object.values(this.session.boards).map(board => ({
-            number: board.number,
-            vulnerability: board.vulnerability,
-            completed: board.completed,
-            resultCount: board.results ? board.results.filter(r => r.isComplete).length : 0,
-            hasResults: board.hasResults || (board.results && board.results.some(r => r.nsScore !== null || r.ewScore !== null))
-        }));
-    }
+    console.log('🏆 Matchpoints calculated for', completedResults.length, 'results');
+}
+
+/**
+ * Get scoring summary for current traveler result
+ */
+getTravelerScoringSummary() {
+    if (!this.traveler.isActive) return null;
     
-    /**
-     * Get scoring summary for current traveler result
-     */
-    getTravelerScoringSummary() {
-        if (!this.traveler.isActive) return null;
-        
-        const currentResult = this.traveler.data[this.currentResultIndex];
-        const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
-        
-        return {
-            boardNumber: this.traveler.boardNumber,
-            vulnerability: vulnerability,
-            vulnerabilityDisplay: this.getVulnerabilityDisplay(vulnerability),
-            currentResult: currentResult,
-            scores: {
-                ns: currentResult.nsScore,
-                ew: currentResult.ewScore
-            },
-            isComplete: currentResult.isComplete
-        };
-    }
+    const currentResult = this.traveler.data[this.currentResultIndex];
+    const vulnerability = this.getBoardVulnerability(this.traveler.boardNumber);
     
-    /**
-     * Get vulnerability display text
-     */
-    getVulnerabilityDisplay(vulnerability) {
-        const displays = {
-            'None': 'None Vulnerable',
-            'NS': 'NS Vulnerable', 
-            'EW': 'EW Vulnerable',
-            'Both': 'Both Vulnerable'
-        };
-        return displays[vulnerability] || 'Unknown';
-    }
-    
-    /**
-     * Get board vulnerability using standard duplicate cycle
-     */
-    getBoardVulnerability(boardNumber) {
-        const cycle = (boardNumber - 1) % 16;
-        const vulns = ['None', 'NS', 'EW', 'Both', 'EW', 'Both', 'None', 'NS', 
-                      'NS', 'EW', 'Both', 'None', 'Both', 'None', 'NS', 'EW'];
-        return vulns[cycle];
-    }
-    
-    /**
-     * Check if declarer is vulnerable for scoring
-     */
-    isDeclarerVulnerable(boardNumber, declarer) {
-        const vulnerability = this.getBoardVulnerability(boardNumber);
-        
-        if (vulnerability === 'None') return false;
-        if (vulnerability === 'Both') return true;
-        
-        const isNS = declarer === 'N' || declarer === 'S';
-        
-        if (vulnerability === 'NS') return isNS;
-        if (vulnerability === 'EW') return !isNS;
-        
-        return false;
-    }
-    
-    /**
-     * Get vulnerability color for display
-     */
-    getVulnerabilityColor(vulnerability) {
-        const colors = {
-            'None': '#95a5a6',
-            'NS': '#27ae60',
-            'EW': '#e74c3c', 
-            'Both': '#f39c12'
-        };
-        return colors[vulnerability] || '#95a5a6';
-    }
+    return {
+        boardNumber: this.traveler.boardNumber,
+        vulnerability: vulnerability,
+        vulnerabilityDisplay: this.getVulnerabilityDisplay(vulnerability),
+        currentResult: currentResult,
+        scores: {
+            ns: currentResult.nsScore,
+            ew: currentResult.ewScore
+        },
+        isComplete: currentResult.isComplete
+    };
+}
+
+/**
+ * Get vulnerability display text
+ */
+getVulnerabilityDisplay(vulnerability) {
+    const displays = {
+        'None': 'None Vulnerable',
+        'NS': 'NS Vulnerable', 
+        'EW': 'EW Vulnerable',
+        'Both': 'Both Vulnerable'
+    };
+    return displays[vulnerability] || 'Unknown';
+}
+
+// END SECTION FOUR
 // SECTION FIVE - Game Management (COMPLETE FIXED VERSION)
 
 /**
@@ -2031,8 +2066,8 @@ getActiveButtons() {
             console.log(`🔍 Completion check: ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)`);
             
             if (completionStatus.percentage === 100) {
-                buttons.push('RESULTS');  // FIXED: Add RESULTS button when 100% complete
-                console.log('✅ Adding RESULTS button - all boards complete');
+                buttons.push('DEAL');  // FIXED: Use DEAL button for results when 100% complete
+                console.log('✅ Adding DEAL button for results - all boards complete');
             }
             
             return buttons;
@@ -2155,7 +2190,8 @@ validateSessionState() {
     console.log('✅ Duplicate Bridge session validation passed');
     return { valid: true, issues: [] };
 }
-// END SECTION FIVE// SECTION SIX - Help and Quit Methods
+// END SECTION FIVE
+// SECTION SIX - Help and Quit Methods
     /**
      * Get help content specific to Duplicate Bridge
      */
@@ -3861,606 +3897,488 @@ showQuit() {
         return recovered;
     }
 // END SECTION EIGHT
-// SECTION NINE - Display Content Methods (CHICAGO STYLE VERSION)
-    /**
-     * Get display content for current state - UPDATED WITH TRAVELER ENTRY
-     */
-    getDisplayContent() {
-        switch (this.inputState) {
-            case 'pairs_setup':
-                return this.getPairsSetupContent();
-                
-            case 'movement_confirm':
-                return this.getMovementConfirmContent();
-                
-            case 'board_selection':
-                return this.getBoardSelectionContent();
-                
-            case 'traveler_entry':
-                return this.getTravelerEntryContent();
-                
-            case 'results':
-                return this.getResultsContent();
-                
-            default:
-                return '<div class="current-state">Loading Duplicate Bridge...</div>';
-        }
+// SECTION NINE - Display Content Methods (DEAL BUTTON MESSAGE FIXED)
+
+/**
+ * Get display content for current state - UPDATED WITH DEAL BUTTON MESSAGE
+ */
+getDisplayContent() {
+    switch (this.inputState) {
+        case 'pairs_setup':
+            return this.getPairsSetupContent();
+            
+        case 'movement_confirm':
+            return this.getMovementConfirmContent();
+            
+        case 'board_selection':
+            return this.getBoardSelectionContent();
+            
+        case 'traveler_entry':
+            return this.getTravelerEntryContent();
+            
+        case 'results':
+            return this.getResultsContent();
+            
+        default:
+            return '<div class="current-state">Loading Duplicate Bridge...</div>';
     }
+}
+
+/**
+ * Get board selection display content - FIXED FOR DEAL BUTTON MESSAGE
+ */
+getBoardSelectionContent() {
+    const completionStatus = this.getCompletionStatus();
+    const isComplete = completionStatus.percentage === 100;
     
-    /**
-     * Get pairs setup display content
-     */
-    getPairsSetupContent() {
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display">Setup</div>
+    return `
+        <div class="title-score-row">
+            <div class="mode-title">${this.displayName}</div>
+            <div class="score-display">
+                ${completionStatus.completed}/${completionStatus.total}
+                <div style="font-size: 10px; color: #95a5a6;">${completionStatus.percentage}%</div>
             </div>
-            <div class="game-content">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="color: #2c3e50; margin: 0;">🏆 Tournament Setup</h3>
-                </div>
-                <div><strong>How many pairs are playing?</strong></div>
-                <div style="margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; border-left: 4px solid #3498db;">
-                    <div style="font-size: 14px; line-height: 1.6;">
-                        <div style="margin-bottom: 10px;">
-                            <strong style="color: #2c3e50;">📋 4 pairs:</strong> 
-                            <span style="color: #7f8c8d;">2 tables, 12 boards, ~2 hours</span>
-                        </div>
-                        <div style="margin-bottom: 10px;">
-                            <strong style="color: #2c3e50;">📋 6 pairs:</strong> 
-                            <span style="color: #7f8c8d;">3 tables, 10 boards, ~1.5 hours</span>
-                        </div>
-                        <div>
-                            <strong style="color: #2c3e50;">📋 8 pairs:</strong> 
-                            <span style="color: #7f8c8d;">4 tables, 14 boards, ~2.5 hours</span>
-                        </div>
+        </div>
+        <div class="game-content">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
+                    ${isComplete ? '🎉 Session Complete!' : '📊 Board Entry'}
+                </h3>
+            </div>
+            
+            ${this.getCompactBoardProgressDisplay()}
+            
+            <div style="text-align: center; margin: 15px 0;">
+                <button id="selectBoardBtn" style="
+                    background: linear-gradient(135deg, #3498db, #2980b9); 
+                    color: white; 
+                    border: none; 
+                    padding: 12px 20px; 
+                    border-radius: 6px; 
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: bold;
+                    box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+                    min-height: 44px;
+                    min-width: 160px;
+                ">
+                    📋 Select Board
+                </button>
+            </div>
+            
+            ${isComplete ? `
+                <div style="
+                    background: rgba(39, 174, 96, 0.1); 
+                    padding: 10px; 
+                    border-radius: 6px; 
+                    border-left: 3px solid #27ae60;
+                    text-align: center;
+                    margin-top: 10px;
+                ">
+                    <div style="color: #27ae60; font-weight: bold; font-size: 13px;">
+                        ✅ All boards completed!
                     </div>
                 </div>
-                <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
-                    Each pair plays all boards exactly once<br>
-                    Results compared using matchpoint scoring
-                </div>
-            </div>
-            <div class="current-state">Select pairs: Press 4, 6, or 8</div>
-        `;
-    }
-    
-    /**
-     * Get movement confirmation display content
-     */
-    getMovementConfirmContent() {
-        const movement = this.session.movement;
-        const estimatedTime = movement.description.match(/~(.+)/)?.[1] || '2-3 hours';
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display">${this.session.pairs} Pairs</div>
-            </div>
-            <div class="game-content">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="color: #2c3e50; margin: 0;">🏆 Movement Selected</h3>
-                </div>
-                <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin: 10px 0;">
-                    <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">
-                        ${movement.description}
-                    </div>
-                    <div style="font-size: 13px; color: #2c3e50; line-height: 1.5;">
-                        <div><strong>Pairs:</strong> ${movement.pairs}</div>
-                        <div><strong>Tables:</strong> ${movement.tables}</div>
-                        <div><strong>Rounds:</strong> ${movement.rounds}</div>
-                        <div><strong>Total Boards:</strong> ${movement.totalBoards}</div>
-                        <div><strong>Estimated Time:</strong> ${estimatedTime}</div>
+            ` : `
+                <div style="
+                    background: rgba(241, 196, 15, 0.1); 
+                    padding: 8px; 
+                    border-radius: 4px; 
+                    border-left: 3px solid #f1c40f;
+                    margin-top: 10px;
+                ">
+                    <div style="color: #2c3e50; font-size: 11px; text-align: center;">
+                        💡 <strong>Tip:</strong> Enter results after each round
                     </div>
                 </div>
-                <div style="margin-top: 15px; font-size: 14px;">
-                    <div style="margin-bottom: 8px;">
-                        Press <strong style="color: #3498db;">1</strong> to view detailed movement
+            `}
+        </div>
+        <div class="current-state">
+            ${isComplete ? 'All boards complete - Press DEAL for results' : 'Select board to enter results'}
+        </div>
+    `;
+}
+
+/**
+ * Get pairs setup display content
+ */
+getPairsSetupContent() {
+    return `
+        <div class="title-score-row">
+            <div class="mode-title">${this.displayName}</div>
+            <div class="score-display">Setup</div>
+        </div>
+        <div class="game-content">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h3 style="color: #2c3e50; margin: 0;">🏆 Tournament Setup</h3>
+            </div>
+            <div><strong>How many pairs are playing?</strong></div>
+            <div style="margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; border-left: 4px solid #3498db;">
+                <div style="font-size: 14px; line-height: 1.6;">
+                    <div style="margin-bottom: 10px;">
+                        <strong style="color: #2c3e50;">📋 4 pairs:</strong> 
+                        <span style="color: #7f8c8d;">2 tables, 12 boards, ~2 hours</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong style="color: #2c3e50;">📋 6 pairs:</strong> 
+                        <span style="color: #7f8c8d;">3 tables, 10 boards, ~1.5 hours</span>
                     </div>
                     <div>
-                        Press <strong style="color: #27ae60;">2</strong> to confirm and start session
+                        <strong style="color: #2c3e50;">📋 8 pairs:</strong> 
+                        <span style="color: #7f8c8d;">4 tables, 14 boards, ~2.5 hours</span>
                     </div>
                 </div>
             </div>
-            <div class="current-state">1=View Movement, 2=Confirm Setup, Back</div>
-        `;
+            <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
+                Each pair plays all boards exactly once<br>
+                Results compared using matchpoint scoring
+            </div>
+        </div>
+        <div class="current-state">Select pairs: Press 4, 6, or 8</div>
+    `;
+}
+
+/**
+ * Get movement confirmation display content
+ */
+getMovementConfirmContent() {
+    const movement = this.session.movement;
+    const estimatedTime = movement.description.match(/~(.+)/)?.[1] || '2-3 hours';
+    
+    return `
+        <div class="title-score-row">
+            <div class="mode-title">${this.displayName}</div>
+            <div class="score-display">${this.session.pairs} Pairs</div>
+        </div>
+        <div class="game-content">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h3 style="color: #2c3e50; margin: 0;">🏆 Movement Selected</h3>
+            </div>
+            <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin: 10px 0;">
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">
+                    ${movement.description}
+                </div>
+                <div style="font-size: 13px; color: #2c3e50; line-height: 1.5;">
+                    <div><strong>Pairs:</strong> ${movement.pairs}</div>
+                    <div><strong>Tables:</strong> ${movement.tables}</div>
+                    <div><strong>Rounds:</strong> ${movement.rounds}</div>
+                    <div><strong>Total Boards:</strong> ${movement.totalBoards}</div>
+                    <div><strong>Estimated Time:</strong> ${estimatedTime}</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; font-size: 14px;">
+                <div style="margin-bottom: 8px;">
+                    Press <strong style="color: #3498db;">1</strong> to view detailed movement
+                </div>
+                <div>
+                    Press <strong style="color: #27ae60;">2</strong> to confirm and start session
+                </div>
+            </div>
+        </div>
+        <div class="current-state">1=View Movement, 2=Confirm Setup, Back</div>
+    `;
+}
+
+/**
+ * Get display content for traveler entry state - TRAVELER DISPLAY METHOD
+ */
+getTravelerEntryContent() {
+    if (!this.traveler.isActive) {
+        return '<div class="current-state">Traveler not active</div>';
     }
     
-    /**
-     * Get board selection display content - FIXED FOR MOBILE LAYOUT
-     */
-    getBoardSelectionContent() {
-        const completionStatus = this.getCompletionStatus();
-        const isComplete = completionStatus.percentage === 100;
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display">
-                    ${completionStatus.completed}/${completionStatus.total}
-                    <div style="font-size: 10px; color: #95a5a6;">${completionStatus.percentage}%</div>
-                </div>
-            </div>
-            <div class="game-content">
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
-                        ${isComplete ? '🎉 Session Complete!' : '📊 Board Entry'}
-                    </h3>
-                </div>
-                
-                ${this.getCompactBoardProgressDisplay()}
-                
-                <div style="text-align: center; margin: 15px 0;">
-                    <button id="selectBoardBtn" style="
-                        background: linear-gradient(135deg, #3498db, #2980b9); 
-                        color: white; 
-                        border: none; 
-                        padding: 12px 20px; 
-                        border-radius: 6px; 
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: bold;
-                        box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
-                        min-height: 44px;
-                        min-width: 160px;
-                    ">
-                        📋 Select Board
-                    </button>
-                </div>
-                
-                ${isComplete ? `
-                    <div style="
-                        background: rgba(39, 174, 96, 0.1); 
-                        padding: 10px; 
-                        border-radius: 6px; 
-                        border-left: 3px solid #27ae60;
-                        text-align: center;
-                        margin-top: 10px;
-                    ">
-                        <div style="color: #27ae60; font-weight: bold; font-size: 13px;">
-                            ✅ All boards completed!
-                        </div>
-                    </div>
-                ` : `
-                    <div style="
-                        background: rgba(241, 196, 15, 0.1); 
-                        padding: 8px; 
-                        border-radius: 4px; 
-                        border-left: 3px solid #f1c40f;
-                        margin-top: 10px;
-                    ">
-                        <div style="color: #2c3e50; font-size: 11px; text-align: center;">
-                            💡 <strong>Tip:</strong> Enter results after each round
-                        </div>
-                    </div>
-                `}
-            </div>
-            <div class="current-state">
-                ${isComplete ? 'All boards complete - Press RESULTS' : 'Select board to enter results'}
-            </div>
-        `;
+    const progress = this.getCurrentTravelerProgress();
+    const scoringSummary = this.getTravelerScoringSummary();
+    const vulnerability = scoringSummary.vulnerabilityDisplay;
+    
+    // Get current result for contract display
+    const currentResult = this.traveler.data[this.currentResultIndex];
+    const contractDisplay = this.getTravelerContractDisplay(currentResult);
+    
+    let statePrompt = '';
+    switch (this.travelerInputState) {
+        case 'level_selection':
+            statePrompt = 'Select bid level (1-7)';
+            break;
+        case 'suit_selection':
+            statePrompt = 'Select suit';
+            break;
+        case 'declarer_selection':
+            statePrompt = 'Select declarer (N/S/E/W)';
+            break;
+        case 'double_selection':
+            statePrompt = 'Press X for double, or Made/Plus/Down';
+            break;
+        case 'result_type_selection':
+            statePrompt = 'Made exactly, Plus overtricks, or Down?';
+            break;
+        case 'result_number_selection':
+            if (this.resultMode === 'down') {
+                statePrompt = 'Select tricks down (1-7)';
+            } else {
+                statePrompt = 'Select overtricks (1-6)';
+            }
+            break;
+        case 'result_complete':
+            statePrompt = 'Press Deal for next pair';
+            break;
+        default:
+            statePrompt = 'Traveler entry';
     }
     
-    /**
-     * Get display content for traveler entry state - TRAVELER DISPLAY METHOD
-     */
-    getTravelerEntryContent() {
-        if (!this.traveler.isActive) {
-            return '<div class="current-state">Traveler not active</div>';
-        }
-        
-        const progress = this.getCurrentTravelerProgress();
-        const scoringSummary = this.getTravelerScoringSummary();
-        const vulnerability = scoringSummary.vulnerabilityDisplay;
-        
-        // Get current result for contract display
-        const currentResult = this.traveler.data[this.currentResultIndex];
-        const contractDisplay = this.getTravelerContractDisplay(currentResult);
-        
-        let statePrompt = '';
-        switch (this.travelerInputState) {
-            case 'level_selection':
-                statePrompt = 'Select bid level (1-7)';
-                break;
-            case 'suit_selection':
-                statePrompt = 'Select suit';
-                break;
-            case 'declarer_selection':
-                statePrompt = 'Select declarer (N/S/E/W) or X for double';
-                break;
-            case 'tricks_selection':
-                statePrompt = `Select tricks taken (0-9, press 0 for ${currentResult.tricks >= 10 ? currentResult.tricks + 1 : '10+'})`;
-                break;
-            case 'result_complete':
-                statePrompt = 'Press Deal for next pair';
-                break;
-            default:
-                statePrompt = 'Traveler entry';
-        }
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">🏆 Board ${this.traveler.boardNumber}</div>
-                <div class="score-display">
-                    Pair ${progress.current}/${progress.total}
+    return `
+        <div class="title-score-row">
+            <div class="mode-title">🏆 Board ${this.traveler.boardNumber}</div>
+            <div class="score-display">
+                Pair ${progress.current}/${progress.total}
+            </div>
+        </div>
+        <div class="game-content">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">
+                    ${vulnerability}
+                </div>
+                <div style="color: #3498db; font-size: 12px; margin-top: 2px;">
+                    Pairs ${progress.nsPair} (NS) vs ${progress.ewPair} (EW)  
                 </div>
             </div>
-            <div class="game-content">
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">
-                        ${vulnerability}
-                    </div>
-                    <div style="color: #3498db; font-size: 12px; margin-top: 2px;">
-                        Pairs ${progress.nsPair} (NS) vs ${progress.ewPair} (EW)  
-                    </div>
-                </div>
-                
-                <div style="margin: 10px 0; padding: 8px; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
-                    <div style="font-size: 12px; color: #2c3e50;">
-                        <strong>Contract:</strong> ${contractDisplay}
-                    </div>
-                </div>
-                
-                ${currentResult.nsScore !== null || currentResult.ewScore !== null ? `
-                    <div style="
-                        background: rgba(39, 174, 96, 0.1); 
-                        padding: 8px; 
-                        border-radius: 4px; 
-                        margin: 8px 0;
-                        text-align: center;
-                    ">
-                        <div style="color: #27ae60; font-weight: bold; font-size: 12px;">
-                            Score: NS ${currentResult.nsScore || 0} • EW ${currentResult.ewScore || 0}
-                        </div>
-                    </div>
-                ` : ''}
-            </div>
-            <div class="current-state">${statePrompt}</div>
-        `;
-    }
-    
-    /**
-     * Get results display content
-     */
-    getResultsContent() {
-        const completionStatus = this.getCompletionStatus();
-        const standings = this.calculateFinalStandings();
-        
-        return `
-            <div class="title-score-row">
-                <div class="mode-title">🏆 Final Results</div>
-                <div class="score-display">
-                    ${this.session.pairs} Pairs
-                    <div style="font-size: 10px; color: #95a5a6;">Complete</div>
+            
+            <div style="margin: 10px 0; padding: 8px; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
+                <div style="font-size: 12px; color: #2c3e50;">
+                    <strong>Contract:</strong> ${contractDisplay}
                 </div>
             </div>
-            <div class="game-content">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="color: #2c3e50; margin: 0;">🎉 Tournament Complete!</h3>
-                </div>
-                
-                ${this.getTopThreeDisplay(standings)}
-                
+            
+            ${currentResult.nsScore !== null || currentResult.ewScore !== null ? `
                 <div style="
-                    background: rgba(52, 152, 219, 0.1);
-                    padding: 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #3498db;
-                    margin: 15px 0;
+                    background: rgba(39, 174, 96, 0.1); 
+                    padding: 8px; 
+                    border-radius: 4px; 
+                    margin: 8px 0;
                     text-align: center;
                 ">
-                    <div style="color: #2c3e50; font-weight: bold; margin-bottom: 8px;">
-                        📊 Session Summary
-                    </div>
-                    <div style="font-size: 13px; color: #2c3e50; line-height: 1.5;">
-                        <div><strong>Movement:</strong> ${this.session.movement.description}</div>
-                        <div><strong>Boards Played:</strong> ${completionStatus.completed}/${completionStatus.total}</div>
-                        <div><strong>Results Entered:</strong> ${this.getTotalResultsCount()}</div>
+                    <div style="color: #27ae60; font-weight: bold; font-size: 12px;">
+                        Score: NS ${currentResult.nsScore || 0} • EW ${currentResult.ewScore || 0}
                     </div>
                 </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <div style="color: #7f8c8d; font-size: 12px; margin-bottom: 10px;">
-                        View detailed results and export options using the buttons below
-                    </div>
-                </div>
-            </div>
-            <div class="current-state">Tournament complete - Use BACK to continue or review results</div>
-        `;
-    }
+            ` : ''}
+        </div>
+        <div class="current-state">${statePrompt}</div>
+    `;
+}
+
+/**
+ * Get results display content
+ */
+getResultsContent() {
+    const completionStatus = this.getCompletionStatus();
+    const standings = this.calculateFinalStandings();
     
-    /**
-     * Get compact board progress display - MOBILE OPTIMIZED
-     */
-    getCompactBoardProgressDisplay() {
-        const boardStatus = this.getBoardStatus();
-        const totalBoards = boardStatus.length;
-        
-        if (totalBoards === 0) {
-            return '<div style="text-align: center; color: #7f8c8d; font-size: 12px;">No boards configured</div>';
-        }
-        
-        const completedBoards = boardStatus.filter(b => b.completed);
-        const incompleteBoards = boardStatus.filter(b => !b.completed);
-        
-        return `
-            <div style="margin: 10px 0;">
-                <div style="
-                    background: rgba(52, 152, 219, 0.1);
-                    padding: 8px;
-                    border-radius: 4px;
-                    margin-bottom: 10px;
-                    text-align: center;
-                ">
-                    <div style="color: #2c3e50; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
-                        📊 ${completedBoards.length}/${totalBoards} Complete
-                    </div>
-                    <div style="
-                        background: #ecf0f1;
-                        height: 12px;
-                        border-radius: 6px;
-                        overflow: hidden;
-                        position: relative;
-                    ">
-                        <div style="
-                            background: linear-gradient(135deg, #27ae60, #2ecc71);
-                            height: 100%;
-                            width: ${(completedBoards.length / totalBoards) * 100}%;
-                            border-radius: 6px;
-                        "></div>
-                    </div>
-                </div>
-                
-                <div style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-                    gap: 4px;
-                    max-height: 120px;
-                    overflow-y: auto;
-                ">
-                    ${boardStatus.map(board => {
-                        const statusIcon = board.completed ? '✅' : '⭕';
-                        const vulnColor = this.getVulnerabilityColor(board.vulnerability);
-                        const vulnAbbrev = { 'None': 'NV', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
-                        
-                        return `
-                            <div style="
-                                background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(149, 165, 166, 0.1)'};
-                                border: 1px solid ${board.completed ? '#27ae60' : '#bdc3c7'};
-                                border-radius: 4px;
-                                padding: 4px;
-                                text-align: center;
-                                font-size: 9px;
-                            ">
-                                <div style="font-weight: bold; margin-bottom: 2px;">
-                                    B${board.number} ${statusIcon}
-                                </div>
-                                <div style="
-                                    color: ${vulnColor}; 
-                                    font-size: 8px; 
-                                    font-weight: bold;
-                                    background: rgba(255,255,255,0.8);
-                                    padding: 1px 2px;
-                                    border-radius: 4px;
-                                ">
-                                    ${vulnAbbrev[board.vulnerability]}
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
+    return `
+        <div class="title-score-row">
+            <div class="mode-title">🏆 Final Results</div>
+            <div class="score-display">
+                ${this.session.pairs} Pairs
+                <div style="font-size: 10px; color: #95a5a6;">Complete</div>
             </div>
-        `;
-    }
-    
-    /**
-     * Get top three display for results
-     */
-    getTopThreeDisplay(standings) {
-        if (standings.length === 0) {
-            return `
-                <div style="text-align: center; color: #7f8c8d; margin: 20px 0;">
-                    <p>No standings available - insufficient data for ranking.</p>
-                </div>
-            `;
-        }
-        
-        const topThree = standings.slice(0, 3);
-        
-        return `
+        </div>
+        <div class="game-content">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h3 style="color: #2c3e50; margin: 0;">🎉 Tournament Complete!</h3>
+            </div>
+            
+            ${this.getTopThreeDisplay(standings)}
+            
             <div style="
-                display: flex;
-                justify-content: center;
-                align-items: end;
-                gap: 15px;
-                margin: 20px 0;
-                flex-wrap: wrap;
+                background: rgba(52, 152, 219, 0.1);
+                padding: 15px;
+                border-radius: 8px;
+                border-left: 4px solid #3498db;
+                margin: 15px 0;
+                text-align: center;
             ">
-                ${topThree.map((pair, index) => {
-                    const position = index + 1;
-                    const heights = ['120px', '100px', '80px'];
-                    const colors = ['#f1c40f', '#95a5a6', '#cd7f32'];
-                    const icons = ['🥇', '🥈', '🥉'];
+                <div style="color: #2c3e50; font-weight: bold; margin-bottom: 8px;">
+                    📊 Session Summary
+                </div>
+                <div style="font-size: 13px; color: #2c3e50; line-height: 1.5;">
+                    <div><strong>Movement:</strong> ${this.session.movement.description}</div>
+                    <div><strong>Boards Played:</strong> ${completionStatus.completed}/${completionStatus.total}</div>
+                    <div><strong>Results Entered:</strong> ${this.getTotalResultsCount()}</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <div style="color: #7f8c8d; font-size: 12px; margin-bottom: 10px;">
+                    View detailed results and export options using the buttons below
+                </div>
+            </div>
+        </div>
+        <div class="current-state">Tournament complete - Use BACK to continue or review results</div>
+    `;
+}
+
+/**
+ * Get compact board progress display - MOBILE OPTIMIZED
+ */
+getCompactBoardProgressDisplay() {
+    const boardStatus = this.getBoardStatus();
+    const totalBoards = boardStatus.length;
+    
+    if (totalBoards === 0) {
+        return '<div style="text-align: center; color: #7f8c8d; font-size: 12px;">No boards configured</div>';
+    }
+    
+    const completedBoards = boardStatus.filter(b => b.completed);
+    const incompleteBoards = boardStatus.filter(b => !b.completed);
+    
+    return `
+        <div style="margin: 10px 0;">
+            <div style="
+                background: rgba(52, 152, 219, 0.1);
+                padding: 8px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+                text-align: center;
+            ">
+                <div style="color: #2c3e50; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
+                    📊 ${completedBoards.length}/${totalBoards} Complete
+                </div>
+                <div style="
+                    background: #ecf0f1;
+                    height: 12px;
+                    border-radius: 6px;
+                    overflow: hidden;
+                    position: relative;
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, #27ae60, #2ecc71);
+                        height: 100%;
+                        width: ${(completedBoards.length / totalBoards) * 100}%;
+                        border-radius: 6px;
+                    "></div>
+                </div>
+            </div>
+            
+            <div style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+                gap: 4px;
+                max-height: 120px;
+                overflow-y: auto;
+            ">
+                ${boardStatus.map(board => {
+                    const statusIcon = board.completed ? '✅' : '⭕';
+                    const vulnColor = this.getVulnerabilityColor(board.vulnerability);
+                    const vulnAbbrev = { 'None': 'NV', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
                     
                     return `
                         <div style="
-                            background: linear-gradient(135deg, ${colors[index]}, ${colors[index]}dd);
-                            color: white;
-                            padding: 15px;
-                            border-radius: 8px;
+                            background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(149, 165, 166, 0.1)'};
+                            border: 1px solid ${board.completed ? '#27ae60' : '#bdc3c7'};
+                            border-radius: 4px;
+                            padding: 4px;
                             text-align: center;
-                            min-width: 100px;
-                            height: ${heights[index]};
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: center;
-                            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                            transform: ${position === 1 ? 'scale(1.05)' : 'scale(1)'};
+                            font-size: 9px;
                         ">
-                            <div style="font-size: 24px; margin-bottom: 5px;">
-                                ${icons[index]}
+                            <div style="font-weight: bold; margin-bottom: 2px;">
+                                B${board.number} ${statusIcon}
                             </div>
-                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 3px;">
-                                Pair ${pair.pair}
-                            </div>
-                            <div style="font-size: 16px; font-weight: bold;">
-                                ${pair.percentage}%
-                            </div>
-                            <div style="font-size: 11px; opacity: 0.9;">
-                                ${pair.totalMatchpoints} MP
+                            <div style="
+                                color: ${vulnColor}; 
+                                font-size: 8px; 
+                                font-weight: bold;
+                                background: rgba(255,255,255,0.8);
+                                padding: 1px 2px;
+                                border-radius: 4px;
+                            ">
+                                ${vulnAbbrev[board.vulnerability]}
                             </div>
                         </div>
                     `;
                 }).join('')}
             </div>
+        </div>
+    `;
+}
+
+/**
+ * Get top three display for results
+ */
+getTopThreeDisplay(standings) {
+    if (standings.length === 0) {
+        return `
+            <div style="text-align: center; color: #7f8c8d; margin: 20px 0;">
+                <p>No standings available - insufficient data for ranking.</p>
+            </div>
         `;
     }
     
-    /**
-     * Get total results count
-     */
-    getTotalResultsCount() {
-        if (!this.session.boards) return 0;
-        
-        return Object.values(this.session.boards).reduce((total, board) => {
-            if (board.results) {
-                return total + board.results.filter(r => r.nsScore !== null || r.ewScore !== null).length;
-            }
-            return total;
-        }, 0);
-    }
+    const topThree = standings.slice(0, 3);
     
-    /**
-     * Update display with enhanced state management
-     */
-    updateDisplay() {
-        const content = this.getDisplayContent();
-        const display = document.getElementById('display');
-        if (display) {
-            display.innerHTML = content;
-        }
-        
-        // Update button states
-        const activeButtons = this.getActiveButtons();
-        this.bridgeApp.updateButtonStates(activeButtons);
-        
-        // Setup board selection button if in board_selection state
-        if (this.inputState === 'board_selection') {
-            setTimeout(() => {
-                this.setupBoardSelectionButton();
-            }, 100);
-        }
-        
-        console.log(`🔄 Display updated for state: ${this.inputState}`);
-        
-        // Debug log for traveler state
-        if (this.inputState === 'traveler_entry') {
-            console.log(`🔍 Traveler state - boardNumber: ${this.traveler.boardNumber}, inputState: ${this.travelerInputState}`);
-        }
-    }
-    
-/**
- * Get active buttons for current state with enhanced logic - FIXED RESULTS BUTTON
- */
-getActiveButtons() {
-    // Handle traveler input buttons
-    if (this.inputState === 'traveler_entry') {
-        const travelerButtons = this.getTravelerActiveButtons();
-        
-        // Always add BACK for traveler
-        if (!travelerButtons.includes('BACK')) {
-            travelerButtons.push('BACK');
-        }
-        
-        return travelerButtons;
-    }
-    
-    // No buttons active when traveler popup is open (shouldn't happen with button system)
-    if (this.traveler.isActive && this.inputState !== 'traveler_entry') {
-        return [];
-    }
-    
-    switch (this.inputState) {
-        case 'pairs_setup':
-            return ['4', '6', '8'];
-            
-        case 'movement_confirm':
-            return ['1', '2', 'BACK'];
-            
-        case 'board_selection':
-            const buttons = ['BACK'];
-            
-            // FIXED: Check for all boards complete properly
-            const completionStatus = this.getCompletionStatus();
-            console.log(`🔍 Completion check: ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)`);
-            
-            if (completionStatus.percentage === 100) {
-                buttons.push('RESULTS');  // FIXED: Add RESULTS button when 100% complete
-                console.log('✅ Adding RESULTS button - all boards complete');
-            }
-            
-            return buttons;
-            
-        case 'results':
-            return ['BACK'];
-            
-        default:
-            return [];
-    }
+    return `
+        <div style="
+            display: flex;
+            justify-content: center;
+            align-items: end;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        ">
+            ${topThree.map((pair, index) => {
+                const position = index + 1;
+                const heights = ['120px', '100px', '80px'];
+                const colors = ['#f1c40f', '#95a5a6', '#cd7f32'];
+                const icons = ['🥇', '🥈', '🥉'];
+                
+                return `
+                    <div style="
+                        background: linear-gradient(135deg, ${colors[index]}, ${colors[index]}dd);
+                        color: white;
+                        padding: 15px;
+                        border-radius: 8px;
+                        text-align: center;
+                        min-width: 100px;
+                        height: ${heights[index]};
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                        transform: ${position === 1 ? 'scale(1.05)' : 'scale(1)'};
+                    ">
+                        <div style="font-size: 24px; margin-bottom: 5px;">
+                            ${icons[index]}
+                        </div>
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 3px;">
+                            Pair ${pair.pair}
+                        </div>
+                        <div style="font-size: 16px; font-weight: bold;">
+                            ${pair.percentage}%
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.9;">
+                            ${pair.totalMatchpoints} MP
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
 }
+
+/**
+ * Get total results count
+ */
+getTotalResultsCount() {
+    if (!this.session.boards) return 0;
     
-    /**
-     * Setup board selection button with mobile enhancements
-     */
-    setupBoardSelectionButton() {
-        const selectBtn = document.getElementById('selectBoardBtn');
-        if (!selectBtn) return;
-        
-        console.log('📱 Setting up board selection button with mobile enhancements');
-        
-        // Remove any existing handlers
-        selectBtn.onclick = null;
-        
-        const boardSelectHandler = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('📋 Board selection button pressed');
-            
-            // Visual feedback
-            selectBtn.style.transform = 'scale(0.95)';
-            selectBtn.style.opacity = '0.8';
-            
-            setTimeout(() => {
-                selectBtn.style.transform = '';
-                selectBtn.style.opacity = '';
-                this.openTravelerPopup();
-            }, 100);
-        };
-        
-        // Enhanced mobile properties
-        selectBtn.style.touchAction = 'manipulation';
-        selectBtn.style.userSelect = 'none';
-        selectBtn.style.webkitTapHighlightColor = 'transparent';
-        selectBtn.style.cursor = 'pointer';
-        selectBtn.style.minHeight = '44px';
-        
-        // Add both event types for maximum compatibility
-        selectBtn.addEventListener('click', boardSelectHandler);
-        selectBtn.addEventListener('touchend', boardSelectHandler, { passive: false });
-        
-        // Touch start feedback
-        selectBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            selectBtn.style.transform = 'scale(0.95)';
-            selectBtn.style.opacity = '0.8';
-        }, { passive: false });
-        
-        console.log('✅ Board selection button mobile enhancement complete');
-    }
-// END SECTION NINE 
-// SECTION TEN
+    return Object.values(this.session.boards).reduce((total, board) => {
+        if (board.results) {
+            return total + board.results.filter(r => r.nsScore !== null || r.ewScore !== null).length;
+        }
+        return total;
+    }, 0);
+}
+
+// END SECTION NINE// SECTION TEN
     /**
      * Get comprehensive duplicate bridge session summary
      */
