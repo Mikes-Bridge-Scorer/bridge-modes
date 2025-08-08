@@ -332,47 +332,62 @@ class BonusBridgeMode extends BaseBridgeMode {
         console.log('🔍 HCP Analysis state - popup should be active');
     }
 // END SECTION FOUR
-// SECTION FIVE - HCP Analysis Popup
-    /**
-     * Show HCP Analysis Popup
-     */
-    showHCPAnalysisPopup() {
-        const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
-        
-        console.log('🔍 Showing HCP Analysis popup for contract:', contract);
-        
-        const popupContent = this.buildHCPAnalysisContent(contract);
-        
-        // Set state to hcp_analysis
-        this.inputState = 'hcp_analysis';
-        
-        // Show the modal using bridgeApp's modal system
-        this.bridgeApp.showModal('⭐ Hand Analysis Required', popupContent);
-        
-        // Setup the popup after a brief delay to ensure DOM is ready
-        setTimeout(() => {
-            console.log('🔧 Setting up HCP Analysis popup handlers with ENHANCED mobile support');
-            this.setupHCPAnalysisPopup();
-        }, 200);
-    }
+// SECTION FIVE - HCP Analysis Popup (PIXEL 9A SCROLLING FIXED)
+
+/**
+ * Show HCP Analysis Popup with Enhanced Pixel 9a Scrolling
+ */
+showHCPAnalysisPopup() {
+    const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
     
-    /**
-     * Build HCP Analysis popup content - FIXED READABILITY
-     */
-    buildHCPAnalysisContent(contract) {
-        const { totalHCP, singletons, voids, longSuits } = this.handAnalysis;
-        const vulnerability = this.vulnerability === 'NV' ? 'Non-Vul' : 
-                             this.vulnerability === 'Both' ? 'Vulnerable' : 
-                             `${this.vulnerability} Vulnerable`;
-        
-        return `
-            <div style="padding: 10px; font-family: Arial, sans-serif;">
-                <div style="text-align: center; margin-bottom: 15px; padding: 12px; background: #2c3e50; border-radius: 8px; border: 2px solid #34495e;">
-                    <strong style="font-size: 16px; color: #ffffff; font-weight: bold;">${contract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong><br>
-                    <strong style="font-size: 14px; color: #ecf0f1;">${vulnerability}</strong><br>
-                    <span style="color: #f39c12; font-size: 15px; font-weight: bold;">Raw Score: ${this.currentContract.rawScore} points</span>
-                </div>
-                
+    console.log('🔍 Showing HCP Analysis popup for contract:', contract);
+    
+    const popupContent = this.buildHCPAnalysisContent(contract);
+    
+    // Set state to hcp_analysis
+    this.inputState = 'hcp_analysis';
+    
+    // Show the modal using bridgeApp's modal system
+    this.bridgeApp.showModal('⭐ Hand Analysis Required', popupContent);
+    
+    // Setup the popup after a brief delay to ensure DOM is ready
+    setTimeout(() => {
+        console.log('🔧 Setting up HCP Analysis popup handlers with ENHANCED mobile support');
+        this.setupHCPAnalysisPopup();
+        this.applyHandAnalysisScrollingFixes(); // NEW: Apply Pixel 9a scrolling fixes
+    }, 200);
+}
+
+/**
+ * Build HCP Analysis popup content - ENHANCED WITH SCROLLING CONTAINER
+ */
+buildHCPAnalysisContent(contract) {
+    const { totalHCP, singletons, voids, longSuits } = this.handAnalysis;
+    const vulnerability = this.vulnerability === 'NV' ? 'Non-Vul' : 
+                         this.vulnerability === 'Both' ? 'Vulnerable' : 
+                         `${this.vulnerability} Vulnerable`;
+    
+    return `
+        <div style="padding: 10px; font-family: Arial, sans-serif; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="text-align: center; margin-bottom: 15px; padding: 12px; background: #2c3e50; border-radius: 8px; border: 2px solid #34495e;">
+                <strong style="font-size: 16px; color: #ffffff; font-weight: bold;">${contract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong><br>
+                <strong style="font-size: 14px; color: #ecf0f1;">${vulnerability}</strong><br>
+                <span style="color: #f39c12; font-size: 15px; font-weight: bold;">Raw Score: ${this.currentContract.rawScore} points</span>
+            </div>
+            
+            <!-- ENHANCED SCROLLABLE CONTENT CONTAINER -->
+            <div id="hcpScrollContainer" style="
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                max-height: 400px;
+                padding-right: 5px;
+                margin-right: -5px;
+                transform: translateZ(0);
+                will-change: scroll-position;
+                position: relative;
+            ">
                 <div style="background: rgba(255,193,7,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #f39c12;">
                     <strong>Count the combined cards of declarer + dummy:</strong><br>
                     <span style="font-size: 14px;">Ace=4, King=3, Queen=2, Jack=1</span>
@@ -434,17 +449,184 @@ class BonusBridgeMode extends BaseBridgeMode {
                         </div>
                     </div>
                 </div>
-                
-                <!-- Action Buttons -->
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button class="cancel-analysis-btn" style="flex: 1; height: 50px; background: #95a5a6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation;">Cancel</button>
-                    <button class="calculate-score-btn" style="flex: 2; height: 50px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation;">Calculate Score</button>
-                </div>
             </div>
-        `;
+            
+            <!-- FIXED ACTION BUTTONS OUTSIDE SCROLL CONTAINER -->
+            <div style="
+                display: flex; 
+                gap: 10px; 
+                justify-content: center;
+                margin-top: 15px;
+                padding-top: 10px;
+                border-top: 1px solid #ddd;
+                flex-shrink: 0;
+            ">
+                <button class="cancel-analysis-btn" style="flex: 1; height: 50px; background: #95a5a6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation;">Cancel</button>
+                <button class="calculate-score-btn" style="flex: 2; height: 50px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation;">Calculate Score</button>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Apply Hand Analysis scrolling fixes specifically for Pixel 9a - NEW FUNCTION
+ */
+applyHandAnalysisScrollingFixes() {
+    if (!this.isMobile) {
+        console.log('📱 Desktop detected - skipping hand analysis scrolling fixes');
+        return;
     }
-// END SECTION FIVE
-// SECTION SIX - Mobile Event Handlers
+    
+    console.log('🔧 Applying Hand Analysis scrolling fixes for Pixel 9a...');
+    
+    // Find the modal and scroll container
+    const modal = document.querySelector('.modal-content');
+    const scrollContainer = document.getElementById('hcpScrollContainer');
+    
+    if (modal && scrollContainer) {
+        // Enhanced modal fixes for mobile
+        modal.style.maxHeight = '95vh';
+        modal.style.height = 'auto';
+        modal.style.display = 'flex';
+        modal.style.flexDirection = 'column';
+        modal.style.overflow = 'hidden';
+        modal.style.position = 'relative';
+        
+        // Enhanced scroll container fixes - CRITICAL FOR PIXEL 9A
+        scrollContainer.style.height = '400px'; // Fixed height
+        scrollContainer.style.maxHeight = '400px';
+        scrollContainer.style.overflowY = 'scroll'; // Force scroll
+        scrollContainer.style.overflowX = 'hidden';
+        scrollContainer.style.webkitOverflowScrolling = 'touch';
+        scrollContainer.style.transform = 'translateZ(0)';
+        scrollContainer.style.willChange = 'scroll-position';
+        scrollContainer.style.overflowAnchor = 'none';
+        scrollContainer.style.position = 'relative';
+        
+        // Enhanced scrollbar visibility for mobile
+        const scrollbarStyle = document.createElement('style');
+        scrollbarStyle.id = 'hcpScrollbarStyle';
+        scrollbarStyle.textContent = `
+            #hcpScrollContainer::-webkit-scrollbar {
+                width: 12px !important;
+                background: rgba(255, 255, 255, 0.2) !important;
+            }
+            #hcpScrollContainer::-webkit-scrollbar-thumb {
+                background: rgba(52, 152, 219, 0.6) !important;
+                border-radius: 6px !important;
+                border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            }
+            #hcpScrollContainer::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.05) !important;
+                border-radius: 6px !important;
+            }
+            #hcpScrollContainer::-webkit-scrollbar-thumb:hover {
+                background: rgba(52, 152, 219, 0.8) !important;
+            }
+        `;
+        
+        // Remove existing style if present
+        const existingStyle = document.getElementById('hcpScrollbarStyle');
+        if (existingStyle) existingStyle.remove();
+        
+        document.head.appendChild(scrollbarStyle);
+        
+        // Test scrolling functionality
+        const testScroll = () => {
+            const initialScrollTop = scrollContainer.scrollTop;
+            scrollContainer.scrollTop = 50;
+            
+            setTimeout(() => {
+                const newScrollTop = scrollContainer.scrollTop;
+                console.log(`📱 HCP Scroll test - Initial: ${initialScrollTop}, Set: 50, Actual: ${newScrollTop}`);
+                console.log(`📱 HCP Container - Height: ${scrollContainer.clientHeight}, ScrollHeight: ${scrollContainer.scrollHeight}`);
+                
+                if (newScrollTop === initialScrollTop && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                    console.warn('⚠️ HCP Analysis scrolling may not be working - applying fallback fixes');
+                    
+                    // Visual feedback for scroll issues
+                    scrollContainer.style.border = '3px solid #e74c3c';
+                    scrollContainer.style.boxShadow = 'inset 0 0 15px rgba(231, 76, 60, 0.3)';
+                    
+                    // Add scroll hint
+                    const scrollHint = document.createElement('div');
+                    scrollHint.innerHTML = '👆 Touch and drag to scroll analysis options';
+                    scrollHint.style.cssText = `
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        background: rgba(231, 76, 60, 0.9);
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-size: 11px;
+                        z-index: 200;
+                        pointer-events: none;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    `;
+                    scrollContainer.appendChild(scrollHint);
+                    
+                    // Fade out hint after 4 seconds
+                    setTimeout(() => {
+                        scrollHint.style.transition = 'opacity 1s ease';
+                        scrollHint.style.opacity = '0';
+                        setTimeout(() => scrollHint.remove(), 1000);
+                    }, 4000);
+                } else {
+                    console.log('✅ HCP Analysis scrolling appears to be working correctly');
+                }
+                
+                // Reset scroll position
+                scrollContainer.scrollTop = 0;
+            }, 100);
+        };
+        
+        testScroll();
+        
+        // Enhanced touch event handlers for problematic devices
+        let touchStartY = null;
+        let isScrolling = false;
+        
+        scrollContainer.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
+            console.log('📱 HCP Analysis touch scroll start');
+        }, { passive: true });
+        
+        scrollContainer.addEventListener('touchmove', (e) => {
+            if (touchStartY !== null) {
+                const touchY = e.touches[0].clientY;
+                const deltaY = touchStartY - touchY;
+                
+                // Only handle if significant movement
+                if (Math.abs(deltaY) > 5) {
+                    isScrolling = true;
+                    const newScrollTop = scrollContainer.scrollTop + deltaY * 0.8;
+                    const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+                    
+                    scrollContainer.scrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+                    touchStartY = touchY;
+                    
+                    console.log(`📱 HCP Analysis touch scroll: ${scrollContainer.scrollTop}/${maxScroll}`);
+                }
+            }
+        }, { passive: true });
+        
+        scrollContainer.addEventListener('touchend', () => {
+            touchStartY = null;
+            if (isScrolling) {
+                console.log('📱 HCP Analysis touch scroll completed');
+            }
+            isScrolling = false;
+        }, { passive: true });
+        
+        console.log('✅ Hand Analysis scrolling fixes applied for Pixel 9a');
+    } else {
+        console.warn('⚠️ Could not find modal or HCP scroll container for scrolling fixes');
+    }
+}
+
+// END SECTION FIVE// SECTION SIX - Mobile Event Handlers
     /**
      * ENHANCED MOBILE FIX: Setup HCP Analysis popup event handlers with improved mobile touch support
      */
