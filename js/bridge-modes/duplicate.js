@@ -49,192 +49,201 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         this.initialize();
     }
 // END SECTION ONE
-// SECTION TWO - Core Methods (FIXED FOR BUTTON INPUT)
-    /**
-     * Initialize movements for different pair counts
-     */
-    initializeMovements() {
-        this.movements = {
-            4: {
-                pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
-                description: "2-table Howell, 12 boards, ~2 hours",
-                movement: [
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] },
-                    { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] },
-                    { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] },
-                    { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] },
-                    { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] },
-                    { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] },
-                    { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] },
-                    { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] },
-                    { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] },
-                    { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] }
-                ]
-            },
-            6: {
-                pairs: 6, tables: 3, rounds: 5, totalBoards: 10,
-                description: "3-table Howell, 10 boards, ~1.5 hours",
-                movement: [
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-                    { round: 2, table: 1, ns: 1, ew: 3, boards: [7,8] },
-                    { round: 2, table: 2, ns: 5, ew: 2, boards: [9,10] },
-                    { round: 2, table: 3, ns: 4, ew: 6, boards: [1,2] },
-                    { round: 3, table: 1, ns: 1, ew: 4, boards: [3,4] },
-                    { round: 3, table: 2, ns: 6, ew: 3, boards: [5,6] },
-                    { round: 3, table: 3, ns: 2, ew: 5, boards: [7,8] },
-                    { round: 4, table: 1, ns: 1, ew: 5, boards: [9,10] },
-                    { round: 4, table: 2, ns: 2, ew: 4, boards: [1,2] },
-                    { round: 4, table: 3, ns: 3, ew: 6, boards: [3,4] },
-                    { round: 5, table: 1, ns: 1, ew: 6, boards: [5,6] },
-                    { round: 5, table: 2, ns: 3, ew: 5, boards: [7,8] },
-                    { round: 5, table: 3, ns: 4, ew: 2, boards: [9,10] }
-                ]
-            },
-            8: {
-                pairs: 8, tables: 4, rounds: 7, totalBoards: 14,
-                description: "4-table Howell, 14 boards, ~2.5 hours",
-                movement: [
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-                    { round: 1, table: 4, ns: 7, ew: 8, boards: [7,8] },
-                    { round: 2, table: 1, ns: 1, ew: 6, boards: [9,10] },
-                    { round: 2, table: 2, ns: 7, ew: 3, boards: [11,12] },
-                    { round: 2, table: 3, ns: 4, ew: 8, boards: [13,14] },
-                    { round: 2, table: 4, ns: 2, ew: 5, boards: [1,2] },
-                    { round: 3, table: 1, ns: 1, ew: 8, boards: [3,4] },
-                    { round: 3, table: 2, ns: 2, ew: 6, boards: [5,6] },
-                    { round: 3, table: 3, ns: 3, ew: 5, boards: [7,8] },
-                    { round: 3, table: 4, ns: 4, ew: 7, boards: [9,10] },
-                    { round: 4, table: 1, ns: 1, ew: 5, boards: [11,12] },
-                    { round: 4, table: 2, ns: 8, ew: 4, boards: [13,14] },
-                    { round: 4, table: 3, ns: 6, ew: 7, boards: [1,2] },
-                    { round: 4, table: 4, ns: 2, ew: 3, boards: [3,4] },
-                    { round: 5, table: 1, ns: 1, ew: 7, boards: [5,6] },
-                    { round: 5, table: 2, ns: 3, ew: 8, boards: [7,8] },
-                    { round: 5, table: 3, ns: 5, ew: 4, boards: [9,10] },
-                    { round: 5, table: 4, ns: 6, ew: 2, boards: [11,12] },
-                    { round: 6, table: 1, ns: 1, ew: 4, boards: [13,14] },
-                    { round: 6, table: 2, ns: 5, ew: 8, boards: [1,2] },
-                    { round: 6, table: 3, ns: 7, ew: 2, boards: [3,4] },
-                    { round: 6, table: 4, ns: 3, ew: 6, boards: [5,6] },
-                    { round: 7, table: 1, ns: 1, ew: 3, boards: [7,8] },
-                    { round: 7, table: 2, ns: 4, ew: 6, boards: [9,10] },
-                    { round: 7, table: 3, ns: 8, ew: 5, boards: [11,12] },
-                    { round: 7, table: 4, ns: 2, ew: 7, boards: [13,14] }
-                ]
-            }
+// SECTION TWO - Core Methods (FIXED FOR BUTTON INPUT WITH DEAL BUTTON)
+
+/**
+ * Initialize movements for different pair counts
+ */
+initializeMovements() {
+    this.movements = {
+        4: {
+            pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
+            description: "2-table Howell, 12 boards, ~2 hours",
+            movement: [
+                { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] },
+                { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] },
+                { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] },
+                { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] },
+                { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] },
+                { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] },
+                { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] },
+                { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] },
+                { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] },
+                { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] }
+            ]
+        },
+        6: {
+            pairs: 6, tables: 3, rounds: 5, totalBoards: 10,
+            description: "3-table Howell, 10 boards, ~1.5 hours",
+            movement: [
+                { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
+                { round: 2, table: 1, ns: 1, ew: 3, boards: [7,8] },
+                { round: 2, table: 2, ns: 5, ew: 2, boards: [9,10] },
+                { round: 2, table: 3, ns: 4, ew: 6, boards: [1,2] },
+                { round: 3, table: 1, ns: 1, ew: 4, boards: [3,4] },
+                { round: 3, table: 2, ns: 6, ew: 3, boards: [5,6] },
+                { round: 3, table: 3, ns: 2, ew: 5, boards: [7,8] },
+                { round: 4, table: 1, ns: 1, ew: 5, boards: [9,10] },
+                { round: 4, table: 2, ns: 2, ew: 4, boards: [1,2] },
+                { round: 4, table: 3, ns: 3, ew: 6, boards: [3,4] },
+                { round: 5, table: 1, ns: 1, ew: 6, boards: [5,6] },
+                { round: 5, table: 2, ns: 3, ew: 5, boards: [7,8] },
+                { round: 5, table: 3, ns: 4, ew: 2, boards: [9,10] }
+            ]
+        },
+        8: {
+            pairs: 8, tables: 4, rounds: 7, totalBoards: 14,
+            description: "4-table Howell, 14 boards, ~2.5 hours",
+            movement: [
+                { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+                { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
+                { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
+                { round: 1, table: 4, ns: 7, ew: 8, boards: [7,8] },
+                { round: 2, table: 1, ns: 1, ew: 6, boards: [9,10] },
+                { round: 2, table: 2, ns: 7, ew: 3, boards: [11,12] },
+                { round: 2, table: 3, ns: 4, ew: 8, boards: [13,14] },
+                { round: 2, table: 4, ns: 2, ew: 5, boards: [1,2] },
+                { round: 3, table: 1, ns: 1, ew: 8, boards: [3,4] },
+                { round: 3, table: 2, ns: 2, ew: 6, boards: [5,6] },
+                { round: 3, table: 3, ns: 3, ew: 5, boards: [7,8] },
+                { round: 3, table: 4, ns: 4, ew: 7, boards: [9,10] },
+                { round: 4, table: 1, ns: 1, ew: 5, boards: [11,12] },
+                { round: 4, table: 2, ns: 8, ew: 4, boards: [13,14] },
+                { round: 4, table: 3, ns: 6, ew: 7, boards: [1,2] },
+                { round: 4, table: 4, ns: 2, ew: 3, boards: [3,4] },
+                { round: 5, table: 1, ns: 1, ew: 7, boards: [5,6] },
+                { round: 5, table: 2, ns: 3, ew: 8, boards: [7,8] },
+                { round: 5, table: 3, ns: 5, ew: 4, boards: [9,10] },
+                { round: 5, table: 4, ns: 6, ew: 2, boards: [11,12] },
+                { round: 6, table: 1, ns: 1, ew: 4, boards: [13,14] },
+                { round: 6, table: 2, ns: 5, ew: 8, boards: [1,2] },
+                { round: 6, table: 3, ns: 7, ew: 2, boards: [3,4] },
+                { round: 6, table: 4, ns: 3, ew: 6, boards: [5,6] },
+                { round: 7, table: 1, ns: 1, ew: 3, boards: [7,8] },
+                { round: 7, table: 2, ns: 4, ew: 6, boards: [9,10] },
+                { round: 7, table: 3, ns: 8, ew: 5, boards: [11,12] },
+                { round: 7, table: 4, ns: 2, ew: 7, boards: [13,14] }
+            ]
+        }
+    };
+    
+    console.log('🏆 Movements initialized:', Object.keys(this.movements));
+}
+
+/**
+ * Initialize Duplicate Bridge mode
+ */
+initialize() {
+    console.log('🎯 Starting Duplicate Bridge session');
+    
+    this.inputState = 'pairs_setup';
+    this.session.isSetup = false;
+    this.traveler.isActive = false;
+    
+    // Set up global reference for popup callbacks
+    window.duplicateBridge = this;
+    
+    this.updateDisplay();
+    
+    console.log('🎯 Duplicate Bridge initialized');
+}
+
+/**
+ * Handle user input - FIXED FOR BUTTON-BASED TRAVELER WITH DEAL BUTTON
+ */
+handleInput(value) {
+    console.log(`🎮 Duplicate Bridge input: ${value} in state: ${this.inputState}`);
+    
+    // Route traveler input to traveler handler - FIXED: Check inputState instead of traveler.isActive
+    if (this.inputState === 'traveler_entry') {
+        this.handleTravelerInput(value);
+        return;
+    }
+    
+    // Handle back navigation
+    if (value === 'BACK') {
+        if (this.handleBack()) {
+            return; // Handled internally
+        } else {
+            // Let parent handle (return to mode selection)
+            this.bridgeApp.showLicensedMode({ 
+                type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+            });
+            return;
+        }
+    }
+    
+    // Handle control buttons
+    if (value === 'HELP') {
+        this.showHelp();
+        return;
+    }
+    
+    if (value === 'QUIT') {
+        this.showQuit();
+        return;
+    }
+    
+    // FIXED: Handle DEAL button specifically for results
+    if (value === 'DEAL' && this.inputState === 'board_selection') {
+        console.log('🎯 DEAL button pressed - attempting to show results');
+        this.handleBoardSelection(value);
+        return;
+    }
+    
+    // Handle other inputs
+    this.handleAction(value);
+}
+
+/**
+ * Setup boards for selected movement
+ */
+setupBoards() {
+    this.session.boards = {};
+    for (let i = 1; i <= this.session.movement.totalBoards; i++) {
+        this.session.boards[i] = {
+            number: i,
+            results: [],
+            completed: false,
+            vulnerability: this.getBoardVulnerability(i)
         };
-        
-        console.log('🏆 Movements initialized:', Object.keys(this.movements));
     }
+    this.session.isSetup = true;
     
-    /**
-     * Initialize Duplicate Bridge mode
-     */
-    initialize() {
-        console.log('🎯 Starting Duplicate Bridge session');
-        
-        this.inputState = 'pairs_setup';
-        this.session.isSetup = false;
-        this.traveler.isActive = false;
-        
-        // Set up global reference for popup callbacks
-        window.duplicateBridge = this;
-        
-        this.updateDisplay();
-        
-        console.log('🎯 Duplicate Bridge initialized');
-    }
+    console.log(`📋 Setup ${this.session.movement.totalBoards} boards for ${this.session.pairs} pairs`);
+}
+
+/**
+ * Get board vulnerability using standard duplicate cycle
+ */
+getBoardVulnerability(boardNumber) {
+    const cycle = (boardNumber - 1) % 16;
+    const vulns = ['None', 'NS', 'EW', 'Both', 'EW', 'Both', 'None', 'NS', 
+                  'NS', 'EW', 'Both', 'None', 'Both', 'None', 'NS', 'EW'];
+    return vulns[cycle];
+}
+
+/**
+ * Check if declarer is vulnerable for scoring
+ */
+isDeclarerVulnerable(boardNumber, declarer) {
+    const vulnerability = this.getBoardVulnerability(boardNumber);
     
-    /**
-     * Handle user input - FIXED FOR BUTTON-BASED TRAVELER
-     */
-    handleInput(value) {
-        console.log(`🎮 Duplicate Bridge input: ${value} in state: ${this.inputState}`);
-        
-        // Route traveler input to traveler handler - FIXED: Check inputState instead of traveler.isActive
-        if (this.inputState === 'traveler_entry') {
-            this.handleTravelerInput(value);
-            return;
-        }
-        
-        // Handle back navigation
-        if (value === 'BACK') {
-            if (this.handleBack()) {
-                return; // Handled internally
-            } else {
-                // Let parent handle (return to mode selection)
-                this.bridgeApp.showLicensedMode({ 
-                    type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
-                });
-                return;
-            }
-        }
-        
-        // Handle control buttons
-        if (value === 'HELP') {
-            this.showHelp();
-            return;
-        }
-        
-        if (value === 'QUIT') {
-            this.showQuit();
-            return;
-        }
-        
-        // Handle other inputs
-        this.handleAction(value);
-    }
+    if (vulnerability === 'None') return false;
+    if (vulnerability === 'Both') return true;
     
-    /**
-     * Setup boards for selected movement
-     */
-    setupBoards() {
-        this.session.boards = {};
-        for (let i = 1; i <= this.session.movement.totalBoards; i++) {
-            this.session.boards[i] = {
-                number: i,
-                results: [],
-                completed: false,
-                vulnerability: this.getBoardVulnerability(i)
-            };
-        }
-        this.session.isSetup = true;
-        
-        console.log(`📋 Setup ${this.session.movement.totalBoards} boards for ${this.session.pairs} pairs`);
-    }
+    const isNS = declarer === 'N' || declarer === 'S';
     
-    /**
-     * Get board vulnerability using standard duplicate cycle
-     */
-    getBoardVulnerability(boardNumber) {
-        const cycle = (boardNumber - 1) % 16;
-        const vulns = ['None', 'NS', 'EW', 'Both', 'EW', 'Both', 'None', 'NS', 
-                      'NS', 'EW', 'Both', 'None', 'Both', 'None', 'NS', 'EW'];
-        return vulns[cycle];
-    }
+    if (vulnerability === 'NS') return isNS;
+    if (vulnerability === 'EW') return !isNS;
     
-    /**
-     * Check if declarer is vulnerable for scoring
-     */
-    isDeclarerVulnerable(boardNumber, declarer) {
-        const vulnerability = this.getBoardVulnerability(boardNumber);
-        
-        if (vulnerability === 'None') return false;
-        if (vulnerability === 'Both') return true;
-        
-        const isNS = declarer === 'N' || declarer === 'S';
-        
-        if (vulnerability === 'NS') return isNS;
-        if (vulnerability === 'EW') return !isNS;
-        
-        return false;
-    }
+    return false;
+}
+
 // END SECTION TWO
 // SECTION THREE - Action Handlers (MOBILE BOARD LIST WITH COMPREHENSIVE SCROLLING FIXES)
 
@@ -827,11 +836,33 @@ handleMovementConfirm(value) {
 /**
  * Handle board selection actions
  */
+/**
+ * Handle board selection actions
+ */
 handleBoardSelection(value) {
-    if (value === 'RESULTS') {
+    if (value === 'DEAL') {  // SIMPLIFIED: Only check for DEAL button
         if (this.areAllBoardsComplete()) {
-            this.inputState = 'results';
-            console.log('📊 Moving to results display');
+            console.log('📊 All boards complete - showing simple results');
+            
+            // Simple results display
+            const completionStatus = this.getCompletionStatus();
+            
+            const simpleResults = `
+                <h4>🎉 Tournament Complete!</h4>
+                <p><strong>Movement:</strong> ${this.session.movement.description}</p>
+                <p><strong>Boards Completed:</strong> ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)</p>
+                <p><strong>All boards have been played successfully!</strong></p>
+                
+                <div style="margin: 20px 0; padding: 15px; background: rgba(39, 174, 96, 0.1); border-radius: 8px;">
+                    <strong>✅ Session Summary:</strong><br>
+                    • All ${completionStatus.total} boards completed<br>
+                    • Results entered for all pairs<br>
+                    • Matchpoints calculated<br>
+                </div>
+            `;
+            
+            this.bridgeApp.showModal('🏆 Tournament Results', simpleResults);
+            
         } else {
             this.bridgeApp.showMessage('Complete all boards before viewing results', 'warning');
         }
@@ -1946,6 +1977,334 @@ getBoardStatus() {
 }
 
 /**
+ * Handle board selection actions - FIXED FOR DETAILED RESULTS
+ */
+handleBoardSelection(value) {
+    if (value === 'DEAL') {  // FIXED: Handle DEAL button for detailed results
+        if (this.areAllBoardsComplete()) {
+            console.log('📊 All boards complete - showing detailed standings table');
+            
+            // FIXED: Call the detailed standings function instead of simple results
+            this.showFinalStandings();
+            
+        } else {
+            this.bridgeApp.showMessage('Complete all boards before viewing results', 'warning');
+        }
+    }
+    // Board selection through popup is handled separately
+}
+
+/**
+ * Handle results display actions
+ */
+handleResults(value) {
+    // Results state actions handled here
+    console.log('📊 Results action:', value);
+}
+
+/**
+ * Show final standings table - ENHANCED VERSION
+ */
+showFinalStandings() {
+    const standings = this.calculateFinalStandings();
+    
+    if (standings.length === 0) {
+        this.bridgeApp.showModal('🏆 Final Standings', '<p>No results available for standings calculation.</p>');
+        return;
+    }
+    
+    let standingsContent = `
+        <div class="standings-header">
+            <h4>🏆 Final Standings</h4>
+            <p><strong>Movement:</strong> ${this.session.movement.description}</p>
+        </div>
+        
+        <div class="standings-table" style="
+            overflow-x: auto;
+            margin: 15px 0;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        ">
+            <table style="
+                width: 100%; 
+                border-collapse: collapse; 
+                font-size: 13px;
+                background: white;
+                min-width: 400px;
+            ">
+                <thead style="background: #2c3e50; color: white;">
+                    <tr>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Pos</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Pair</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">MP</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">%</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Boards</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Total Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    standings.forEach((pair, index) => {
+        const position = index + 1;
+        const isWinner = position === 1;
+        const isTop3 = position <= 3;
+        
+        const rowColor = isWinner ? 'rgba(241, 196, 15, 0.2)' : 
+                       isTop3 ? 'rgba(39, 174, 96, 0.1)' : 
+                       index % 2 === 0 ? '#f8f9fa' : 'white';
+        
+        const positionIcon = position === 1 ? '🥇' :
+                            position === 2 ? '🥈' :
+                            position === 3 ? '🥉' : '';
+        
+        standingsContent += `
+            <tr style="background: ${rowColor};">
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: ${isTop3 ? 'bold' : 'normal'};
+                    font-size: ${isWinner ? '16px' : '13px'};
+                ">
+                    ${positionIcon} ${position}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: ${isWinner ? 'bold' : 'normal'};
+                    color: ${isWinner ? '#f39c12' : '#2c3e50'};
+                ">
+                    Pair ${pair.pair}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: bold;
+                    color: #3498db;
+                ">
+                    ${pair.totalMatchpoints}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: bold;
+                    color: ${pair.percentage >= 60 ? '#27ae60' : pair.percentage >= 50 ? '#f39c12' : '#e74c3c'};
+                    font-size: ${isWinner ? '15px' : '13px'};
+                ">
+                    ${pair.percentage}%
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    color: #7f8c8d;
+                ">
+                    ${pair.boardsPlayed}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                ">
+                    ${pair.totalScore > 0 ? '+' : ''}${pair.totalScore}
+                </td>
+            </tr>
+        `;
+    });
+    
+    standingsContent += `
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="
+            background: rgba(52, 152, 219, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #2c3e50;
+        ">
+            <strong>📊 Scoring:</strong> Matchpoints (MP) are awarded by comparing your result to others on the same board.
+            Beat another pair = 2 MP, tie = 1 MP each, lose = 0 MP.
+            Percentage shows MP earned vs maximum possible.
+        </div>
+    `;
+    
+    const buttons = [
+        { text: 'Close Standings', action: 'close', class: 'close-btn' },
+        { text: 'Export Standings', action: () => this.exportStandings(standings), class: 'export-btn' },
+        { text: 'View Board Details', action: () => this.showDetailedResults(), class: 'details-btn' }
+    ];
+    
+    this.bridgeApp.showModal('🏆 Final Standings', standingsContent, buttons);
+}
+
+/**
+ * Calculate final standings with matchpoint totals - FIXED VERSION
+ */
+calculateFinalStandings() {
+    if (!this.session.isSetup) {
+        console.warn('⚠️ Cannot calculate standings - session not setup');
+        return [];
+    }
+    
+    console.log('🏆 Calculating final standings for duplicate bridge');
+    
+    // Initialize pair totals
+    const pairTotals = {};
+    for (let i = 1; i <= this.session.pairs; i++) {
+        pairTotals[i] = {
+            pair: i,
+            totalMatchpoints: 0,
+            maxPossibleMatchpoints: 0,
+            boardsPlayed: 0,
+            totalScore: 0,
+            percentage: 0
+        };
+    }
+    
+    // Process each completed board
+    const completedBoards = Object.values(this.session.boards)
+        .filter(board => board.completed && board.results && board.results.length > 0);
+    
+    console.log(`📊 Processing ${completedBoards.length} completed boards for standings`);
+    
+    completedBoards.forEach(board => {
+        const resultsWithScores = board.results.filter(result => 
+            result.nsScore !== null || result.ewScore !== null
+        );
+        
+        if (resultsWithScores.length < 2) {
+            console.log(`⚠️ Board ${board.number} has insufficient results (${resultsWithScores.length})`);
+            return; // Need at least 2 results for comparison
+        }
+        
+        // Recalculate matchpoints for this board
+        this.calculateBoardMatchpoints(resultsWithScores);
+        
+        // Add to pair totals
+        resultsWithScores.forEach(result => {
+            if (result.matchpoints) {
+                // NS pair
+                if (pairTotals[result.nsPair]) {
+                    pairTotals[result.nsPair].totalMatchpoints += result.matchpoints.ns || 0;
+                    pairTotals[result.nsPair].maxPossibleMatchpoints += (resultsWithScores.length - 1) * 2;
+                    pairTotals[result.nsPair].boardsPlayed++;
+                    pairTotals[result.nsPair].totalScore += result.nsScore || 0;
+                }
+                
+                // EW pair
+                if (pairTotals[result.ewPair]) {
+                    pairTotals[result.ewPair].totalMatchpoints += result.matchpoints.ew || 0;
+                    pairTotals[result.ewPair].maxPossibleMatchpoints += (resultsWithScores.length - 1) * 2;
+                    pairTotals[result.ewPair].boardsPlayed++;
+                    pairTotals[result.ewPair].totalScore += result.ewScore || 0;
+                }
+            }
+        });
+    });
+    
+    // Calculate percentages and sort
+    const standings = Object.values(pairTotals)
+        .filter(pair => pair.boardsPlayed > 0)
+        .map(pair => {
+            pair.percentage = pair.maxPossibleMatchpoints > 0 ? 
+                Math.round((pair.totalMatchpoints / pair.maxPossibleMatchpoints) * 100 * 100) / 100 : 0;
+            return pair;
+        })
+        .sort((a, b) => {
+            // Sort by percentage, then by total matchpoints
+            if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+            return b.totalMatchpoints - a.totalMatchpoints;
+        });
+    
+    console.log('📊 Final standings calculated:', standings);
+    return standings;
+}
+
+/**
+ * Calculate matchpoints for a specific board's results - ENHANCED
+ */
+calculateBoardMatchpoints(results) {
+    if (results.length < 2) return;
+    
+    console.log(`🏆 Calculating matchpoints for ${results.length} results`);
+    
+    // Calculate NS matchpoints (EW are complementary)
+    results.forEach(result => {
+        let nsMatchpoints = 0;
+        let ewMatchpoints = 0;
+        
+        results.forEach(otherResult => {
+            if (result !== otherResult) {
+                // Compare NS scores (higher is better)
+                const nsScore = result.nsScore || 0;
+                const otherNsScore = otherResult.nsScore || 0;
+                
+                // NS comparison
+                if (nsScore > otherNsScore) {
+                    nsMatchpoints += 2;
+                } else if (nsScore === otherNsScore) {
+                    nsMatchpoints += 1;
+                    ewMatchpoints += 1;
+                } else {
+                    ewMatchpoints += 2;
+                }
+            }
+        });
+        
+        result.matchpoints = { ns: nsMatchpoints, ew: ewMatchpoints };
+    });
+    
+    console.log(`✅ Matchpoints calculated for ${results.length} results`);
+}
+
+/**
+ * Export standings to text file
+ */
+exportStandings(standings) {
+    let text = `DUPLICATE BRIDGE FINAL STANDINGS\n`;
+    text += `Generated: ${new Date().toLocaleString()}\n`;
+    text += `Movement: ${this.session.movement.description}\n`;
+    text += `========================================\n\n`;
+    
+    text += `Pos  Pair  Matchpoints  Percentage  Boards  Total Score\n`;
+    text += `---  ----  -----------  ----------  ------  -----------\n`;
+    
+    standings.forEach((pair, index) => {
+        const pos = (index + 1).toString().padStart(2);
+        const pairNum = pair.pair.toString().padStart(4);
+        const mp = pair.totalMatchpoints.toString().padStart(11);
+        const pct = `${pair.percentage}%`.padStart(10);
+        const boards = pair.boardsPlayed.toString().padStart(6);
+        const score = pair.totalScore.toString().padStart(11);
+        
+        text += `${pos}   ${pairNum}  ${mp}  ${pct}  ${boards}  ${score}\n`;
+    });
+    
+    // Create downloadable file
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `duplicate-standings-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    this.bridgeApp.showMessage('Standings exported successfully!', 'success');
+}
+
+/**
  * Handle back navigation with state management
  */
 handleBack() {
@@ -2190,6 +2549,7 @@ validateSessionState() {
     console.log('✅ Duplicate Bridge session validation passed');
     return { valid: true, issues: [] };
 }
+
 // END SECTION FIVE
 // SECTION SIX - Help and Quit Methods
     /**
@@ -3210,692 +3570,438 @@ showQuit() {
         return text;
     }
 // END SECTION SEVEN
-// SECTION EIGHT - Utility and Game Management
-    /**
-     * Calculate final standings with matchpoint totals
-     */
-    calculateFinalStandings() {
-        if (!this.session.isSetup) {
-            console.warn('⚠️ Cannot calculate standings - session not setup');
-            return [];
-        }
-        
-        console.log('🏆 Calculating final standings for duplicate bridge');
-        
-        // Initialize pair totals
-        const pairTotals = {};
-        for (let i = 1; i <= this.session.pairs; i++) {
-            pairTotals[i] = {
-                pair: i,
-                totalMatchpoints: 0,
-                maxPossibleMatchpoints: 0,
-                boardsPlayed: 0,
-                totalScore: 0,
-                percentage: 0
-            };
-        }
-        
-        // Process each completed board
-        const completedBoards = Object.values(this.session.boards)
-            .filter(board => board.completed && board.results && board.results.length > 0);
-        
-        completedBoards.forEach(board => {
-            const resultsWithScores = board.results.filter(result => 
-                result.nsScore !== null || result.ewScore !== null
-            );
-            
-            if (resultsWithScores.length < 2) return; // Need at least 2 results for comparison
-            
-            // Recalculate matchpoints for this board
-            this.calculateBoardMatchpoints(resultsWithScores);
-            
-            // Add to pair totals
-            resultsWithScores.forEach(result => {
-                if (result.matchpoints) {
-                    // NS pair
-                    if (pairTotals[result.nsPair]) {
-                        pairTotals[result.nsPair].totalMatchpoints += result.matchpoints.ns;
-                        pairTotals[result.nsPair].maxPossibleMatchpoints += (resultsWithScores.length - 1) * 2;
-                        pairTotals[result.nsPair].boardsPlayed++;
-                        pairTotals[result.nsPair].totalScore += result.nsScore || 0;
-                    }
-                    
-                    // EW pair
-                    if (pairTotals[result.ewPair]) {
-                        pairTotals[result.ewPair].totalMatchpoints += result.matchpoints.ew;
-                        pairTotals[result.ewPair].maxPossibleMatchpoints += (resultsWithScores.length - 1) * 2;
-                        pairTotals[result.ewPair].boardsPlayed++;
-                        pairTotals[result.ewPair].totalScore += result.ewScore || 0;
-                    }
-                }
-            });
-        });
-        
-        // Calculate percentages and sort
-        const standings = Object.values(pairTotals)
-            .filter(pair => pair.boardsPlayed > 0)
-            .map(pair => {
-                pair.percentage = pair.maxPossibleMatchpoints > 0 ? 
-                    Math.round((pair.totalMatchpoints / pair.maxPossibleMatchpoints) * 100 * 100) / 100 : 0;
-                return pair;
-            })
-            .sort((a, b) => {
-                // Sort by percentage, then by total matchpoints
-                if (b.percentage !== a.percentage) return b.percentage - a.percentage;
-                return b.totalMatchpoints - a.totalMatchpoints;
-            });
-        
-        console.log('📊 Final standings calculated:', standings);
-        return standings;
+// SECTION EIGHT - Utility and Game Management (WITH RESULTS FUNCTIONS)
+
+/**
+ * Calculate final standings with matchpoint totals
+ */
+calculateFinalStandings() {
+    if (!this.session.isSetup) {
+        console.warn('⚠️ Cannot calculate standings - session not setup');
+        return [];
     }
     
-    /**
-     * Calculate matchpoints for a specific board's results
-     */
-    calculateBoardMatchpoints(results) {
-        if (results.length < 2) return;
-        
-        // Calculate NS matchpoints (EW are complementary)
-        results.forEach(result => {
-            let nsMatchpoints = 0;
-            let ewMatchpoints = 0;
-            
-            results.forEach(otherResult => {
-                if (result !== otherResult) {
-                    const nsScore = result.nsScore || 0;
-                    const otherNsScore = otherResult.nsScore || 0;
-                    
-                    if (nsScore > otherNsScore) {
-                        nsMatchpoints += 2;
-                    } else if (nsScore === otherNsScore) {
-                        nsMatchpoints += 1;
-                        ewMatchpoints += 1;
-                    } else {
-                        ewMatchpoints += 2;
-                    }
-                }
-            });
-            
-            result.matchpoints = { ns: nsMatchpoints, ew: ewMatchpoints };
-        });
-        
-        console.log(`🧮 Matchpoints calculated for ${results.length} results`);
+    console.log('🏆 Calculating final standings for duplicate bridge');
+    
+    // Initialize pair totals
+    const pairTotals = {};
+    for (let i = 1; i <= this.session.pairs; i++) {
+        pairTotals[i] = {
+            pair: i,
+            totalMatchpoints: 0,
+            maxPossibleMatchpoints: 0,
+            boardsPlayed: 0,
+            totalScore: 0,
+            percentage: 0
+        };
     }
     
-    /**
-     * Show final standings table
-     */
-    showFinalStandings() {
-        const standings = this.calculateFinalStandings();
-        
-        if (standings.length === 0) {
-            this.bridgeApp.showModal('🏆 Final Standings', '<p>No results available for standings calculation.</p>');
-            return;
-        }
-        
-        let standingsContent = `
-            <div class="standings-header">
-                <h4>🏆 Final Standings</h4>
-                <p><strong>Movement:</strong> ${this.session.movement.description}</p>
-            </div>
-            
-            <div class="standings-table" style="
-                overflow-x: auto;
-                margin: 15px 0;
-                -webkit-overflow-scrolling: touch;
-                border-radius: 6px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            ">
-                <table style="
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    font-size: 13px;
-                    background: white;
-                    min-width: 400px;
-                ">
-                    <thead style="background: #2c3e50; color: white;">
-                        <tr>
-                            <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Pos</th>
-                            <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Pair</th>
-                            <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">MP</th>
-                            <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">%</th>
-                            <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Boards</th>
-                            <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Total Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        
-        standings.forEach((pair, index) => {
-            const position = index + 1;
-            const isWinner = position === 1;
-            const isTop3 = position <= 3;
-            
-            const rowColor = isWinner ? 'rgba(241, 196, 15, 0.2)' : 
-                           isTop3 ? 'rgba(39, 174, 96, 0.1)' : 
-                           index % 2 === 0 ? '#f8f9fa' : 'white';
-            
-            const positionIcon = position === 1 ? '🥇' :
-                                position === 2 ? '🥈' :
-                                position === 3 ? '🥉' : '';
-            
-            standingsContent += `
-                <tr style="background: ${rowColor};">
-                    <td style="
-                        padding: 10px 8px; 
-                        border: 1px solid #ddd; 
-                        text-align: center;
-                        font-weight: ${isTop3 ? 'bold' : 'normal'};
-                        font-size: ${isWinner ? '16px' : '13px'};
-                    ">
-                        ${positionIcon} ${position}
-                    </td>
-                    <td style="
-                        padding: 10px 8px; 
-                        border: 1px solid #ddd; 
-                        text-align: center;
-                        font-weight: ${isWinner ? 'bold' : 'normal'};
-                        color: ${isWinner ? '#f39c12' : '#2c3e50'};
-                    ">
-                        Pair ${pair.pair}
-                    </td>
-                    <td style="
-                        padding: 10px 8px; 
-                        border: 1px solid #ddd; 
-                        text-align: center;
-                        font-weight: bold;
-                        color: #3498db;
-                    ">
-                        ${pair.totalMatchpoints}
-                    </td>
-                    <td style="
-                        padding: 10px 8px; 
-                        border: 1px solid #ddd; 
-                        text-align: center;
-                        font-weight: bold;
-                        color: ${pair.percentage >= 60 ? '#27ae60' : pair.percentage >= 50 ? '#f39c12' : '#e74c3c'};
-                        font-size: ${isWinner ? '15px' : '13px'};
-                    ">
-                        ${pair.percentage}%
-                    </td>
-                    <td style="
-                        padding: 10px 8px; 
-                        border: 1px solid #ddd; 
-                        text-align: center;
-                        color: #7f8c8d;
-                    ">
-                        ${pair.boardsPlayed}
-                    </td>
-                    <td style="
-                        padding: 10px 8px; 
-                        border: 1px solid #ddd; 
-                        text-align: center;
-                        color: #7f8c8d;
-                        font-size: 12px;
-                    ">
-                        ${pair.totalScore > 0 ? '+' : ''}${pair.totalScore}
-                    </td>
-                </tr>
-            `;
-        });
-        
-        standingsContent += `
-                    </tbody>
-                </table>
-            </div>
-            
-            <div style="
-                background: rgba(52, 152, 219, 0.1);
-                padding: 12px;
-                border-radius: 6px;
-                margin-top: 15px;
-                font-size: 12px;
-                color: #2c3e50;
-            ">
-                <strong>📊 Scoring:</strong> Matchpoints (MP) are awarded by comparing your result to others on the same board.
-                Beat another pair = 2 MP, tie = 1 MP each, lose = 0 MP.
-                Percentage shows MP earned vs maximum possible.
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Close Standings', action: 'close', class: 'close-btn' },
-            { text: 'Export Standings', action: () => this.exportStandings(standings), class: 'export-btn' },
-            { text: 'View Board Details', action: () => this.showDetailedResults(), class: 'details-btn' }
-        ];
-        
-        this.bridgeApp.showModal('🏆 Final Standings', standingsContent, buttons);
-    }
+    // Process each completed board
+    const completedBoards = Object.values(this.session.boards)
+        .filter(board => board.completed && board.results && board.results.length > 0);
     
-    /**
-     * Export standings to text file
-     */
-    exportStandings(standings) {
-        let text = `DUPLICATE BRIDGE FINAL STANDINGS\n`;
-        text += `Generated: ${new Date().toLocaleString()}\n`;
-        text += `Movement: ${this.session.movement.description}\n`;
-        text += `========================================\n\n`;
-        
-        text += `Pos  Pair  Matchpoints  Percentage  Boards  Total Score\n`;
-        text += `---  ----  -----------  ----------  ------  -----------\n`;
-        
-        standings.forEach((pair, index) => {
-            const pos = (index + 1).toString().padStart(2);
-            const pairNum = pair.pair.toString().padStart(4);
-            const mp = pair.totalMatchpoints.toString().padStart(11);
-            const pct = `${pair.percentage}%`.padStart(10);
-            const boards = pair.boardsPlayed.toString().padStart(6);
-            const score = pair.totalScore.toString().padStart(11);
-            
-            text += `${pos}   ${pairNum}  ${mp}  ${pct}  ${boards}  ${score}\n`;
-        });
-        
-        // Create downloadable file
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `duplicate-standings-${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        this.bridgeApp.showMessage('Standings exported successfully!', 'success');
-    }
-    
-    /**
-     * Get session statistics for analysis
-     */
-    getSessionStatistics() {
-        const completedBoards = Object.values(this.session.boards)
-            .filter(board => board.completed && board.results);
-        
-        const totalResults = completedBoards.reduce((sum, board) => 
-            sum + (board.results ? board.results.filter(r => r.nsScore !== null || r.ewScore !== null).length : 0), 0
+    completedBoards.forEach(board => {
+        const resultsWithScores = board.results.filter(result => 
+            result.nsScore !== null || result.ewScore !== null
         );
         
-        // Contract analysis
-        const contractStats = {
-            levels: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 },
-            suits: { '♣': 0, '♦': 0, '♥': 0, '♠': 0, 'NT': 0 },
-            doubles: { normal: 0, doubled: 0, redoubled: 0 },
-            outcomes: { made: 0, failed: 0 },
-            vulnerabilityOutcomes: { None: { made: 0, failed: 0 }, NS: { made: 0, failed: 0 }, EW: { made: 0, failed: 0 }, Both: { made: 0, failed: 0 } }
-        };
+        if (resultsWithScores.length < 2) return; // Need at least 2 results for comparison
         
-        let totalScore = 0;
-        let highestScore = 0;
-        let lowestScore = 0;
+        // Recalculate matchpoints for this board
+        this.calculateBoardMatchpoints(resultsWithScores);
         
-        completedBoards.forEach(board => {
-            if (!board.results) return;
-            
-            board.results.forEach(result => {
-                if (result.nsScore === null && result.ewScore === null) return;
-                
-                // Contract statistics
-                if (result.level) contractStats.levels[result.level]++;
-                if (result.suit) contractStats.suits[result.suit]++;
-                
-                if (result.double === 'X') contractStats.doubles.doubled++;
-                else if (result.double === 'XX') contractStats.doubles.redoubled++;
-                else contractStats.doubles.normal++;
-                
-                // Outcome analysis
-                const nsScore = result.nsScore || 0;
-                const ewScore = result.ewScore || 0;
-                const topScore = Math.max(nsScore, ewScore);
-                
-                if (topScore > 0) {
-                    contractStats.outcomes.made++;
-                    contractStats.vulnerabilityOutcomes[board.vulnerability].made++;
-                } else {
-                    contractStats.outcomes.failed++;
-                    contractStats.vulnerabilityOutcomes[board.vulnerability].failed++;
+        // Add to pair totals
+        resultsWithScores.forEach(result => {
+            if (result.matchpoints) {
+                // NS pair
+                if (pairTotals[result.nsPair]) {
+                    pairTotals[result.nsPair].totalMatchpoints += result.matchpoints.ns;
+                    pairTotals[result.nsPair].maxPossibleMatchpoints += (resultsWithScores.length - 1) * 2;
+                    pairTotals[result.nsPair].boardsPlayed++;
+                    pairTotals[result.nsPair].totalScore += result.nsScore || 0;
                 }
                 
-                totalScore += topScore;
-                if (topScore > highestScore) highestScore = topScore;
-                if (lowestScore === 0 || topScore < lowestScore) lowestScore = topScore;
-            });
+                // EW pair
+                if (pairTotals[result.ewPair]) {
+                    pairTotals[result.ewPair].totalMatchpoints += result.matchpoints.ew;
+                    pairTotals[result.ewPair].maxPossibleMatchpoints += (resultsWithScores.length - 1) * 2;
+                    pairTotals[result.ewPair].boardsPlayed++;
+                    pairTotals[result.ewPair].totalScore += result.ewScore || 0;
+                }
+            }
+        });
+    });
+    
+    // Calculate percentages and sort
+    const standings = Object.values(pairTotals)
+        .filter(pair => pair.boardsPlayed > 0)
+        .map(pair => {
+            pair.percentage = pair.maxPossibleMatchpoints > 0 ? 
+                Math.round((pair.totalMatchpoints / pair.maxPossibleMatchpoints) * 100 * 100) / 100 : 0;
+            return pair;
+        })
+        .sort((a, b) => {
+            // Sort by percentage, then by total matchpoints
+            if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+            return b.totalMatchpoints - a.totalMatchpoints;
+        });
+    
+    console.log('📊 Final standings calculated:', standings);
+    return standings;
+}
+
+/**
+ * Calculate matchpoints for a specific board's results
+ */
+calculateBoardMatchpoints(results) {
+    if (results.length < 2) return;
+    
+    // Calculate NS matchpoints (EW are complementary)
+    results.forEach(result => {
+        let nsMatchpoints = 0;
+        let ewMatchpoints = 0;
+        
+        results.forEach(otherResult => {
+            if (result !== otherResult) {
+                // Compare NS scores (higher is better)
+                if (result.nsScore > otherResult.nsScore) {
+                    nsMatchpoints += 2;
+                } else if (result.nsScore === otherResult.nsScore) {
+                    nsMatchpoints += 1;
+                    ewMatchpoints += 1;
+                } else {
+                    ewMatchpoints += 2;
+                }
+            }
         });
         
-        return {
-            sessionInfo: {
-                movement: this.session.movement.description,
-                pairs: this.session.pairs,
-                totalBoards: this.session.movement.totalBoards,
-                completedBoards: completedBoards.length,
-                totalResults: totalResults
-            },
-            contractStats,
-            scoreStats: {
-                totalScore,
-                averageScore: totalResults > 0 ? Math.round(totalScore / totalResults) : 0,
-                highestScore,
-                lowestScore
-            },
-            completionRate: this.session.movement.totalBoards > 0 ? 
-                Math.round((completedBoards.length / this.session.movement.totalBoards) * 100) : 0
-        };
+        result.matchpoints = { ns: nsMatchpoints, ew: ewMatchpoints };
+    });
+    
+    console.log(`🏆 Matchpoints calculated for ${results.length} results`);
+}
+
+/**
+ * Get board status with enhanced information - FIXED RESULT DISPLAY
+ */
+getBoardStatus() {
+    if (!this.session.isSetup) {
+        return [];
     }
     
-    /**
-     * Show session statistics
-     */
-    showSessionStatistics() {
-        const stats = this.getSessionStatistics();
+    return Object.values(this.session.boards).map(board => ({
+        number: board.number,
+        vulnerability: board.vulnerability,
+        completed: board.completed,
+        resultCount: board.results ? board.results.filter(r => r.isComplete).length : 0,
+        hasResults: board.hasResults || (board.results && board.results.some(r => r.nsScore !== null || r.ewScore !== null))
+    }));
+}
+
+/**
+ * Get vulnerability color for display
+ */
+getVulnerabilityColor(vulnerability) {
+    const colors = {
+        'None': '#95a5a6',
+        'NS': '#27ae60',
+        'EW': '#e74c3c', 
+        'Both': '#f39c12'
+    };
+    return colors[vulnerability] || '#95a5a6';
+}
+
+/**
+ * Show final standings table
+ */
+showFinalStandings() {
+    const standings = this.calculateFinalStandings();
+    
+    if (standings.length === 0) {
+        this.bridgeApp.showModal('🏆 Final Standings', '<p>No results available for standings calculation.</p>');
+        return;
+    }
+    
+    let standingsContent = `
+        <div class="standings-header">
+            <h4>🏆 Final Standings</h4>
+            <p><strong>Movement:</strong> ${this.session.movement.description}</p>
+        </div>
         
-        let statsContent = `
-            <div class="stats-header">
-                <h4>📈 Session Statistics</h4>
-                <p><strong>Movement:</strong> ${stats.sessionInfo.movement}</p>
-            </div>
-            
-            <div class="stats-grid" style="
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-                margin: 20px 0;
+        <div class="standings-table" style="
+            overflow-x: auto;
+            margin: 15px 0;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        ">
+            <table style="
+                width: 100%; 
+                border-collapse: collapse; 
+                font-size: 13px;
+                background: white;
+                min-width: 400px;
             ">
-                <div style="
-                    background: rgba(52, 152, 219, 0.1);
-                    padding: 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #3498db;
+                <thead style="background: #2c3e50; color: white;">
+                    <tr>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Pos</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Pair</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">MP</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">%</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Boards</th>
+                        <th style="padding: 12px 8px; border: 1px solid #34495e; text-align: center;">Total Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    standings.forEach((pair, index) => {
+        const position = index + 1;
+        const isWinner = position === 1;
+        const isTop3 = position <= 3;
+        
+        const rowColor = isWinner ? 'rgba(241, 196, 15, 0.2)' : 
+                       isTop3 ? 'rgba(39, 174, 96, 0.1)' : 
+                       index % 2 === 0 ? '#f8f9fa' : 'white';
+        
+        const positionIcon = position === 1 ? '🥇' :
+                            position === 2 ? '🥈' :
+                            position === 3 ? '🥉' : '';
+        
+        standingsContent += `
+            <tr style="background: ${rowColor};">
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: ${isTop3 ? 'bold' : 'normal'};
+                    font-size: ${isWinner ? '16px' : '13px'};
                 ">
-                    <h5 style="margin: 0 0 10px 0; color: #2c3e50;">📊 Session Progress</h5>
-                    <div style="font-size: 13px; color: #2c3e50;">
-                        <strong>Completion:</strong> ${stats.completionRate}%<br>
-                        <strong>Boards:</strong> ${stats.sessionInfo.completedBoards}/${stats.sessionInfo.totalBoards}<br>
-                        <strong>Results:</strong> ${stats.sessionInfo.totalResults}<br>
-                        <strong>Pairs:</strong> ${stats.sessionInfo.pairs}
-                    </div>
-                </div>
-                
-                <div style="
-                    background: rgba(39, 174, 96, 0.1);
-                    padding: 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #27ae60;
+                    ${positionIcon} ${position}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: ${isWinner ? 'bold' : 'normal'};
+                    color: ${isWinner ? '#f39c12' : '#2c3e50'};
                 ">
-                    <h5 style="margin: 0 0 10px 0; color: #2c3e50;">💰 Score Analysis</h5>
-                    <div style="font-size: 13px; color: #2c3e50;">
-                        <strong>Average:</strong> ${stats.scoreStats.averageScore}<br>
-                        <strong>Highest:</strong> ${stats.scoreStats.highestScore}<br>
-                        <strong>Lowest:</strong> ${stats.scoreStats.lowestScore}<br>
-                        <strong>Total:</strong> ${stats.scoreStats.totalScore}
-                    </div>
-                </div>
-                
-                <div style="
-                    background: rgba(241, 196, 15, 0.1);
-                    padding: 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #f1c40f;
+                    Pair ${pair.pair}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: bold;
+                    color: #3498db;
                 ">
-                    <h5 style="margin: 0 0 10px 0; color: #2c3e50;">🃏 Contract Levels</h5>
-                    <div style="font-size: 12px; color: #2c3e50;">
-                        ${Object.entries(stats.contractStats.levels)
-                            .filter(([level, count]) => count > 0)
-                            .map(([level, count]) => `<strong>${level}:</strong> ${count}`)
-                            .join('<br>')
-                        }
-                    </div>
-                </div>
-                
-                <div style="
-                    background: rgba(231, 76, 60, 0.1);
-                    padding: 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #e74c3c;
+                    ${pair.totalMatchpoints}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    font-weight: bold;
+                    color: ${pair.percentage >= 60 ? '#27ae60' : pair.percentage >= 50 ? '#f39c12' : '#e74c3c'};
+                    font-size: ${isWinner ? '15px' : '13px'};
                 ">
-                    <h5 style="margin: 0 0 10px 0; color: #2c3e50;">♠ Suits Played</h5>
-                    <div style="font-size: 12px; color: #2c3e50;">
-                        ${Object.entries(stats.contractStats.suits)
-                            .filter(([suit, count]) => count > 0)
-                            .map(([suit, count]) => `<strong>${suit}:</strong> ${count}`)
-                            .join('<br>')
-                        }
-                    </div>
-                </div>
-            </div>
-            
-            <div style="
-                background: rgba(149, 165, 166, 0.1);
-                padding: 15px;
-                border-radius: 8px;
-                margin: 15px 0;
-            ">
-                <h5 style="margin: 0 0 10px 0; color: #2c3e50;">📋 Contract Outcomes</h5>
-                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 20px; font-weight: bold; color: #27ae60;">
-                            ${stats.contractStats.outcomes.made}
-                        </div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Made</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 20px; font-weight: bold; color: #e74c3c;">
-                            ${stats.contractStats.outcomes.failed}
-                        </div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Failed</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 20px; font-weight: bold; color: #f39c12;">
-                            ${stats.contractStats.doubles.doubled + stats.contractStats.doubles.redoubled}
-                        </div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Doubled</div>
-                    </div>
-                </div>
-            </div>
+                    ${pair.percentage}%
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    color: #7f8c8d;
+                ">
+                    ${pair.boardsPlayed}
+                </td>
+                <td style="
+                    padding: 10px 8px; 
+                    border: 1px solid #ddd; 
+                    text-align: center;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                ">
+                    ${pair.totalScore > 0 ? '+' : ''}${pair.totalScore}
+                </td>
+            </tr>
         `;
-        
-        const buttons = [
-            { text: 'Close Stats', action: 'close', class: 'close-btn' },
-            { text: 'Export Stats', action: () => this.exportStatistics(stats), class: 'export-btn' }
-        ];
-        
-        this.bridgeApp.showModal('📈 Session Statistics', statsContent, buttons);
-    }
+    });
     
-    /**
-     * Export statistics to text file
-     */
-    exportStatistics(stats) {
-        let text = `DUPLICATE BRIDGE SESSION STATISTICS\n`;
-        text += `Generated: ${new Date().toLocaleString()}\n`;
-        text += `=========================================\n\n`;
+    standingsContent += `
+                </tbody>
+            </table>
+        </div>
         
-        text += `SESSION INFO:\n`;
-        text += `Movement: ${stats.sessionInfo.movement}\n`;
-        text += `Pairs: ${stats.sessionInfo.pairs}\n`;
-        text += `Completion: ${stats.completionRate}%\n`;
-        text += `Boards: ${stats.sessionInfo.completedBoards}/${stats.sessionInfo.totalBoards}\n`;
-        text += `Total Results: ${stats.sessionInfo.totalResults}\n\n`;
-        
-        text += `SCORE STATISTICS:\n`;
-        text += `Average Score: ${stats.scoreStats.averageScore}\n`;
-        text += `Highest Score: ${stats.scoreStats.highestScore}\n`;
-        text += `Lowest Score: ${stats.scoreStats.lowestScore}\n`;
-        text += `Total Points: ${stats.scoreStats.totalScore}\n\n`;
-        
-        text += `CONTRACT ANALYSIS:\n`;
-        text += `Levels: ${Object.entries(stats.contractStats.levels).filter(([,c]) => c > 0).map(([l,c]) => `${l}=${c}`).join(', ')}\n`;
-        text += `Suits: ${Object.entries(stats.contractStats.suits).filter(([,c]) => c > 0).map(([s,c]) => `${s}=${c}`).join(', ')}\n`;
-        text += `Made: ${stats.contractStats.outcomes.made}, Failed: ${stats.contractStats.outcomes.failed}\n`;
-        text += `Doubled: ${stats.contractStats.doubles.doubled}, Redoubled: ${stats.contractStats.doubles.redoubled}\n`;
-        
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `duplicate-statistics-${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        this.bridgeApp.showMessage('Statistics exported successfully!', 'success');
-    }
+        <div style="
+            background: rgba(52, 152, 219, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #2c3e50;
+        ">
+            <strong>📊 Scoring:</strong> Matchpoints (MP) are awarded by comparing your result to others on the same board.
+            Beat another pair = 2 MP, tie = 1 MP each, lose = 0 MP.
+            Percentage shows MP earned vs maximum possible.
+        </div>
+    `;
     
-    /**
-     * Validate all session data for consistency
-     */
-    validateCompleteSession() {
-        console.log('🔍 Performing comprehensive session validation...');
+    const buttons = [
+        { text: 'Close Standings', action: 'close', class: 'close-btn' },
+        { text: 'Export Standings', action: () => this.exportStandings(standings), class: 'export-btn' },
+        { text: 'View Board Details', action: () => this.showDetailedResults(), class: 'details-btn' }
+    ];
+    
+    this.bridgeApp.showModal('🏆 Final Standings', standingsContent, buttons);
+}
+
+/**
+ * Export standings to text file
+ */
+exportStandings(standings) {
+    let text = `DUPLICATE BRIDGE FINAL STANDINGS\n`;
+    text += `Generated: ${new Date().toLocaleString()}\n`;
+    text += `Movement: ${this.session.movement.description}\n`;
+    text += `========================================\n\n`;
+    
+    text += `Pos  Pair  Matchpoints  Percentage  Boards  Total Score\n`;
+    text += `---  ----  -----------  ----------  ------  -----------\n`;
+    
+    standings.forEach((pair, index) => {
+        const pos = (index + 1).toString().padStart(2);
+        const pairNum = pair.pair.toString().padStart(4);
+        const mp = pair.totalMatchpoints.toString().padStart(11);
+        const pct = `${pair.percentage}%`.padStart(10);
+        const boards = pair.boardsPlayed.toString().padStart(6);
+        const score = pair.totalScore.toString().padStart(11);
         
-        const issues = [];
-        const warnings = [];
+        text += `${pos}   ${pairNum}  ${mp}  ${pct}  ${boards}  ${score}\n`;
+    });
+    
+    // Create downloadable file
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `duplicate-standings-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    this.bridgeApp.showMessage('Standings exported successfully!', 'success');
+}
+
+/**
+ * Get session statistics for analysis
+ */
+getSessionStatistics() {
+    const completedBoards = Object.values(this.session.boards)
+        .filter(board => board.completed && board.results);
+    
+    const totalResults = completedBoards.reduce((sum, board) => 
+        sum + (board.results ? board.results.filter(r => r.nsScore !== null || r.ewScore !== null).length : 0), 0
+    );
+    
+    // Contract analysis
+    const contractStats = {
+        levels: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 },
+        suits: { '♣': 0, '♦': 0, '♥': 0, '♠': 0, 'NT': 0 },
+        doubles: { normal: 0, doubled: 0, redoubled: 0 },
+        outcomes: { made: 0, failed: 0 },
+        vulnerabilityOutcomes: { None: { made: 0, failed: 0 }, NS: { made: 0, failed: 0 }, EW: { made: 0, failed: 0 }, Both: { made: 0, failed: 0 } }
+    };
+    
+    let totalScore = 0;
+    let highestScore = 0;
+    let lowestScore = 0;
+    
+    completedBoards.forEach(board => {
+        if (!board.results) return;
         
-        // Basic setup validation
-        if (!this.session.isSetup) {
-            issues.push('Session not properly initialized');
-            return { valid: false, issues, warnings };
-        }
-        
-        if (!this.session.movement) {
-            issues.push('Movement data missing');
-            return { valid: false, issues, warnings };
-        }
-        
-        // Board validation
-        const expectedBoards = this.session.movement.totalBoards;
-        const actualBoards = Object.keys(this.session.boards).length;
-        
-        if (actualBoards !== expectedBoards) {
-            issues.push(`Board count mismatch: expected ${expectedBoards}, got ${actualBoards}`);
-        }
-        
-        // Movement validation
-        const movementInstances = this.session.movement.movement;
-        const boardsInMovement = [...new Set(movementInstances.flatMap(m => m.boards))];
-        
-        if (boardsInMovement.length !== expectedBoards) {
-            warnings.push(`Movement defines ${boardsInMovement.length} boards, expected ${expectedBoards}`);
-        }
-        
-        // Pair validation
-        const pairsInMovement = [...new Set([...movementInstances.map(m => m.ns), ...movementInstances.map(m => m.ew)])];
-        if (pairsInMovement.length !== this.session.pairs) {
-            warnings.push(`Movement has ${pairsInMovement.length} pairs, session configured for ${this.session.pairs}`);
-        }
-        
-        // Results validation
-        let totalResultsExpected = 0;
-        let totalResultsActual = 0;
-        
-        Object.values(this.session.boards).forEach(board => {
-            const expectedResults = movementInstances.filter(m => m.boards.includes(board.number)).length;
-            const actualResults = board.results ? board.results.length : 0;
+        board.results.forEach(result => {
+            if (result.nsScore === null && result.ewScore === null) return;
             
-            totalResultsExpected += expectedResults;
-            totalResultsActual += actualResults;
+            // Contract statistics
+            if (result.level) contractStats.levels[result.level]++;
+            if (result.suit) contractStats.suits[result.suit]++;
             
-            if (board.completed && actualResults < expectedResults) {
-                warnings.push(`Board ${board.number} marked complete but has ${actualResults}/${expectedResults} results`);
+            if (result.double === 'X') contractStats.doubles.doubled++;
+            else if (result.double === 'XX') contractStats.doubles.redoubled++;
+            else contractStats.doubles.normal++;
+            
+            // Outcome analysis
+            const nsScore = result.nsScore || 0;
+            const ewScore = result.ewScore || 0;
+            const topScore = Math.max(nsScore, ewScore);
+            
+            if (topScore > 0) {
+                contractStats.outcomes.made++;
+                contractStats.vulnerabilityOutcomes[board.vulnerability].made++;
+            } else {
+                contractStats.outcomes.failed++;
+                contractStats.vulnerabilityOutcomes[board.vulnerability].failed++;
             }
+            
+            totalScore += topScore;
+            if (topScore > highestScore) highestScore = topScore;
+            if (lowestScore === 0 || topScore < lowestScore) lowestScore = topScore;
         });
-        
-        if (totalResultsActual > totalResultsExpected) {
-            warnings.push(`More results (${totalResultsActual}) than expected (${totalResultsExpected})`);
-        }
-        
-        // State consistency
-        const inputStateValidation = this.validateSessionState();
-        if (!inputStateValidation.valid) {
-            issues.push(...inputStateValidation.issues);
-        }
-        
-        const result = {
-            valid: issues.length === 0,
-            issues,
-            warnings,
-            summary: {
-                totalBoards: expectedBoards,
-                completedBoards: Object.values(this.session.boards).filter(b => b.completed).length,
-                totalResults: totalResultsActual,
-                expectedResults: totalResultsExpected
-            }
-        };
-        
-        if (result.valid) {
-            console.log('✅ Session validation passed');
-        } else {
-            console.warn('🚨 Session validation failed:', issues);
-        }
-        
-        if (warnings.length > 0) {
-            console.warn('⚠️ Session validation warnings:', warnings);
-        }
-        
-        return result;
+    });
+    
+    return {
+        sessionInfo: {
+            movement: this.session.movement.description,
+            pairs: this.session.pairs,
+            totalBoards: this.session.movement.totalBoards,
+            completedBoards: completedBoards.length,
+            totalResults: totalResults
+        },
+        contractStats,
+        scoreStats: {
+            totalScore,
+            averageScore: totalResults > 0 ? Math.round(totalScore / totalResults) : 0,
+            highestScore,
+            lowestScore
+        },
+        completionRate: this.session.movement.totalBoards > 0 ? 
+            Math.round((completedBoards.length / this.session.movement.totalBoards) * 100) : 0
+    };
+}
+
+/**
+ * Validate session state for consistency
+ */
+validateSessionState() {
+    const issues = [];
+    
+    // Check if session is properly initialized
+    if (this.inputState !== 'pairs_setup' && !this.session.movement) {
+        issues.push('Movement not selected but not in setup state');
     }
     
-    /**
-     * Auto-save session data (for future implementation)
-     */
-    autoSaveSession() {
-        try {
-            const sessionData = {
-                timestamp: Date.now(),
-                session: this.session,
-                inputState: this.inputState,
-                version: '1.0'
-            };
-            
-            // In a real implementation, this would save to localStorage or server
-            console.log('💾 Auto-save triggered:', sessionData.timestamp);
-            return true;
-        } catch (error) {
-            console.error('❌ Auto-save failed:', error);
-            return false;
-        }
+    // Check if boards are setup when expected
+    if (this.inputState === 'board_selection' && !this.session.isSetup) {
+        issues.push('In board selection but boards not setup');
     }
     
-    /**
-     * Recovery function for corrupted sessions
-     */
-    attemptSessionRecovery() {
-        console.log('🔧 Attempting session recovery...');
-        
-        const validation = this.validateCompleteSession();
-        let recovered = false;
-        
-        // Fix missing boards
-        if (this.session.movement && !this.session.boards) {
-            console.log('🔧 Recreating missing boards');
-            this.setupBoards();
-            recovered = true;
-        }
-        
-        // Fix state inconsistencies
-        if (this.session.isSetup && this.inputState === 'pairs_setup') {
-            console.log('🔧 Fixing state inconsistency');
-            this.inputState = 'board_selection';
-            recovered = true;
-        }
-        
-        // Clean up orphaned popups
-        const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
-        popups.forEach(id => {
-            if (document.getElementById(id)) {
-                document.getElementById(id).remove();
-                recovered = true;
-                console.log(`🔧 Removed orphaned popup: ${id}`);
-            }
-        });
-        
-        if (recovered) {
-            console.log('✅ Session recovery completed');
-            this.updateDisplay();
-        } else {
-            console.log('ℹ️ No recovery actions needed');
-        }
-        
-        return recovered;
+    // Check for orphaned popups
+    const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
+    const openPopups = popups.filter(id => document.getElementById(id));
+    if (openPopups.length > 1) {
+        issues.push(`Multiple popups open: ${openPopups.join(', ')}`);
     }
+    
+    if (issues.length > 0) {
+        console.warn('🚨 Duplicate Bridge session validation issues:', issues);
+        return { valid: false, issues };
+    }
+    
+    console.log('✅ Duplicate Bridge session validation passed');
+    return { valid: true, issues: [] };
+}
+
 // END SECTION EIGHT
 // SECTION NINE - Display Content Methods (DEAL BUTTON MESSAGE FIXED)
 
@@ -3925,11 +4031,14 @@ getDisplayContent() {
 }
 
 /**
- * Get board selection display content - FIXED FOR DEAL BUTTON MESSAGE
+ * Get board selection display content - FIXED FOR DEAL BUTTON DISPLAY
  */
 getBoardSelectionContent() {
     const completionStatus = this.getCompletionStatus();
     const isComplete = completionStatus.percentage === 100;
+    
+    console.log('🔍 DEBUG: getBoardSelectionContent - completion:', completionStatus);
+    console.log('🔍 DEBUG: isComplete:', isComplete);
     
     return `
         <div class="title-score-row">
@@ -3942,7 +4051,7 @@ getBoardSelectionContent() {
         <div class="game-content">
             <div style="text-align: center; margin-bottom: 10px;">
                 <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
-                    ${isComplete ? '🎉 Session Complete!' : '📊 Board Entry'}
+                    ${isComplete ? '🎉 Tournament Complete!' : '📊 Board Entry'}
                 </h3>
             </div>
             
@@ -3969,15 +4078,32 @@ getBoardSelectionContent() {
             ${isComplete ? `
                 <div style="
                     background: rgba(39, 174, 96, 0.1); 
-                    padding: 10px; 
+                    padding: 15px; 
                     border-radius: 6px; 
                     border-left: 3px solid #27ae60;
                     text-align: center;
-                    margin-top: 10px;
+                    margin: 15px 0;
                 ">
-                    <div style="color: #27ae60; font-weight: bold; font-size: 13px;">
+                    <div style="color: #27ae60; font-weight: bold; font-size: 14px; margin-bottom: 10px;">
                         ✅ All boards completed!
                     </div>
+                    <button id="viewResultsBtn" style="
+                        background: linear-gradient(135deg, #27ae60, #229954);
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: bold;
+                        box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);
+                        min-height: 44px;
+                        min-width: 160px;
+                        touch-action: manipulation;
+                        user-select: none;
+                    ">
+                        🏆 View Final Results
+                    </button>
                 </div>
             ` : `
                 <div style="
@@ -3994,7 +4120,7 @@ getBoardSelectionContent() {
             `}
         </div>
         <div class="current-state">
-            ${isComplete ? 'All boards complete - Press DEAL for results' : 'Select board to enter results'}
+            ${isComplete ? 'Tournament complete - Press "View Final Results" or DEAL button' : 'Select board to enter results'}
         </div>
     `;
 }
@@ -4376,6 +4502,83 @@ getTotalResultsCount() {
         }
         return total;
     }, 0);
+}
+
+/**
+ * Enhanced updateDisplay that sets up the results button
+ */
+updateDisplay() {
+    const content = this.getDisplayContent();
+    const display = document.getElementById('display');
+    if (display) {
+        display.innerHTML = content;
+    }
+    
+    // Update button states
+    const activeButtons = this.getActiveButtons();
+    this.bridgeApp.updateButtonStates(activeButtons);
+    
+    // Setup board selection button if in board_selection state
+    if (this.inputState === 'board_selection') {
+        setTimeout(() => {
+            this.setupBoardSelectionButton();
+            this.setupViewResultsButton(); // NEW: Setup results button
+        }, 100);
+    }
+    
+    console.log(`🔄 Display updated for state: ${this.inputState}`);
+    console.log(`🔄 Active buttons: ${activeButtons.join(', ')}`);
+    
+    // Debug log for traveler state
+    if (this.inputState === 'traveler_entry') {
+        console.log(`🔍 Traveler state - boardNumber: ${this.traveler.boardNumber}, inputState: ${this.travelerInputState}`);
+    }
+}
+
+/**
+ * Setup view results button - NEW FUNCTION
+ */
+setupViewResultsButton() {
+    const resultsBtn = document.getElementById('viewResultsBtn');
+    if (!resultsBtn) return;
+    
+    console.log('🏆 Setting up view results button');
+    
+    const resultsHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🏆 View Results button pressed');
+        
+        // Visual feedback
+        resultsBtn.style.transform = 'scale(0.95)';
+        resultsBtn.style.opacity = '0.8';
+        
+        setTimeout(() => {
+            resultsBtn.style.transform = '';
+            resultsBtn.style.opacity = '';
+            this.handleBoardSelection('DEAL');
+        }, 100);
+    };
+    
+    // Enhanced mobile properties
+    resultsBtn.style.touchAction = 'manipulation';
+    resultsBtn.style.userSelect = 'none';
+    resultsBtn.style.webkitTapHighlightColor = 'transparent';
+    resultsBtn.style.cursor = 'pointer';
+    
+    // Add enhanced handlers
+    resultsBtn.addEventListener('click', resultsHandler);
+    resultsBtn.addEventListener('touchend', resultsHandler, { passive: false });
+    
+    // Touch start feedback
+    resultsBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        resultsBtn.style.transform = 'scale(0.95)';
+        resultsBtn.style.opacity = '0.8';
+    }, { passive: false });
+    
+    console.log('✅ View results button setup complete');
 }
 
 // END SECTION NINE// SECTION TEN
