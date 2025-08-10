@@ -1,4 +1,3 @@
-// SECTION ONE - Header and Constructor
 /**
  * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
@@ -98,8 +97,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
         console.log(`🎯 Vulnerability changed to: ${this.vulnerability}`);
         this.updateDisplay();
     }
-// END SECTION ONE
-// SECTION TWO - Action Handlers and Game Logic
+    
     /**
      * Handle user actions with enhanced mobile support
      */
@@ -336,8 +334,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 return [];
         }
     }
-// END SECTION TWO
-// SECTION THREE - Scoring and Calculation Methods
+    
     /**
      * Calculate score using Kitchen Bridge rules - using original proven method
      */
@@ -494,8 +491,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
         
         this.bridgeApp.updateButtonStates(activeButtons);
     }
-// END SECTION THREE
-// SECTION FOUR - Help and Modal Methods (FIXED VERSION WITH WORKING REFRESH BUTTON)
+    
     /**
      * Get help content specific to Kitchen Bridge - FIXED WITH BUTTON
      */
@@ -781,98 +777,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             
             document.head.appendChild(scrollbarStyle);
             
-            // Test scrolling functionality
-            const testScroll = () => {
-                const initialScrollTop = helpContainer.scrollTop;
-                helpContainer.scrollTop = 50;
-                
-                setTimeout(() => {
-                    const newScrollTop = helpContainer.scrollTop;
-                    console.log(`📱 Help scroll test - Initial: ${initialScrollTop}, Set: 50, Actual: ${newScrollTop}`);
-                    console.log(`📱 Help container - Height: ${helpContainer.clientHeight}, ScrollHeight: ${helpContainer.scrollHeight}`);
-                    
-                    if (newScrollTop === initialScrollTop && helpContainer.scrollHeight > helpContainer.clientHeight) {
-                        console.warn(⚠️ Help scrolling may not be working - applying fallback fixes');
-                        
-                        // Visual feedback for scroll issues
-                        helpContainer.style.border = '3px solid #e74c3c';
-                        helpContainer.style.boxShadow = 'inset 0 0 15px rgba(231, 76, 60, 0.3)';
-                        
-                        // Add scroll hint
-                        const scrollHint = document.createElement('div');
-                        scrollHint.innerHTML = '👆 Touch and drag to scroll help content';
-                        scrollHint.style.cssText = `
-                            position: absolute;
-                            top: 10px;
-                            right: 10px;
-                            background: rgba(231, 76, 60, 0.9);
-                            color: white;
-                            padding: 6px 12px;
-                            border-radius: 6px;
-                            font-size: 11px;
-                            z-index: 200;
-                            pointer-events: none;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                        `;
-                        helpContainer.appendChild(scrollHint);
-                        
-                        // Fade out hint after 4 seconds
-                        setTimeout(() => {
-                            scrollHint.style.transition = 'opacity 1s ease';
-                            scrollHint.style.opacity = '0';
-                            setTimeout(() => scrollHint.remove(), 1000);
-                        }, 4000);
-                    } else {
-                        console.log('✅ Help scrolling appears to be working correctly');
-                    }
-                    
-                    // Reset scroll position
-                    helpContainer.scrollTop = 0;
-                }, 100);
-            };
-            
-            testScroll();
-            
-            // Enhanced touch event handlers for problematic devices
-            let touchStartY = null;
-            let isScrolling = false;
-            
-            helpContainer.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-                isScrolling = false;
-                console.log('📱 Help scroll touch start');
-            }, { passive: true });
-            
-            helpContainer.addEventListener('touchmove', (e) => {
-                if (touchStartY !== null) {
-                    const touchY = e.touches[0].clientY;
-                    const deltaY = touchStartY - touchY;
-                    
-                    // Only handle if significant movement
-                    if (Math.abs(deltaY) > 5) {
-                        isScrolling = true;
-                        const newScrollTop = helpContainer.scrollTop + deltaY * 0.8;
-                        const maxScroll = helpContainer.scrollHeight - helpContainer.clientHeight;
-                        
-                        helpContainer.scrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
-                        touchStartY = touchY;
-                        
-                        console.log(`📱 Help touch scroll: ${helpContainer.scrollTop}/${maxScroll}`);
-                    }
-                }
-            }, { passive: true });
-            
-            helpContainer.addEventListener('touchend', () => {
-                touchStartY = null;
-                if (isScrolling) {
-                    console.log('📱 Help touch scroll completed');
-                }
-                isScrolling = false;
-            }, { passive: true });
-            
             console.log('✅ Help modal scrolling fixes applied successfully');
-        } else {
-            console.warn('⚠️ Could not find modal or help container for scrolling fixes');
         }
     }
     
@@ -899,9 +804,6 @@ class KitchenBridgeMode extends BaseBridgeMode {
             helpContainer.style.webkitOverflowScrolling = 'touch';
             helpContainer.style.transform = 'translateZ(0)';
             helpContainer.style.willChange = 'scroll-position';
-            
-            // Re-apply scrolling fixes
-            this.applyHelpScrollingFixes();
             
             setTimeout(() => {
                 helpContainer.style.border = '1px solid #ddd';
