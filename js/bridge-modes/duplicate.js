@@ -2551,9 +2551,9 @@ validateSessionState() {
 }
 
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods (COMPLETE MOBILE FIXED VERSION)
+// SECTION SIX - Help and Quit Methods (FINAL FIXED VERSION)
     /**
-     * Get help content specific to Duplicate Bridge
+     * Get help content specific to Duplicate Bridge - FIXED FOR MOBILE
      */
     getHelpContent() {
         return {
@@ -2568,18 +2568,22 @@ validateSessionState() {
                     <h4>📄 Printable Templates</h4>
                     <p><strong>Perfect for home games and cruise ships!</strong></p>
                     <div style="margin: 10px 0;">
-                        <button onclick="window.duplicateBridge.showBoardTemplates()" style="
+                        <div class="help-template-button" data-action="showBoardTemplates" style="
                             background: #27ae60; color: white; border: none; 
                             padding: 10px 16px; border-radius: 4px; margin: 5px;
                             cursor: pointer; font-size: 13px; font-weight: bold;
                             min-height: 44px; touch-action: manipulation;
-                        ">📋 Board Templates</button>
-                        <button onclick="window.duplicateBridge.showTravelerTemplates()" style="
+                            display: inline-block; user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">📋 Board Templates</div>
+                        <div class="help-template-button" data-action="showTravelerTemplates" style="
                             background: #3498db; color: white; border: none; 
                             padding: 10px 16px; border-radius: 4px; margin: 5px;
                             cursor: pointer; font-size: 13px; font-weight: bold;
                             min-height: 44px; touch-action: manipulation;
-                        ">📊 Traveler Sheets</button>
+                            display: inline-block; user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">📊 Traveler Sheets</div>
                     </div>
                 </div>
             `,
@@ -2588,12 +2592,156 @@ validateSessionState() {
             ]
         };
     }
+
+    /**
+     * Show help - ENHANCED WITH EVENT DELEGATION
+     */
+    showHelp() {
+        try {
+            const helpContent = this.getHelpContent();
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                this.bridgeApp.showModal(helpContent.title, helpContent.content);
+                
+                // Setup event delegation for help template buttons after modal is shown
+                setTimeout(() => {
+                    this.setupHelpModalEventDelegation();
+                }, 200);
+                
+            } else {
+                console.error('❌ BridgeApp or showModal not available');
+            }
+        } catch (error) {
+            console.error('❌ Error showing help:', error);
+        }
+    }
+
+    /**
+     * Setup event delegation for help modal template buttons
+     */
+    setupHelpModalEventDelegation() {
+        console.log('📱 Setting up help modal event delegation...');
+        
+        // Find the modal (it should be the most recent one)
+        const modal = document.querySelector('.modal-overlay') || document.querySelector('[class*="modal"]');
+        
+        if (!modal) {
+            console.error('❌ Could not find help modal');
+            return;
+        }
+        
+        // Create event handler for help template buttons
+        const handleHelpTemplateClick = (e) => {
+            console.log('📱 Help modal event triggered on:', e.target);
+            
+            // Find the help template button
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('help-template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (!templateButton || !templateButton.classList.contains('help-template-button')) {
+                console.log('📱 Not a help template button, ignoring');
+                return;
+            }
+            
+            const action = templateButton.getAttribute('data-action');
+            console.log(`📱 Help template button clicked: ${action}`);
+            
+            if (!action) {
+                console.error('❌ No action found for help template button');
+                return;
+            }
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Visual feedback
+            const originalTransform = templateButton.style.transform;
+            const originalOpacity = templateButton.style.opacity;
+            
+            templateButton.style.transform = 'scale(0.95)';
+            templateButton.style.opacity = '0.7';
+            templateButton.style.transition = 'all 0.1s ease';
+            
+            // Execute action after feedback
+            setTimeout(() => {
+                templateButton.style.transform = originalTransform;
+                templateButton.style.opacity = originalOpacity;
+                
+                try {
+                    console.log(`🎯 Executing help template action: ${action}`);
+                    
+                    if (action === 'showBoardTemplates') {
+                        this.showBoardTemplates();
+                    } else if (action === 'showTravelerTemplates') {
+                        this.showTravelerTemplates();
+                    } else {
+                        console.error(`❌ Unknown help template action: ${action}`);
+                    }
+                    
+                    console.log(`✅ Help template action completed: ${action}`);
+                } catch (error) {
+                    console.error(`❌ Error executing help template action ${action}:`, error);
+                    if (this.bridgeApp && this.bridgeApp.showMessage) {
+                        this.bridgeApp.showMessage(`Error: Could not ${action}`, 'error');
+                    }
+                }
+            }, 150);
+        };
+        
+        // Add event delegation to the modal
+        const eventTypes = ['click', 'touchend'];
+        
+        eventTypes.forEach(eventType => {
+            modal.addEventListener(eventType, handleHelpTemplateClick, { 
+                passive: false,
+                capture: true
+            });
+            console.log(`✅ Added ${eventType} delegation to help modal`);
+        });
+        
+        // Add touch feedback
+        modal.addEventListener('touchstart', (e) => {
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('help-template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (templateButton && templateButton.classList.contains('help-template-button')) {
+                templateButton.style.transform = 'scale(0.95)';
+                templateButton.style.opacity = '0.7';
+                templateButton.style.transition = 'all 0.1s ease';
+                console.log('📱 Help template touch feedback applied');
+            }
+        }, { passive: false, capture: true });
+        
+        modal.addEventListener('touchcancel', (e) => {
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('help-template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (templateButton && templateButton.classList.contains('help-template-button')) {
+                templateButton.style.transform = '';
+                templateButton.style.opacity = '';
+                console.log('📱 Help template touch cancel cleanup');
+            }
+        }, { passive: true, capture: true });
+        
+        console.log('✅ Help modal event delegation setup completed');
+    }
     
     /**
-     * Show board templates popup - ENHANCED MOBILE COMPATIBLE VERSION
+     * Show board templates popup - EVENT DELEGATION VERSION
      */
     showBoardTemplates() {
-        console.log('📋 Creating board templates popup with enhanced mobile support...');
+        console.log('📋 Creating board templates popup with EVENT DELEGATION...');
         
         // Remove any existing popup first
         const existingPopup = document.getElementById('boardTemplatesPopup');
@@ -2612,7 +2760,7 @@ validateSessionState() {
         `;
         
         popup.innerHTML = `
-            <div style="
+            <div class="popup-content" style="
                 background: white; padding: 20px; border-radius: 8px; 
                 max-width: 90%; max-height: 85%; overflow-y: auto; 
                 color: #2c3e50; min-width: 300px;
@@ -2621,7 +2769,7 @@ validateSessionState() {
                 <h3 style="text-align: center; margin: 0 0 15px 0;">📋 Board Templates</h3>
                 
                 <div style="text-align: center; margin: 15px 0;">
-                    <button data-action="download12Boards" style="
+                    <div class="template-button" data-action="download12Boards" style="
                         background: #27ae60; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
@@ -2629,9 +2777,9 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📄 12 Boards (4 pairs)</button>
+                    ">📄 12 Boards (4 pairs)</div>
                     
-                    <button data-action="download10Boards" style="
+                    <div class="template-button" data-action="download10Boards" style="
                         background: #3498db; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
@@ -2639,9 +2787,9 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📄 10 Boards (6 pairs)</button>
+                    ">📄 10 Boards (6 pairs)</div>
                     
-                    <button data-action="download14Boards" style="
+                    <div class="template-button" data-action="download14Boards" style="
                         background: #e67e22; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
@@ -2649,11 +2797,11 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📄 14 Boards (8 pairs)</button>
+                    ">📄 14 Boards (8 pairs)</div>
                     
                     <br><br>
                     
-                    <button data-action="downloadMovement4" style="
+                    <div class="template-button" data-action="downloadMovement4" style="
                         background: #9b59b6; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
@@ -2661,9 +2809,9 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📋 Movement (4 pairs)</button>
+                    ">📋 Movement (4 pairs)</div>
                     
-                    <button data-action="downloadMovement6" style="
+                    <div class="template-button" data-action="downloadMovement6" style="
                         background: #9b59b6; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
@@ -2671,9 +2819,9 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📋 Movement (6 pairs)</button>
+                    ">📋 Movement (6 pairs)</div>
                     
-                    <button data-action="downloadMovement8" style="
+                    <div class="template-button" data-action="downloadMovement8" style="
                         background: #9b59b6; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
@@ -2681,11 +2829,11 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📋 Movement (8 pairs)</button>
+                    ">📋 Movement (8 pairs)</div>
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button data-action="closeBoardTemplates" style="
+                    <div class="template-button" data-action="closeBoardTemplates" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; 
                         cursor: pointer; font-size: 14px; font-weight: bold;
@@ -2693,194 +2841,25 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">Close</button>
+                    ">Close</div>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
-        console.log('✅ Board templates popup HTML created');
+        console.log('✅ Board templates popup HTML created with DIVs');
         
-        // Setup event listeners with multiple fallback methods
-        setTimeout(() => {
-            try {
-                this.setupBoardTemplateEvents();
-                console.log('✅ Board template events setup completed');
-            } catch (error) {
-                console.error('❌ Error setting up board template events:', error);
-                // Fallback: Try again after a longer delay
-                setTimeout(() => {
-                    try {
-                        this.setupBoardTemplateEvents();
-                        console.log('✅ Board template events setup completed (fallback)');
-                    } catch (fallbackError) {
-                        console.error('❌ Fallback event setup also failed:', fallbackError);
-                    }
-                }, 500);
-            }
-        }, 200);
+        // Setup EVENT DELEGATION on the popup container
+        this.setupEventDelegation(popup, 'board');
         
-        console.log('✅ Board templates popup created with enhanced error handling');
+        console.log('✅ Board templates popup created with EVENT DELEGATION');
     }
     
     /**
-     * Setup board template events - ENHANCED MOBILE COMPATIBLE
-     */
-    setupBoardTemplateEvents() {
-        console.log('📱 Setting up board template events with enhanced mobile compatibility...');
-        
-        const popup = document.getElementById('boardTemplatesPopup');
-        if (!popup) {
-            console.error('❌ Board templates popup not found');
-            return;
-        }
-        
-        // Find all buttons with data-action attributes
-        const buttons = popup.querySelectorAll('button[data-action]');
-        console.log(`📱 Found ${buttons.length} buttons to setup`);
-        
-        if (buttons.length === 0) {
-            console.error('❌ No buttons found with data-action attributes');
-            return;
-        }
-        
-        // Enhanced mobile button handler with multiple event types
-        const createEnhancedMobileHandler = (action, actionName) => {
-            return (e) => {
-                console.log(`📱 Button pressed: ${actionName}`);
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Visual feedback
-                const button = e.target;
-                const originalTransform = button.style.transform;
-                const originalOpacity = button.style.opacity;
-                
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.7';
-                
-                // Execute action after feedback delay
-                setTimeout(() => {
-                    button.style.transform = originalTransform;
-                    button.style.opacity = originalOpacity;
-                    
-                    try {
-                        console.log(`🎯 Executing action: ${actionName}`);
-                        action();
-                        console.log(`✅ Action completed: ${actionName}`);
-                    } catch (error) {
-                        console.error(`❌ Error executing action ${actionName}:`, error);
-                        // Show user-friendly error
-                        if (this.bridgeApp && this.bridgeApp.showMessage) {
-                            this.bridgeApp.showMessage(`Error: Could not ${actionName}`, 'error');
-                        }
-                    }
-                }, 150);
-            };
-        };
-        
-        // Action mapping
-        const actionMap = {
-            'download12Boards': () => this.downloadBoardTemplate('12'),
-            'download10Boards': () => this.downloadBoardTemplate('10'),
-            'download14Boards': () => this.downloadBoardTemplate('14'),
-            'downloadMovement4': () => this.downloadMovementSheets('4'),
-            'downloadMovement6': () => this.downloadMovementSheets('6'),
-            'downloadMovement8': () => this.downloadMovementSheets('8'),
-            'closeBoardTemplates': () => this.closeBoardTemplatesPopup()
-        };
-        
-        // Setup each button with comprehensive event handling
-        buttons.forEach((button, index) => {
-            const actionName = button.getAttribute('data-action');
-            const action = actionMap[actionName];
-            
-            if (!action) {
-                console.error(`❌ No action found for: ${actionName}`);
-                return;
-            }
-            
-            console.log(`📱 Setting up button ${index + 1}: ${actionName}`);
-            
-            const enhancedHandler = createEnhancedMobileHandler(action, actionName);
-            
-            // Remove any existing handlers
-            button.onclick = null;
-            button.ontouchend = null;
-            
-            // Add multiple event types for maximum compatibility
-            try {
-                // Primary handlers
-                button.addEventListener('click', enhancedHandler, { passive: false });
-                button.addEventListener('touchend', enhancedHandler, { passive: false });
-                
-                // Touch feedback handlers
-                button.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    button.style.transform = 'scale(0.95)';
-                    button.style.opacity = '0.7';
-                    console.log(`📱 Touch start: ${actionName}`);
-                }, { passive: false });
-                
-                button.addEventListener('touchcancel', (e) => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                    console.log(`📱 Touch cancel: ${actionName}`);
-                }, { passive: true });
-                
-                // Mouse handlers for desktop compatibility
-                button.addEventListener('mousedown', (e) => {
-                    button.style.transform = 'scale(0.95)';
-                    button.style.opacity = '0.7';
-                }, { passive: true });
-                
-                button.addEventListener('mouseup', (e) => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                }, { passive: true });
-                
-                button.addEventListener('mouseleave', (e) => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                }, { passive: true });
-                
-                console.log(`✅ Events setup for button: ${actionName}`);
-                
-            } catch (error) {
-                console.error(`❌ Error setting up events for ${actionName}:`, error);
-                
-                // Fallback: Try simple onclick handler
-                try {
-                    button.onclick = enhancedHandler;
-                    console.log(`⚠️ Fallback onclick handler set for: ${actionName}`);
-                } catch (fallbackError) {
-                    console.error(`❌ Fallback also failed for ${actionName}:`, fallbackError);
-                }
-            }
-        });
-        
-        console.log('✅ Board template events setup completed with enhanced error handling');
-    }
-    
-    /**
-     * Close board templates popup
-     */
-    closeBoardTemplatesPopup() {
-        console.log('🔒 Closing board templates popup...');
-        const popup = document.getElementById('boardTemplatesPopup');
-        if (popup) {
-            popup.remove();
-            console.log('✅ Board templates popup closed');
-        } else {
-            console.log('⚠️ Board templates popup not found when trying to close');
-        }
-    }
-    
-    /**
-     * Show traveler templates popup - ENHANCED MOBILE COMPATIBLE VERSION
+     * Show traveler templates popup - EVENT DELEGATION VERSION
      */
     showTravelerTemplates() {
-        console.log('📊 Creating traveler templates popup with enhanced mobile support...');
+        console.log('📊 Creating traveler templates popup with EVENT DELEGATION...');
         
         // Remove any existing popup first
         const existingPopup = document.getElementById('travelerTemplatesPopup');
@@ -2899,7 +2878,7 @@ validateSessionState() {
         `;
         
         popup.innerHTML = `
-            <div style="
+            <div class="popup-content" style="
                 background: white; padding: 20px; border-radius: 8px; 
                 max-width: 90%; max-height: 85%; overflow-y: auto; 
                 color: #2c3e50; min-width: 300px;
@@ -2915,7 +2894,7 @@ validateSessionState() {
                 </div>
                 
                 <div style="text-align: center; margin: 15px 0;">
-                    <button data-action="downloadTraveler" style="
+                    <div class="template-button" data-action="downloadTraveler" style="
                         background: #3498db; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; margin: 5px;
                         cursor: pointer; font-size: 14px; font-weight: bold;
@@ -2923,11 +2902,11 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">📄 Download Bespoke Traveler Sheets</button>
+                    ">📄 Download Bespoke Traveler Sheets</div>
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button data-action="closeTravelerTemplates" style="
+                    <div class="template-button" data-action="closeTravelerTemplates" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; 
                         cursor: pointer; font-size: 14px; font-weight: bold;
@@ -2935,168 +2914,156 @@ validateSessionState() {
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: inline-block;
-                    ">Close</button>
+                    ">Close</div>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
-        console.log('✅ Traveler templates popup HTML created');
+        console.log('✅ Traveler templates popup HTML created with DIVs');
         
-        // Setup event listeners with error handling
-        setTimeout(() => {
-            try {
-                this.setupTravelerTemplateEvents();
-                console.log('✅ Traveler template events setup completed');
-            } catch (error) {
-                console.error('❌ Error setting up traveler template events:', error);
-                // Fallback: Try again after a longer delay
-                setTimeout(() => {
-                    try {
-                        this.setupTravelerTemplateEvents();
-                        console.log('✅ Traveler template events setup completed (fallback)');
-                    } catch (fallbackError) {
-                        console.error('❌ Fallback event setup also failed:', fallbackError);
-                    }
-                }, 500);
-            }
-        }, 200);
+        // Setup EVENT DELEGATION on the popup container
+        this.setupEventDelegation(popup, 'traveler');
         
-        console.log('✅ Traveler templates popup created with enhanced error handling');
+        console.log('✅ Traveler templates popup created with EVENT DELEGATION');
     }
     
     /**
-     * Setup traveler template events - ENHANCED MOBILE COMPATIBLE
+     * Setup event delegation - PIXEL-SPECIFIC FIX
      */
-    setupTravelerTemplateEvents() {
-        console.log('📱 Setting up traveler template events with enhanced mobile compatibility...');
+    setupEventDelegation(popup, type) {
+        console.log(`📱 Setting up EVENT DELEGATION for ${type} popup...`);
         
-        const popup = document.getElementById('travelerTemplatesPopup');
-        if (!popup) {
-            console.error('❌ Traveler templates popup not found');
-            return;
-        }
-        
-        // Find all buttons with data-action attributes
-        const buttons = popup.querySelectorAll('button[data-action]');
-        console.log(`📱 Found ${buttons.length} traveler template buttons to setup`);
-        
-        if (buttons.length === 0) {
-            console.error('❌ No traveler template buttons found with data-action attributes');
-            return;
-        }
-        
-        // Enhanced mobile button handler
-        const createEnhancedMobileHandler = (action, actionName) => {
-            return (e) => {
-                console.log(`📱 Traveler button pressed: ${actionName}`);
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Visual feedback
-                const button = e.target;
-                const originalTransform = button.style.transform;
-                const originalOpacity = button.style.opacity;
-                
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.7';
-                
-                // Execute action after feedback delay
-                setTimeout(() => {
-                    button.style.transform = originalTransform;
-                    button.style.opacity = originalOpacity;
-                    
-                    try {
-                        console.log(`🎯 Executing traveler action: ${actionName}`);
-                        action();
-                        console.log(`✅ Traveler action completed: ${actionName}`);
-                    } catch (error) {
-                        console.error(`❌ Error executing traveler action ${actionName}:`, error);
-                        // Show user-friendly error
-                        if (this.bridgeApp && this.bridgeApp.showMessage) {
-                            this.bridgeApp.showMessage(`Error: Could not ${actionName}`, 'error');
-                        }
-                    }
-                }, 150);
-            };
-        };
-        
-        // Action mapping for traveler templates
+        // Action mapping
         const actionMap = {
+            // Board template actions
+            'download12Boards': () => this.downloadBoardTemplate('12'),
+            'download10Boards': () => this.downloadBoardTemplate('10'),
+            'download14Boards': () => this.downloadBoardTemplate('14'),
+            'downloadMovement4': () => this.downloadMovementSheets('4'),
+            'downloadMovement6': () => this.downloadMovementSheets('6'),
+            'downloadMovement8': () => this.downloadMovementSheets('8'),
+            'closeBoardTemplates': () => this.closeBoardTemplatesPopup(),
+            
+            // Traveler template actions
             'downloadTraveler': () => this.downloadTravelerTemplate(),
             'closeTravelerTemplates': () => this.closeTravelerTemplatesPopup()
         };
         
-        // Setup each button
-        buttons.forEach((button, index) => {
-            const actionName = button.getAttribute('data-action');
-            const action = actionMap[actionName];
+        // Create comprehensive event handler using delegation
+        const handlePopupEvent = (e) => {
+            console.log(`📱 Event triggered on:`, e.target);
             
-            if (!action) {
-                console.error(`❌ No traveler action found for: ${actionName}`);
+            // Find the template button (could be the target or a parent)
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (!templateButton || !templateButton.classList.contains('template-button')) {
+                console.log(`📱 Not a template button, ignoring`);
                 return;
             }
             
-            console.log(`📱 Setting up traveler button ${index + 1}: ${actionName}`);
+            const action = templateButton.getAttribute('data-action');
+            console.log(`📱 Template button clicked: ${action}`);
             
-            const enhancedHandler = createEnhancedMobileHandler(action, actionName);
-            
-            // Remove any existing handlers
-            button.onclick = null;
-            button.ontouchend = null;
-            
-            // Add comprehensive event handling
-            try {
-                // Primary handlers
-                button.addEventListener('click', enhancedHandler, { passive: false });
-                button.addEventListener('touchend', enhancedHandler, { passive: false });
-                
-                // Touch feedback handlers
-                button.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    button.style.transform = 'scale(0.95)';
-                    button.style.opacity = '0.7';
-                    console.log(`📱 Traveler touch start: ${actionName}`);
-                }, { passive: false });
-                
-                button.addEventListener('touchcancel', (e) => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                    console.log(`📱 Traveler touch cancel: ${actionName}`);
-                }, { passive: true });
-                
-                // Mouse handlers for desktop
-                button.addEventListener('mousedown', (e) => {
-                    button.style.transform = 'scale(0.95)';
-                    button.style.opacity = '0.7';
-                }, { passive: true });
-                
-                button.addEventListener('mouseup', (e) => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                }, { passive: true });
-                
-                button.addEventListener('mouseleave', (e) => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                }, { passive: true });
-                
-                console.log(`✅ Events setup for traveler button: ${actionName}`);
-                
-            } catch (error) {
-                console.error(`❌ Error setting up events for traveler ${actionName}:`, error);
-                
-                // Fallback: Try simple onclick handler
-                try {
-                    button.onclick = enhancedHandler;
-                    console.log(`⚠️ Fallback onclick handler set for traveler: ${actionName}`);
-                } catch (fallbackError) {
-                    console.error(`❌ Traveler fallback also failed for ${actionName}:`, fallbackError);
-                }
+            if (!action || !actionMap[action]) {
+                console.error(`❌ No action found for: ${action}`);
+                return;
             }
+            
+            // Prevent default and stop propagation
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Visual feedback
+            const originalTransform = templateButton.style.transform;
+            const originalOpacity = templateButton.style.opacity;
+            
+            templateButton.style.transform = 'scale(0.95)';
+            templateButton.style.opacity = '0.7';
+            templateButton.style.transition = 'all 0.1s ease';
+            
+            // Execute action after feedback
+            setTimeout(() => {
+                templateButton.style.transform = originalTransform;
+                templateButton.style.opacity = originalOpacity;
+                
+                try {
+                    console.log(`🎯 Executing delegated action: ${action}`);
+                    actionMap[action]();
+                    console.log(`✅ Delegated action completed: ${action}`);
+                } catch (error) {
+                    console.error(`❌ Error executing delegated action ${action}:`, error);
+                    if (this.bridgeApp && this.bridgeApp.showMessage) {
+                        this.bridgeApp.showMessage(`Error: Could not ${action}`, 'error');
+                    }
+                }
+            }, 150);
+        };
+        
+        // Add MULTIPLE event types using delegation on the popup container
+        const eventTypes = ['click', 'touchend'];
+        
+        eventTypes.forEach(eventType => {
+            popup.addEventListener(eventType, handlePopupEvent, { 
+                passive: false,
+                capture: true // Use capture phase for better reliability
+            });
+            console.log(`✅ Added ${eventType} delegation to popup`);
         });
         
-        console.log('✅ Traveler template events setup completed with enhanced error handling');
+        // Add touch start for visual feedback
+        popup.addEventListener('touchstart', (e) => {
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (templateButton && templateButton.classList.contains('template-button')) {
+                templateButton.style.transform = 'scale(0.95)';
+                templateButton.style.opacity = '0.7';
+                templateButton.style.transition = 'all 0.1s ease';
+                console.log(`📱 Touch start feedback applied`);
+            }
+        }, { passive: false, capture: true });
+        
+        // Add touch cancel cleanup
+        popup.addEventListener('touchcancel', (e) => {
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (templateButton && templateButton.classList.contains('template-button')) {
+                templateButton.style.transform = '';
+                templateButton.style.opacity = '';
+                console.log(`📱 Touch cancel cleanup applied`);
+            }
+        }, { passive: true, capture: true });
+        
+        console.log(`✅ Event delegation setup completed for ${type} popup`);
+    }
+    
+    /**
+     * Close board templates popup
+     */
+    closeBoardTemplatesPopup() {
+        console.log('🔒 Closing board templates popup...');
+        const popup = document.getElementById('boardTemplatesPopup');
+        if (popup) {
+            popup.remove();
+            console.log('✅ Board templates popup closed');
+        } else {
+            console.log('⚠️ Board templates popup not found when trying to close');
+        }
     }
     
     /**
@@ -3395,22 +3362,6 @@ validateSessionState() {
     }
     
     /**
-     * Show help
-     */
-    showHelp() {
-        try {
-            const helpContent = this.getHelpContent();
-            if (this.bridgeApp && this.bridgeApp.showModal) {
-                this.bridgeApp.showModal(helpContent.title, helpContent.content);
-            } else {
-                console.error('❌ BridgeApp or showModal not available');
-            }
-        } catch (error) {
-            console.error('❌ Error showing help:', error);
-        }
-    }
-    
-    /**
      * Show quit options
      */
     showQuit() {
@@ -3467,7 +3418,8 @@ validateSessionState() {
         };
         return colors[vulnerability] || '#95a5a6';
     }
-// END SECTION SIX// SECTION SEVEN - Score Display Methods
+// END SECTION SIX
+// SECTION SEVEN - Score Display Methods
     /**
      * Show detailed results with mobile scrolling fixes - COMPREHENSIVE VERSION
      */
