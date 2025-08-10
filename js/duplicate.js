@@ -2551,7 +2551,7 @@ validateSessionState() {
 }
 
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods (MOBILE FIXED VERSION)
+// SECTION SIX - Help and Quit Methods (EVENT DELEGATION FIX FOR PIXEL)
     /**
      * Get help content specific to Duplicate Bridge
      */
@@ -2572,11 +2572,13 @@ validateSessionState() {
                             background: #27ae60; color: white; border: none; 
                             padding: 10px 16px; border-radius: 4px; margin: 5px;
                             cursor: pointer; font-size: 13px; font-weight: bold;
+                            min-height: 44px; touch-action: manipulation;
                         ">📋 Board Templates</button>
                         <button onclick="window.duplicateBridge.showTravelerTemplates()" style="
                             background: #3498db; color: white; border: none; 
                             padding: 10px 16px; border-radius: 4px; margin: 5px;
                             cursor: pointer; font-size: 13px; font-weight: bold;
+                            min-height: 44px; touch-action: manipulation;
                         ">📊 Traveler Sheets</button>
                     </div>
                 </div>
@@ -2588,9 +2590,18 @@ validateSessionState() {
     }
     
     /**
-     * Show board templates popup - MOBILE COMPATIBLE VERSION
+     * Show board templates popup - EVENT DELEGATION VERSION
      */
     showBoardTemplates() {
+        console.log('📋 Creating board templates popup with EVENT DELEGATION...');
+        
+        // Remove any existing popup first
+        const existingPopup = document.getElementById('boardTemplatesPopup');
+        if (existingPopup) {
+            existingPopup.remove();
+            console.log('🧹 Removed existing board templates popup');
+        }
+        
         const popup = document.createElement('div');
         popup.id = 'boardTemplatesPopup';
         popup.style.cssText = `
@@ -2601,7 +2612,7 @@ validateSessionState() {
         `;
         
         popup.innerHTML = `
-            <div style="
+            <div class="popup-content" style="
                 background: white; padding: 20px; border-radius: 8px; 
                 max-width: 90%; max-height: 85%; overflow-y: auto; 
                 color: #2c3e50; min-width: 300px;
@@ -2610,177 +2621,105 @@ validateSessionState() {
                 <h3 style="text-align: center; margin: 0 0 15px 0;">📋 Board Templates</h3>
                 
                 <div style="text-align: center; margin: 15px 0;">
-                    <button id="download12Boards" style="
+                    <div class="template-button" data-action="download12Boards" style="
                         background: #27ae60; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
                         min-height: 44px; min-width: 120px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📄 12 Boards (4 pairs)</button>
+                        display: inline-block;
+                    ">📄 12 Boards (4 pairs)</div>
                     
-                    <button id="download10Boards" style="
+                    <div class="template-button" data-action="download10Boards" style="
                         background: #3498db; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
                         min-height: 44px; min-width: 120px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📄 10 Boards (6 pairs)</button>
+                        display: inline-block;
+                    ">📄 10 Boards (6 pairs)</div>
                     
-                    <button id="download14Boards" style="
+                    <div class="template-button" data-action="download14Boards" style="
                         background: #e67e22; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
                         min-height: 44px; min-width: 120px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📄 14 Boards (8 pairs)</button>
+                        display: inline-block;
+                    ">📄 14 Boards (8 pairs)</div>
                     
-                    <br>
+                    <br><br>
                     
-                    <button id="downloadMovement4" style="
+                    <div class="template-button" data-action="downloadMovement4" style="
                         background: #9b59b6; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
                         min-height: 44px; min-width: 120px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📋 Movement (4 pairs)</button>
+                        display: inline-block;
+                    ">📋 Movement (4 pairs)</div>
                     
-                    <button id="downloadMovement6" style="
+                    <div class="template-button" data-action="downloadMovement6" style="
                         background: #9b59b6; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
                         min-height: 44px; min-width: 120px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📋 Movement (6 pairs)</button>
+                        display: inline-block;
+                    ">📋 Movement (6 pairs)</div>
                     
-                    <button id="downloadMovement8" style="
+                    <div class="template-button" data-action="downloadMovement8" style="
                         background: #9b59b6; color: white; border: none; 
                         padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
                         min-height: 44px; min-width: 120px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📋 Movement (8 pairs)</button>
+                        display: inline-block;
+                    ">📋 Movement (8 pairs)</div>
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button id="closeBoardTemplates" style="
+                    <div class="template-button" data-action="closeBoardTemplates" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; 
                         cursor: pointer; font-size: 14px; font-weight: bold;
                         min-height: 44px; min-width: 100px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">Close</button>
+                        display: inline-block;
+                    ">Close</div>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
+        console.log('✅ Board templates popup HTML created with DIVs');
         
-        // Setup event listeners using proper mobile-compatible handlers
-        setTimeout(() => {
-            this.setupBoardTemplateEvents();
-        }, 100);
+        // Setup EVENT DELEGATION on the popup container
+        this.setupEventDelegation(popup, 'board');
         
-        console.log('✅ Board templates popup created with direct event listeners');
+        console.log('✅ Board templates popup created with EVENT DELEGATION');
     }
     
     /**
-     * Setup board template events - MOBILE COMPATIBLE
-     */
-    setupBoardTemplateEvents() {
-        console.log('📱 Setting up board template events with mobile compatibility...');
-        
-        // Enhanced mobile button handler
-        const createMobileHandler = (action) => {
-            return (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Visual feedback
-                const button = e.target;
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.8';
-                
-                setTimeout(() => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                    
-                    // Execute action
-                    try {
-                        action();
-                    } catch (error) {
-                        console.error('Error executing board template action:', error);
-                    }
-                }, 150);
-            };
-        };
-        
-        // Board template download handlers
-        const handlers = [
-            { id: 'download12Boards', action: () => this.downloadBoardTemplate('12') },
-            { id: 'download10Boards', action: () => this.downloadBoardTemplate('10') },
-            { id: 'download14Boards', action: () => this.downloadBoardTemplate('14') },
-            { id: 'downloadMovement4', action: () => this.downloadMovementSheets('4') },
-            { id: 'downloadMovement6', action: () => this.downloadMovementSheets('6') },
-            { id: 'downloadMovement8', action: () => this.downloadMovementSheets('8') },
-            { id: 'closeBoardTemplates', action: () => this.closeBoardTemplatesPopup() }
-        ];
-        
-        handlers.forEach(({ id, action }) => {
-            const button = document.getElementById(id);
-            if (button) {
-                const mobileHandler = createMobileHandler(action);
-                
-                // Remove any existing handlers
-                button.onclick = null;
-                
-                // Add both click and touch handlers for maximum compatibility
-                button.addEventListener('click', mobileHandler);
-                button.addEventListener('touchend', mobileHandler, { passive: false });
-                
-                // Touch start feedback
-                button.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    button.style.transform = 'scale(0.95)';
-                    button.style.opacity = '0.8';
-                }, { passive: false });
-                
-                // Touch cancel cleanup
-                button.addEventListener('touchcancel', () => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                }, { passive: true });
-                
-                console.log(`✅ Mobile events setup for ${id}`);
-            } else {
-                console.warn(`⚠️ Button not found: ${id}`);
-            }
-        });
-        
-        console.log('✅ Board template events setup completed');
-    }
-    
-    /**
-     * Close board templates popup
-     */
-    closeBoardTemplatesPopup() {
-        const popup = document.getElementById('boardTemplatesPopup');
-        if (popup) {
-            popup.remove();
-            console.log('✅ Board templates popup closed');
-        }
-    }
-    
-    /**
-     * Show traveler templates popup - MOBILE COMPATIBLE VERSION
+     * Show traveler templates popup - EVENT DELEGATION VERSION
      */
     showTravelerTemplates() {
+        console.log('📊 Creating traveler templates popup with EVENT DELEGATION...');
+        
+        // Remove any existing popup first
+        const existingPopup = document.getElementById('travelerTemplatesPopup');
+        if (existingPopup) {
+            existingPopup.remove();
+            console.log('🧹 Removed existing traveler templates popup');
+        }
+        
         const popup = document.createElement('div');
         popup.id = 'travelerTemplatesPopup';
         popup.style.cssText = `
@@ -2791,7 +2730,7 @@ validateSessionState() {
         `;
         
         popup.innerHTML = `
-            <div style="
+            <div class="popup-content" style="
                 background: white; padding: 20px; border-radius: 8px; 
                 max-width: 90%; max-height: 85%; overflow-y: auto; 
                 color: #2c3e50; min-width: 300px;
@@ -2807,384 +2746,532 @@ validateSessionState() {
                 </div>
                 
                 <div style="text-align: center; margin: 15px 0;">
-                    <button id="downloadTravelerBtn" style="
+                    <div class="template-button" data-action="downloadTraveler" style="
                         background: #3498db; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; margin: 5px;
                         cursor: pointer; font-size: 14px; font-weight: bold;
                         min-height: 44px; min-width: 200px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">📄 Download Bespoke Traveler Sheets</button>
+                        display: inline-block;
+                    ">📄 Download Bespoke Traveler Sheets</div>
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button id="closeTravelerTemplates" style="
+                    <div class="template-button" data-action="closeTravelerTemplates" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; 
                         cursor: pointer; font-size: 14px; font-weight: bold;
                         min-height: 44px; min-width: 100px;
                         touch-action: manipulation; user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">Close</button>
+                        display: inline-block;
+                    ">Close</div>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
+        console.log('✅ Traveler templates popup HTML created with DIVs');
         
-        // Setup event listeners
-        setTimeout(() => {
-            this.setupTravelerTemplateEvents();
-        }, 100);
+        // Setup EVENT DELEGATION on the popup container
+        this.setupEventDelegation(popup, 'traveler');
         
-        console.log('✅ Traveler templates popup created with direct event listeners');
+        console.log('✅ Traveler templates popup created with EVENT DELEGATION');
     }
     
     /**
-     * Setup traveler template events - MOBILE COMPATIBLE
+     * Setup event delegation - PIXEL-SPECIFIC FIX
      */
-    setupTravelerTemplateEvents() {
-        console.log('📱 Setting up traveler template events with mobile compatibility...');
+    setupEventDelegation(popup, type) {
+        console.log(`📱 Setting up EVENT DELEGATION for ${type} popup...`);
         
-        // Enhanced mobile button handler
-        const createMobileHandler = (action) => {
-            return (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Visual feedback
-                const button = e.target;
-                button.style.transform = 'scale(0.95)';
-                button.style.opacity = '0.8';
-                
-                setTimeout(() => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                    
-                    // Execute action
-                    try {
-                        action();
-                    } catch (error) {
-                        console.error('Error executing traveler template action:', error);
-                    }
-                }, 150);
-            };
+        // Action mapping
+        const actionMap = {
+            // Board template actions
+            'download12Boards': () => this.downloadBoardTemplate('12'),
+            'download10Boards': () => this.downloadBoardTemplate('10'),
+            'download14Boards': () => this.downloadBoardTemplate('14'),
+            'downloadMovement4': () => this.downloadMovementSheets('4'),
+            'downloadMovement6': () => this.downloadMovementSheets('6'),
+            'downloadMovement8': () => this.downloadMovementSheets('8'),
+            'closeBoardTemplates': () => this.closeBoardTemplatesPopup(),
+            
+            // Traveler template actions
+            'downloadTraveler': () => this.downloadTravelerTemplate(),
+            'closeTravelerTemplates': () => this.closeTravelerTemplatesPopup()
         };
         
-        // Setup handlers
-        const handlers = [
-            { id: 'downloadTravelerBtn', action: () => this.downloadTravelerTemplate() },
-            { id: 'closeTravelerTemplates', action: () => this.closeTravelerTemplatesPopup() }
-        ];
-        
-        handlers.forEach(({ id, action }) => {
-            const button = document.getElementById(id);
-            if (button) {
-                const mobileHandler = createMobileHandler(action);
-                
-                // Remove any existing handlers
-                button.onclick = null;
-                
-                // Add both click and touch handlers for maximum compatibility
-                button.addEventListener('click', mobileHandler);
-                button.addEventListener('touchend', mobileHandler, { passive: false });
-                
-                // Touch start feedback
-                button.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    button.style.transform = 'scale(0.95)';
-                    button.style.opacity = '0.8';
-                }, { passive: false });
-                
-                // Touch cancel cleanup
-                button.addEventListener('touchcancel', () => {
-                    button.style.transform = '';
-                    button.style.opacity = '';
-                }, { passive: true });
-                
-                console.log(`✅ Mobile events setup for ${id}`);
-            } else {
-                console.warn(`⚠️ Button not found: ${id}`);
+        // Create comprehensive event handler using delegation
+        const handlePopupEvent = (e) => {
+            console.log(`📱 Event triggered on:`, e.target);
+            
+            // Find the template button (could be the target or a parent)
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
             }
+            
+            if (!templateButton || !templateButton.classList.contains('template-button')) {
+                console.log(`📱 Not a template button, ignoring`);
+                return;
+            }
+            
+            const action = templateButton.getAttribute('data-action');
+            console.log(`📱 Template button clicked: ${action}`);
+            
+            if (!action || !actionMap[action]) {
+                console.error(`❌ No action found for: ${action}`);
+                return;
+            }
+            
+            // Prevent default and stop propagation
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Visual feedback
+            const originalTransform = templateButton.style.transform;
+            const originalOpacity = templateButton.style.opacity;
+            
+            templateButton.style.transform = 'scale(0.95)';
+            templateButton.style.opacity = '0.7';
+            templateButton.style.transition = 'all 0.1s ease';
+            
+            // Execute action after feedback
+            setTimeout(() => {
+                templateButton.style.transform = originalTransform;
+                templateButton.style.opacity = originalOpacity;
+                
+                try {
+                    console.log(`🎯 Executing delegated action: ${action}`);
+                    actionMap[action]();
+                    console.log(`✅ Delegated action completed: ${action}`);
+                } catch (error) {
+                    console.error(`❌ Error executing delegated action ${action}:`, error);
+                    if (this.bridgeApp && this.bridgeApp.showMessage) {
+                        this.bridgeApp.showMessage(`Error: Could not ${action}`, 'error');
+                    }
+                }
+            }, 150);
+        };
+        
+        // Add MULTIPLE event types using delegation on the popup container
+        const eventTypes = ['click', 'touchend'];
+        
+        eventTypes.forEach(eventType => {
+            popup.addEventListener(eventType, handlePopupEvent, { 
+                passive: false,
+                capture: true // Use capture phase for better reliability
+            });
+            console.log(`✅ Added ${eventType} delegation to popup`);
         });
         
-        console.log('✅ Traveler template events setup completed');
+        // Add touch start for visual feedback
+        popup.addEventListener('touchstart', (e) => {
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (templateButton && templateButton.classList.contains('template-button')) {
+                templateButton.style.transform = 'scale(0.95)';
+                templateButton.style.opacity = '0.7';
+                templateButton.style.transition = 'all 0.1s ease';
+                console.log(`📱 Touch start feedback applied`);
+            }
+        }, { passive: false, capture: true });
+        
+        // Add touch cancel cleanup
+        popup.addEventListener('touchcancel', (e) => {
+            let templateButton = e.target;
+            let attempts = 0;
+            while (templateButton && !templateButton.classList.contains('template-button') && attempts < 5) {
+                templateButton = templateButton.parentElement;
+                attempts++;
+            }
+            
+            if (templateButton && templateButton.classList.contains('template-button')) {
+                templateButton.style.transform = '';
+                templateButton.style.opacity = '';
+                console.log(`📱 Touch cancel cleanup applied`);
+            }
+        }, { passive: true, capture: true });
+        
+        console.log(`✅ Event delegation setup completed for ${type} popup`);
+    }
+    
+    /**
+     * Close board templates popup
+     */
+    closeBoardTemplatesPopup() {
+        console.log('🔒 Closing board templates popup...');
+        const popup = document.getElementById('boardTemplatesPopup');
+        if (popup) {
+            popup.remove();
+            console.log('✅ Board templates popup closed');
+        } else {
+            console.log('⚠️ Board templates popup not found when trying to close');
+        }
     }
     
     /**
      * Close traveler templates popup
      */
     closeTravelerTemplatesPopup() {
+        console.log('🔒 Closing traveler templates popup...');
         const popup = document.getElementById('travelerTemplatesPopup');
         if (popup) {
             popup.remove();
             console.log('✅ Traveler templates popup closed');
+        } else {
+            console.log('⚠️ Traveler templates popup not found when trying to close');
         }
     }
     
     /**
-     * Download board template - SIMPLE VERSION
+     * Download board template - SIMPLE VERSION WITH ENHANCED ERROR HANDLING
      */
     downloadBoardTemplate(boardCount) {
         const numBoards = parseInt(boardCount);
         console.log(`📄 Generating ${numBoards} board template`);
         
-        let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Board Templates</title>';
-        htmlContent += '<style>body{font-family:Arial}';
-        htmlContent += '.slip{border:2px solid black;width:200px;height:120px;display:inline-block;margin:5px;text-align:center;padding:20px}';
-        htmlContent += '.vuln{color:red} .not-vuln{color:blue}';
-        htmlContent += '</style></head><body>';
-        htmlContent += '<h1>Bridge-Modes Board Templates - ' + numBoards + ' Boards</h1>';
-        htmlContent += '<p>© 2025 Bridge-Modes App | Right-click → Print → Save as PDF</p>';
-        
-        for (let board = 1; board <= numBoards; board++) {
-            const positions = ['N', 'E', 'S', 'W'];
-            positions.forEach(position => {
-                const isVuln = this.isPositionVulnerable(board, position);
-                const vulnText = isVuln ? 'Vul' : 'Not Vul';
-                const vulnClass = isVuln ? 'vuln' : 'not-vuln';
-                
-                htmlContent += '<div class="slip">';
-                htmlContent += '<div>Board ' + board + '</div>';
-                htmlContent += '<div style="font-size:24px;margin:10px" class="' + vulnClass + '">' + position + '</div>';
-                htmlContent += '<div>' + vulnText + '</div>';
-                htmlContent += '</div>';
-            });
+        try {
+            let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Board Templates</title>';
+            htmlContent += '<style>body{font-family:Arial}';
+            htmlContent += '.slip{border:2px solid black;width:200px;height:120px;display:inline-block;margin:5px;text-align:center;padding:20px}';
+            htmlContent += '.vuln{color:red} .not-vuln{color:blue}';
+            htmlContent += '</style></head><body>';
+            htmlContent += '<h1>Bridge-Modes Board Templates - ' + numBoards + ' Boards</h1>';
+            htmlContent += '<p>© 2025 Bridge-Modes App | Right-click → Print → Save as PDF</p>';
+            
+            for (let board = 1; board <= numBoards; board++) {
+                const positions = ['N', 'E', 'S', 'W'];
+                positions.forEach(position => {
+                    const isVuln = this.isPositionVulnerable(board, position);
+                    const vulnText = isVuln ? 'Vul' : 'Not Vul';
+                    const vulnClass = isVuln ? 'vuln' : 'not-vuln';
+                    
+                    htmlContent += '<div class="slip">';
+                    htmlContent += '<div>Board ' + board + '</div>';
+                    htmlContent += '<div style="font-size:24px;margin:10px" class="' + vulnClass + '">' + position + '</div>';
+                    htmlContent += '<div>' + vulnText + '</div>';
+                    htmlContent += '</div>';
+                });
+            }
+            
+            htmlContent += '</body></html>';
+            
+            this.downloadFile(htmlContent, 'bridge-modes-board-slips-' + numBoards + 'boards.html');
+            
+            // Close popup after successful download
+            this.closeBoardTemplatesPopup();
+            
+        } catch (error) {
+            console.error('❌ Error generating board template:', error);
+            if (this.bridgeApp && this.bridgeApp.showMessage) {
+                this.bridgeApp.showMessage('Error generating board template', 'error');
+            }
         }
-        
-        htmlContent += '</body></html>';
-        
-        this.downloadFile(htmlContent, 'bridge-modes-board-slips-' + numBoards + 'boards.html');
-        
-        const popup = document.getElementById('boardTemplatesPopup');
-        if (popup) popup.remove();
     }
     
     /**
-     * Download traveler template - SIMPLE VERSION
+     * Download traveler template - SIMPLE VERSION WITH ENHANCED ERROR HANDLING
      */
     downloadTravelerTemplate() {
         console.log('📊 Generating bespoke traveler sheets');
         
-        let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Bespoke Traveler Sheets</title>';
-        htmlContent += '<style>body{font-family:Arial;font-size:10pt}';
-        htmlContent += '.traveler{border:2px solid black;margin:20px;page-break-after:always}';
-        htmlContent += '.header{background:black;color:white;padding:10px;text-align:center;font-weight:bold}';
-        htmlContent += 'table{width:100%;border-collapse:collapse}';
-        htmlContent += 'th,td{border:1px solid black;padding:5px;text-align:center}';
-        htmlContent += 'th{background:#333;color:white;font-size:8pt}';
-        htmlContent += '.button{width:16px;height:16px;border:1px solid black;display:inline-block;margin:1px;font-size:7pt;text-align:center}';
-        htmlContent += '</style></head><body>';
-        htmlContent += '<h1>Bridge-Modes Bespoke Traveler Sheets</h1>';
-        htmlContent += '<p>© 2025 Bridge-Modes App - Patented Button System | Right-click → Print → Save as PDF</p>';
-        
-        for (let board = 1; board <= 16; board++) {
-            const vulnerability = this.getBoardVulnerability(board);
-            htmlContent += '<div class="traveler">';
-            htmlContent += '<div class="header">Board ' + board + ' - ' + vulnerability.toUpperCase() + ' VULNERABLE</div>';
-            htmlContent += '<p style="text-align:center"><strong>Circle ONE choice in each column - Follow app button sequence!</strong></p>';
-            htmlContent += '<table>';
-            htmlContent += '<tr><th>NS Pair</th><th>EW Pair</th><th>1.Level</th><th>2.Suit</th><th>3.Declarer</th><th>4.Double</th><th>5.Result</th><th>6.Number</th><th>NS Score</th><th>EW Score</th></tr>';
+        try {
+            let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Bespoke Traveler Sheets</title>';
+            htmlContent += '<style>body{font-family:Arial;font-size:10pt}';
+            htmlContent += '.traveler{border:2px solid black;margin:20px;page-break-after:always}';
+            htmlContent += '.header{background:black;color:white;padding:10px;text-align:center;font-weight:bold}';
+            htmlContent += 'table{width:100%;border-collapse:collapse}';
+            htmlContent += 'th,td{border:1px solid black;padding:5px;text-align:center}';
+            htmlContent += 'th{background:#333;color:white;font-size:8pt}';
+            htmlContent += '.button{width:16px;height:16px;border:1px solid black;display:inline-block;margin:1px;font-size:7pt;text-align:center}';
+            htmlContent += '</style></head><body>';
+            htmlContent += '<h1>Bridge-Modes Bespoke Traveler Sheets</h1>';
+            htmlContent += '<p>© 2025 Bridge-Modes App - Patented Button System | Right-click → Print → Save as PDF</p>';
             
-            for (let row = 0; row < 8; row++) {
-                htmlContent += '<tr><td></td><td></td>';
+            for (let board = 1; board <= 16; board++) {
+                const vulnerability = this.getBoardVulnerability(board);
+                htmlContent += '<div class="traveler">';
+                htmlContent += '<div class="header">Board ' + board + ' - ' + vulnerability.toUpperCase() + ' VULNERABLE</div>';
+                htmlContent += '<p style="text-align:center"><strong>Circle ONE choice in each column - Follow app button sequence!</strong></p>';
+                htmlContent += '<table>';
+                htmlContent += '<tr><th>NS Pair</th><th>EW Pair</th><th>1.Level</th><th>2.Suit</th><th>3.Declarer</th><th>4.Double</th><th>5.Result</th><th>6.Number</th><th>NS Score</th><th>EW Score</th></tr>';
                 
-                // Level buttons
-                htmlContent += '<td>';
-                for (let i = 1; i <= 7; i++) {
-                    htmlContent += '<span class="button">' + i + '</span>';
+                for (let row = 0; row < 8; row++) {
+                    htmlContent += '<tr><td></td><td></td>';
+                    
+                    // Level buttons
+                    htmlContent += '<td>';
+                    for (let i = 1; i <= 7; i++) {
+                        htmlContent += '<span class="button">' + i + '</span>';
+                    }
+                    htmlContent += '</td>';
+                    
+                    // Suit buttons
+                    htmlContent += '<td>';
+                    htmlContent += '<span class="button">♣</span><span class="button">♦</span><span class="button">♥</span><span class="button">♠</span><span class="button">NT</span>';
+                    htmlContent += '</td>';
+                    
+                    // Declarer buttons
+                    htmlContent += '<td>';
+                    htmlContent += '<span class="button">N</span><span class="button">S</span><span class="button">E</span><span class="button">W</span>';
+                    htmlContent += '</td>';
+                    
+                    // Double buttons
+                    htmlContent += '<td>';
+                    htmlContent += '<span class="button">-</span><span class="button">X</span><span class="button">XX</span>';
+                    htmlContent += '</td>';
+                    
+                    // Result buttons
+                    htmlContent += '<td>';
+                    htmlContent += '<span class="button">✓</span><span class="button">+</span><span class="button">-</span>';
+                    htmlContent += '</td>';
+                    
+                    // Number buttons
+                    htmlContent += '<td>';
+                    htmlContent += '<span class="button">-</span>';
+                    for (let i = 1; i <= 7; i++) {
+                        htmlContent += '<span class="button">' + i + '</span>';
+                    }
+                    htmlContent += '</td>';
+                    
+                    htmlContent += '<td></td><td></td></tr>';
                 }
-                htmlContent += '</td>';
                 
-                // Suit buttons
-                htmlContent += '<td>';
-                htmlContent += '<span class="button">♣</span><span class="button">♦</span><span class="button">♥</span><span class="button">♠</span><span class="button">NT</span>';
-                htmlContent += '</td>';
-                
-                // Declarer buttons
-                htmlContent += '<td>';
-                htmlContent += '<span class="button">N</span><span class="button">S</span><span class="button">E</span><span class="button">W</span>';
-                htmlContent += '</td>';
-                
-                // Double buttons
-                htmlContent += '<td>';
-                htmlContent += '<span class="button">-</span><span class="button">X</span><span class="button">XX</span>';
-                htmlContent += '</td>';
-                
-                // Result buttons
-                htmlContent += '<td>';
-                htmlContent += '<span class="button">✓</span><span class="button">+</span><span class="button">-</span>';
-                htmlContent += '</td>';
-                
-                // Number buttons
-                htmlContent += '<td>';
-                htmlContent += '<span class="button">-</span>';
-                for (let i = 1; i <= 7; i++) {
-                    htmlContent += '<span class="button">' + i + '</span>';
-                }
-                htmlContent += '</td>';
-                
-                htmlContent += '<td></td><td></td></tr>';
+                htmlContent += '</table></div>';
             }
             
-            htmlContent += '</table></div>';
+            htmlContent += '</body></html>';
+            
+            this.downloadFile(htmlContent, 'bridge-modes-bespoke-traveler-sheets.html');
+            
+            // Close popup after successful download
+            this.closeTravelerTemplatesPopup();
+            
+        } catch (error) {
+            console.error('❌ Error generating traveler template:', error);
+            if (this.bridgeApp && this.bridgeApp.showMessage) {
+                this.bridgeApp.showMessage('Error generating traveler template', 'error');
+            }
         }
-        
-        htmlContent += '</body></html>';
-        
-        this.downloadFile(htmlContent, 'bridge-modes-bespoke-traveler-sheets.html');
-        
-        const popup = document.getElementById('travelerTemplatesPopup');
-        if (popup) popup.remove();
     }
     
     /**
-     * Download movement sheets - SIMPLE VERSION
+     * Download movement sheets - SIMPLE VERSION WITH ENHANCED ERROR HANDLING
      */
     downloadMovementSheets(pairCount) {
         const numPairs = parseInt(pairCount);
         console.log(`📋 Generating movement sheets for ${numPairs} pairs`);
         
-        if (!this.movements[numPairs]) {
-            this.bridgeApp.showMessage(`Movement for ${numPairs} pairs not available`, 'error');
-            return;
-        }
-        
-        const movement = this.movements[numPairs];
-        
-        let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Movement Sheets</title>';
-        htmlContent += '<style>body{font-family:Arial}';
-        htmlContent += '.table-sheet{border:2px solid black;margin:20px;page-break-after:always}';
-        htmlContent += '.header{background:#2c3e50;color:white;padding:15px;text-align:center;font-size:18pt}';
-        htmlContent += 'table{width:100%;border-collapse:collapse;margin:10px 0}';
-        htmlContent += 'th,td{border:1px solid black;padding:10px;text-align:center}';
-        htmlContent += 'th{background:#34495e;color:white}';
-        htmlContent += '.ns{color:#27ae60;font-weight:bold}';
-        htmlContent += '.ew{color:#e74c3c;font-weight:bold}';
-        htmlContent += '</style></head><body>';
-        htmlContent += '<h1>Bridge-Modes Movement Sheets - ' + numPairs + ' Pairs</h1>';
-        htmlContent += '<p>© 2025 Bridge-Modes App | Right-click → Print → Save as PDF</p>';
-        
-        for (let tableNum = 1; tableNum <= movement.tables; tableNum++) {
-            const tableMovement = movement.movement.filter(entry => entry.table === tableNum);
-            
-            htmlContent += '<div class="table-sheet">';
-            htmlContent += '<div class="header">TABLE ' + tableNum + ' MOVEMENT GUIDE</div>';
-            htmlContent += '<p><strong>Post this sheet at Table ' + tableNum + '</strong></p>';
-            htmlContent += '<table>';
-            htmlContent += '<tr><th>Round</th><th>North-South</th><th>East-West</th><th>Boards</th><th>Next Movement</th></tr>';
-            
-            tableMovement.forEach((entry, index) => {
-                const boardRange = entry.boards.length > 1 ? 
-                    entry.boards[0] + '-' + entry.boards[entry.boards.length-1] : 
-                    entry.boards[0];
-                
-                let nextMove = 'Tournament Complete!';
-                if (index < tableMovement.length - 1) {
-                    const nsNext = this.findNextTable(movement, entry.ns, entry.round + 1);
-                    const ewNext = this.findNextTable(movement, entry.ew, entry.round + 1);
-                    nextMove = 'NS ' + entry.ns + ' → Table ' + nsNext + ' | EW ' + entry.ew + ' → Table ' + ewNext;
+        try {
+            if (!this.movements[numPairs]) {
+                console.error(`❌ Movement for ${numPairs} pairs not available`);
+                if (this.bridgeApp && this.bridgeApp.showMessage) {
+                    this.bridgeApp.showMessage(`Movement for ${numPairs} pairs not available`, 'error');
                 }
-                
-                htmlContent += '<tr>';
-                htmlContent += '<td><strong>Round ' + entry.round + '</strong></td>';
-                htmlContent += '<td class="ns">Pair ' + entry.ns + '</td>';
-                htmlContent += '<td class="ew">Pair ' + entry.ew + '</td>';
-                htmlContent += '<td>Boards ' + boardRange + '</td>';
-                htmlContent += '<td style="font-size:10pt">' + nextMove + '</td>';
-                htmlContent += '</tr>';
-            });
+                return;
+            }
             
-            htmlContent += '</table></div>';
+            const movement = this.movements[numPairs];
+            
+            let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Movement Sheets</title>';
+            htmlContent += '<style>body{font-family:Arial}';
+            htmlContent += '.table-sheet{border:2px solid black;margin:20px;page-break-after:always}';
+            htmlContent += '.header{background:#2c3e50;color:white;padding:15px;text-align:center;font-size:18pt}';
+            htmlContent += 'table{width:100%;border-collapse:collapse;margin:10px 0}';
+            htmlContent += 'th,td{border:1px solid black;padding:10px;text-align:center}';
+            htmlContent += 'th{background:#34495e;color:white}';
+            htmlContent += '.ns{color:#27ae60;font-weight:bold}';
+            htmlContent += '.ew{color:#e74c3c;font-weight:bold}';
+            htmlContent += '</style></head><body>';
+            htmlContent += '<h1>Bridge-Modes Movement Sheets - ' + numPairs + ' Pairs</h1>';
+            htmlContent += '<p>© 2025 Bridge-Modes App | Right-click → Print → Save as PDF</p>';
+            
+            for (let tableNum = 1; tableNum <= movement.tables; tableNum++) {
+                const tableMovement = movement.movement.filter(entry => entry.table === tableNum);
+                
+                htmlContent += '<div class="table-sheet">';
+                htmlContent += '<div class="header">TABLE ' + tableNum + ' MOVEMENT GUIDE</div>';
+                htmlContent += '<p><strong>Post this sheet at Table ' + tableNum + '</strong></p>';
+                htmlContent += '<table>';
+                htmlContent += '<tr><th>Round</th><th>North-South</th><th>East-West</th><th>Boards</th><th>Next Movement</th></tr>';
+                
+                tableMovement.forEach((entry, index) => {
+                    const boardRange = entry.boards.length > 1 ? 
+                        entry.boards[0] + '-' + entry.boards[entry.boards.length-1] : 
+                        entry.boards[0];
+                    
+                    let nextMove = 'Tournament Complete!';
+                    if (index < tableMovement.length - 1) {
+                        const nsNext = this.findNextTable(movement, entry.ns, entry.round + 1);
+                        const ewNext = this.findNextTable(movement, entry.ew, entry.round + 1);
+                        nextMove = 'NS ' + entry.ns + ' → Table ' + nsNext + ' | EW ' + entry.ew + ' → Table ' + ewNext;
+                    }
+                    
+                    htmlContent += '<tr>';
+                    htmlContent += '<td><strong>Round ' + entry.round + '</strong></td>';
+                    htmlContent += '<td class="ns">Pair ' + entry.ns + '</td>';
+                    htmlContent += '<td class="ew">Pair ' + entry.ew + '</td>';
+                    htmlContent += '<td>Boards ' + boardRange + '</td>';
+                    htmlContent += '<td style="font-size:10pt">' + nextMove + '</td>';
+                    htmlContent += '</tr>';
+                });
+                
+                htmlContent += '</table></div>';
+            }
+            
+            htmlContent += '</body></html>';
+            
+            this.downloadFile(htmlContent, 'bridge-modes-movement-sheets-' + numPairs + 'pairs.html');
+            
+            // Close popup after successful download
+            this.closeBoardTemplatesPopup();
+            
+        } catch (error) {
+            console.error('❌ Error generating movement sheets:', error);
+            if (this.bridgeApp && this.bridgeApp.showMessage) {
+                this.bridgeApp.showMessage('Error generating movement sheets', 'error');
+            }
         }
-        
-        htmlContent += '</body></html>';
-        
-        this.downloadFile(htmlContent, 'bridge-modes-movement-sheets-' + numPairs + 'pairs.html');
-        
-        const popup = document.getElementById('boardTemplatesPopup');
-        if (popup) popup.remove();
     }
     
     /**
      * Find next table for a pair
      */
     findNextTable(movement, pairNum, nextRound) {
-        const nextEntry = movement.movement.find(entry => 
-            entry.round === nextRound && (entry.ns === pairNum || entry.ew === pairNum)
-        );
-        return nextEntry ? nextEntry.table : '?';
+        try {
+            const nextEntry = movement.movement.find(entry => 
+                entry.round === nextRound && (entry.ns === pairNum || entry.ew === pairNum)
+            );
+            return nextEntry ? nextEntry.table : '?';
+        } catch (error) {
+            console.error('❌ Error finding next table:', error);
+            return '?';
+        }
     }
     
     /**
-     * Simple file download
+     * Simple file download with enhanced error handling
      */
     downloadFile(content, filename) {
-        const blob = new Blob([content], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        this.bridgeApp.showMessage('Template downloaded! Right-click → Print → Save as PDF', 'success');
+        try {
+            console.log(`📁 Attempting to download file: ${filename}`);
+            
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none'; // Hide the link
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log(`✅ File download initiated: ${filename}`);
+            
+            if (this.bridgeApp && this.bridgeApp.showMessage) {
+                this.bridgeApp.showMessage('Template downloaded! Right-click → Print → Save as PDF', 'success');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error downloading file:', error);
+            if (this.bridgeApp && this.bridgeApp.showMessage) {
+                this.bridgeApp.showMessage('Error downloading file', 'error');
+            }
+        }
     }
     
     /**
      * Check if a position is vulnerable
      */
     isPositionVulnerable(boardNumber, position) {
-        const vulnerability = this.getBoardVulnerability(boardNumber);
-        
-        if (vulnerability === 'None') return false;
-        if (vulnerability === 'Both') return true;
-        
-        const isNS = position === 'N' || position === 'S';
-        
-        if (vulnerability === 'NS') return isNS;
-        if (vulnerability === 'EW') return !isNS;
-        
-        return false;
+        try {
+            const vulnerability = this.getBoardVulnerability(boardNumber);
+            
+            if (vulnerability === 'None') return false;
+            if (vulnerability === 'Both') return true;
+            
+            const isNS = position === 'N' || position === 'S';
+            
+            if (vulnerability === 'NS') return isNS;
+            if (vulnerability === 'EW') return !isNS;
+            
+            return false;
+        } catch (error) {
+            console.error('❌ Error checking vulnerability:', error);
+            return false;
+        }
     }
     
     /**
      * Show help
      */
     showHelp() {
-        const helpContent = this.getHelpContent();
-        this.bridgeApp.showModal(helpContent.title, helpContent.content);
+        try {
+            const helpContent = this.getHelpContent();
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                this.bridgeApp.showModal(helpContent.title, helpContent.content);
+            } else {
+                console.error('❌ BridgeApp or showModal not available');
+            }
+        } catch (error) {
+            console.error('❌ Error showing help:', error);
+        }
     }
     
     /**
      * Show quit options
      */
     showQuit() {
-        const content = `
-            <div class="help-section">
-                <h4>🎮 Session Options</h4>
-                <p>What would you like to do?</p>
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Continue Session', action: () => {}, class: 'continue-btn' },
-            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
-        ];
-        
-        this.bridgeApp.showModal('🏆 Duplicate Bridge Options', content, buttons);
+        try {
+            const content = `
+                <div class="help-section">
+                    <h4>🎮 Session Options</h4>
+                    <p>What would you like to do?</p>
+                </div>
+            `;
+            
+            const buttons = [
+                { text: 'Continue Session', action: () => {}, class: 'continue-btn' },
+                { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
+                { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
+            ];
+            
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                this.bridgeApp.showModal('🏆 Duplicate Bridge Options', content, buttons);
+            } else {
+                console.error('❌ BridgeApp or showModal not available');
+            }
+        } catch (error) {
+            console.error('❌ Error showing quit options:', error);
+        }
     }
     
     /**
      * Return to main menu
      */
     returnToMainMenu() {
-        this.bridgeApp.showLicensedMode({ 
-            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
-        });
+        try {
+            if (this.bridgeApp && this.bridgeApp.showLicensedMode) {
+                this.bridgeApp.showLicensedMode({ 
+                    type: this.bridgeApp.licenseManager?.getLicenseData()?.type || 'FULL' 
+                });
+            } else {
+                console.error('❌ BridgeApp or showLicensedMode not available');
+            }
+        } catch (error) {
+            console.error('❌ Error returning to main menu:', error);
+        }
     }
     
     /**
