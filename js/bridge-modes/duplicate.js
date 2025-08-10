@@ -2551,7 +2551,7 @@ validateSessionState() {
 }
 
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods
+// SECTION SIX - Help and Quit Methods (CLEAN FIXED VERSION)
     /**
      * Get help content specific to Duplicate Bridge
      */
@@ -2565,107 +2565,20 @@ validateSessionState() {
                 </div>
                 
                 <div class="help-section">
-                    <h4>🏆 Key Features</h4>
-                    <ul>
-                        <li><strong>Multiple Movements:</strong> Support for 4, 6, or 8 pairs</li>
-                        <li><strong>Board Tracking:</strong> Each board played by multiple pairs</li>
-                        <li><strong>Traveler Sheets:</strong> Record results for each board</li>
-                        <li><strong>Matchpoint Scoring:</strong> Compare your result to others</li>
-                        <li><strong>Mobile Optimized:</strong> Touch-friendly interface</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎯 How to Use</h4>
-                    <ol>
-                        <li><strong>Select Pairs:</strong> Choose 4, 6, or 8 pairs</li>
-                        <li><strong>View Movement:</strong> Optional - see seating assignments</li>
-                        <li><strong>Confirm Setup:</strong> Start the session</li>
-                        <li><strong>Enter Results:</strong> Use traveler sheets for each board</li>
-                        <li><strong>View Results:</strong> See final standings when complete</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>📋 Traveler Sheets</h4>
-                    <p>For each board, enter:</p>
-                    <ul>
-                        <li><strong>Contract:</strong> Level, suit, declarer</li>
-                        <li><strong>Doubling:</strong> X for double, XX for redouble</li>
-                        <li><strong>Tricks:</strong> Number of tricks taken (0-13)</li>
-                        <li><strong>Auto-calculation:</strong> Scores calculated automatically</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎮 Movement Types</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-                        <tr style="background: rgba(255,255,255,0.1);">
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Pairs</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Tables</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Boards</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Time</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">4</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">2</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">12</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">~2 hours</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">6</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">3</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">10</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">~1.5 hours</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">8</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">4</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">14</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">~2.5 hours</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🃏 Vulnerability Cycle</h4>
-                    <p>Boards follow standard duplicate vulnerability:</p>
-                    <ul>
-                        <li><strong>Boards 1, 8, 11, 14:</strong> None vulnerable</li>
-                        <li><strong>Boards 2, 5, 12, 15:</strong> NS vulnerable</li>
-                        <li><strong>Boards 3, 6, 9, 16:</strong> EW vulnerable</li>
-                        <li><strong>Boards 4, 7, 10, 13:</strong> Both vulnerable</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>📱 Mobile Tips</h4>
-                    <ul>
-                        <li><strong>Touch Controls:</strong> All buttons optimized for touch</li>
-                        <li><strong>Scrolling Tables:</strong> Swipe to scroll movement and traveler tables</li>
-                        <li><strong>Dropdown Menus:</strong> Enhanced for mobile browsers</li>
-                        <li><strong>Auto-Save:</strong> Results saved automatically when complete</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>💡 Scoring Tips</h4>
-                    <ul>
-                        <li><strong>Standard Scoring:</strong> Uses official bridge scoring rules</li>
-                        <li><strong>Auto-calculation:</strong> Scores appear when contract data is complete</li>
-                        <li><strong>Vulnerability:</strong> Automatically applied based on board number</li>
-                        <li><strong>Matchpoints:</strong> Calculated when all results are entered</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎯 Best Practices</h4>
-                    <ul>
-                        <li>Enter results promptly after each round</li>
-                        <li>Double-check contract details before saving</li>
-                        <li>Use the movement table to track pair positions</li>
-                        <li>Complete all boards before viewing final results</li>
-                    </ul>
+                    <h4>📄 Printable Templates</h4>
+                    <p><strong>Perfect for home games and cruise ships!</strong></p>
+                    <div style="margin: 10px 0;">
+                        <button onclick="window.duplicateBridge.showBoardTemplates()" style="
+                            background: #27ae60; color: white; border: none; 
+                            padding: 10px 16px; border-radius: 4px; margin: 5px;
+                            cursor: pointer; font-size: 13px; font-weight: bold;
+                        ">📋 Board Templates</button>
+                        <button onclick="window.duplicateBridge.showTravelerTemplates()" style="
+                            background: #3498db; color: white; border: none; 
+                            padding: 10px 16px; border-radius: 4px; margin: 5px;
+                            cursor: pointer; font-size: 13px; font-weight: bold;
+                        ">📊 Traveler Sheets</button>
+                    </div>
                 </div>
             `,
             buttons: [
@@ -2675,161 +2588,410 @@ validateSessionState() {
     }
     
     /**
-     * Show Duplicate Bridge specific help
+     * Show board templates popup - USING GLOBAL FUNCTIONS
+     */
+    showBoardTemplates() {
+        // Set up global functions that can be called from HTML
+        window.downloadBoardTemplate12 = () => this.downloadBoardTemplate('12');
+        window.downloadBoardTemplate10 = () => this.downloadBoardTemplate('10');
+        window.downloadBoardTemplate14 = () => this.downloadBoardTemplate('14');
+        window.downloadMovementSheets4 = () => this.downloadMovementSheets('4');
+        window.downloadMovementSheets6 = () => this.downloadMovementSheets('6');
+        window.downloadMovementSheets8 = () => this.downloadMovementSheets('8');
+        window.closeBoardTemplatesPopup = () => {
+            const popup = document.getElementById('boardTemplatesPopup');
+            if (popup) popup.remove();
+        };
+        
+        const popup = document.createElement('div');
+        popup.id = 'boardTemplatesPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        popup.innerHTML = `
+            <div style="
+                background: white; padding: 20px; border-radius: 8px; 
+                max-width: 90%; max-height: 85%; overflow-y: auto; 
+                color: #2c3e50; min-width: 300px;
+            ">
+                <h3 style="text-align: center; margin: 0 0 15px 0;">📋 Board Templates</h3>
+                
+                <div style="text-align: center; margin: 15px 0;">
+                    <button onclick="window.downloadBoardTemplate12()" style="
+                        background: #27ae60; color: white; border: none; 
+                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        cursor: pointer; font-size: 13px; font-weight: bold;
+                    ">📄 12 Boards (4 pairs)</button>
+                    
+                    <button onclick="window.downloadBoardTemplate10()" style="
+                        background: #3498db; color: white; border: none; 
+                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        cursor: pointer; font-size: 13px; font-weight: bold;
+                    ">📄 10 Boards (6 pairs)</button>
+                    
+                    <button onclick="window.downloadBoardTemplate14()" style="
+                        background: #e67e22; color: white; border: none; 
+                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        cursor: pointer; font-size: 13px; font-weight: bold;
+                    ">📄 14 Boards (8 pairs)</button>
+                    
+                    <br>
+                    
+                    <button onclick="window.downloadMovementSheets4()" style="
+                        background: #9b59b6; color: white; border: none; 
+                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        cursor: pointer; font-size: 13px; font-weight: bold;
+                    ">📋 Movement (4 pairs)</button>
+                    
+                    <button onclick="window.downloadMovementSheets6()" style="
+                        background: #9b59b6; color: white; border: none; 
+                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        cursor: pointer; font-size: 13px; font-weight: bold;
+                    ">📋 Movement (6 pairs)</button>
+                    
+                    <button onclick="window.downloadMovementSheets8()" style="
+                        background: #9b59b6; color: white; border: none; 
+                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        cursor: pointer; font-size: 13px; font-weight: bold;
+                    ">📋 Movement (8 pairs)</button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="window.closeBoardTemplatesPopup()" style="
+                        background: #e74c3c; color: white; border: none; 
+                        padding: 12px 20px; border-radius: 6px; 
+                        cursor: pointer; font-size: 14px; font-weight: bold;
+                    ">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        console.log('✅ Board templates popup created with global functions');
+    }
+    
+    /**
+     * Show traveler templates popup - USING GLOBAL FUNCTIONS
+     */
+    showTravelerTemplates() {
+        // Set up global functions
+        window.downloadTravelerTemplate = () => this.downloadTravelerTemplate();
+        window.closeTravelerTemplatesPopup = () => {
+            const popup = document.getElementById('travelerTemplatesPopup');
+            if (popup) popup.remove();
+        };
+        
+        const popup = document.createElement('div');
+        popup.id = 'travelerTemplatesPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        popup.innerHTML = `
+            <div style="
+                background: white; padding: 20px; border-radius: 8px; 
+                max-width: 90%; max-height: 85%; overflow-y: auto; 
+                color: #2c3e50; min-width: 300px;
+            ">
+                <h3 style="text-align: center; margin: 0 0 15px 0;">📊 Traveler Sheets</h3>
+                
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 6px;">
+                    <p style="margin: 0; font-size: 13px; line-height: 1.5;">
+                        <strong>Bespoke traveler sheets</strong> with button-based entry system. 
+                        Circle choices instead of writing contracts!
+                    </p>
+                </div>
+                
+                <div style="text-align: center; margin: 15px 0;">
+                    <button onclick="window.downloadTravelerTemplate()" style="
+                        background: #3498db; color: white; border: none; 
+                        padding: 12px 20px; border-radius: 6px; margin: 5px;
+                        cursor: pointer; font-size: 14px; font-weight: bold;
+                    ">📄 Download Bespoke Traveler Sheets</button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="window.closeTravelerTemplatesPopup()" style="
+                        background: #e74c3c; color: white; border: none; 
+                        padding: 12px 20px; border-radius: 6px; 
+                        cursor: pointer; font-size: 14px; font-weight: bold;
+                    ">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        console.log('✅ Traveler templates popup created with global functions');
+    }
+    
+    /**
+     * Download board template - SIMPLE VERSION
+     */
+    downloadBoardTemplate(boardCount) {
+        const numBoards = parseInt(boardCount);
+        console.log(`📄 Generating ${numBoards} board template`);
+        
+        let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Board Templates</title>';
+        htmlContent += '<style>body{font-family:Arial}';
+        htmlContent += '.slip{border:2px solid black;width:200px;height:120px;display:inline-block;margin:5px;text-align:center;padding:20px}';
+        htmlContent += '.vuln{color:red} .not-vuln{color:blue}';
+        htmlContent += '</style></head><body>';
+        htmlContent += '<h1>Bridge-Modes Board Templates - ' + numBoards + ' Boards</h1>';
+        htmlContent += '<p>© 2025 Bridge-Modes App | Right-click → Print → Save as PDF</p>';
+        
+        for (let board = 1; board <= numBoards; board++) {
+            const positions = ['N', 'E', 'S', 'W'];
+            positions.forEach(position => {
+                const isVuln = this.isPositionVulnerable(board, position);
+                const vulnText = isVuln ? 'Vul' : 'Not Vul';
+                const vulnClass = isVuln ? 'vuln' : 'not-vuln';
+                
+                htmlContent += '<div class="slip">';
+                htmlContent += '<div>Board ' + board + '</div>';
+                htmlContent += '<div style="font-size:24px;margin:10px" class="' + vulnClass + '">' + position + '</div>';
+                htmlContent += '<div>' + vulnText + '</div>';
+                htmlContent += '</div>';
+            });
+        }
+        
+        htmlContent += '</body></html>';
+        
+        this.downloadFile(htmlContent, 'bridge-modes-board-slips-' + numBoards + 'boards.html');
+        
+        const popup = document.getElementById('boardTemplatesPopup');
+        if (popup) popup.remove();
+    }
+    
+    /**
+     * Download traveler template - SIMPLE VERSION
+     */
+    downloadTravelerTemplate() {
+        console.log('📊 Generating bespoke traveler sheets');
+        
+        let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Bespoke Traveler Sheets</title>';
+        htmlContent += '<style>body{font-family:Arial;font-size:10pt}';
+        htmlContent += '.traveler{border:2px solid black;margin:20px;page-break-after:always}';
+        htmlContent += '.header{background:black;color:white;padding:10px;text-align:center;font-weight:bold}';
+        htmlContent += 'table{width:100%;border-collapse:collapse}';
+        htmlContent += 'th,td{border:1px solid black;padding:5px;text-align:center}';
+        htmlContent += 'th{background:#333;color:white;font-size:8pt}';
+        htmlContent += '.button{width:16px;height:16px;border:1px solid black;display:inline-block;margin:1px;font-size:7pt;text-align:center}';
+        htmlContent += '</style></head><body>';
+        htmlContent += '<h1>Bridge-Modes Bespoke Traveler Sheets</h1>';
+        htmlContent += '<p>© 2025 Bridge-Modes App - Patented Button System | Right-click → Print → Save as PDF</p>';
+        
+        for (let board = 1; board <= 16; board++) {
+            const vulnerability = this.getBoardVulnerability(board);
+            htmlContent += '<div class="traveler">';
+            htmlContent += '<div class="header">Board ' + board + ' - ' + vulnerability.toUpperCase() + ' VULNERABLE</div>';
+            htmlContent += '<p style="text-align:center"><strong>Circle ONE choice in each column - Follow app button sequence!</strong></p>';
+            htmlContent += '<table>';
+            htmlContent += '<tr><th>NS Pair</th><th>EW Pair</th><th>1.Level</th><th>2.Suit</th><th>3.Declarer</th><th>4.Double</th><th>5.Result</th><th>6.Number</th><th>NS Score</th><th>EW Score</th></tr>';
+            
+            for (let row = 0; row < 8; row++) {
+                htmlContent += '<tr><td></td><td></td>';
+                
+                // Level buttons
+                htmlContent += '<td>';
+                for (let i = 1; i <= 7; i++) {
+                    htmlContent += '<span class="button">' + i + '</span>';
+                }
+                htmlContent += '</td>';
+                
+                // Suit buttons
+                htmlContent += '<td>';
+                htmlContent += '<span class="button">♣</span><span class="button">♦</span><span class="button">♥</span><span class="button">♠</span><span class="button">NT</span>';
+                htmlContent += '</td>';
+                
+                // Declarer buttons
+                htmlContent += '<td>';
+                htmlContent += '<span class="button">N</span><span class="button">S</span><span class="button">E</span><span class="button">W</span>';
+                htmlContent += '</td>';
+                
+                // Double buttons
+                htmlContent += '<td>';
+                htmlContent += '<span class="button">-</span><span class="button">X</span><span class="button">XX</span>';
+                htmlContent += '</td>';
+                
+                // Result buttons
+                htmlContent += '<td>';
+                htmlContent += '<span class="button">✓</span><span class="button">+</span><span class="button">-</span>';
+                htmlContent += '</td>';
+                
+                // Number buttons
+                htmlContent += '<td>';
+                htmlContent += '<span class="button">-</span>';
+                for (let i = 1; i <= 7; i++) {
+                    htmlContent += '<span class="button">' + i + '</span>';
+                }
+                htmlContent += '</td>';
+                
+                htmlContent += '<td></td><td></td></tr>';
+            }
+            
+            htmlContent += '</table></div>';
+        }
+        
+        htmlContent += '</body></html>';
+        
+        this.downloadFile(htmlContent, 'bridge-modes-bespoke-traveler-sheets.html');
+        
+        const popup = document.getElementById('travelerTemplatesPopup');
+        if (popup) popup.remove();
+    }
+    
+    /**
+     * Download movement sheets - SIMPLE VERSION
+     */
+    downloadMovementSheets(pairCount) {
+        const numPairs = parseInt(pairCount);
+        console.log(`📋 Generating movement sheets for ${numPairs} pairs`);
+        
+        if (!this.movements[numPairs]) {
+            this.bridgeApp.showMessage(`Movement for ${numPairs} pairs not available`, 'error');
+            return;
+        }
+        
+        const movement = this.movements[numPairs];
+        
+        let htmlContent = '<!DOCTYPE html><html><head><title>Bridge-Modes Movement Sheets</title>';
+        htmlContent += '<style>body{font-family:Arial}';
+        htmlContent += '.table-sheet{border:2px solid black;margin:20px;page-break-after:always}';
+        htmlContent += '.header{background:#2c3e50;color:white;padding:15px;text-align:center;font-size:18pt}';
+        htmlContent += 'table{width:100%;border-collapse:collapse;margin:10px 0}';
+        htmlContent += 'th,td{border:1px solid black;padding:10px;text-align:center}';
+        htmlContent += 'th{background:#34495e;color:white}';
+        htmlContent += '.ns{color:#27ae60;font-weight:bold}';
+        htmlContent += '.ew{color:#e74c3c;font-weight:bold}';
+        htmlContent += '</style></head><body>';
+        htmlContent += '<h1>Bridge-Modes Movement Sheets - ' + numPairs + ' Pairs</h1>';
+        htmlContent += '<p>© 2025 Bridge-Modes App | Right-click → Print → Save as PDF</p>';
+        
+        for (let tableNum = 1; tableNum <= movement.tables; tableNum++) {
+            const tableMovement = movement.movement.filter(entry => entry.table === tableNum);
+            
+            htmlContent += '<div class="table-sheet">';
+            htmlContent += '<div class="header">TABLE ' + tableNum + ' MOVEMENT GUIDE</div>';
+            htmlContent += '<p><strong>Post this sheet at Table ' + tableNum + '</strong></p>';
+            htmlContent += '<table>';
+            htmlContent += '<tr><th>Round</th><th>North-South</th><th>East-West</th><th>Boards</th><th>Next Movement</th></tr>';
+            
+            tableMovement.forEach((entry, index) => {
+                const boardRange = entry.boards.length > 1 ? 
+                    entry.boards[0] + '-' + entry.boards[entry.boards.length-1] : 
+                    entry.boards[0];
+                
+                let nextMove = 'Tournament Complete!';
+                if (index < tableMovement.length - 1) {
+                    const nsNext = this.findNextTable(movement, entry.ns, entry.round + 1);
+                    const ewNext = this.findNextTable(movement, entry.ew, entry.round + 1);
+                    nextMove = 'NS ' + entry.ns + ' → Table ' + nsNext + ' | EW ' + entry.ew + ' → Table ' + ewNext;
+                }
+                
+                htmlContent += '<tr>';
+                htmlContent += '<td><strong>Round ' + entry.round + '</strong></td>';
+                htmlContent += '<td class="ns">Pair ' + entry.ns + '</td>';
+                htmlContent += '<td class="ew">Pair ' + entry.ew + '</td>';
+                htmlContent += '<td>Boards ' + boardRange + '</td>';
+                htmlContent += '<td style="font-size:10pt">' + nextMove + '</td>';
+                htmlContent += '</tr>';
+            });
+            
+            htmlContent += '</table></div>';
+        }
+        
+        htmlContent += '</body></html>';
+        
+        this.downloadFile(htmlContent, 'bridge-modes-movement-sheets-' + numPairs + 'pairs.html');
+        
+        const popup = document.getElementById('boardTemplatesPopup');
+        if (popup) popup.remove();
+    }
+    
+    /**
+     * Find next table for a pair
+     */
+    findNextTable(movement, pairNum, nextRound) {
+        const nextEntry = movement.movement.find(entry => 
+            entry.round === nextRound && (entry.ns === pairNum || entry.ew === pairNum)
+        );
+        return nextEntry ? nextEntry.table : '?';
+    }
+    
+    /**
+     * Simple file download
+     */
+    downloadFile(content, filename) {
+        const blob = new Blob([content], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.bridgeApp.showMessage('Template downloaded! Right-click → Print → Save as PDF', 'success');
+    }
+    
+    /**
+     * Check if a position is vulnerable
+     */
+    isPositionVulnerable(boardNumber, position) {
+        const vulnerability = this.getBoardVulnerability(boardNumber);
+        
+        if (vulnerability === 'None') return false;
+        if (vulnerability === 'Both') return true;
+        
+        const isNS = position === 'N' || position === 'S';
+        
+        if (vulnerability === 'NS') return isNS;
+        if (vulnerability === 'EW') return !isNS;
+        
+        return false;
+    }
+    
+    /**
+     * Show help
      */
     showHelp() {
         const helpContent = this.getHelpContent();
         this.bridgeApp.showModal(helpContent.title, helpContent.content);
     }
     
-   /**
- * Show Duplicate Bridge specific quit options - SHORTENED FOR MOBILE
- */
-showQuit() {
-    const completionStatus = this.getCompletionStatus();
-    const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
-    const cycleInfo = this.getCycleInfo ? this.getCycleInfo() : null;
-    
-    let sessionContent = '';
-    if (this.session.isSetup) {
-        const movement = this.session.movement;
-        sessionContent = `
-            <div class="help-section">
-                <h4>📊 Current Session Status</h4>
-                <p><strong>Movement:</strong> ${movement.description}</p>
-                <p><strong>Pairs:</strong> ${movement.pairs} pairs</p>
-                <p><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
-                ${completionStatus.percentage === 100 ? 
-                    '<p style="color: #27ae60; font-weight: bold;">✅ All boards complete!</p>' : 
-                    '<p style="color: #f39c12;">⏳ Session in progress...</p>'
-                }
-            </div>
-        `;
-    } else {
-        sessionContent = `
-            <div class="help-section">
-                <h4>🎯 Session Setup</h4>
-                <p>Session not yet configured.</p>
-            </div>
-        `;
-    }
-    
-    // SHORTENED: Remove license section for mobile
-    
-    const content = `
-        ${sessionContent}
-        <div class="help-section">
-            <h4>🎮 Session Options</h4>
-            <p>What would you like to do?</p>
-        </div>
-    `;
-    
-    const buttons = [
-        { text: 'Continue Session', action: () => {}, class: 'continue-btn' }
-    ];
-    
-    if (this.session.isSetup && completionStatus.completed > 0) {
-        buttons.push({ text: 'Show Progress', action: () => this.showSessionProgress(), class: 'progress-btn' });
-    }
-    
-    if (this.session.isSetup) {
-        buttons.push({ text: 'Reset Session', action: () => this.confirmResetSession(), class: 'reset-btn' });
-    } else {
-        buttons.push({ text: 'New Session', action: () => this.resetSession(), class: 'new-session-btn' });
-    }
-    
-    buttons.push(
-        { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
-        { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
-    );
-    
-    this.bridgeApp.showModal('🏆 Duplicate Bridge Options', content, buttons);
-}
-    
     /**
-     * Get readable state description
+     * Show quit options
      */
-    getReadableState() {
-        const stateDescriptions = {
-            'pairs_setup': 'Selecting number of pairs',
-            'movement_confirm': 'Confirming movement setup',
-            'board_selection': 'Entering board results',
-            'results': 'Viewing final results'
-        };
-        
-        return stateDescriptions[this.inputState] || this.inputState;
-    }
-    
-    /**
-     * Show detailed session progress
-     */
-    showSessionProgress() {
-        const boardStatus = this.getBoardStatus();
-        const completionStatus = this.getCompletionStatus();
-        
-        let progressContent = `
+    showQuit() {
+        const content = `
             <div class="help-section">
-                <h4>📊 Session Progress</h4>
-                <p><strong>Overall:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
-            </div>
-            
-            <div class="help-section">
-                <h4>📋 Board Status</h4>
-                <div style="
-                    max-height: 300px; 
-                    overflow-y: auto; 
-                    border: 1px solid #bdc3c7; 
-                    border-radius: 4px;
-                    background: rgba(255,255,255,0.95);
-                    -webkit-overflow-scrolling: touch;
-                ">
-        `;
-        
-        boardStatus.forEach(board => {
-            const statusIcon = board.completed ? '✅' : '⭕';
-            const vulnColor = this.getVulnerabilityColor(board.vulnerability);
-            
-            progressContent += `
-                <div style="
-                    padding: 8px 12px; 
-                    border-bottom: 1px solid #ecf0f1;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-size: 14px;
-                ">
-                    <div>
-                        <strong>Board ${board.number}</strong> ${statusIcon}
-                        <span style="color: ${vulnColor}; margin-left: 8px;">
-                            ${board.vulnerability}
-                        </span>
-                    </div>
-                    <div style="color: #7f8c8d; font-size: 12px;">
-                        ${board.hasResults ? `${board.resultCount} results` : 'No results'}
-                    </div>
-                </div>
-            `;
-        });
-        
-        progressContent += `
-                </div>
-            </div>
-            
-            <div class="help-section">
-                <h4>🎯 Next Steps</h4>
-                ${completionStatus.percentage === 100 ? 
-                    '<p style="color: #27ae60;">All boards complete! You can view final results.</p>' :
-                    '<p style="color: #3498db;">Continue entering results for remaining boards.</p>'
-                }
+                <h4>🎮 Session Options</h4>
+                <p>What would you like to do?</p>
             </div>
         `;
         
-        const progressButtons = [
+        const buttons = [
             { text: 'Continue Session', action: () => {}, class: 'continue-btn' },
-            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' }
+            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
         ];
         
-        this.bridgeApp.showModal('📊 Session Progress', progressContent, progressButtons);
+        this.bridgeApp.showModal('🏆 Duplicate Bridge Options', content, buttons);
+    }
+    
+    /**
+     * Return to main menu
+     */
+    returnToMainMenu() {
+        this.bridgeApp.showLicensedMode({ 
+            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+        });
     }
     
     /**
@@ -2843,123 +3005,6 @@ showQuit() {
             'Both': '#f39c12'
         };
         return colors[vulnerability] || '#95a5a6';
-    }
-    
-    /**
-     * Confirm session reset with warning
-     */
-    confirmResetSession() {
-        const completionStatus = this.getCompletionStatus();
-        
-        const warningMessage = completionStatus.completed > 0 ? 
-            `⚠️ WARNING: This will delete all entered results for ${completionStatus.completed} boards!\n\nAre you sure you want to start over?` :
-            'Start a new duplicate bridge session?\n\nThis will return to pair selection.';
-        
-        const confirmed = confirm(warningMessage);
-        
-        if (confirmed) {
-            this.resetSession();
-            console.log('🔄 Session reset confirmed by user');
-        }
-    }
-    
-    /**
-     * Return to main menu
-     */
-    returnToMainMenu() {
-        // Clean up any open popups first
-        this.cleanup();
-        
-        this.bridgeApp.showLicensedMode({ 
-            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
-        });
-    }
-    
-    /**
-     * Show movement details as help
-     */
-    showMovementDetails() {
-        if (!this.session.movement) {
-            this.bridgeApp.showMessage('No movement selected', 'warning');
-            return;
-        }
-        
-        const movement = this.session.movement;
-        
-        const content = `
-            <div class="help-section">
-                <h4>🏆 ${movement.description}</h4>
-                <ul>
-                    <li><strong>Pairs:</strong> ${movement.pairs}</li>
-                    <li><strong>Tables:</strong> ${movement.tables}</li>
-                    <li><strong>Rounds:</strong> ${movement.rounds}</li>
-                    <li><strong>Total Boards:</strong> ${movement.totalBoards}</li>
-                    <li><strong>Boards per Round:</strong> ${Math.floor(movement.totalBoards / movement.rounds)}</li>
-                </ul>
-            </div>
-            
-            <div class="help-section">
-                <h4>📋 How It Works</h4>
-                <p>Each pair will:</p>
-                <ul>
-                    <li>Play at different tables during each round</li>
-                    <li>Play against different opponents</li>
-                    <li>Play all ${movement.totalBoards} boards exactly once</li>
-                    <li>Have their results compared using matchpoint scoring</li>
-                </ul>
-            </div>
-            
-            <div class="help-section">
-                <h4>⏱️ Timing</h4>
-                <p>Estimated session time: <strong>${movement.description.match(/~(.+)/)?.[1] || '2-3 hours'}</strong></p>
-                <p>This includes time for:</p>
-                <ul>
-                    <li>Playing all boards (~6-8 minutes per board)</li>
-                    <li>Moving between rounds</li>
-                    <li>Entering and checking results</li>
-                </ul>
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Close', action: 'close', class: 'close-btn' },
-            { text: 'View Full Movement', action: () => this.showMovementPopup(), class: 'movement-btn' }
-        ];
-        
-        this.bridgeApp.showModal('🏆 Movement Details', content, buttons);
-    }
-    
-    /**
-     * Emergency cleanup function
-     */
-    emergencyCleanup() {
-        console.log('🚨 Emergency cleanup triggered');
-        
-        // Close all popups
-        const popups = ['travelerPopup', 'boardSelectorPopup', 'movementPopup'];
-        popups.forEach(id => {
-            const popup = document.getElementById(id);
-            if (popup) {
-                popup.remove();
-                console.log(`🧹 Emergency removed ${id}`);
-            }
-        });
-        
-        // Reset traveler state
-        this.traveler.isActive = false;
-        this.traveler.boardNumber = null;
-        this.traveler.data = [];
-        
-        // Clean up global references
-        delete window.calculateAllScores;
-        delete window.saveTravelerData;
-        delete window.closeTravelerPopup;
-        delete window.duplicateBridge;
-        
-        // Force display update
-        this.updateDisplay();
-        
-        console.log('✅ Emergency cleanup completed');
     }
 // END SECTION SIX
 // SECTION SEVEN - Score Display Methods
