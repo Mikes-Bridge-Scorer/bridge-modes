@@ -2551,7 +2551,7 @@ validateSessionState() {
 }
 
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods (CLEAN FIXED VERSION)
+// SECTION SIX - Help and Quit Methods (MOBILE FIXED VERSION)
     /**
      * Get help content specific to Duplicate Bridge
      */
@@ -2588,27 +2588,16 @@ validateSessionState() {
     }
     
     /**
-     * Show board templates popup - USING GLOBAL FUNCTIONS
+     * Show board templates popup - MOBILE COMPATIBLE VERSION
      */
     showBoardTemplates() {
-        // Set up global functions that can be called from HTML
-        window.downloadBoardTemplate12 = () => this.downloadBoardTemplate('12');
-        window.downloadBoardTemplate10 = () => this.downloadBoardTemplate('10');
-        window.downloadBoardTemplate14 = () => this.downloadBoardTemplate('14');
-        window.downloadMovementSheets4 = () => this.downloadMovementSheets('4');
-        window.downloadMovementSheets6 = () => this.downloadMovementSheets('6');
-        window.downloadMovementSheets8 = () => this.downloadMovementSheets('8');
-        window.closeBoardTemplatesPopup = () => {
-            const popup = document.getElementById('boardTemplatesPopup');
-            if (popup) popup.remove();
-        };
-        
         const popup = document.createElement('div');
         popup.id = 'boardTemplatesPopup';
         popup.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.8); z-index: 1000; 
             display: flex; align-items: center; justify-content: center;
+            -webkit-overflow-scrolling: touch;
         `;
         
         popup.innerHTML = `
@@ -2616,80 +2605,189 @@ validateSessionState() {
                 background: white; padding: 20px; border-radius: 8px; 
                 max-width: 90%; max-height: 85%; overflow-y: auto; 
                 color: #2c3e50; min-width: 300px;
+                -webkit-overflow-scrolling: touch;
             ">
                 <h3 style="text-align: center; margin: 0 0 15px 0;">📋 Board Templates</h3>
                 
                 <div style="text-align: center; margin: 15px 0;">
-                    <button onclick="window.downloadBoardTemplate12()" style="
+                    <button id="download12Boards" style="
                         background: #27ae60; color: white; border: none; 
-                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
+                        min-height: 44px; min-width: 120px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📄 12 Boards (4 pairs)</button>
                     
-                    <button onclick="window.downloadBoardTemplate10()" style="
+                    <button id="download10Boards" style="
                         background: #3498db; color: white; border: none; 
-                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
+                        min-height: 44px; min-width: 120px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📄 10 Boards (6 pairs)</button>
                     
-                    <button onclick="window.downloadBoardTemplate14()" style="
+                    <button id="download14Boards" style="
                         background: #e67e22; color: white; border: none; 
-                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
+                        min-height: 44px; min-width: 120px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📄 14 Boards (8 pairs)</button>
                     
                     <br>
                     
-                    <button onclick="window.downloadMovementSheets4()" style="
+                    <button id="downloadMovement4" style="
                         background: #9b59b6; color: white; border: none; 
-                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
+                        min-height: 44px; min-width: 120px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📋 Movement (4 pairs)</button>
                     
-                    <button onclick="window.downloadMovementSheets6()" style="
+                    <button id="downloadMovement6" style="
                         background: #9b59b6; color: white; border: none; 
-                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
+                        min-height: 44px; min-width: 120px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📋 Movement (6 pairs)</button>
                     
-                    <button onclick="window.downloadMovementSheets8()" style="
+                    <button id="downloadMovement8" style="
                         background: #9b59b6; color: white; border: none; 
-                        padding: 10px 16px; border-radius: 4px; margin: 5px;
+                        padding: 12px 16px; border-radius: 4px; margin: 5px;
                         cursor: pointer; font-size: 13px; font-weight: bold;
+                        min-height: 44px; min-width: 120px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📋 Movement (8 pairs)</button>
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="window.closeBoardTemplatesPopup()" style="
+                    <button id="closeBoardTemplates" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; 
                         cursor: pointer; font-size: 14px; font-weight: bold;
+                        min-height: 44px; min-width: 100px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">Close</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
-        console.log('✅ Board templates popup created with global functions');
+        
+        // Setup event listeners using proper mobile-compatible handlers
+        setTimeout(() => {
+            this.setupBoardTemplateEvents();
+        }, 100);
+        
+        console.log('✅ Board templates popup created with direct event listeners');
     }
     
     /**
-     * Show traveler templates popup - USING GLOBAL FUNCTIONS
+     * Setup board template events - MOBILE COMPATIBLE
      */
-    showTravelerTemplates() {
-        // Set up global functions
-        window.downloadTravelerTemplate = () => this.downloadTravelerTemplate();
-        window.closeTravelerTemplatesPopup = () => {
-            const popup = document.getElementById('travelerTemplatesPopup');
-            if (popup) popup.remove();
+    setupBoardTemplateEvents() {
+        console.log('📱 Setting up board template events with mobile compatibility...');
+        
+        // Enhanced mobile button handler
+        const createMobileHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Visual feedback
+                const button = e.target;
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+                
+                setTimeout(() => {
+                    button.style.transform = '';
+                    button.style.opacity = '';
+                    
+                    // Execute action
+                    try {
+                        action();
+                    } catch (error) {
+                        console.error('Error executing board template action:', error);
+                    }
+                }, 150);
+            };
         };
         
+        // Board template download handlers
+        const handlers = [
+            { id: 'download12Boards', action: () => this.downloadBoardTemplate('12') },
+            { id: 'download10Boards', action: () => this.downloadBoardTemplate('10') },
+            { id: 'download14Boards', action: () => this.downloadBoardTemplate('14') },
+            { id: 'downloadMovement4', action: () => this.downloadMovementSheets('4') },
+            { id: 'downloadMovement6', action: () => this.downloadMovementSheets('6') },
+            { id: 'downloadMovement8', action: () => this.downloadMovementSheets('8') },
+            { id: 'closeBoardTemplates', action: () => this.closeBoardTemplatesPopup() }
+        ];
+        
+        handlers.forEach(({ id, action }) => {
+            const button = document.getElementById(id);
+            if (button) {
+                const mobileHandler = createMobileHandler(action);
+                
+                // Remove any existing handlers
+                button.onclick = null;
+                
+                // Add both click and touch handlers for maximum compatibility
+                button.addEventListener('click', mobileHandler);
+                button.addEventListener('touchend', mobileHandler, { passive: false });
+                
+                // Touch start feedback
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    button.style.transform = 'scale(0.95)';
+                    button.style.opacity = '0.8';
+                }, { passive: false });
+                
+                // Touch cancel cleanup
+                button.addEventListener('touchcancel', () => {
+                    button.style.transform = '';
+                    button.style.opacity = '';
+                }, { passive: true });
+                
+                console.log(`✅ Mobile events setup for ${id}`);
+            } else {
+                console.warn(`⚠️ Button not found: ${id}`);
+            }
+        });
+        
+        console.log('✅ Board template events setup completed');
+    }
+    
+    /**
+     * Close board templates popup
+     */
+    closeBoardTemplatesPopup() {
+        const popup = document.getElementById('boardTemplatesPopup');
+        if (popup) {
+            popup.remove();
+            console.log('✅ Board templates popup closed');
+        }
+    }
+    
+    /**
+     * Show traveler templates popup - MOBILE COMPATIBLE VERSION
+     */
+    showTravelerTemplates() {
         const popup = document.createElement('div');
         popup.id = 'travelerTemplatesPopup';
         popup.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.8); z-index: 1000; 
             display: flex; align-items: center; justify-content: center;
+            -webkit-overflow-scrolling: touch;
         `;
         
         popup.innerHTML = `
@@ -2697,6 +2795,7 @@ validateSessionState() {
                 background: white; padding: 20px; border-radius: 8px; 
                 max-width: 90%; max-height: 85%; overflow-y: auto; 
                 color: #2c3e50; min-width: 300px;
+                -webkit-overflow-scrolling: touch;
             ">
                 <h3 style="text-align: center; margin: 0 0 15px 0;">📊 Traveler Sheets</h3>
                 
@@ -2708,25 +2807,119 @@ validateSessionState() {
                 </div>
                 
                 <div style="text-align: center; margin: 15px 0;">
-                    <button onclick="window.downloadTravelerTemplate()" style="
+                    <button id="downloadTravelerBtn" style="
                         background: #3498db; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; margin: 5px;
                         cursor: pointer; font-size: 14px; font-weight: bold;
+                        min-height: 44px; min-width: 200px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">📄 Download Bespoke Traveler Sheets</button>
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="window.closeTravelerTemplatesPopup()" style="
+                    <button id="closeTravelerTemplates" style="
                         background: #e74c3c; color: white; border: none; 
                         padding: 12px 20px; border-radius: 6px; 
                         cursor: pointer; font-size: 14px; font-weight: bold;
+                        min-height: 44px; min-width: 100px;
+                        touch-action: manipulation; user-select: none;
+                        -webkit-tap-highlight-color: transparent;
                     ">Close</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
-        console.log('✅ Traveler templates popup created with global functions');
+        
+        // Setup event listeners
+        setTimeout(() => {
+            this.setupTravelerTemplateEvents();
+        }, 100);
+        
+        console.log('✅ Traveler templates popup created with direct event listeners');
+    }
+    
+    /**
+     * Setup traveler template events - MOBILE COMPATIBLE
+     */
+    setupTravelerTemplateEvents() {
+        console.log('📱 Setting up traveler template events with mobile compatibility...');
+        
+        // Enhanced mobile button handler
+        const createMobileHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Visual feedback
+                const button = e.target;
+                button.style.transform = 'scale(0.95)';
+                button.style.opacity = '0.8';
+                
+                setTimeout(() => {
+                    button.style.transform = '';
+                    button.style.opacity = '';
+                    
+                    // Execute action
+                    try {
+                        action();
+                    } catch (error) {
+                        console.error('Error executing traveler template action:', error);
+                    }
+                }, 150);
+            };
+        };
+        
+        // Setup handlers
+        const handlers = [
+            { id: 'downloadTravelerBtn', action: () => this.downloadTravelerTemplate() },
+            { id: 'closeTravelerTemplates', action: () => this.closeTravelerTemplatesPopup() }
+        ];
+        
+        handlers.forEach(({ id, action }) => {
+            const button = document.getElementById(id);
+            if (button) {
+                const mobileHandler = createMobileHandler(action);
+                
+                // Remove any existing handlers
+                button.onclick = null;
+                
+                // Add both click and touch handlers for maximum compatibility
+                button.addEventListener('click', mobileHandler);
+                button.addEventListener('touchend', mobileHandler, { passive: false });
+                
+                // Touch start feedback
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    button.style.transform = 'scale(0.95)';
+                    button.style.opacity = '0.8';
+                }, { passive: false });
+                
+                // Touch cancel cleanup
+                button.addEventListener('touchcancel', () => {
+                    button.style.transform = '';
+                    button.style.opacity = '';
+                }, { passive: true });
+                
+                console.log(`✅ Mobile events setup for ${id}`);
+            } else {
+                console.warn(`⚠️ Button not found: ${id}`);
+            }
+        });
+        
+        console.log('✅ Traveler template events setup completed');
+    }
+    
+    /**
+     * Close traveler templates popup
+     */
+    closeTravelerTemplatesPopup() {
+        const popup = document.getElementById('travelerTemplatesPopup');
+        if (popup) {
+            popup.remove();
+            console.log('✅ Traveler templates popup closed');
+        }
     }
     
     /**
