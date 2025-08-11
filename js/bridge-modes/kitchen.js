@@ -1,3 +1,4 @@
+// SECTION ONE - Header and Constructor
 /**
  * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
@@ -42,7 +43,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
         
         this.updateDisplay();
     }
-    
+// END SECTION ONE
+
+// SECTION TWO - Input Handlers
     /**
      * Handle user input - integration with new system
      */
@@ -125,7 +128,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
         
         this.updateDisplay();
     }
-    
+// END SECTION TWO
+
+// SECTION THREE - Action Processing
     /**
      * Handle bid level selection (1-7)
      */
@@ -232,7 +237,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
             this.nextDeal();
         }
     }
-    
+// END SECTION THREE
+
+// SECTION FOUR - Game Management & Scoring
     /**
      * Move to next deal
      */
@@ -334,7 +341,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 return [];
         }
     }
-    
+// END SECTION FOUR
+
+// SECTION FIVE - Scoring Logic
     /**
      * Calculate score using Kitchen Bridge rules - using original proven method
      */
@@ -475,7 +484,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
         
         console.log(`💾 Score recorded: ${score >= 0 ? score + ' for ' + declarerSide : Math.abs(score) + ' penalty for ' + (declarerSide === 'NS' ? 'EW' : 'NS')}`);
     }
-    
+// END SECTION FIVE
+
+// SECTION SIX - Display & Help - ULTRA COMPACT VERSION
     /**
      * Update the display using new system
      */
@@ -493,58 +504,51 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Get help content specific to Kitchen Bridge - CLEAN VERSION
+     * Get help content specific to Kitchen Bridge - ULTRA COMPACT VERSION
      */
     getHelpContent() {
         return {
-            title: 'Kitchen Bridge (Party Bridge) Help',
+            title: 'Kitchen Bridge Help',
             content: `
-                <div style="padding: 15px; font-size: 14px; line-height: 1.4; max-width: 600px; margin: 0 auto;">
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 8px;">What is Kitchen Bridge?</h4>
-                        <p><strong>Kitchen Bridge</strong> (also called <strong>Party Bridge</strong>) is traditional bridge scoring designed for casual play at a single table with 4 players. It uses standard bridge scoring rules without any adjustments for hand strength or playing skill.</p>
+                <div style="padding: 12px; font-size: 13px; line-height: 1.3; max-width: 500px; margin: 0 auto;">
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: #2c3e50; margin: 0 0 6px 0; font-size: 15px;">What is Kitchen Bridge?</h4>
+                        <p style="margin: 0 0 8px 0;"><strong>Kitchen Bridge</strong> (Party Bridge) is traditional bridge scoring for casual 4-player games using standard bridge rules.</p>
                     </div>
                     
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 8px;">Key Features</h4>
-                        <ul style="margin: 0; padding-left: 18px;">
-                            <li><strong>Standard Scoring:</strong> Uses traditional bridge point values</li>
-                            <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
-                            <li><strong>4 Players Only:</strong> Designed for one table bridge</li>
-                            <li><strong>Simple and Quick:</strong> Easy to calculate, familiar to all bridge players</li>
-                        </ul>
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: #2c3e50; margin: 0 0 6px 0; font-size: 14px;">How to Use</h4>
+                        <div style="font-size: 12px;">
+                            <strong>1.</strong> Set Vulnerability: Use Vuln button (NV → NS → EW → Both)<br>
+                            <strong>2.</strong> Enter Contract: Level → Suit → Declarer → Result<br>
+                            <strong>3.</strong> Add Doubling: Press X to cycle None/Double/Redouble<br>
+                            <strong>4.</strong> Next Deal: Press Deal to continue
+                        </div>
                     </div>
                     
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 8px;">How to Use</h4>
-                        <ol style="margin: 0; padding-left: 18px;">
-                            <li><strong>Set Vulnerability:</strong> Use Vuln button (NV → NS → EW → Both)</li>
-                            <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
-                            <li><strong>Add Doubling:</strong> Press X to cycle None/Double/Redouble</li>
-                            <li><strong>Score Automatically:</strong> Calculator applies standard scoring</li>
-                            <li><strong>Next Deal:</strong> Press Deal to continue</li>
-                        </ol>
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="flex: 1; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                            <h5 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 13px;">Key Features</h5>
+                            <div style="font-size: 11px;">
+                                • Standard bridge scoring<br>
+                                • Manual vulnerability control<br>
+                                • 4 players only<br>
+                                • Simple and quick
+                            </div>
+                        </div>
+                        <div style="flex: 1; background: #e8f4f8; padding: 10px; border-radius: 6px;">
+                            <h5 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 13px;">Basic Scoring</h5>
+                            <div style="font-size: 11px;">
+                                • Minor suits: 20 pts/trick<br>
+                                • Major suits: 30 pts/trick<br>
+                                • NT: 30 + 10 bonus<br>
+                                • Game: +300/500 bonus
+                            </div>
+                        </div>
                     </div>
                     
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 8px;">Perfect For</h4>
-                        <ul style="margin: 0; padding-left: 18px;">
-                            <li>Casual home bridge games</li>
-                            <li>Learning bridge scoring</li>
-                            <li>Quick social games</li>
-                            <li>Traditional bridge enthusiasts</li>
-                        </ul>
-                    </div>
-                    
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
-                        <h4 style="color: #2c3e50; margin: 0 0 8px 0;">Basic Scoring</h4>
-                        <p style="margin: 0; font-size: 13px;">
-                            <strong>Minor suits (♣♦):</strong> 20 points per trick<br>
-                            <strong>Major suits (♥♠):</strong> 30 points per trick<br>
-                            <strong>No Trump (NT):</strong> 30 points per trick + 10 bonus<br>
-                            <strong>Game bonus:</strong> 300 (not vul) / 500 (vul)<br>
-                            <strong>Part-game bonus:</strong> 50 points
-                        </p>
+                    <div style="text-align: center; font-size: 11px; color: #666;">
+                        Perfect for casual home games and learning bridge scoring
                     </div>
                 </div>
             `,
@@ -561,7 +565,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
         const helpContent = this.getHelpContent();
         this.bridgeApp.showModal(helpContent.title, helpContent.content, helpContent.buttons);
     }
-    
+// END SECTION SIX
+
+// SECTION SEVEN - Score Display & Game Options
     /**
      * Show Kitchen Bridge specific quit options
      */
@@ -762,7 +768,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
             type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
         });
     }
-    
+// END SECTION SEVEN
+
+// SECTION EIGHT - Display Content & Final Methods
     /**
      * Get display content for current state
      */
@@ -908,4 +916,5 @@ if (typeof module !== 'undefined' && module.exports) {
     window.KitchenBridgeMode = KitchenBridgeMode;
 }
 
-console.log('🍳 Kitchen Bridge module loaded successfully - CLEAN VERSION');
+console.log('🍳 Kitchen Bridge module loaded successfully - CLEAN VERSION WITH SECTIONS');
+// END SECTION EIGHT
