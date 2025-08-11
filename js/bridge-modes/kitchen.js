@@ -2,7 +2,7 @@
  * Kitchen Bridge Mode - Simplified Social Bridge Scoring (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
  * Updated to work with new modular bridge system
- * PIXEL 9A SCROLLING FIXES INCLUDED
+ * CLEAN VERSION - No scrolling issues
  */
 
 class KitchenBridgeMode extends BaseBridgeMode {
@@ -24,7 +24,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
         this.inputState = 'level_selection';
         this.resultMode = null; // 'down', 'plus'
         
-        console.log('🏠 Kitchen Bridge mode initialized with enhanced mobile support');
+        console.log('🏠 Kitchen Bridge mode initialized with clean help system');
         
         // Initialize immediately
         this.initialize();
@@ -493,102 +493,59 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Get help content specific to Kitchen Bridge - FIXED WITH BUTTON
+     * Get help content specific to Kitchen Bridge - CLEAN VERSION
      */
     getHelpContent() {
         return {
             title: 'Kitchen Bridge (Party Bridge) Help',
             content: `
-                <div class="help-scroll-container" style="
-                    max-height: 350px; 
-                    overflow-y: auto; 
-                    overflow-x: hidden;
-                    -webkit-overflow-scrolling: touch;
-                    font-size: 13px;
-                    border: 1px solid #ddd;
-                    border-radius: 6px;
-                    background: rgba(255,255,255,0.98);
-                    margin: 10px 0;
-                    padding: 15px;
-                    position: relative;
-                    transform: translateZ(0);
-                    will-change: scroll-position;
-                ">
-                    <div class="help-section">
-                        <h4>What is Kitchen Bridge?</h4>
+                <div style="padding: 15px; font-size: 14px; line-height: 1.4; max-width: 600px; margin: 0 auto;">
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 8px;">What is Kitchen Bridge?</h4>
                         <p><strong>Kitchen Bridge</strong> (also called <strong>Party Bridge</strong>) is traditional bridge scoring designed for casual play at a single table with 4 players. It uses standard bridge scoring rules without any adjustments for hand strength or playing skill.</p>
                     </div>
                     
-                    <div class="help-section">
-                        <h4>Enhanced Features</h4>
-                        <ul>
-                            <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
-                            <li><strong>Deal Tracking:</strong> Clear display of current deal and vulnerability</li>
-                            <li><strong>Traditional Scoring:</strong> Standard bridge point values</li>
-                            <li><strong>Mobile Support:</strong> Enhanced touch support for all devices</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h4>Vulnerability Control</h4>
-                        <p><strong>Kitchen Bridge allows manual vulnerability control:</strong></p>
-                        <ul>
-                            <li>Press the <strong>Vuln</strong> button to cycle: NV → NS → EW → Both</li>
-                            <li>Set vulnerability as desired for each deal</li>
-                            <li>Vulnerability affects game bonuses and penalty scoring</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h4>Key Characteristics</h4>
-                        <ul>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 8px;">Key Features</h4>
+                        <ul style="margin: 0; padding-left: 18px;">
                             <li><strong>Standard Scoring:</strong> Uses traditional bridge point values</li>
+                            <li><strong>Manual Vulnerability:</strong> Player-controlled vulnerability settings</li>
                             <li><strong>4 Players Only:</strong> Designed for one table bridge</li>
-                            <li><strong>No Skill Adjustment:</strong> Same score regardless of hand strength</li>
-                            <li><strong>Simple & Quick:</strong> Easy to calculate, familiar to all bridge players</li>
+                            <li><strong>Simple and Quick:</strong> Easy to calculate, familiar to all bridge players</li>
                         </ul>
                     </div>
                     
-                    <div class="help-section">
-                        <h4>Mobile & Touch Support</h4>
-                        <ul>
-                            <li><strong>Touch Optimized:</strong> All buttons work perfectly on mobile devices</li>
-                            <li><strong>Visual Feedback:</strong> Buttons provide haptic and visual feedback</li>
-                            <li><strong>Proper Sizing:</strong> Buttons sized for easy touch interaction</li>
-                            <li><strong>Universal Support:</strong> Works on phones, tablets, and desktops</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h4>How to Use</h4>
-                        <ol>
-                            <li><strong>Set Vulnerability:</strong> Use Vuln button before each deal</li>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 8px;">How to Use</h4>
+                        <ol style="margin: 0; padding-left: 18px;">
+                            <li><strong>Set Vulnerability:</strong> Use Vuln button (NV → NS → EW → Both)</li>
                             <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
-                            <li><strong>Add Doubling:</strong> Press X to cycle through None/Double/Redouble</li>
-                            <li><strong>Score Automatically:</strong> Calculator applies standard bridge scoring</li>
+                            <li><strong>Add Doubling:</strong> Press X to cycle None/Double/Redouble</li>
+                            <li><strong>Score Automatically:</strong> Calculator applies standard scoring</li>
                             <li><strong>Next Deal:</strong> Press Deal to continue</li>
                         </ol>
                     </div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 15px;">
-                    <div class="help-refresh-button" data-action="refreshHelpScroll" style="
-                        background: #3498db; color: white; border: none; 
-                        padding: 10px 20px; border-radius: 6px; margin: 5px;
-                        cursor: pointer; font-size: 13px; font-weight: bold;
-                        min-height: 44px; touch-action: manipulation;
-                        display: inline-block; user-select: none;
-                        -webkit-tap-highlight-color: transparent;
-                    ">🔄 Refresh Scroll</div>
-                </div>
-                
-                <div style="
-                    text-align: center; 
-                    font-size: 11px; 
-                    color: #666; 
-                    margin-top: 10px;
-                ">
-                    📱 On mobile: Use "Refresh Scroll" above if scrolling issues occur
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 8px;">Perfect For</h4>
+                        <ul style="margin: 0; padding-left: 18px;">
+                            <li>Casual home bridge games</li>
+                            <li>Learning bridge scoring</li>
+                            <li>Quick social games</li>
+                            <li>Traditional bridge enthusiasts</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                        <h4 style="color: #2c3e50; margin: 0 0 8px 0;">Basic Scoring</h4>
+                        <p style="margin: 0; font-size: 13px;">
+                            <strong>Minor suits (♣♦):</strong> 20 points per trick<br>
+                            <strong>Major suits (♥♠):</strong> 30 points per trick<br>
+                            <strong>No Trump (NT):</strong> 30 points per trick + 10 bonus<br>
+                            <strong>Game bonus:</strong> 300 (not vul) / 500 (vul)<br>
+                            <strong>Part-game bonus:</strong> 50 points
+                        </p>
+                    </div>
                 </div>
             `,
             buttons: [
@@ -598,219 +555,11 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Show Kitchen Bridge specific help - WITH EVENT DELEGATION
+     * Show Kitchen Bridge specific help
      */
     showHelp() {
         const helpContent = this.getHelpContent();
         this.bridgeApp.showModal(helpContent.title, helpContent.content, helpContent.buttons);
-        
-        // Setup event delegation for the refresh button after modal is shown
-        setTimeout(() => {
-            this.setupHelpEventDelegation();
-            this.applyHelpScrollingFixes();
-        }, 150);
-    }
-    
-    /**
-     * Setup event delegation for help modal refresh button
-     */
-    setupHelpEventDelegation() {
-        console.log('📱 Setting up help refresh button event delegation...');
-        
-        // Find the modal
-        const modal = document.querySelector('.modal-overlay') || document.querySelector('[class*="modal"]');
-        
-        if (!modal) {
-            console.error('❌ Could not find help modal for event delegation');
-            return;
-        }
-        
-        // Create event handler for help refresh button
-        const handleHelpRefreshClick = (e) => {
-            console.log('📱 Help modal event triggered on:', e.target);
-            
-            // Find the refresh button
-            let refreshButton = e.target;
-            let attempts = 0;
-            while (refreshButton && !refreshButton.classList.contains('help-refresh-button') && attempts < 5) {
-                refreshButton = refreshButton.parentElement;
-                attempts++;
-            }
-            
-            if (!refreshButton || !refreshButton.classList.contains('help-refresh-button')) {
-                console.log('📱 Not a help refresh button, ignoring');
-                return;
-            }
-            
-            const action = refreshButton.getAttribute('data-action');
-            console.log(`📱 Help refresh button clicked: ${action}`);
-            
-            if (action !== 'refreshHelpScroll') {
-                console.error('❌ Wrong action for help refresh button');
-                return;
-            }
-            
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Visual feedback
-            const originalTransform = refreshButton.style.transform;
-            const originalOpacity = refreshButton.style.opacity;
-            
-            refreshButton.style.transform = 'scale(0.95)';
-            refreshButton.style.opacity = '0.7';
-            refreshButton.style.transition = 'all 0.1s ease';
-            
-            // Execute action after feedback
-            setTimeout(() => {
-                refreshButton.style.transform = originalTransform;
-                refreshButton.style.opacity = originalOpacity;
-                
-                try {
-                    console.log('🎯 Executing help refresh action');
-                    this.refreshHelpScroll();
-                    console.log('✅ Help refresh action completed');
-                } catch (error) {
-                    console.error('❌ Error executing help refresh action:', error);
-                }
-            }, 150);
-        };
-        
-        // Add event delegation to the modal
-        const eventTypes = ['click', 'touchend'];
-        
-        eventTypes.forEach(eventType => {
-            modal.addEventListener(eventType, handleHelpRefreshClick, { 
-                passive: false,
-                capture: true
-            });
-            console.log(`✅ Added ${eventType} delegation to help modal`);
-        });
-        
-        // Add touch feedback
-        modal.addEventListener('touchstart', (e) => {
-            let refreshButton = e.target;
-            let attempts = 0;
-            while (refreshButton && !refreshButton.classList.contains('help-refresh-button') && attempts < 5) {
-                refreshButton = refreshButton.parentElement;
-                attempts++;
-            }
-            
-            if (refreshButton && refreshButton.classList.contains('help-refresh-button')) {
-                refreshButton.style.transform = 'scale(0.95)';
-                refreshButton.style.opacity = '0.7';
-                refreshButton.style.transition = 'all 0.1s ease';
-                console.log('📱 Help refresh touch feedback applied');
-            }
-        }, { passive: false, capture: true });
-        
-        modal.addEventListener('touchcancel', (e) => {
-            let refreshButton = e.target;
-            let attempts = 0;
-            while (refreshButton && !refreshButton.classList.contains('help-refresh-button') && attempts < 5) {
-                refreshButton = refreshButton.parentElement;
-                attempts++;
-            }
-            
-            if (refreshButton && refreshButton.classList.contains('help-refresh-button')) {
-                refreshButton.style.transform = '';
-                refreshButton.style.opacity = '';
-                console.log('📱 Help refresh touch cancel cleanup');
-            }
-        }, { passive: true, capture: true });
-        
-        console.log('✅ Help refresh button event delegation setup completed');
-    }
-    
-    /**
-     * Apply scrolling fixes specifically for help modal
-     */
-    applyHelpScrollingFixes() {
-        console.log('🔧 Applying help modal scrolling fixes for Pixel 9a...');
-        
-        // Find the modal and help scroll container
-        const modal = document.querySelector('.modal-content') || document.querySelector('[class*="modal"]');
-        const helpContainer = document.querySelector('.help-scroll-container');
-        
-        if (modal && helpContainer) {
-            // Enhanced modal fixes
-            modal.style.maxHeight = '90vh';
-            modal.style.display = 'flex';
-            modal.style.flexDirection = 'column';
-            modal.style.overflow = 'hidden';
-            
-            // Enhanced help container fixes
-            helpContainer.style.height = '350px'; // Fixed height
-            helpContainer.style.overflowY = 'scroll'; // Force scroll
-            helpContainer.style.overflowX = 'hidden';
-            helpContainer.style.webkitOverflowScrolling = 'touch';
-            helpContainer.style.transform = 'translateZ(0)';
-            helpContainer.style.willChange = 'scroll-position';
-            helpContainer.style.overflowAnchor = 'none';
-            helpContainer.style.position = 'relative';
-            
-            // Enhanced scrollbar visibility
-            const scrollbarStyle = document.createElement('style');
-            scrollbarStyle.id = 'helpScrollbarStyle';
-            scrollbarStyle.textContent = `
-                .help-scroll-container::-webkit-scrollbar {
-                    width: 12px !important;
-                    background: rgba(255, 255, 255, 0.2) !important;
-                }
-                .help-scroll-container::-webkit-scrollbar-thumb {
-                    background: rgba(52, 152, 219, 0.6) !important;
-                    border-radius: 6px !important;
-                    border: 2px solid rgba(255, 255, 255, 0.1) !important;
-                }
-                .help-scroll-container::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.05) !important;
-                    border-radius: 6px !important;
-                }
-                .help-scroll-container::-webkit-scrollbar-thumb:hover {
-                    background: rgba(52, 152, 219, 0.8) !important;
-                }
-            `;
-            
-            // Remove existing style if present
-            const existingStyle = document.getElementById('helpScrollbarStyle');
-            if (existingStyle) existingStyle.remove();
-            
-            document.head.appendChild(scrollbarStyle);
-            
-            console.log('✅ Help modal scrolling fixes applied successfully');
-        }
-    }
-    
-    /**
-     * Refresh help scroll to fix mobile scrolling issues
-     */
-    refreshHelpScroll() {
-        console.log('🔄 Refreshing help scroll for mobile...');
-        
-        const helpContainer = document.querySelector('.help-scroll-container');
-        if (helpContainer) {
-            // Visual feedback
-            helpContainer.style.border = '2px solid #27ae60';
-            helpContainer.style.transition = 'border-color 0.3s ease';
-            
-            // Force scroll activation by scrolling to bottom and back
-            helpContainer.scrollTop = helpContainer.scrollHeight;
-            setTimeout(() => {
-                helpContainer.scrollTop = 0;
-            }, 100);
-            
-            // Re-apply scrolling properties
-            helpContainer.style.overflowY = 'scroll';
-            helpContainer.style.webkitOverflowScrolling = 'touch';
-            helpContainer.style.transform = 'translateZ(0)';
-            helpContainer.style.willChange = 'scroll-position';
-            
-            setTimeout(() => {
-                helpContainer.style.border = '1px solid #ddd';
-            }, 600);
-            
-            console.log('✅ Help scroll refreshed');
-        }
     }
     
     /**
@@ -869,9 +618,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
         
         this.bridgeApp.showModal('🍳 Kitchen Bridge Options', content, buttons);
     }
-// END SECTION FOUR// SECTION FIVE - Detailed Scores and Remaining Methods
+    
     /**
-     * Show detailed deal-by-deal scores - ENHANCED WITH PIXEL 9A SCROLLING FIXES
+     * Show detailed deal-by-deal scores - SIMPLIFIED VERSION (NO COMPLEX SCROLLING)
      */
     showDetailedScores() {
         const scores = this.gameState.scores;
@@ -882,32 +631,27 @@ class KitchenBridgeMode extends BaseBridgeMode {
             return;
         }
 
-        // Enhanced content with mobile-optimized structure and vulnerability info
+        // SIMPLIFIED - Show only summary and recent deals (no scrolling needed)
+        const recentDeals = history.slice(-8); // Show last 8 deals max
+        const hasMoreDeals = history.length > 8;
+        
         let dealSummary = `
-            <div class="scores-summary">
-                <h4>📊 Current Totals</h4>
-                <p><strong>North-South:</strong> ${scores.NS} points</p>
-                <p><strong>East-West:</strong> ${scores.EW} points</p>
-                <p><strong>Leader:</strong> ${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</p>
-            </div>
-            
-            <div class="deals-history">
-                <h4>🃏 Deal by Deal Summary</h4>
-                <div class="deal-scroll-container" style="
-                    max-height: 280px; 
-                    overflow-y: auto; 
-                    overflow-x: hidden;
-                    -webkit-overflow-scrolling: touch;
-                    font-size: 12px;
-                    border: 1px solid #444;
-                    border-radius: 4px;
-                    background: rgba(0,0,0,0.05);
-                    margin: 10px 0;
-                    position: relative;
-                ">
+            <div style="padding: 15px; font-size: 13px;">
+                <div style="margin-bottom: 15px; text-align: center; background: rgba(52,152,219,0.1); padding: 12px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0;">📊 Current Totals</h4>
+                    <div style="font-size: 16px; font-weight: bold;">
+                        <span style="color: #27ae60;">North-South: ${scores.NS}</span> • 
+                        <span style="color: #e74c3c;">East-West: ${scores.EW}</span>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 14px; color: #666;">
+                        Leader: <strong>${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</strong>
+                    </div>
+                </div>
+                
+                <h4 style="margin: 15px 0 8px 0;">🃏 Recent Deals ${hasMoreDeals ? `(Last ${recentDeals.length} of ${history.length})` : `(All ${history.length})`}</h4>
         `;
         
-        history.forEach((deal, index) => {
+        recentDeals.forEach((deal, index) => {
             const contract = deal.contract;
             const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
             const scoreDisplay = deal.score >= 0 ? `+${deal.score}` : `${deal.score}`;
@@ -915,204 +659,69 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 (['N', 'S'].includes(contract.declarer) ? 'NS' : 'EW') :
                 (['N', 'S'].includes(contract.declarer) ? 'EW' : 'NS'));
             
-            // Add vulnerability display
             const vulnerability = deal.vulnerability || 'NV';
             
             dealSummary += `
                 <div style="
-                    border-bottom: 1px solid #444; 
-                    padding: 12px 8px; 
-                    display: flex; 
+                    border: 1px solid #ddd; 
+                    padding: 10px; 
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    background: ${index % 2 === 0 ? 'rgba(240,248,255,0.8)' : 'rgba(248,249,250,0.8)'};
+                    display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    min-height: 40px;
-                    background: ${index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'};
                 ">
-                    <div style="flex: 1; min-width: 0;">
+                    <div style="flex: 1;">
                         <div style="font-weight: bold; margin-bottom: 2px;">
                             Deal ${deal.deal} - ${vulnerability}
                         </div>
-                        <div style="font-size: 11px; color: #888;">
+                        <div style="font-size: 12px; color: #666;">
                             ${contractStr} by ${contract.declarer} = ${contract.result}
                         </div>
                     </div>
                     <div style="
-                        color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};
-                        font-weight: bold;
                         text-align: right;
                         min-width: 80px;
-                        font-size: 11px;
+                        font-weight: bold;
                     ">
-                        ${scoreDisplay}<br>
-                        <span style="font-size: 10px;">${scoringSide}</span>
+                        <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'}; font-size: 14px;">
+                            ${scoreDisplay}
+                        </div>
+                        <div style="font-size: 11px; color: #666;">
+                            ${scoringSide}
+                        </div>
                     </div>
                 </div>
             `;
         });
         
-        dealSummary += `
+        if (hasMoreDeals) {
+            dealSummary += `
+                <div style="
+                    text-align: center; 
+                    padding: 10px; 
+                    margin-top: 10px;
+                    background: rgba(255,193,7,0.1); 
+                    border-radius: 6px;
+                    color: #856404;
+                    font-size: 12px;
+                ">
+                    📝 Showing recent ${recentDeals.length} deals of ${history.length} total deals played
                 </div>
-            </div>
-            
-            <!-- Enhanced mobile scrolling hints -->
-            <div style="
-                text-align: center; 
-                font-size: 10px; 
-                color: #666; 
-                margin-top: 10px;
-                display: block;
-            ">
-                📱 On mobile: Refresh Scroll below if needed
+            `;
+        }
+        
+        dealSummary += `
             </div>
         `;
         
         const buttons = [
             { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
-            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
         ];
         
-        // Show modal and then apply additional mobile fixes
-        this.bridgeApp.showModal('📊 Kitchen Bridge - Detailed Scores', dealSummary, buttons);
-        
-        // Apply Pixel 9a specific scrolling fixes after modal is shown
-        setTimeout(() => {
-            this.applyPixelScrollingFixes();
-        }, 100);
-    }
-    
-    /**
-     * Refresh the score sheet to force scrolling activation on problematic devices
-     */
-    refreshScoreSheet() {
-        console.log('🔄 Refreshing score sheet for better scrolling...');
-        
-        // Simply re-show the detailed scores - this forces DOM refresh
-        this.showDetailedScores();
-        
-        // Add a brief visual indication that refresh happened
-        setTimeout(() => {
-            const container = document.querySelector('.deal-scroll-container');
-            if (container) {
-                // Flash border to indicate refresh
-                container.style.border = '2px solid #27ae60';
-                container.style.transition = 'border-color 0.3s ease';
-                
-                setTimeout(() => {
-                    container.style.border = '1px solid #444';
-                }, 500);
-                
-                // Scroll to bottom and back to top to "wake up" scrolling
-                container.scrollTop = container.scrollHeight;
-                setTimeout(() => {
-                    container.scrollTop = 0;
-                }, 100);
-            }
-        }, 150);
-    }
-    
-    /**
-     * Apply specific scrolling fixes for Pixel 9a and other problematic devices
-     */
-    applyPixelScrollingFixes() {
-        console.log('🔧 Applying Pixel 9a scrolling fixes...');
-        
-        // Find the modal and scroll container
-        const modal = document.querySelector('.modal-content');
-        const scrollContainer = document.querySelector('.deal-scroll-container');
-        
-        if (modal && scrollContainer) {
-            // Force the modal to be scrollable
-            modal.style.maxHeight = '85vh';
-            modal.style.overflowY = 'auto';
-            modal.style.webkitOverflowScrolling = 'touch';
-            modal.style.position = 'relative';
-            
-            // Enhanced scroll container fixes
-            scrollContainer.style.height = '280px'; // Fixed height instead of max-height
-            scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
-            scrollContainer.style.webkitOverflowScrolling = 'touch';
-            scrollContainer.style.transform = 'translateZ(0)'; // Force hardware acceleration
-            scrollContainer.style.willChange = 'scroll-position';
-            
-            // Add visible scrollbar for mobile
-            const style = document.createElement('style');
-            style.textContent = `
-                .deal-scroll-container::-webkit-scrollbar {
-                    width: 8px !important;
-                    background: rgba(255, 255, 255, 0.1) !important;
-                }
-                .deal-scroll-container::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.4) !important;
-                    border-radius: 4px !important;
-                }
-                .deal-scroll-container::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.1) !important;
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Test scroll and log results
-            const testScroll = () => {
-                scrollContainer.scrollTop = 50;
-                setTimeout(() => {
-                    console.log(`📱 Scroll test - scrollTop: ${scrollContainer.scrollTop}, scrollHeight: ${scrollContainer.scrollHeight}, clientHeight: ${scrollContainer.clientHeight}`);
-                    if (scrollContainer.scrollTop === 0 && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
-                        console.warn('⚠️ Scrolling may not be working properly on this device');
-                        // Add a touch scroll hint
-                        scrollContainer.style.border = '2px solid #3498db';
-                        scrollContainer.style.boxShadow = 'inset 0 0 10px rgba(52, 152, 219, 0.3)';
-                        
-                        // Add a visible scroll indicator
-                        const scrollHint = document.createElement('div');
-                        scrollHint.innerHTML = '👆 Touch and drag to scroll';
-                        scrollHint.style.cssText = `
-                            position: absolute;
-                            top: 10px;
-                            right: 10px;
-                            background: rgba(52, 152, 219, 0.8);
-                            color: white;
-                            padding: 4px 8px;
-                            border-radius: 4px;
-                            font-size: 10px;
-                            z-index: 100;
-                            pointer-events: none;
-                        `;
-                        scrollContainer.style.position = 'relative';
-                        scrollContainer.appendChild(scrollHint);
-                    }
-                }, 100);
-            };
-            
-            testScroll();
-            
-            // Add touch event handlers for better mobile scrolling
-            let touchStart = null;
-            
-            scrollContainer.addEventListener('touchstart', (e) => {
-                touchStart = e.touches[0].clientY;
-                console.log('📱 Touch start detected');
-            }, { passive: true });
-            
-            scrollContainer.addEventListener('touchmove', (e) => {
-                if (touchStart !== null) {
-                    const touchY = e.touches[0].clientY;
-                    const deltaY = touchStart - touchY;
-                    scrollContainer.scrollTop += deltaY * 0.5; // Smooth scrolling
-                    touchStart = touchY;
-                    console.log(`📱 Touch scroll: ${scrollContainer.scrollTop}`);
-                }
-            }, { passive: true });
-            
-            scrollContainer.addEventListener('touchend', () => {
-                touchStart = null;
-                console.log('📱 Touch end');
-            }, { passive: true });
-            
-            console.log('✅ Pixel 9a scrolling fixes applied successfully');
-        } else {
-            console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
-        }
+        this.bridgeApp.showModal('📊 Kitchen Bridge - Scores', dealSummary, buttons);
     }
     
     /**
@@ -1299,9 +908,4 @@ if (typeof module !== 'undefined' && module.exports) {
     window.KitchenBridgeMode = KitchenBridgeMode;
 }
 
-console.log('🍳 Kitchen Bridge module loaded successfully with Pixel 9a scrolling fixes');
-// END SECTION FIVE - FILE COMPLETE
-
-
-
-
+console.log('🍳 Kitchen Bridge module loaded successfully - CLEAN VERSION');
