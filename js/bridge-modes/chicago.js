@@ -676,121 +676,17 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         return this.inputState !== 'level_selection';
     }
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods
+// SECTION SIX - Help and Quit Methods (UPDATED FOR STANDALONE HELP)
     /**
-     * Get help content specific to Chicago Bridge
-     */
-    getHelpContent() {
-        return {
-            title: 'Chicago Bridge (4-Deal Cycle) Help',
-            content: `
-                <div class="help-section">
-                    <h4>What is Chicago Bridge?</h4>
-                    <p><strong>Chicago Bridge</strong> is a popular bridge variant that combines standard bridge scoring with a structured 4-deal vulnerability cycle. It provides the excitement of bridge scoring with a predictable, fair vulnerability rotation that ensures balanced play over multiple deals.</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Enhanced Display Features</h4>
-                    <ul>
-                        <li><strong>Complete Deal Info:</strong> Deal number, dealer, and vulnerability shown</li>
-                        <li><strong>Cycle Progress:</strong> Shows current cycle number and position (X/4)</li>
-                        <li><strong>Auto Rotation:</strong> Dealer and vulnerability advance automatically</li>
-                        <li><strong>Next Deal Preview:</strong> Shows upcoming deal info after scoring</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>The 4-Deal Vulnerability Cycle</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-                        <tr style="background: rgba(255,255,255,0.1);">
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Deal</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Dealer</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Vulnerability</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">Strategy</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">1</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">North</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #95a5a6;">None</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Aggressive bidding</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">2</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">East</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #27ae60;">NS Vul</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">NS cautious, EW preempt</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">3</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">South</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #e74c3c;">EW Vul</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">EW cautious, NS preempt</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">4</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">West</td>
-                            <td style="padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #f39c12;">Both Vul</td>
-                            <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.2);">Conservative play</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Key Features</h4>
-                    <ul>
-                        <li><strong>Automatic Vulnerability:</strong> No manual control - follows 4-deal cycle</li>
-                        <li><strong>Deal Counter:</strong> Shows current position (1/4, 2/4, etc.)</li>
-                        <li><strong>Cycle Tracking:</strong> Displays which cycle you're in</li>
-                        <li><strong>Standard Scoring:</strong> Same as traditional bridge</li>
-                        <li><strong>Predictable Sessions:</strong> Natural break after 4 deals</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Perfect For</h4>
-                    <ul>
-                        <li>Social bridge clubs with time limits</li>
-                        <li>Teaching vulnerability strategy</li>
-                        <li>Structured practice sessions</li>
-                        <li>Fair, balanced competition</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use</h4>
-                    <ol>
-                        <li><strong>Automatic Setup:</strong> Dealer and vulnerability set automatically</li>
-                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer → Result</li>
-                        <li><strong>Note Vulnerability:</strong> Display shows vulnerability status</li>
-                        <li><strong>Score Deal:</strong> Calculator applies vulnerability automatically</li>
-                        <li><strong>Next Deal:</strong> Vulnerability advances to next in cycle</li>
-                        <li><strong>Track Progress:</strong> Deal counter shows cycle position</li>
-                    </ol>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Cycle Management</h4>
-                    <ul>
-                        <li><strong>Cycle Completion:</strong> After deal 4, new cycle begins with deal 5</li>
-                        <li><strong>Session Breaks:</strong> Natural stopping points after each 4-deal cycle</li>
-                        <li><strong>Fair Play:</strong> Everyone gets to be dealer and experience all vulnerability conditions</li>
-                        <li><strong>Predictable:</strong> Players can plan strategy knowing upcoming vulnerability</li>
-                    </ul>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-    
-    /**
-     * Show Chicago Bridge specific help
+     * Show Chicago Bridge specific help - UPDATED TO USE STANDALONE HELP
      */
     showHelp() {
-        const helpContent = this.getHelpContent();
-        this.bridgeApp.showModal(helpContent.title, helpContent.content);
+    if (this.bridgeApp.helpSystem) {
+        this.bridgeApp.helpSystem.show('chicago');
+    } else {
+        console.warn('Help system not initialized');
     }
+}
     
     /**
      * Show Chicago Bridge specific quit options
@@ -852,7 +748,25 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         this.bridgeApp.showModal('🌉 Chicago Bridge Options', content, buttons);
     }
 // END SECTION SIX
-// SECTION SEVEN - Score Display Methods
+
+// NOTE: The following method should be REMOVED entirely from chicago.js:
+// 
+// /**
+//  * Get help content specific to Chicago Bridge
+//  */
+// getHelpContent() {
+//     return {
+//         title: 'Chicago Bridge (4-Deal Cycle) Help',
+//         content: `
+//             // ... all the embedded help HTML content ...
+//         `,
+//         buttons: [
+//             { text: 'Close Help', action: 'close', class: 'close-btn' }
+//         ]
+//     };
+// }
+//
+// DELETE THE ENTIRE getHelpContent() method from your chicago.js file// SECTION SEVEN - Score Display Methods
     /**
      * Show detailed deal-by-deal scores with Chicago Bridge cycle analysis - WITH PIXEL 9A FIX
      */
