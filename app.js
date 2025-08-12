@@ -1,3 +1,4 @@
+// SECTION ONE - Header and Constructor
 // VERSION CHECK - Updated at 2025-01-31
 console.log('🔍 APP.JS VERSION: 2025-01-31-ENHANCED');
 
@@ -23,6 +24,10 @@ class BridgeApp {
         // Initialize license manager (imported from license.js)
         this.licenseManager = new LicenseManager();
         
+        // ENHANCED HELP SYSTEM INITIALIZATION WITH ERROR HANDLING
+        this.helpSystem = null;
+        this.initializeHelpSystem();
+        
         // Wake lock for screen management
         this.wakeLock = null;
         this.isWakeActive = false;
@@ -32,7 +37,8 @@ class BridgeApp {
         
         this.init();
     }
-
+// END SECTION ONE
+// SECTION TWO - Initialization and Help System
     async init() {
         console.log('🎮 Initializing Bridge Modes Calculator');
         console.log('📱 Mobile device detected:', this.isMobile);
@@ -57,6 +63,38 @@ class BridgeApp {
         console.log('✅ Bridge Modes Calculator ready');
     }
 
+    // NEW METHOD: Enhanced help system initialization with fallback
+    initializeHelpSystem() {
+        try {
+            // Check if the help functions are available
+            if (typeof initializeBridgeHelp === 'function') {
+                this.helpSystem = initializeBridgeHelp(this);
+                console.log('✅ Enhanced Bridge Help System initialized successfully');
+            } else {
+                console.warn('⚠️ initializeBridgeHelp function not found, using fallback');
+                this.helpSystem = this.createFallbackHelpSystem();
+            }
+        } catch (error) {
+            console.error('❌ Failed to initialize help system:', error);
+            console.log('🔄 Creating fallback help system...');
+            this.helpSystem = this.createFallbackHelpSystem();
+        }
+    }
+
+    // NEW METHOD: Fallback help system
+    createFallbackHelpSystem() {
+        return {
+            show: (modeName) => {
+                console.log('📚 Using fallback help for:', modeName);
+                this.showFallbackHelp(modeName);
+            },
+            close: () => {
+                this.closeModal();
+            },
+            isVisible: false
+        };
+    }
+
     async loadBaseMode() {
         try {
             if (!this.loadedModules.has('base-mode')) {
@@ -70,7 +108,8 @@ class BridgeApp {
             throw new Error('Failed to load required base mode class');
         }
     }
-
+// END SECTION TWO
+// SECTION THREE - Module Loading
     async loadBridgeModule(moduleId) {
         const moduleMap = {
             '1': { file: './js/bridge-modes/kitchen.js', class: 'KitchenBridgeMode', name: 'Kitchen Bridge' },
@@ -206,7 +245,8 @@ class BridgeApp {
             }
         };
     }
-
+// END SECTION THREE
+// SECTION FOUR - Event Handling
     setupEventListeners() {
         // Primary button handler - works on all devices
         document.addEventListener('click', (e) => {
@@ -298,6 +338,22 @@ class BridgeApp {
         }
     }
 
+    handleKeyboard(e) {
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            this.handleButtonPress(e.key);
+        } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            this.handleButtonPress('BACK');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (this.appState === 'license_entry') {
+                this.handleButtonPress('DEAL');
+            }
+        }
+    }
+// END SECTION FOUR
+// SECTION FIVE - Bridge Mode Selection
     async selectBridgeMode(mode) {
         const modeNames = {
             '1': 'Kitchen Bridge',
@@ -335,6 +391,74 @@ class BridgeApp {
         }
     }
 
+    showLicensedMode(licenseInfo) {
+        this.appState = 'licensed_mode';
+        
+        // Clean up any active bridge mode
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy?.();
+            this.currentBridgeMode = null;
+        }
+        
+        const licenseType = licenseInfo.type || 'FULL';
+        const isTrialMode = licenseType === 'TRIAL';
+        
+        let licenseText = '';
+        if (isTrialMode) {
+            const status = this.licenseManager.checkLicenseStatus();
+            licenseText = 'Trial: ' + (status.daysLeft || 0) + ' days, ' + (status.dealsLeft || 0) + ' deals left';
+        } else {
+            licenseText = 'Full Version Activated';
+        }
+        
+        const display = document.getElementById('display');
+        if (!display) {
+            console.error('Display element not found');
+            return;
+        }
+        
+        // Create HTML content safely
+        const titleRow = '<div class="title-score-row"><div class="mode-title">Bridge Modes Calculator</div><div class="score-display">NS: 0<br>EW: 0</div></div>';
+        
+        const modeGrid = '<div class="mode-grid"><div class="mode-row"><span><strong>1</strong> - Kitchen Bridge</span><span><strong>2</strong> - Bonus Bridge</span></div><div class="mode-row"><span><strong>3</strong> - Chicago Bridge</span></div><div class="mode-row"><span><strong>4</strong> - Rubber Bridge</span><span><strong>5</strong> - Duplicate Bridge</span></div></div>';
+        
+        const gameContent = '<div class="game-content"><div class="mode-selection">' + modeGrid + '</div></div>';
+        const currentState = '<div class="current-state">Press 1-5 to select bridge scoring mode</div>';
+        const licenseStatus = '<div class="license-status">' + licenseText + '</div>';
+
+        display.innerHTML = titleRow + gameContent + currentState + licenseStatus;
+
+        // Enable mode selection buttons and controls
+        this.updateButtonStates(['1', '2', '3', '4', '5']);
+        this.enableControls();
+    }
+
+    updateButtonStates(activeButtons) {
+        const allButtons = document.querySelectorAll('.btn');
+        
+        allButtons.forEach(btn => {
+            const value = btn.dataset.value;
+            
+            if (activeButtons.includes(value)) {
+                btn.classList.remove('disabled');
+                btn.classList.add('active-operation');
+            } else {
+                btn.classList.add('disabled');
+                btn.classList.remove('active-operation');
+            }
+        });
+        
+        console.log('🎯 Active buttons:', activeButtons);
+    }
+
+    enableControls() {
+        const vulnControl = document.getElementById('vulnControl');
+        if (vulnControl) {
+            vulnControl.classList.remove('disabled');
+        }
+    }
+// END SECTION FIVE
+// SECTION SIX - License Handling
     // License handling methods
     addDigit(digit) {
         if (this.enteredCode.length < this.maxCodeLength) {
@@ -446,74 +570,8 @@ class BridgeApp {
         this.updateButtonStates(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK']);
         this.updateLicenseDisplay();
     }
-
-    showLicensedMode(licenseInfo) {
-        this.appState = 'licensed_mode';
-        
-        // Clean up any active bridge mode
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.destroy?.();
-            this.currentBridgeMode = null;
-        }
-        
-        const licenseType = licenseInfo.type || 'FULL';
-        const isTrialMode = licenseType === 'TRIAL';
-        
-        let licenseText = '';
-        if (isTrialMode) {
-            const status = this.licenseManager.checkLicenseStatus();
-            licenseText = 'Trial: ' + (status.daysLeft || 0) + ' days, ' + (status.dealsLeft || 0) + ' deals left';
-        } else {
-            licenseText = 'Full Version Activated';
-        }
-        
-        const display = document.getElementById('display');
-        if (!display) {
-            console.error('Display element not found');
-            return;
-        }
-        
-        // Create HTML content safely
-        const titleRow = '<div class="title-score-row"><div class="mode-title">Bridge Modes Calculator</div><div class="score-display">NS: 0<br>EW: 0</div></div>';
-        
-        const modeGrid = '<div class="mode-grid"><div class="mode-row"><span><strong>1</strong> - Kitchen Bridge</span><span><strong>2</strong> - Bonus Bridge</span></div><div class="mode-row"><span><strong>3</strong> - Chicago Bridge</span></div><div class="mode-row"><span><strong>4</strong> - Rubber Bridge</span><span><strong>5</strong> - Duplicate Bridge</span></div></div>';
-        
-        const gameContent = '<div class="game-content"><div class="mode-selection">' + modeGrid + '</div></div>';
-        const currentState = '<div class="current-state">Press 1-5 to select bridge scoring mode</div>';
-        const licenseStatus = '<div class="license-status">' + licenseText + '</div>';
-
-        display.innerHTML = titleRow + gameContent + currentState + licenseStatus;
-
-        // Enable mode selection buttons and controls
-        this.updateButtonStates(['1', '2', '3', '4', '5']);
-        this.enableControls();
-    }
-
-    updateButtonStates(activeButtons) {
-        const allButtons = document.querySelectorAll('.btn');
-        
-        allButtons.forEach(btn => {
-            const value = btn.dataset.value;
-            
-            if (activeButtons.includes(value)) {
-                btn.classList.remove('disabled');
-                btn.classList.add('active-operation');
-            } else {
-                btn.classList.add('disabled');
-                btn.classList.remove('active-operation');
-            }
-        });
-        
-        console.log('🎯 Active buttons:', activeButtons);
-    }
-
-    enableControls() {
-        const vulnControl = document.getElementById('vulnControl');
-        if (vulnControl) {
-            vulnControl.classList.remove('disabled');
-        }
-    }
-
+// END SECTION SIX
+// SECTION SEVEN - Control Handling and Wake Lock
     handleControlButton(controlId) {
         console.log('🎛️ Control button pressed:', controlId);
         
@@ -546,59 +604,224 @@ class BridgeApp {
                 break;
         }
     }
-    
-    // ENHANCED HELP METHOD
-    showHelp() {
-        // If in bridge mode, let the bridge mode handle help
-        if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
-            this.currentBridgeMode.showHelp();
+
+    async toggleWakeLock() {
+        const wakeToggle = document.getElementById('wakeToggle');
+        
+        try {
+            if ('wakeLock' in navigator) {
+                if (this.wakeLock) {
+                    await this.wakeLock.release();
+                    this.wakeLock = null;
+                    this.isWakeActive = false;
+                    wakeToggle?.classList.remove('active');
+                    this.showMessage('Screen sleep enabled', 'info');
+                } else {
+                    this.wakeLock = await navigator.wakeLock.request('screen');
+                    this.isWakeActive = true;
+                    wakeToggle?.classList.add('active');
+                    this.showMessage('Screen will stay awake', 'success');
+                }
+            } else {
+                this.showMessage('Wake lock not supported', 'error');
+            }
+        } catch (error) {
+            console.error('Wake lock error:', error);
+            this.showMessage('Wake lock unavailable', 'error');
+        }
+    }
+
+    toggleVulnerability() {
+        const vulnText = document.getElementById('vulnText');
+        
+        // If in bridge mode, let the bridge mode handle it
+        if (this.currentBridgeMode && typeof this.currentBridgeMode.toggleVulnerability === 'function') {
+            this.currentBridgeMode.toggleVulnerability();
             return;
         }
         
-        // Enhanced help content based on current state
-        let title, content;
+        // Default behavior for main menu
+        if (!vulnText) {
+            console.warn('Vulnerability text element not found');
+            return;
+        }
         
-        if (this.appState === 'license_entry') {
-            title = '🔑 License Help';
-            content = `
-                <h4>License Codes</h4>
-                <p><strong>Trial Version:</strong> Try any 6-digit code starting with 111, 222, 333, etc. for a 14-day, 50-deal trial.</p>
-                <p><strong>Full Version:</strong> Enter your purchased 6-digit license code for unlimited access.</p>
+        const states = ['NV', 'NS', 'EW', 'Both'];
+        const current = vulnText.textContent;
+        const currentIndex = states.indexOf(current);
+        const nextIndex = (currentIndex + 1) % states.length;
+        
+        vulnText.textContent = states[nextIndex];
+        this.showMessage('Vulnerability: ' + states[nextIndex], 'info');
+    }
+// END SECTION SEVEN
+// SECTION EIGHT - Help and Fallback Systems
+    // ENHANCED HELP METHOD WITH ROBUST ERROR HANDLING
+    showHelp() {
+        try {
+            // If in bridge mode, let the bridge mode handle help
+            if (this.currentBridgeMode && typeof this.currentBridgeMode.showHelp === 'function') {
+                this.currentBridgeMode.showHelp();
+                return;
+            }
+            
+            // Use help system if available
+            if (this.helpSystem && typeof this.helpSystem.show === 'function') {
+                this.helpSystem.show();
+                return;
+            }
+            
+            // Fallback to basic help
+            this.showFallbackHelp('general');
+            
+        } catch (error) {
+            console.error('❌ Error showing help:', error);
+            this.showFallbackHelp('general');
+        }
+    }
+
+    // NEW METHOD: Fallback help content
+    showFallbackHelp(modeName) {
+        const helpContent = this.getFallbackHelpContent(modeName);
+        this.showModal(helpContent.title, helpContent.content, [
+            { text: 'Close', action: 'close' }
+        ]);
+    }
+
+    // NEW METHOD: Generate fallback help content
+    getFallbackHelpContent(modeName) {
+        const helpMap = {
+            'kitchen': {
+                title: '🍳 Kitchen Bridge Help',
+                content: `
+                    <h4>Kitchen Bridge (Party Bridge)</h4>
+                    <p>Traditional bridge scoring for casual 4-player games.</p>
+                    
+                    <h4>How to Use:</h4>
+                    <ol>
+                        <li>Set vulnerability with NV button</li>
+                        <li>Enter contract: Level → Suit → Declarer → Result</li>
+                        <li>Press Deal for next hand</li>
+                    </ol>
+                    
+                    <h4>Scoring:</h4>
+                    <ul>
+                        <li>Minor suits: 20 points per trick</li>
+                        <li>Major suits: 30 points per trick</li>
+                        <li>No Trump: 30 points + 10 bonus</li>
+                        <li>Game bonus: 300 (NV) or 500 (Vul)</li>
+                    </ul>
+                `
+            },
+            'chicago': {
+                title: '🌉 Chicago Bridge Help',
+                content: `
+                    <h4>Chicago Bridge (4-Deal Cycle)</h4>
+                    <p>Bridge with automatic vulnerability rotation over 4 deals.</p>
+                    
+                    <h4>4-Deal Cycle:</h4>
+                    <ul>
+                        <li>Deal 1: None vulnerable</li>
+                        <li>Deal 2: North-South vulnerable</li>
+                        <li>Deal 3: East-West vulnerable</li>
+                        <li>Deal 4: Both vulnerable</li>
+                    </ul>
+                    
+                    <h4>Features:</h4>
+                    <ul>
+                        <li>Automatic vulnerability rotation</li>
+                        <li>Dealer advances each deal</li>
+                        <li>Natural 4-deal break points</li>
+                    </ul>
+                `
+            },
+            'bonus': {
+                title: '⭐ Bonus Bridge Help',
+                content: `
+                    <h4>Bonus Bridge (HCP-Enhanced)</h4>
+                    <p>Enhanced scoring system by Mike Smith that rewards skill over luck.</p>
+                    
+                    <h4>How It Works:</h4>
+                    <ol>
+                        <li>Enter contract normally</li>
+                        <li>Analyze hand strength (HCP + distribution)</li>
+                        <li>System adjusts scores based on performance vs expectations</li>
+                    </ol>
+                    
+                    <h4>Key Features:</h4>
+                    <ul>
+                        <li>Rewards both declarers and defenders</li>
+                        <li>Considers hand strength in scoring</li>
+                        <li>More skill-based, less luck-dependent</li>
+                    </ul>
+                `
+            },
+            'rubber': {
+                title: '🎯 Rubber Bridge Help',
+                content: `
+                    <h4>Rubber Bridge (Traditional)</h4>
+                    <p>Classic bridge as played for over 100 years.</p>
+                    
+                    <h4>Game Structure:</h4>
+                    <ul>
+                        <li>First to win 2 games wins the rubber</li>
+                        <li>Rubber bonus: 700 (2-0) or 500 (2-1)</li>
+                        <li>Part-scores accumulate toward game</li>
+                    </ul>
+                    
+                    <h4>Vulnerability:</h4>
+                    <ul>
+                        <li>Not vulnerable until you win first game</li>
+                        <li>Vulnerable after winning one game</li>
+                    </ul>
+                `
+            },
+            'duplicate': {
+                title: '♦ Duplicate Bridge Help',
+                content: `
+                    <h4>Duplicate Bridge (Tournament)</h4>
+                    <p>Competitive bridge with matchpoint and IMP scoring.</p>
+                    
+                    <h4>Scoring Methods:</h4>
+                    <ul>
+                        <li><strong>Matchpoints:</strong> Compare results with other pairs</li>
+                        <li><strong>IMPs:</strong> International Match Points for teams</li>
+                        <li><strong>Board-a-Match:</strong> Win/Lose/Tie system</li>
+                    </ul>
+                    
+                    <h4>Key Differences:</h4>
+                    <ul>
+                        <li>Eliminates luck factor</li>
+                        <li>Fair comparison of skill</li>
+                        <li>Pre-determined vulnerability</li>
+                    </ul>
+                `
+            }
+        };
+        
+        return helpMap[modeName] || {
+            title: '🃏 Bridge Help',
+            content: `
+                <h4>Bridge Modes Calculator</h4>
+                <p>Professional bridge scoring for all major bridge variants.</p>
+                
+                <h4>Available Modes:</h4>
+                <ul>
+                    <li>Kitchen Bridge - Casual scoring</li>
+                    <li>Chicago Bridge - 4-deal cycles</li>
+                    <li>Bonus Bridge - HCP-enhanced</li>
+                    <li>Rubber Bridge - Traditional</li>
+                    <li>Duplicate Bridge - Tournament</li>
+                </ul>
                 
                 <h4>Need a License?</h4>
                 <p>Request a code from Mike Smith</p>
                 <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
-            `;
-        } else {
-            title = '🃏 Bridge Modes Calculator';
-            content = `
-                <h4>Available Bridge Modes</h4>
-                <p><strong>1 - Kitchen Bridge:</strong> Casual bridge scoring with simple bonuses</p>
-                <p><strong>2 - Bonus Bridge:</strong> Kitchen bridge with additional bonus points</p>
-                <p><strong>3 - Chicago Bridge:</strong> Four-deal bridge with rotating partnerships</p>
-                <p><strong>4 - Rubber Bridge:</strong> Traditional rubber bridge scoring</p>
-                <p><strong>5 - Duplicate Bridge:</strong> Tournament-style duplicate scoring</p>
-                
-                <h4>How to Use</h4>
-                <p>1. Select a bridge mode (1-5)</p>
-                <p>2. Set vulnerability with the NV button</p>
-                <p>3. Enter: Level → Suit → Declarer → Result</p>
-                <p>4. Press DEAL for next hand</p>
-                
-                <h4>Controls</h4>
-                <p><strong>Wake:</strong> Keep screen on during play</p>
-                <p><strong>NV/NS/EW/Both:</strong> Set vulnerability</p>
-                <p><strong>X/XX:</strong> Doubles and redoubles</p>
-                <p><strong>Made/Plus/Down:</strong> Contract results</p>
-                
-                <h4>Support</h4>
-                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
-            `;
-        }
-        
-        this.showModal(title, content);
+            `
+        };
     }
-
+// END SECTION EIGHT
+// SECTION NINE - Quit and Purchase Systems
     // ENHANCED QUIT METHOD WITH LICENSE PURCHASE
     showQuit() {
         const licenseStatus = this.licenseManager.checkLicenseStatus();
@@ -700,71 +923,16 @@ Thanks!`);
         }
     }
 
-    async toggleWakeLock() {
-        const wakeToggle = document.getElementById('wakeToggle');
-        
-        try {
-            if ('wakeLock' in navigator) {
-                if (this.wakeLock) {
-                    await this.wakeLock.release();
-                    this.wakeLock = null;
-                    this.isWakeActive = false;
-                    wakeToggle?.classList.remove('active');
-                    this.showMessage('Screen sleep enabled', 'info');
-                } else {
-                    this.wakeLock = await navigator.wakeLock.request('screen');
-                    this.isWakeActive = true;
-                    wakeToggle?.classList.add('active');
-                    this.showMessage('Screen will stay awake', 'success');
-                }
-            } else {
-                this.showMessage('Wake lock not supported', 'error');
-            }
-        } catch (error) {
-            console.error('Wake lock error:', error);
-            this.showMessage('Wake lock unavailable', 'error');
+    closeApp() {
+        if (window.close) {
+            window.close();
+        } else {
+            // For PWA/mobile, show instructions
+            alert('To close this app:\n\n• On mobile: Use your device home button or recent apps\n• On desktop: Close this browser tab');
         }
     }
-
-    toggleVulnerability() {
-        const vulnText = document.getElementById('vulnText');
-        
-        // If in bridge mode, let the bridge mode handle it
-        if (this.currentBridgeMode && typeof this.currentBridgeMode.toggleVulnerability === 'function') {
-            this.currentBridgeMode.toggleVulnerability();
-            return;
-        }
-        
-        // Default behavior for main menu
-        if (!vulnText) {
-            console.warn('Vulnerability text element not found');
-            return;
-        }
-        
-        const states = ['NV', 'NS', 'EW', 'Both'];
-        const current = vulnText.textContent;
-        const currentIndex = states.indexOf(current);
-        const nextIndex = (currentIndex + 1) % states.length;
-        
-        vulnText.textContent = states[nextIndex];
-        this.showMessage('Vulnerability: ' + states[nextIndex], 'info');
-    }
-
-    handleKeyboard(e) {
-        if (e.key >= '0' && e.key <= '9') {
-            e.preventDefault();
-            this.handleButtonPress(e.key);
-        } else if (e.key === 'Backspace') {
-            e.preventDefault();
-            this.handleButtonPress('BACK');
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (this.appState === 'license_entry') {
-                this.handleButtonPress('DEAL');
-            }
-        }
-    }
-
+// END SECTION NINE
+// SECTION TEN - UI State Management
     showLoadingState(message = 'Loading...') {
         const statusMessage = document.getElementById('statusMessage');
         if (statusMessage) {
@@ -797,15 +965,59 @@ Thanks!`);
         }
     }
 
-    closeApp() {
-        if (window.close) {
-            window.close();
-        } else {
-            // For PWA/mobile, show instructions
-            alert('To close this app:\n\n• On mobile: Use your device home button or recent apps\n• On desktop: Close this browser tab');
+    // Utility methods for bridge modes
+    getCurrentLicenseStatus() {
+        return this.licenseManager.checkLicenseStatus();
+    }
+
+    getDealsStats() {
+        return this.licenseManager.getDealsStats();
+    }
+
+    // Return to mode selection (used by bridge modes)
+    returnToModeSelection() {
+        if (this.currentBridgeMode) {
+            this.currentBridgeMode.destroy?.();
+            this.currentBridgeMode = null;
+        }
+        
+        this.appState = 'licensed_mode';
+        const licenseStatus = this.licenseManager.checkLicenseStatus();
+        this.showLicensedMode(licenseStatus);
+    }
+
+    // Get current app state (for bridge modes)
+    getAppState() {
+        return {
+            appState: this.appState,
+            isLicensed: this.isLicensed,
+            isMobile: this.isMobile,
+            currentMode: this.currentBridgeMode?.modeName || null
+        };
+    }
+
+    // Deal completion callback
+    onDealCompleted() {
+        const result = this.licenseManager.incrementDealsPlayed();
+        
+        if (result.trialExpired) {
+            this.showMessage('Trial expired! Enter full version code.', 'error');
+            setTimeout(() => {
+                this.showLicenseEntry(result.licenseStatus);
+            }, 2000);
         }
     }
 
+    closeModal() {
+        const existingModal = document.querySelector('.modal-overlay');
+        if (existingModal) {
+            existingModal.remove();
+            // Restore body scroll when modal closes
+            document.body.classList.remove('modal-open');
+        }
+    }
+// END SECTION TEN
+// SECTION ELEVEN - Enhanced Modal System
     // ENHANCED MODAL METHOD - Fixed for Mobile Scrolling on Pixel 9a
     showModal(title, content, buttons = null) {
         // Prevent body scroll when modal opens
@@ -943,59 +1155,8 @@ Thanks!`);
         };
         document.addEventListener('keydown', handleEscape);
     }
-
-    closeModal() {
-        const existingModal = document.querySelector('.modal-overlay');
-        if (existingModal) {
-            existingModal.remove();
-            // Restore body scroll when modal closes
-            document.body.classList.remove('modal-open');
-        }
-    }
-
-    // Utility methods for bridge modes
-    getCurrentLicenseStatus() {
-        return this.licenseManager.checkLicenseStatus();
-    }
-
-    getDealsStats() {
-        return this.licenseManager.getDealsStats();
-    }
-
-    // Return to mode selection (used by bridge modes)
-    returnToModeSelection() {
-        if (this.currentBridgeMode) {
-            this.currentBridgeMode.destroy?.();
-            this.currentBridgeMode = null;
-        }
-        
-        this.appState = 'licensed_mode';
-        const licenseStatus = this.licenseManager.checkLicenseStatus();
-        this.showLicensedMode(licenseStatus);
-    }
-
-    // Get current app state (for bridge modes)
-    getAppState() {
-        return {
-            appState: this.appState,
-            isLicensed: this.isLicensed,
-            isMobile: this.isMobile,
-            currentMode: this.currentBridgeMode?.modeName || null
-        };
-    }
-
-    // Deal completion callback
-    onDealCompleted() {
-        const result = this.licenseManager.incrementDealsPlayed();
-        
-        if (result.trialExpired) {
-            this.showMessage('Trial expired! Enter full version code.', 'error');
-            setTimeout(() => {
-                this.showLicenseEntry(result.licenseStatus);
-            }, 2000);
-        }
-    }
-
+// END SECTION ELEVEN
+// SECTION TWELVE - Cleanup and Export
     // Cleanup method
     cleanup() {
         console.log('🧹 Cleaning up Bridge App');
@@ -1058,3 +1219,9 @@ if (location.hostname === 'localhost' ||
     console.log('• forceClearCache() - Clear all caches and reload');
     console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-ENHANCED"');
 }
+// END SECTION TWELVE - FILE COMPLETE
+
+
+
+
+
