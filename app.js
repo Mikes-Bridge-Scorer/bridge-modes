@@ -63,30 +63,15 @@ class BridgeApp {
         console.log('✅ Bridge Modes Calculator ready');
     }
 
-    // NEW METHOD: Enhanced help system initialization with cache busting
-    async initializeHelpSystem() {
+    // NEW METHOD: Enhanced help system initialization with fallback
+    initializeHelpSystem() {
         try {
-            // Force load help system with cache busting like bridge modules
-            const version = new Date().getTime();
-            const helpUrl = './js/bridge-help-v2.js?v=' + version + '&bust=' + Math.random();
-            
-            console.log('🔄 Loading help system with cache busting: ' + helpUrl);
-            
-            // Remove existing help script
-            const existingHelp = document.querySelector('script[src*="bridge-help"]');
-            if (existingHelp) {
-                existingHelp.remove();
-                console.log('🗑️ Removed existing help script');
-            }
-            
-            await this.loadScript(helpUrl);
-            
             // Check if the help functions are available
             if (typeof initializeBridgeHelp === 'function') {
                 this.helpSystem = initializeBridgeHelp(this);
-                console.log('✅ Enhanced Bridge Help System initialized successfully with cache busting');
+                console.log('✅ Enhanced Bridge Help System initialized successfully');
             } else {
-                console.warn('⚠️ initializeBridgeHelp function not found after cache-busted load, using fallback');
+                console.warn('⚠️ initializeBridgeHelp function not found, using fallback');
                 this.helpSystem = this.createFallbackHelpSystem();
             }
         } catch (error) {
