@@ -689,7 +689,8 @@ class ChicagoBridgeMode extends BaseBridgeMode {
 }
     
     /**
-     * Show Chicago Bridge specific quit options
+     * Show Chicago Bridge specific quit options - FIXED VERSION
+     * Removed unnecessary "Show Help" button as requested
      */
     showQuit() {
         const scores = this.gameState.scores;
@@ -737,18 +738,36 @@ class ChicagoBridgeMode extends BaseBridgeMode {
             </div>
         `;
         
+        // FIXED: Removed "Show Help" button from the buttons array
         const buttons = [
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
             { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
             { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
-            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
         ];
         
         this.bridgeApp.showModal('🌉 Chicago Bridge Options', content, buttons);
     }
 // END SECTION SIX
 
+// NOTE: The following method should be REMOVED entirely from chicago.js:
+// 
+// /**
+//  * Get help content specific to Chicago Bridge
+//  */
+// getHelpContent() {
+//     return {
+//         title: 'Chicago Bridge (4-Deal Cycle) Help',
+//         content: `
+//             // ... all the embedded help HTML content ...
+//         `,
+//         buttons: [
+//             { text: 'Close Help', action: 'close', class: 'close-btn' }
+//         ]
+//     };
+// }
+//
+// DELETE THE ENTIRE getHelpContent() method from your chicago.js file
 // NOTE: The following method should be REMOVED entirely from chicago.js:
 // 
 // /**
