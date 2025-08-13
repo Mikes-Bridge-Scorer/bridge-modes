@@ -50,12 +50,12 @@ class BridgeApp {
         const licenseStatus = this.licenseManager.checkLicenseStatus();
         
         if (!licenseStatus.needsCode) {
-            console.log('📄 Valid license found, entering licensed mode');
+            console.log('🔄 Valid license found, entering licensed mode');
             this.isLicensed = true;
             this.appState = 'licensed_mode';
             this.showLicensedMode(licenseStatus);
         } else {
-            console.log('🔑 No valid license, showing license entry');
+            console.log('🔒 No valid license, showing license entry');
             this.showLicenseEntry(licenseStatus);
         }
         
@@ -63,19 +63,34 @@ class BridgeApp {
         console.log('✅ Bridge Modes Calculator ready');
     }
 
-    // NEW METHOD: Enhanced help system initialization with fallback
-    initializeHelpSystem() {
+    // NEW METHOD: Enhanced help system initialization with cache busting
+    async initializeHelpSystem() {
         try {
+            // Force load help system with cache busting like bridge modules
+            const version = new Date().getTime();
+            const helpUrl = './js/bridge-help-v2.js?v=' + version + '&bust=' + Math.random();
+            
+            console.log('🔄 Loading help system with cache busting: ' + helpUrl);
+            
+            // Remove existing help script
+            const existingHelp = document.querySelector('script[src*="bridge-help"]');
+            if (existingHelp) {
+                existingHelp.remove();
+                console.log('🗑️ Removed existing help script');
+            }
+            
+            await this.loadScript(helpUrl);
+            
             // Check if the help functions are available
             if (typeof initializeBridgeHelp === 'function') {
                 this.helpSystem = initializeBridgeHelp(this);
-                console.log('✅ Enhanced Bridge Help System initialized successfully');
+                console.log('✅ Enhanced Bridge Help System initialized successfully with cache busting');
             } else {
-                console.warn('⚠️ initializeBridgeHelp function not found, using fallback');
+                console.warn('⚠️ initializeBridgeHelp function not found after cache-busted load, using fallback');
                 this.helpSystem = this.createFallbackHelpSystem();
             }
         } catch (error) {
-            console.error('❌ Failed to initialize help system:', error);
+            console.error('⛔ Failed to initialize help system:', error);
             console.log('🔄 Creating fallback help system...');
             this.helpSystem = this.createFallbackHelpSystem();
         }
@@ -104,7 +119,7 @@ class BridgeApp {
                 console.log('✅ Base mode class loaded');
             }
         } catch (error) {
-            console.error('❌ Failed to load base mode:', error);
+            console.error('⛔ Failed to load base mode:', error);
             throw new Error('Failed to load required base mode class');
         }
     }
