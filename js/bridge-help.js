@@ -1,3 +1,4 @@
+// SECTION ONE - Header and Class Definition
 // FIXED TAB HELP SYSTEM - Working tab switching for mobile
 /**
  * Simple help system with WORKING tab functionality
@@ -12,7 +13,9 @@ class BridgeHelpSystem {
         this.isVisible = false;
         console.log('📚 Fixed Tab Bridge Help System initialized');
     }
-    
+// END SECTION ONE
+
+// SECTION TWO - Main Show Method
     show(modeName = 'kitchen') {
         console.log(`📚 Showing help for: ${modeName}`);
         this.isVisible = true;
@@ -25,6 +28,10 @@ class BridgeHelpSystem {
             case 'chicago':
                 helpContent = this.getChicagoHelpFixed();
                 title = '🌉 Chicago Bridge Help';
+                break;
+            case 'bonus':
+                helpContent = this.getBonusHelpFixed();
+                title = '⭐ Bonus Bridge Help';
                 break;
             case 'kitchen':
                 helpContent = this.getKitchenHelpMinimal();
@@ -39,11 +46,13 @@ class BridgeHelpSystem {
             { text: 'Close', action: () => this.close() }
         ]);
         
-        if (mode === 'chicago') {
+        if (mode === 'chicago' || mode === 'bonus') {
             setTimeout(() => this.setupFixedTabs(), 200);
         }
     }
-    
+// END SECTION TWO
+
+// SECTION THREE - Chicago Bridge Help Content
     /**
      * Chicago Bridge help with FIXED tab switching
      */
@@ -183,7 +192,156 @@ class BridgeHelpSystem {
             </div>
         `;
     }
-    
+// END SECTION THREE
+
+// SECTION FOUR - Bonus Bridge Help Content
+/**
+ * Replace the getBonusHelpFixed() method in bridge-help.js Section 4 with this version
+ * Uses EXACT same structure as Chicago Bridge help - just different content
+ */
+
+/**
+ * Bonus Bridge help with EXACT Chicago structure - just different text content
+ */
+getBonusHelpFixed() {
+    return `
+        <div style="width: 100%; max-width: 500px; margin: 0 auto;">
+            <!-- Fixed tab bar with better mobile support - EXACT same as Chicago -->
+            <div id="tab-container" style="
+                display: flex; 
+                background: #fff3e0; 
+                border-radius: 8px; 
+                margin-bottom: 16px; 
+                padding: 4px;
+            ">
+                <button id="tab-overview" class="help-tab active" onclick="window.switchTab('overview')" style="
+                    flex: 1; padding: 10px 8px; background: white; border: none; 
+                    border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;
+                    color: #e65100;
+                ">Overview</button>
+                <button id="tab-hcp" class="help-tab" onclick="window.switchTab('hcp')" style="
+                    flex: 1; padding: 10px 8px; background: none; border: none; 
+                    border-radius: 6px; font-size: 12px; cursor: pointer;
+                    color: #666;
+                ">HCP</button>
+                <button id="tab-performance" class="help-tab" onclick="window.switchTab('performance')" style="
+                    flex: 1; padding: 10px 8px; background: none; border: none; 
+                    border-radius: 6px; font-size: 12px; cursor: pointer;
+                    color: #666;
+                ">Examples</button>
+            </div>
+            
+            <!-- Content area with fixed switching - EXACT same dimensions as Chicago -->
+            <div style="min-height: 300px; position: relative;">
+                
+                <!-- Overview Content -->
+                <div id="content-overview" class="tab-content" style="display: block;">
+                    <h3 style="margin: 0 0 12px 0; color: #e65100; font-size: 18px;">What is Bonus Bridge?</h3>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.4; color: #333;">
+                        Enhanced scoring system that rewards both declarers and defenders 
+                        based on hand strength and performance versus expectations.
+                    </p>
+                    
+                    <h4 style="margin: 0 0 8px 0; color: #e65100; font-size: 16px;">Key Features</h4>
+                    <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                        <li><strong>HCP-based scoring adjustments</strong></li>
+                        <li><strong>Performance vs expectation analysis</strong></li>
+                        <li><strong>Both sides can score on every deal</strong></li>
+                        <li><strong>Auto vulnerability cycle (Chicago style)</strong></li>
+                    </ul>
+                    
+                    <div style="background: #fff8e1; padding: 12px; border-radius: 8px; border-left: 4px solid #ff8f00;">
+                        <h4 style="margin: 0 0 8px 0; color: #e65100; font-size: 14px;">Perfect For</h4>
+                        <p style="margin: 0; font-size: 13px; color: #e65100;">
+                            Players who want skill over luck • Teaching hand evaluation • Rewarding good defense • Balanced competition
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- HCP Content -->
+                <div id="content-hcp" class="tab-content" style="display: none;">
+                    <h3 style="margin: 0 0 16px 0; color: #e65100; font-size: 18px;">HCP Analysis</h3>
+                    
+                    <div style="
+                        display: grid; grid-template-columns: 1fr 1fr; gap: 8px; 
+                        margin: 16px 0; background: #f5f5f5; padding: 12px; border-radius: 8px;
+                    ">
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #666;">
+                            <div style="font-weight: bold; font-size: 14px;">Level 1-2</div>
+                            <div style="font-size: 12px; color: #666;">Part-game</div>
+                            <div style="font-size: 12px; color: #666;">20-24 HCP</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #28a745;">
+                            <div style="font-weight: bold; color: #28a745; font-size: 14px;">Level 3</div>
+                            <div style="font-size: 12px; color: #666;">3NT game</div>
+                            <div style="font-size: 12px; color: #28a745;">25-26 HCP</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #dc3545;">
+                            <div style="font-weight: bold; color: #dc3545; font-size: 14px;">Level 4</div>
+                            <div style="font-size: 12px; color: #666;">Major game</div>
+                            <div style="font-size: 12px; color: #dc3545;">27-28 HCP</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #fd7e14;">
+                            <div style="font-weight: bold; color: #fd7e14; font-size: 14px;">Level 5+</div>
+                            <div style="font-size: 12px; color: #666;">Minor/Slam</div>
+                            <div style="font-size: 12px; color: #fd7e14;">29+ HCP</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff8e1; padding: 12px; border-radius: 8px; border-left: 4px solid #ff8f00;">
+                        <h4 style="margin: 0 0 8px 0; color: #e65100; font-size: 14px;">Distribution Points</h4>
+                        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #e65100; line-height: 1.3;">
+                            <li>Singleton: 1 point</li>
+                            <li>Void: 3 points</li>
+                            <li>Long suits (6+): 1 point per extra card</li>
+                            <li>Used in expected trick calculation</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Performance/Examples Content -->
+                <div id="content-performance" class="tab-content" style="display: none;">
+                    <h3 style="margin: 0 0 16px 0; color: #e65100; font-size: 18px;">Scoring Examples</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
+                        <div style="background: #e8f5e8; padding: 14px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <h4 style="margin: 0 0 10px 0; color: #155724; font-size: 14px;">✅ Made Contract</h4>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #155724; line-height: 1.3;">
+                                <li>4♠ by N, 28 HCP</li>
+                                <li>Made exactly</li>
+                                <li>HCP advantage reduces score</li>
+                                <li>Final: 9 points</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #ffebee; padding: 14px; border-radius: 8px; border-left: 4px solid #f44336;">
+                            <h4 style="margin: 0 0 10px 0; color: #b71c1c; font-size: 14px;">⚠️ Failed Contract</h4>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #b71c1c; line-height: 1.3;">
+                                <li>3NT by E, 18 HCP</li>
+                                <li>Down 1 (weak hand)</li>
+                                <li>Defenders: 11 points</li>
+                                <li>Declarer consolation: 3 points</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff8e1; padding: 14px; border-radius: 8px; border-left: 4px solid #ff8f00; margin-top: 16px;">
+                        <h4 style="margin: 0 0 10px 0; color: #e65100; font-size: 14px;">Performance Formula</h4>
+                        <div style="font-size: 12px; color: #e65100; line-height: 1.4;">
+                            <strong>Expected Tricks:</strong> 6 + (HCP ÷ 3) + (Distribution ÷ 4)<br>
+                            <strong>Over-performance:</strong> +10 pts per extra trick<br>
+                            <strong>Under-performance:</strong> -8 pts per missed trick<br>
+                            <strong>Both sides typically score on every deal</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+// END SECTION FOUR
+
+// SECTION FIVE - Kitchen Bridge and Basic Help Content
     /**
      * Kitchen Bridge help - simple version
      */
@@ -255,7 +413,9 @@ class BridgeHelpSystem {
             </div>
         `;
     }
-    
+// END SECTION FIVE
+
+// SECTION SIX - Tab Functionality Setup
     /**
      * Setup FIXED tab functionality with multiple event types
      */
@@ -267,7 +427,7 @@ class BridgeHelpSystem {
             console.log(`📱 Switching to tab: ${tabName}`);
             
             // Update tab buttons
-            const tabs = ['overview', 'cycle', 'strategy'];
+            const tabs = ['overview', 'cycle', 'strategy', 'hcp', 'performance', 'examples'];
             tabs.forEach(tab => {
                 const button = document.getElementById(`tab-${tab}`);
                 const content = document.getElementById(`content-${tab}`);
@@ -277,7 +437,7 @@ class BridgeHelpSystem {
                         // Active tab
                         button.style.background = 'white';
                         button.style.fontWeight = '600';
-                        button.style.color = '#1976d2';
+                        button.style.color = button.style.color || '#1976d2';
                         button.classList.add('active');
                         content.style.display = 'block';
                     } else {
@@ -314,7 +474,9 @@ class BridgeHelpSystem {
         
         console.log('✅ Fixed tab functionality setup complete');
     }
-    
+// END SECTION SIX
+
+// SECTION SEVEN - Close and Cleanup
     close() {
         // Clean up global function
         if (window.switchTab) {
@@ -330,7 +492,9 @@ class BridgeHelpSystem {
         console.log('📚 Fixed help system closed');
     }
 }
+// END SECTION SEVEN
 
+// SECTION EIGHT - Global System and Initialization
 // Global system
 let globalBridgeHelp = null;
 
@@ -352,10 +516,12 @@ function showBridgeHelp(modeName = 'kitchen') {
         const newHelp = initializeBridgeHelp(window.bridgeApp);
         if (newHelp) newHelp.show(modeName);
     } else {
-        console.error('❌ Bridge app not available');
+        console.error('⛔ Bridge app not available');
     }
 }
+// END SECTION EIGHT
 
+// SECTION NINE - Export and Module Loading
 // Export
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { BridgeHelpSystem, initializeBridgeHelp, showBridgeHelp };
@@ -366,3 +532,4 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 console.log('✅ Fixed Tab Bridge Help System loaded successfully');
+// END SECTION NINE - FILE COMPLETE
