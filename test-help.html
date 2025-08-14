@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mobile Scrolling Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #2c3e50;
+            color: #333;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: #3498db;
+            color: white;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        /* CRITICAL: The scrollable content area */
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            background: white;
+            position: relative;
+            min-height: 0; /* Critical for flex scrolling */
+        }
+
+        /* Enhanced scrollbar for mobile visibility */
+        .modal-body::-webkit-scrollbar {
+            width: 12px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(52, 152, 219, 0.6);
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .content-section {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .content-section:last-child {
+            border-bottom: none;
+            padding-bottom: 30px;
+        }
+
+        .content-section h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .content-section p {
+            line-height: 1.5;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .feature-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .feature-item h4 {
+            color: #2c3e50;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .feature-item p {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            flex-shrink: 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        /* Touch feedback */
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Scroll indicator for mobile */
+        .scroll-indicator {
+            position: absolute;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+            background: rgba(52, 152, 219, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 1;
+        }
+
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            font-family: monospace;
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debugInfo">
+        Device: <span id="deviceInfo"></span><br>
+        Viewport: <span id="viewportInfo"></span><br>
+        Scroll: <span id="scrollInfo"></span>
+    </div>
+
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🧪 Mobile Scrolling Test</h2>
+            </div>
+            
+            <div class="modal-body" id="modalBody">
+                <div class="scroll-indicator" id="scrollIndicator">👆 Scroll to see more</div>
+                
+                <div class="content-section">
+                    <h3>Section 1: Introduction</h3>
+                    <p>This is a test page designed to perfect mobile scrolling for our bridge app. We're testing on various devices, especially the Pixel 9a which has been problematic.</p>
+                    <p>The key is getting the modal body to scroll properly while keeping the header and footer fixed. This should work on all mobile devices.</p>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 2: Features Grid</h3>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <h4>Touch Scrolling</h4>
+                            <p>Optimized for touch devices with momentum scrolling</p>
+                        </div>
+                        <div class="feature-item">
+                            <h4>Fixed Layout</h4>
+                            <p>Header and footer stay in place while content scrolls</p>
+                        </div>
+                        <div class="feature-item">
+                            <h4>Visible Scrollbar</h4>
+                            <p>Enhanced scrollbar visibility for mobile users</p>
+                        </div>
+                        <div class="feature-item">
+                            <h4>Responsive Design</h4>
+                            <p>Adapts to all screen sizes and orientations</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 3: Technical Details</h3>
+                    <p>We use flexbox layout with the modal body set to <code>flex: 1</code> and <code>overflow-y: auto</code>. The critical CSS property is <code>min-height: 0</code> which allows the flex item to shrink below its content size.</p>
+                    <p>For iOS devices, we add <code>-webkit-overflow-scrolling: touch</code> to enable momentum scrolling. The scrollbar is styled to be more visible on mobile devices.</p>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 4: Browser Compatibility</h3>
+                    <p>This solution works across all modern browsers including:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Chrome on Android (including Pixel devices)</li>
+                        <li>Safari on iOS (iPhone and iPad)</li>
+                        <li>Firefox Mobile</li>
+                        <li>Samsung Internet</li>
+                        <li>Desktop browsers (Chrome, Firefox, Safari, Edge)</li>
+                    </ul>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 5: Implementation Notes</h3>
+                    <p>When implementing this in the bridge app, remember to:</p>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>Set the modal overlay to fixed positioning</li>
+                        <li>Use flexbox for the modal content container</li>
+                        <li>Make the scrollable area use flex: 1</li>
+                        <li>Add touch-action: manipulation to buttons</li>
+                        <li>Include the webkit scrolling properties</li>
+                    </ol>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 6: Testing Checklist</h3>
+                    <p>Test this page on your Pixel 9a and verify:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>✅ Content scrolls smoothly with touch</li>
+                        <li>✅ Header and footer remain fixed</li>
+                        <li>✅ Scrollbar is visible</li>
+                        <li>✅ No horizontal scrolling</li>
+                        <li>✅ Buttons respond to touch</li>
+                        <li>✅ Modal fits within viewport</li>
+                    </ul>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 7: Debug Information</h3>
+                    <p>Check the debug info in the top-left corner. It shows device details and scroll position to help diagnose any issues.</p>
+                    <p>If scrolling doesn't work, the debug info will help us understand what's happening on your specific device.</p>
+                </div>
+
+                <div class="content-section">
+                    <h3>Section 8: Final Content</h3>
+                    <p>This is the last section. If you can see this by scrolling, then the mobile scrolling is working correctly!</p>
+                    <p>Once we confirm this works on your Pixel 9a, we can apply the same technique to all the help modals in the bridge app.</p>
+                    <div style="height: 50px; background: linear-gradient(45deg, #3498db, #2ecc71); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-top: 15px;">
+                        🎉 You reached the end!
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="testScroll()">Test Scroll</button>
+                <button class="btn btn-primary" onclick="refreshPage()">Refresh</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Debug information
+        function updateDebugInfo() {
+            const deviceInfo = document.getElementById('deviceInfo');
+            const viewportInfo = document.getElementById('viewportInfo');
+            const scrollInfo = document.getElementById('scrollInfo');
+            const modalBody = document.getElementById('modalBody');
+            
+            // Device detection
+            const userAgent = navigator.userAgent;
+            let device = 'Unknown';
+            if (userAgent.includes('iPhone')) device = 'iPhone';
+            else if (userAgent.includes('iPad')) device = 'iPad';
+            else if (userAgent.includes('Android')) device = 'Android';
+            else if (userAgent.includes('Windows')) device = 'Windows';
+            else if (userAgent.includes('Mac')) device = 'Mac';
+            
+            deviceInfo.textContent = device;
+            viewportInfo.textContent = `${window.innerWidth}x${window.innerHeight}`;
+            
+            if (modalBody) {
+                scrollInfo.textContent = `${modalBody.scrollTop}/${modalBody.scrollHeight - modalBody.clientHeight}`;
+            }
+        }
+
+        // Test scroll function
+        function testScroll() {
+            const modalBody = document.getElementById('modalBody');
+            const indicator = document.getElementById('scrollIndicator');
+            
+            // Scroll to middle, then back to top
+            modalBody.scrollTo({ top: modalBody.scrollHeight / 2, behavior: 'smooth' });
+            
+            // Show indicator
+            indicator.classList.add('visible');
+            
+            setTimeout(() => {
+                modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => {
+                    indicator.classList.remove('visible');
+                }, 1000);
+            }, 2000);
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+        function closeModal() {
+            alert('In the real app, this would close the modal');
+        }
+
+        // Update debug info regularly
+        setInterval(updateDebugInfo, 100);
+
+        // Show scroll indicator if needed
+        const modalBody = document.getElementById('modalBody');
+        const indicator = document.getElementById('scrollIndicator');
+
+        modalBody.addEventListener('scroll', () => {
+            if (modalBody.scrollHeight > modalBody.clientHeight && modalBody.scrollTop < 50) {
+                indicator.classList.add('visible');
+                setTimeout(() => indicator.classList.remove('visible'), 2000);
+            }
+        });
+
+        // Initial setup
+        updateDebugInfo();
+        
+        // Show indicator on load if content is scrollable
+        setTimeout(() => {
+            if (modalBody.scrollHeight > modalBody.clientHeight) {
+                indicator.classList.add('visible');
+                setTimeout(() => indicator.classList.remove('visible'), 3000);
+            }
+        }, 1000);
+
+        console.log('🧪 Mobile Scrolling Test Page Loaded');
+        console.log('📱 Test on Pixel 9a and other devices');
+        console.log('✅ Check if all content is scrollable');
+    </script>
+</body>
+</html>
