@@ -821,7 +821,7 @@ class BridgeApp {
         };
     }
 // END SECTION EIGHT
-// SECTION NINE - Quit and Purchase Systems
+// SECTION NINE - Quit and Purchase Systems (MOBILE OPTIMIZED)
     // ENHANCED QUIT METHOD WITH LICENSE PURCHASE
     showQuit() {
         const licenseStatus = this.licenseManager.checkLicenseStatus();
@@ -837,22 +837,31 @@ class BridgeApp {
         if (isTrialMode) {
             title = '🎯 Upgrade Available';
             content = `
-                <p><strong>Enjoying Bridge Modes Calculator?</strong></p>
-                <p>Upgrade to the full version for:</p>
-                <ul>
-                    <li>✅ Unlimited deals and time</li>
-                    <li>✅ All 5 bridge scoring modes</li>
-                    <li>✅ Advanced scoring features</li>
-                    <li>✅ Lifetime updates</li>
-                </ul>
-                <p><strong>Request a license code from Mike Smith</strong></p>
+                <div style="padding: 20px; font-size: 14px; line-height: 1.4;">
+                    <div style="margin-bottom: 20px;">
+                        <p style="margin: 0 0 12px 0; font-weight: bold; font-size: 16px;">Enjoying Bridge Modes Calculator?</p>
+                        <p style="margin: 0 0 16px 0;">Upgrade to the full version for:</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
+                            <li style="margin-bottom: 6px;"><strong>✅ Unlimited deals and time</strong></li>
+                            <li style="margin-bottom: 6px;"><strong>✅ All 5 bridge scoring modes</strong></li>
+                            <li style="margin-bottom: 6px;"><strong>✅ Advanced scoring features</strong></li>
+                            <li style="margin-bottom: 0;"><strong>✅ Lifetime updates</strong></li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 16px; border-radius: 8px; text-align: center;">
+                        <p style="margin: 0; font-weight: bold; color: #1976d2;">Request a license code from Mike Smith</p>
+                    </div>
+                </div>
             `;
             
             buttons = [
                 { text: 'Continue Playing', action: 'close' },
                 { text: 'Request License', action: () => this.showPurchaseInfo() },
-                { text: 'Enter License Code', action: () => this.showLicenseEntry(this.licenseManager.checkLicenseStatus()) },
-                { text: 'Close App', action: () => this.closeApp() }
+                { text: 'Enter License Code', action: () => this.showLicenseEntry(this.licenseManager.checkLicenseStatus()) }
             ];
         } else {
             // Full version - standard quit menu
@@ -862,37 +871,51 @@ class BridgeApp {
             ];
         }
         
-        this.showModal(title, content, buttons);
+        this.showMobileOptimizedModal(title, content, buttons);
     }
 
-    // LICENSE REQUEST INFORMATION
+    // LICENSE REQUEST INFORMATION - MOBILE OPTIMIZED
     showPurchaseInfo() {
         const content = `
-            <h4>📧 Request Full License</h4>
-            <p><strong>Bridge Modes Calculator - Full Version</strong></p>
-            
-            <h4>What's Included:</h4>
-            <ul>
-                <li>All 5 bridge scoring modes</li>
-                <li>Unlimited deals and playing time</li>
-                <li>Advanced scoring features</li>
-                <li>Detailed score tracking</li>
-                <li>Lifetime updates</li>
-            </ul>
-            
-            <h4>How to Request:</h4>
-            <p>1. Email: <a href="mailto:mike.chris.smith@gmail.com?subject=Bridge%20Modes%20License%20Request">mike.chris.smith@gmail.com</a></p>
-            <p>2. Include "License Request" in subject</p>
-            <p>3. Mike will respond with license details</p>
-            
-            <p><strong>Contact Mike Smith for pricing and availability</strong></p>
+            <div style="padding: 20px; font-size: 14px; line-height: 1.4;">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 16px;">📧 Request Full License</h4>
+                    <p style="margin: 0; font-weight: bold;">Bridge Modes Calculator - Full Version</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 14px;">What's Included:</h5>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                        <li>All 5 bridge scoring modes</li>
+                        <li>Unlimited deals and playing time</li>
+                        <li>Advanced scoring features</li>
+                        <li>Detailed score tracking</li>
+                        <li>Lifetime updates</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e8f5e8; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 12px 0; color: #155724; font-size: 14px;">How to Request:</h5>
+                    <div style="font-size: 13px; color: #155724;">
+                        <p style="margin: 0 0 8px 0;"><strong>1.</strong> Email: <a href="mailto:mike.chris.smith@gmail.com?subject=Bridge%20Modes%20License%20Request" style="color: #155724;">mike.chris.smith@gmail.com</a></p>
+                        <p style="margin: 0 0 8px 0;"><strong>2.</strong> Include "License Request" in subject</p>
+                        <p style="margin: 0;"><strong>3.</strong> Mike will respond with license details</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; background: #fff3cd; padding: 12px; border-radius: 8px;">
+                    <p style="margin: 0; font-weight: bold; color: #856404; font-size: 13px;">Contact Mike Smith for pricing and availability</p>
+                </div>
+            </div>
         `;
         
-        this.showModal('📧 Request License', content, [
+        const buttons = [
             { text: 'Send Email', action: () => this.openPurchaseEmail() },
             { text: 'Back', action: () => this.showQuit() },
             { text: 'Close', action: 'close' }
-        ]);
+        ];
+        
+        this.showMobileOptimizedModal('📧 Request License', content, buttons);
     }
 
     // OPEN EMAIL CLIENT FOR LICENSE REQUEST
@@ -916,8 +939,11 @@ Thanks!`);
             window.open(mailtoLink, '_blank');
         } catch (error) {
             // Fallback for mobile devices
-            this.showModal('📧 Contact Information', 
-                '<p>Email: <strong>mike.chris.smith@gmail.com</strong></p><p>Subject: <strong>Bridge Modes License Request</strong></p>',
+            this.showMobileOptimizedModal('📧 Contact Information', 
+                `<div style="padding: 20px; text-align: center;">
+                    <p style="margin: 0 0 12px 0;"><strong>Email:</strong> mike.chris.smith@gmail.com</p>
+                    <p style="margin: 0;"><strong>Subject:</strong> Bridge Modes License Request</p>
+                </div>`,
                 [{ text: 'Close', action: 'close' }]
             );
         }
@@ -931,8 +957,213 @@ Thanks!`);
             alert('To close this app:\n\n• On mobile: Use your device home button or recent apps\n• On desktop: Close this browser tab');
         }
     }
-// END SECTION NINE
-// SECTION TEN - UI State Management
+
+    // NEW: Mobile-optimized modal method for app.js
+    showMobileOptimizedModal(title, content, buttons = null) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay using proven template
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
+        
+        const defaultButtons = [{ text: 'Close', action: 'close' }];
+        const modalButtons = buttons || defaultButtons;
+        
+        // Create responsive button layout
+        let buttonsHTML = '';
+        if (modalButtons.length === 3) {
+            // 2+1 layout for 3 buttons (mobile friendly)
+            buttonsHTML = `
+                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="modal-btn" data-action="${modalButtons[0].text}" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #27ae60;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[0].text}</button>
+                        <button class="modal-btn" data-action="${modalButtons[1].text}" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #3498db;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[1].text}</button>
+                    </div>
+                    <button class="modal-btn" data-action="${modalButtons[2].text}" style="
+                        padding: 12px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #f39c12;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[2].text}</button>
+                </div>
+            `;
+        } else {
+            // Standard layout for other button counts
+            modalButtons.forEach(btn => {
+                buttonsHTML += `
+                    <button class="modal-btn" data-action="${btn.text}" style="
+                        padding: 10px 15px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #3498db;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        margin: 0 4px;
+                        flex: 1;
+                        max-width: 140px;
+                    ">${btn.text}</button>
+                `;
+            });
+        }
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #3498db;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">${title}</h2>
+                </div>
+                
+                <div class="modal-body" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        .modal-body::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-thumb {
+                            background: rgba(52, 152, 219, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                    </style>
+                    ${content}
+                </div>
+                
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                ">
+                    ${buttonsHTML}
+                </div>
+            </div>
+        `;
+        
+        // Enhanced event handling
+        const handleAction = (actionText) => {
+            document.body.classList.remove('modal-open');
+            
+            const buttonConfig = modalButtons.find(b => b.text === actionText);
+            if (buttonConfig) {
+                if (buttonConfig.action === 'close') {
+                    // Just close modal
+                } else if (typeof buttonConfig.action === 'function') {
+                    buttonConfig.action();
+                }
+            }
+            modal.remove();
+        };
+        
+        // Button event listeners with mobile optimization
+        setTimeout(() => {
+            const modalBtns = modal.querySelectorAll('.modal-btn');
+            
+            modalBtns.forEach((btn) => {
+                ['click', 'touchend'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
+                
+                // Visual feedback
+                btn.addEventListener('touchstart', (e) => {
+                    const originalBg = btn.style.background;
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        btn.style.background = originalBg;
+                        btn.style.transform = 'scale(1)';
+                    }, 150);
+                }, { passive: true });
+            });
+        }, 50);
+        
+        document.body.appendChild(modal);
+    }
+// END SECTION NINE// SECTION TEN - UI State Management
     showLoadingState(message = 'Loading...') {
         const statusMessage = document.getElementById('statusMessage');
         if (statusMessage) {
