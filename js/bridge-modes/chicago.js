@@ -681,7 +681,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
     }
 // END SECTION FIVE
 
-// SECTION SIX - Mobile Template System (CORRECTED - NO TABS)
+// SECTION SIX - Mobile Template System (COMPLETE WITH QUIT FIX)
     /**
      * Mobile-optimized modal using proven template from test-help.html
      */
@@ -863,6 +863,229 @@ class ChicagoBridgeMode extends BaseBridgeMode {
     }
     
     /**
+     * Mobile-optimized modal with custom button layout for quit page
+     */
+    showMobileOptimizedModalWithCustomButtons(title, content, buttons = null) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay using proven template
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
+        
+        const defaultButtons = [{ text: 'Close', action: () => this.closeMobileModal() }];
+        const modalButtons = buttons || defaultButtons;
+        
+        // Create two-row button layout for mobile
+        let buttonsHTML = '';
+        if (modalButtons.length === 4) {
+            // Two rows of two buttons each
+            buttonsHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+                    <button class="modal-btn" data-action="${modalButtons[0].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #27ae60;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[0].text}</button>
+                    <button class="modal-btn" data-action="${modalButtons[1].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #3498db;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[1].text}</button>
+                    <button class="modal-btn" data-action="${modalButtons[2].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #f39c12;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[2].text}</button>
+                    <button class="modal-btn" data-action="${modalButtons[3].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #95a5a6;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[3].text}</button>
+                </div>
+            `;
+        } else {
+            // Fallback to single row for other button counts
+            modalButtons.forEach(btn => {
+                buttonsHTML += `
+                    <button class="modal-btn" data-action="${btn.text}" style="
+                        padding: 10px 15px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #3498db;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        margin: 0 3px;
+                        flex: 1;
+                        max-width: 120px;
+                    ">${btn.text}</button>
+                `;
+            });
+        }
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #3498db;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">${title}</h2>
+                </div>
+                
+                <div class="modal-body" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        .modal-body::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-thumb {
+                            background: rgba(52, 152, 219, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                        .content-section {
+                            padding: 20px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .content-section:last-child {
+                            border-bottom: none;
+                            padding-bottom: 30px;
+                        }
+                    </style>
+                    ${content}
+                </div>
+                
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                ">
+                    ${buttonsHTML}
+                </div>
+            </div>
+        `;
+        
+        // Enhanced event handling
+        const handleAction = (actionText) => {
+            document.body.classList.remove('modal-open');
+            
+            const buttonConfig = modalButtons.find(b => b.text === actionText);
+            if (buttonConfig && buttonConfig.action) {
+                buttonConfig.action();
+            }
+            modal.remove();
+        };
+        
+        // Button event listeners with mobile optimization
+        setTimeout(() => {
+            const modalBtns = modal.querySelectorAll('.modal-btn');
+            
+            modalBtns.forEach((btn) => {
+                ['click', 'touchend'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
+                
+                // Visual feedback
+                btn.addEventListener('touchstart', (e) => {
+                    const originalBg = btn.style.background;
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        btn.style.background = originalBg;
+                        btn.style.transform = 'scale(1)';
+                    }, 150);
+                }, { passive: true });
+            });
+        }, 50);
+        
+        document.body.appendChild(modal);
+    }
+    
+    /**
      * Close mobile modal
      */
     closeMobileModal() {
@@ -1007,7 +1230,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Show Chicago Bridge specific quit options
+     * Show Chicago Bridge specific quit options - FIXED MOBILE LAYOUT
      */
     showQuit() {
         const scores = this.gameState.scores;
@@ -1062,7 +1285,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
             { text: 'Return to Main Menu', action: () => this.returnToMainMenu() }
         ];
         
-        this.showMobileOptimizedModal('🌉 Chicago Bridge Options', content, buttons);
+        this.showMobileOptimizedModalWithCustomButtons('🌉 Chicago Bridge Options', content, buttons);
     }
 
     /**
