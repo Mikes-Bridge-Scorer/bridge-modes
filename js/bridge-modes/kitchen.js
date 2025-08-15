@@ -486,87 +486,867 @@ class KitchenBridgeMode extends BaseBridgeMode {
     }
 // END SECTION FIVE
 
-// SECTION SIX - Display & Help - ULTRA COMPACT VERSION
+// SECTION SIX - Mobile Template System (PROVEN FROM Chicago Bridge)
     /**
-     * Update the display using new system
+     * Mobile-optimized modal using proven template from test-help.html
      */
-    updateDisplay() {
-        const display = document.getElementById('display');
-        if (display) {
-            display.innerHTML = this.getDisplayContent();
-        }
+    showMobileOptimizedModal(title, content, buttons = null) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
         
-        // Update button states
-        const activeButtons = this.getActiveButtons();
-        activeButtons.push('BACK'); // Always allow going back
+        // Create modal overlay using proven template
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
         
-        this.bridgeApp.updateButtonStates(activeButtons);
+        const defaultButtons = [{ text: 'Close', action: () => this.closeMobileModal() }];
+        const modalButtons = buttons || defaultButtons;
+        
+        let buttonsHTML = '';
+        modalButtons.forEach(btn => {
+            buttonsHTML += `
+                <button class="modal-btn" data-action="${btn.text}" style="
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    background: #3498db;
+                    color: white;
+                    touch-action: manipulation;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                    margin: 0 5px;
+                ">${btn.text}</button>
+            `;
+        });
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #3498db;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">${title}</h2>
+                </div>
+                
+                <div class="modal-body" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        .modal-body::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-thumb {
+                            background: rgba(52, 152, 219, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                        .content-section {
+                            padding: 20px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .content-section:last-child {
+                            border-bottom: none;
+                            padding-bottom: 30px;
+                        }
+                        .feature-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 12px;
+                            margin: 15px 0;
+                        }
+                        .feature-item {
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 8px;
+                            border-left: 4px solid #3498db;
+                        }
+                        .feature-item h4 {
+                            color: #2c3e50;
+                            font-size: 14px;
+                            margin-bottom: 6px;
+                        }
+                        .feature-item p {
+                            font-size: 12px;
+                            color: #666;
+                            margin: 0;
+                        }
+                        .scoring-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 10px 0;
+                            font-size: 12px;
+                        }
+                        .scoring-table th,
+                        .scoring-table td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: left;
+                        }
+                        .scoring-table th {
+                            background: #f8f9fa;
+                            font-weight: bold;
+                        }
+                    </style>
+                    ${content}
+                </div>
+                
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    gap: 10px;
+                    justify-content: center;
+                ">
+                    ${buttonsHTML}
+                </div>
+            </div>
+        `;
+        
+        // Enhanced event handling
+        const handleAction = (actionText) => {
+            document.body.classList.remove('modal-open');
+            
+            const buttonConfig = modalButtons.find(b => b.text === actionText);
+            if (buttonConfig && buttonConfig.action) {
+                buttonConfig.action();
+            }
+            modal.remove();
+        };
+        
+        // Button event listeners with mobile optimization
+        setTimeout(() => {
+            const modalBtns = modal.querySelectorAll('.modal-btn');
+            
+            modalBtns.forEach((btn) => {
+                ['click', 'touchend'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
+                
+                // Visual feedback
+                btn.addEventListener('touchstart', (e) => {
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.95)';
+                }, { passive: true });
+                
+                btn.addEventListener('touchend', (e) => {
+                    btn.style.background = '#3498db';
+                    btn.style.transform = 'scale(1)';
+                }, { passive: true });
+            });
+        }, 50);
+        
+        document.body.appendChild(modal);
     }
     
     /**
-     * Get help content specific to Kitchen Bridge - ULTRA COMPACT VERSION
+     * Mobile-optimized modal with custom button layout for quit page
      */
-    getHelpContent() {
+    showMobileOptimizedModalWithCustomButtons(title, content, buttons = null) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay using proven template
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
+        
+        const defaultButtons = [{ text: 'Close', action: () => this.closeMobileModal() }];
+        const modalButtons = buttons || defaultButtons;
+        
+        // Create two-row button layout for mobile (Kitchen Bridge has 5 buttons)
+        let buttonsHTML = '';
+        if (modalButtons.length === 5) {
+            // First row: 3 buttons, Second row: 2 buttons
+            buttonsHTML = `
+                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <button class="modal-btn" data-action="${modalButtons[0].text}" style="
+                            padding: 12px 6px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #27ae60;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[0].text}</button>
+                        <button class="modal-btn" data-action="${modalButtons[1].text}" style="
+                            padding: 12px 6px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #3498db;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[1].text}</button>
+                        <button class="modal-btn" data-action="${modalButtons[2].text}" style="
+                            padding: 12px 6px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #f39c12;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[2].text}</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="modal-btn" data-action="${modalButtons[3].text}" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #95a5a6;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[3].text}</button>
+                        <button class="modal-btn" data-action="${modalButtons[4].text}" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #e74c3c;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">${modalButtons[4].text}</button>
+                    </div>
+                </div>
+            `;
+        } else if (modalButtons.length === 4) {
+            // Two rows of two buttons each (fallback)
+            buttonsHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+                    <button class="modal-btn" data-action="${modalButtons[0].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #27ae60;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[0].text}</button>
+                    <button class="modal-btn" data-action="${modalButtons[1].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #3498db;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[1].text}</button>
+                    <button class="modal-btn" data-action="${modalButtons[2].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #f39c12;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[2].text}</button>
+                    <button class="modal-btn" data-action="${modalButtons[3].text}" style="
+                        padding: 12px 8px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #95a5a6;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">${modalButtons[3].text}</button>
+                </div>
+            `;
+        } else {
+            // Fallback to single row for other button counts
+            modalButtons.forEach(btn => {
+                buttonsHTML += `
+                    <button class="modal-btn" data-action="${btn.text}" style="
+                        padding: 10px 15px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #3498db;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        margin: 0 3px;
+                        flex: 1;
+                        max-width: 120px;
+                    ">${btn.text}</button>
+                `;
+            });
+        }
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #3498db;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">${title}</h2>
+                </div>
+                
+                <div class="modal-body" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        .modal-body::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-thumb {
+                            background: rgba(52, 152, 219, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                        .content-section {
+                            padding: 20px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .content-section:last-child {
+                            border-bottom: none;
+                            padding-bottom: 30px;
+                        }
+                    </style>
+                    ${content}
+                </div>
+                
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                ">
+                    ${buttonsHTML}
+                </div>
+            </div>
+        `;
+        
+        // Enhanced event handling
+        const handleAction = (actionText) => {
+            document.body.classList.remove('modal-open');
+            
+            const buttonConfig = modalButtons.find(b => b.text === actionText);
+            if (buttonConfig && buttonConfig.action) {
+                buttonConfig.action();
+            }
+            modal.remove();
+        };
+        
+        // Button event listeners with mobile optimization
+        setTimeout(() => {
+            const modalBtns = modal.querySelectorAll('.modal-btn');
+            
+            modalBtns.forEach((btn) => {
+                ['click', 'touchend'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
+                
+                // Visual feedback
+                btn.addEventListener('touchstart', (e) => {
+                    const originalBg = btn.style.background;
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        btn.style.background = originalBg;
+                        btn.style.transform = 'scale(1)';
+                    }, 150);
+                }, { passive: true });
+            });
+        }, 50);
+        
+        document.body.appendChild(modal);
+    }
+    
+    /**
+     * Close mobile modal
+     */
+    closeMobileModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    /**
+     * Show Kitchen Bridge specific help - PROVEN MOBILE TEMPLATE
+     */
+    showHelp() {
+        const helpContent = this.getKitchenHelpContent();
+        this.showMobileOptimizedModal(helpContent.title, helpContent.content, helpContent.buttons);
+    }
+
+    /**
+     * Get Kitchen Bridge help content - Based on your help document
+     */
+    getKitchenHelpContent() {
         return {
-            title: 'Kitchen Bridge Help',
+            title: '🍳 Kitchen Bridge Help',
             content: `
-                <div style="padding: 12px; font-size: 13px; line-height: 1.3; max-width: 500px; margin: 0 auto;">
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="color: #2c3e50; margin: 0 0 6px 0; font-size: 15px;">What is Kitchen Bridge?</h4>
-                        <p style="margin: 0 0 8px 0;"><strong>Kitchen Bridge</strong> (Party Bridge) is traditional bridge scoring for casual 4-player games using standard bridge rules.</p>
-                    </div>
+                <div class="content-section">
+                    <h3 style="margin: 0 0 12px 0; color: #1976d2; font-size: 18px;">What is Kitchen Bridge?</h3>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.4; color: #333;">
+                        Kitchen Bridge is traditional bridge scoring designed for casual play at a single table with 4 players. 
+                        It uses standard bridge scoring rules without any adjustments for hand strength or playing skill.
+                    </p>
                     
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="color: #2c3e50; margin: 0 0 6px 0; font-size: 14px;">How to Use</h4>
-                        <div style="font-size: 12px;">
-                            <strong>1.</strong> Set Vulnerability: Use Vuln button (NV → NS → EW → Both)<br>
-                            <strong>2.</strong> Enter Contract: Level → Suit → Declarer → Result<br>
-                            <strong>3.</strong> Add Doubling: Press X to cycle None/Double/Redouble<br>
-                            <strong>4.</strong> Next Deal: Press Deal to continue
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 16px;">Key Characteristics</h4>
+                    <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                        <li><strong>Standard Scoring:</strong> Uses traditional bridge point values</li>
+                        <li><strong>4 Players Only:</strong> Designed for one table bridge</li>
+                        <li><strong>No Skill Adjustment:</strong> Same score regardless of hand strength</li>
+                        <li><strong>Simple & Quick:</strong> Easy to calculate, familiar to all bridge players</li>
+                    </ul>
+                    
+                    <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 14px;">Perfect For</h4>
+                        <p style="margin: 0; font-size: 13px; color: #1976d2;">
+                            Casual home bridge games • Learning bridge scoring • Quick social games • Traditional bridge enthusiasts
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 16px 0; color: #1976d2; font-size: 18px;">Basic Contract Scores</h3>
+                    
+                    <table class="scoring-table">
+                        <tr>
+                            <th>Contract</th>
+                            <th>Points per Trick</th>
+                            <th>Example (4-level)</th>
+                        </tr>
+                        <tr>
+                            <td>♣ ♦ (Minors)</td>
+                            <td>20</td>
+                            <td>4♣ = 80 pts</td>
+                        </tr>
+                        <tr>
+                            <td>♥ ♠ (Majors)</td>
+                            <td>30</td>
+                            <td>4♥ = 120 pts</td>
+                        </tr>
+                        <tr>
+                            <td>NT (No Trump)</td>
+                            <td>30 + 10</td>
+                            <td>3NT = 100 pts</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 16px 0; color: #1976d2; font-size: 18px;">Bonus Points</h3>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <h4>Game Bonus</h4>
+                            <p>300 (not vulnerable)<br>500 (vulnerable)</p>
+                        </div>
+                        <div class="feature-item">
+                            <h4>Part Game</h4>
+                            <p>50 points</p>
+                        </div>
+                        <div class="feature-item">
+                            <h4>Small Slam</h4>
+                            <p>500 / 750 points</p>
+                        </div>
+                        <div class="feature-item">
+                            <h4>Grand Slam</h4>
+                            <p>1000 / 1500 points</p>
                         </div>
                     </div>
                     
-                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                        <div style="flex: 1; background: #f8f9fa; padding: 10px; border-radius: 6px;">
-                            <h5 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 13px;">Key Features</h5>
-                            <div style="font-size: 11px;">
-                                • Standard bridge scoring<br>
-                                • Manual vulnerability control<br>
-                                • 4 players only<br>
-                                • Simple and quick
-                            </div>
+                    <div style="background: #e8f5e8; padding: 12px; border-radius: 8px; border-left: 4px solid #28a745; margin-top: 16px;">
+                        <h4 style="margin: 0 0 8px 0; color: #155724; font-size: 14px;">Doubling Effects</h4>
+                        <p style="margin: 0; font-size: 13px; color: #155724;">
+                            Doubles contract points and penalties • Adds 50/100 bonus for making doubled contracts
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 16px 0; color: #1976d2; font-size: 18px;">Overtricks & Penalties</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
+                        <div style="background: #e8f5e8; padding: 14px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <h4 style="margin: 0 0 10px 0; color: #155724; font-size: 14px;">✅ Made Contracts</h4>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #155724; line-height: 1.3;">
+                                <li>Overtricks: Same value as contract suit</li>
+                                <li>Doubled Overtricks: 100/200 (not vul/vul)</li>
+                            </ul>
                         </div>
-                        <div style="flex: 1; background: #e8f4f8; padding: 10px; border-radius: 6px;">
-                            <h5 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 13px;">Basic Scoring</h5>
-                            <div style="font-size: 11px;">
-                                • Minor suits: 20 pts/trick<br>
-                                • Major suits: 30 pts/trick<br>
-                                • NT: 30 + 10 bonus<br>
-                                • Game: +300/500 bonus
-                            </div>
+                        
+                        <div style="background: #ffebee; padding: 14px; border-radius: 8px; border-left: 4px solid #f44336;">
+                            <h4 style="margin: 0 0 10px 0; color: #b71c1c; font-size: 14px;">❌ Failed Contracts</h4>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #b71c1c; line-height: 1.3;">
+                                <li>Penalties: 50/100 per trick (not vul/vul)</li>
+                                <li>Doubled Penalties: 100/200/300... progression</li>
+                            </ul>
                         </div>
                     </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 12px 0; color: #1976d2; font-size: 18px;">How to Use</h3>
+                    <ol style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                        <li>Set Vulnerability using the Vuln button (NV → NS → EW → Both)</li>
+                        <li>Enter Contract: Level → Suit → Declarer → Result</li>
+                        <li>Add Doubling: Press X to cycle None/Double/Redouble</li>
+                        <li>Press Deal to continue to next hand</li>
+                        <li>Manual vulnerability control throughout game</li>
+                    </ol>
                     
-                    <div style="text-align: center; font-size: 11px; color: #666;">
-                        Perfect for casual home games and learning bridge scoring
+                    <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #ffc107; margin-top: 16px;">
+                        <h4 style="margin: 0 0 8px 0; color: #856404; font-size: 14px;">⚠️ The Core Limitation</h4>
+                        <p style="margin: 0; font-size: 13px; color: #856404;">
+                            Kitchen Bridge treats all hands equally - a brilliant 4♥ make with 6 HCP gets the same 420 points as an easy 4♥ make with 28 HCP. Consider Bonus Bridge for skill-based scoring.
+                        </p>
+                    </div>
+                    
+                    <div style="
+                        text-align: center; 
+                        font-size: 12px; 
+                        color: #666; 
+                        background: rgba(52,152,219,0.05);
+                        padding: 12px;
+                        border-radius: 6px;
+                        margin-top: 16px;
+                    ">
+                        🍳 Kitchen Bridge: Perfect for casual home games and learning bridge scoring
                     </div>
                 </div>
             `,
             buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
+                { text: 'Close', action: () => this.closeMobileModal() }
             ]
         };
     }
+
+    /**
+     * Show Kitchen Bridge specific quit options - FIXED MOBILE LAYOUT
+     */
+    showQuit() {
+        const scores = this.gameState.scores;
+        const totalDeals = this.gameState.history.length;
+        const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
+        
+        let currentScoreContent = '';
+        if (totalDeals > 0) {
+            const leader = scores.NS > scores.EW ? 'North-South' : 
+                          scores.EW > scores.NS ? 'East-West' : 'Tied';
+            
+            currentScoreContent = `
+                <div class="content-section">
+                    <h4 style="margin: 0 0 12px 0; color: #1976d2;">📊 Current Game Status</h4>
+                    <p><strong>Deals Played:</strong> ${totalDeals}</p>
+                    <p><strong>Current Vulnerability:</strong> ${this.vulnerability}</p>
+                    <p><strong>Current Scores:</strong></p>
+                    <ul>
+                        <li>North-South: ${scores.NS} points</li>
+                        <li>East-West: ${scores.EW} points</li>
+                    </ul>
+                    <p><strong>Current Leader:</strong> ${leader}</p>
+                </div>
+            `;
+        }
+        
+        let licenseSection = '';
+        if (licenseStatus.status === 'trial') {
+            licenseSection = `
+                <div class="content-section">
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2;">📅 License Status</h4>
+                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
+                </div>
+            `;
+        }
+        
+        const content = `
+            ${currentScoreContent}
+            ${licenseSection}
+            <div class="content-section">
+                <h4 style="margin: 0 0 8px 0; color: #1976d2;">🎮 Game Options</h4>
+                <p>What would you like to do?</p>
+            </div>
+        `;
+        
+        const buttons = [
+            { text: 'Continue Playing', action: () => this.closeMobileModal() },
+            { text: 'Show Scores', action: () => this.showDetailedScores() },
+            { text: 'New Game', action: () => this.startNewGame() },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu() },
+            { text: 'Show Help', action: () => this.showHelp() }
+        ];
+        
+        this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
+    }
+
+    /**
+     * Show detailed scores using the proven mobile template
+     */
+    showDetailedScores() {
+        const scores = this.gameState.scores;
+        const history = this.gameState.history;
+        
+        if (history.length === 0) {
+            this.showMobileOptimizedModal('📊 Game Scores', '<div class="content-section"><p>No deals have been played yet.</p></div>');
+            return;
+        }
+
+        let dealSummary = `
+            <div class="content-section">
+                <h4 style="margin: 0 0 12px 0; color: #1976d2;">📊 Current Totals</h4>
+                <div style="text-align: center; background: rgba(52,152,219,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-size: 18px; font-weight: bold; color: #2c3e50;">
+                        <span style="color: #27ae60;">North-South: ${scores.NS}</span> • 
+                        <span style="color: #e74c3c;">East-West: ${scores.EW}</span>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 14px; color: #666;">
+                        Leader: <strong>${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <h4 style="margin: 0 0 12px 0; color: #1976d2;">🍳 Deal by Deal History</h4>
+        `;
+        
+        // Show all deals (Kitchen Bridge doesn't need cycle grouping like Chicago)
+        history.forEach((deal, index) => {
+            const contract = deal.contract;
+            const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
+            const vulnerability = deal.vulnerability || 'NV';
+            const scoreDisplay = deal.score >= 0 ? `+${deal.score}` : `${deal.score}`;
+            const scoringSide = deal.scoringSide || (deal.score >= 0 ? 
+                (['N', 'S'].includes(contract.declarer) ? 'NS' : 'EW') :
+                (['N', 'S'].includes(contract.declarer) ? 'EW' : 'NS'));
+            
+            // Vulnerability color coding
+            const vulnColor = vulnerability === 'NV' ? '#95a5a6' : 
+                             vulnerability === 'NS' ? '#27ae60' : 
+                             vulnerability === 'EW' ? '#e74c3c' : '#f39c12';
+            
+            dealSummary += `
+                <div style="
+                    border: 1px solid #ddd; 
+                    padding: 12px; 
+                    margin: 8px 0;
+                    border-radius: 6px;
+                    background: ${index % 2 === 0 ? 'rgba(240,248,255,0.8)' : 'white'};
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; margin-bottom: 4px; color: #222; font-size: 13px;">
+                            Deal ${deal.deal} - <span style="color: ${vulnColor};">${vulnerability}</span>
+                        </div>
+                        <div style="font-size: 12px; color: #333; font-weight: 500;">
+                            ${contractStr} by ${contract.declarer} = ${contract.result}
+                        </div>
+                    </div>
+                    <div style="
+                        text-align: right;
+                        min-width: 80px;
+                        font-weight: bold;
+                    ">
+                        <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'}; font-size: 14px;">
+                            ${scoreDisplay}
+                        </div>
+                        <div style="font-size: 11px; color: #666;">
+                            ${scoringSide}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        dealSummary += `
+            </div>
+            
+            <div class="content-section">
+                <div style="
+                    text-align: center; 
+                    font-size: 12px; 
+                    color: #666; 
+                    background: rgba(52,152,219,0.05);
+                    padding: 12px;
+                    border-radius: 6px;
+                ">
+                    🍳 Kitchen Bridge: Traditional bridge scoring for casual play
+                </div>
+            </div>
+        `;
+        
+        this.showMobileOptimizedModal('📊 Kitchen Bridge - Detailed Analysis', dealSummary, [
+            { text: 'Back to Options', action: () => this.showQuit() },
+            { text: 'Continue Playing', action: () => this.closeMobileModal() }
+        ]);
+    }
+
+    /**
+     * Start a new game (reset scores and vulnerability)
+     */
+    startNewGame() {
+        const confirmed = confirm(
+            'Start a new Kitchen Bridge game?\n\nThis will reset all scores to zero and start over.\n\nClick OK to start new game, Cancel to continue current game.'
+        );
+        
+        if (confirmed) {
+            // Reset all scores and history
+            this.gameState.scores = { NS: 0, EW: 0 };
+            this.gameState.history = [];
+            this.currentDeal = 1;
+            this.vulnerability = 'NV';
+            
+            // Update vulnerability display
+            const vulnText = document.getElementById('vulnText');
+            if (vulnText) {
+                vulnText.textContent = 'NV';
+            }
+            
+            // Reset to level selection
+            this.resetContract();
+            this.inputState = 'level_selection';
+            this.updateDisplay();
+            
+            console.log('🆕 New Kitchen Bridge game started');
+            this.closeMobileModal();
+        }
+    }
     
     /**
-     * Show Kitchen Bridge specific help
+     * Return to main menu
      */
-    showHelp() {
-        const helpContent = this.getHelpContent();
-        this.bridgeApp.showModal(helpContent.title, helpContent.content, helpContent.buttons);
+    returnToMainMenu() {
+        this.closeMobileModal();
+        this.bridgeApp.showLicensedMode({ 
+            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+        });
     }
 // END SECTION SIX
-
 // SECTION SEVEN - Score Display & Game Options
     /**
      * Show Kitchen Bridge specific quit options
@@ -622,7 +1402,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
         ];
         
-        this.bridgeApp.showModal('🍳 Kitchen Bridge Options', content, buttons);
+        this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
     }
     
     /**
@@ -727,7 +1507,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
         ];
         
-        this.bridgeApp.showModal('📊 Kitchen Bridge - Scores', dealSummary, buttons);
+        this.showMobileOptimizedModal('📊 Kitchen Bridge - Detailed Analysis', dealSummary, buttons);
     }
     
     /**
