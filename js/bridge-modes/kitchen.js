@@ -1394,13 +1394,13 @@ class KitchenBridgeMode extends BaseBridgeMode {
             </div>
         `;
         
-        const buttons = [
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
-            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
-            { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
-            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
-        ];
+const buttons = [
+    { text: 'Continue', action: () => this.closeMobileModal() },
+    { text: 'Scores', action: () => this.showDetailedScores() },
+    { text: 'New Game', action: () => this.startNewGame() },
+    { text: 'Main Menu', action: () => this.returnToMainMenu() },
+    { text: 'Help', action: () => this.showHelp() }
+];
         
         this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
     }
