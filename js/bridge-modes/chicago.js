@@ -2,7 +2,7 @@
 /**
  * Chicago Bridge Mode - 4-Deal Vulnerability Cycle Bridge (Enhanced)
  * MOBILE ENHANCED VERSION - Full touch support for all devices
- * Updated to work with new modular bridge system
+ * Updated to work with new modular bridge system with PROVEN MOBILE TEMPLATE
  * 
  * Chicago Bridge combines standard bridge scoring with a structured 4-deal 
  * vulnerability cycle: None → NS → EW → Both → repeat. This provides 
@@ -33,12 +33,13 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         // Mobile detection
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        console.log('🌉 Chicago Bridge mode initialized with enhanced mobile support');
+        console.log('🌉 Chicago Bridge mode initialized with proven mobile template');
         
         // Initialize immediately
         this.initialize();
     }
 // END SECTION ONE
+
 // SECTION TWO - Core Methods
     /**
      * Initialize Chicago Bridge mode with proper vulnerability and dealer rotation
@@ -192,6 +193,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         this.bridgeApp.showMessage('Chicago Bridge uses automatic vulnerability cycle (4-deal rotation)', 'info');
     }
 // END SECTION TWO
+
 // SECTION THREE - Action Handlers
     /**
      * Handle user actions with enhanced mobile support
@@ -328,6 +330,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         }
     }
 // END SECTION THREE
+
 // SECTION FOUR - Contract Logic
     /**
      * Calculate score using standard Chicago Bridge rules
@@ -467,7 +470,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         });
         
         // Increment deals for license tracking
-        this.licenseManager.incrementDealsPlayed();
+        this.bridgeApp.licenseManager.incrementDealsPlayed();
         
         console.log(`💾 Chicago Bridge score recorded: ${score >= 0 ? score + ' for ' + declarerSide : Math.abs(score) + ' penalty for ' + (declarerSide === 'NS' ? 'EW' : 'NS')}`);
     }
@@ -502,6 +505,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         return `Deal ${nextDeal} • Dealer: ${nextDealer} • Vuln: ${vulnDisplay[nextVuln]} • Cycle ${nextCycleNum} (${nextCyclePos}/4)`;
     }
 // END SECTION FOUR
+
 // SECTION FIVE - Game Management
     /**
      * Move to next deal with automatic Chicago vulnerability cycling
@@ -676,21 +680,334 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         return this.inputState !== 'level_selection';
     }
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods (UPDATED FOR STANDALONE HELP)
+
+// SECTION SIX - Mobile Template System (CORRECTED - NO TABS)
     /**
-     * Show Chicago Bridge specific help - UPDATED TO USE STANDALONE HELP
+     * Mobile-optimized modal using proven template from test-help.html
      */
-    showHelp() {
-    if (this.bridgeApp.helpSystem) {
-        this.bridgeApp.helpSystem.show('chicago');
-    } else {
-        console.warn('Help system not initialized');
+    showMobileOptimizedModal(title, content, buttons = null) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay using proven template
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
+        
+        const defaultButtons = [{ text: 'Close', action: () => this.closeMobileModal() }];
+        const modalButtons = buttons || defaultButtons;
+        
+        let buttonsHTML = '';
+        modalButtons.forEach(btn => {
+            buttonsHTML += `
+                <button class="modal-btn" data-action="${btn.text}" style="
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    background: #3498db;
+                    color: white;
+                    touch-action: manipulation;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                    margin: 0 5px;
+                ">${btn.text}</button>
+            `;
+        });
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #3498db;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">${title}</h2>
+                </div>
+                
+                <div class="modal-body" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        .modal-body::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-thumb {
+                            background: rgba(52, 152, 219, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .modal-body::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                        .content-section {
+                            padding: 20px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .content-section:last-child {
+                            border-bottom: none;
+                            padding-bottom: 30px;
+                        }
+                        .feature-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 12px;
+                            margin: 15px 0;
+                        }
+                        .feature-item {
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 8px;
+                            border-left: 4px solid #3498db;
+                        }
+                        .feature-item h4 {
+                            color: #2c3e50;
+                            font-size: 14px;
+                            margin-bottom: 6px;
+                        }
+                        .feature-item p {
+                            font-size: 12px;
+                            color: #666;
+                            margin: 0;
+                        }
+                    </style>
+                    ${content}
+                </div>
+                
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    gap: 10px;
+                    justify-content: center;
+                ">
+                    ${buttonsHTML}
+                </div>
+            </div>
+        `;
+        
+        // Enhanced event handling
+        const handleAction = (actionText) => {
+            document.body.classList.remove('modal-open');
+            
+            const buttonConfig = modalButtons.find(b => b.text === actionText);
+            if (buttonConfig && buttonConfig.action) {
+                buttonConfig.action();
+            }
+            modal.remove();
+        };
+        
+        // Button event listeners with mobile optimization
+        setTimeout(() => {
+            const modalBtns = modal.querySelectorAll('.modal-btn');
+            
+            modalBtns.forEach((btn) => {
+                ['click', 'touchend'].forEach(eventType => {
+                    btn.addEventListener(eventType, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAction(btn.dataset.action);
+                    }, { passive: false });
+                });
+                
+                // Visual feedback
+                btn.addEventListener('touchstart', (e) => {
+                    btn.style.background = 'rgba(52, 152, 219, 0.8)';
+                    btn.style.transform = 'scale(0.95)';
+                }, { passive: true });
+                
+                btn.addEventListener('touchend', (e) => {
+                    btn.style.background = '#3498db';
+                    btn.style.transform = 'scale(1)';
+                }, { passive: true });
+            });
+        }, 50);
+        
+        document.body.appendChild(modal);
     }
-}
     
     /**
-     * Show Chicago Bridge specific quit options - FIXED VERSION
-     * Removed unnecessary "Show Help" button as requested
+     * Close mobile modal
+     */
+    closeMobileModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    /**
+     * Show Chicago Bridge specific help - PROVEN MOBILE TEMPLATE
+     */
+    showHelp() {
+        const helpContent = this.getChicagoHelpContent();
+        this.showMobileOptimizedModal(helpContent.title, helpContent.content, helpContent.buttons);
+    }
+
+    /**
+     * Get Chicago Bridge help content - NO TABS, JUST SCROLLING
+     */
+    getChicagoHelpContent() {
+        return {
+            title: '🌉 Chicago Bridge Help',
+            content: `
+                <div class="content-section">
+                    <h3 style="margin: 0 0 12px 0; color: #1976d2; font-size: 18px;">What is Chicago Bridge?</h3>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.4; color: #333;">
+                        Standard bridge scoring with automatic 4-deal vulnerability cycles. 
+                        Dealer rotates clockwise and vulnerability follows a predictable pattern.
+                    </p>
+                    
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 16px;">Key Features</h4>
+                    <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                        <li><strong>Automatic vulnerability rotation</strong></li>
+                        <li><strong>Dealer advances each deal</strong></li>
+                        <li><strong>Natural 4-deal break points</strong></li>
+                        <li><strong>Standard bridge scoring</strong></li>
+                    </ul>
+                    
+                    <div style="background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 14px;">Perfect For</h4>
+                        <p style="margin: 0; font-size: 13px; color: #1976d2;">
+                            Social bridge clubs • Teaching vulnerability strategy • Timed sessions • Fair competition
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 16px 0; color: #1976d2; font-size: 18px;">4-Deal Vulnerability Cycle</h3>
+                    
+                    <div style="
+                        display: grid; grid-template-columns: 1fr 1fr; gap: 8px; 
+                        margin: 16px 0; background: #f5f5f5; padding: 12px; border-radius: 8px;
+                    ">
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #666;">
+                            <div style="font-weight: bold; font-size: 14px;">Deal 1</div>
+                            <div style="font-size: 12px; color: #666;">North deals</div>
+                            <div style="font-size: 12px; color: #666;">None vulnerable</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #28a745;">
+                            <div style="font-weight: bold; color: #28a745; font-size: 14px;">Deal 2</div>
+                            <div style="font-size: 12px; color: #666;">East deals</div>
+                            <div style="font-size: 12px; color: #28a745;">NS vulnerable</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #dc3545;">
+                            <div style="font-weight: bold; color: #dc3545; font-size: 14px;">Deal 3</div>
+                            <div style="font-size: 12px; color: #666;">South deals</div>
+                            <div style="font-size: 12px; color: #dc3545;">EW vulnerable</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #fd7e14;">
+                            <div style="font-weight: bold; color: #fd7e14; font-size: 14px;">Deal 4</div>
+                            <div style="font-size: 12px; color: #666;">West deals</div>
+                            <div style="font-size: 12px; color: #fd7e14;">Both vulnerable</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e8f5e8; padding: 12px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h4 style="margin: 0 0 8px 0; color: #155724; font-size: 14px;">Automatic Benefits</h4>
+                        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #155724; line-height: 1.3;">
+                            <li>Everyone deals once per cycle</li>
+                            <li>Equal vulnerability exposure</li>
+                            <li>Natural break points every 4 deals</li>
+                            <li>Predictable structure for planning</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 16px 0; color: #1976d2; font-size: 18px;">Vulnerability Strategy</h3>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-item" style="border-left-color: #28a745;">
+                            <h4>✅ Not Vulnerable</h4>
+                            <p>Bid aggressively • Light game bids OK • Preempt freely • Take calculated risks</p>
+                        </div>
+                        
+                        <div class="feature-item" style="border-left-color: #f44336;">
+                            <h4>⚠️ Vulnerable</h4>
+                            <p>Bid conservatively • Need solid values • Careful with preempts • Focus on making</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f0f8ff; padding: 14px; border-radius: 8px; border-left: 4px solid #2196f3; margin-top: 16px;">
+                        <h4 style="margin: 0 0 10px 0; color: #1976d2; font-size: 14px;">Key Scoring Differences</h4>
+                        <div style="font-size: 12px; color: #1976d2; line-height: 1.4;">
+                            <strong>Game Bonus:</strong> Not Vul +300 | Vul +500<br>
+                            <strong>Down 1:</strong> Not Vul -50 | Vul -100<br>
+                            <strong>Down 1 Doubled:</strong> Not Vul -100 | Vul -200<br>
+                            <strong>Slam Bonus:</strong> Small +500/750 | Grand +1000/1500
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3 style="margin: 0 0 12px 0; color: #1976d2; font-size: 18px;">How to Use</h3>
+                    <ol style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                        <li>Enter contract: Level → Suit → Declarer → Result</li>
+                        <li>Vulnerability automatically cycles every 4 deals</li>
+                        <li>Dealer rotates clockwise each deal</li>
+                        <li>Press Deal to advance to next hand</li>
+                        <li>Natural break points after every 4 deals</li>
+                    </ol>
+                    
+                    <div style="
+                        text-align: center; 
+                        font-size: 12px; 
+                        color: #666; 
+                        background: rgba(52,152,219,0.05);
+                        padding: 12px;
+                        border-radius: 6px;
+                        margin-top: 16px;
+                    ">
+                        🌉 Chicago Bridge: Perfect for social bridge with structured cycles
+                    </div>
+                </div>
+            `,
+            buttons: [
+                { text: 'Close', action: () => this.closeMobileModal() }
+            ]
+        };
+    }
+
+    /**
+     * Show Chicago Bridge specific quit options
      */
     showQuit() {
         const scores = this.gameState.scores;
@@ -704,8 +1021,8 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                           scores.EW > scores.NS ? 'East-West' : 'Tied';
             
             currentScoreContent = `
-                <div class="help-section">
-                    <h4>📊 Current Game Status</h4>
+                <div class="content-section">
+                    <h4 style="margin: 0 0 12px 0; color: #1976d2;">📊 Current Game Status</h4>
                     <p><strong>Deals Played:</strong> ${totalDeals}</p>
                     <p><strong>Current Cycle:</strong> ${cycleInfo.cycleNumber} (Position ${cycleInfo.cyclePosition}/4)</p>
                     <p><strong>Current Scores:</strong></p>
@@ -722,8 +1039,8 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         let licenseSection = '';
         if (licenseStatus.status === 'trial') {
             licenseSection = `
-                <div class="help-section">
-                    <h4>📅 License Status</h4>
+                <div class="content-section">
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2;">📅 License Status</h4>
                     <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
                 </div>
             `;
@@ -732,94 +1049,50 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         const content = `
             ${currentScoreContent}
             ${licenseSection}
-            <div class="help-section">
-                <h4>🎮 Game Options</h4>
+            <div class="content-section">
+                <h4 style="margin: 0 0 8px 0; color: #1976d2;">🎮 Game Options</h4>
                 <p>What would you like to do?</p>
             </div>
         `;
         
-        // FIXED: Removed "Show Help" button from the buttons array
         const buttons = [
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
-            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
-            { text: 'New Game', action: () => this.startNewGame(), class: 'new-game-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
+            { text: 'Continue Playing', action: () => this.closeMobileModal() },
+            { text: 'Show Scores', action: () => this.showDetailedScores() },
+            { text: 'New Game', action: () => this.startNewGame() },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu() }
         ];
         
-        this.bridgeApp.showModal('🌉 Chicago Bridge Options', content, buttons);
+        this.showMobileOptimizedModal('🌉 Chicago Bridge Options', content, buttons);
     }
-// END SECTION SIX
 
-// NOTE: The following method should be REMOVED entirely from chicago.js:
-// 
-// /**
-//  * Get help content specific to Chicago Bridge
-//  */
-// getHelpContent() {
-//     return {
-//         title: 'Chicago Bridge (4-Deal Cycle) Help',
-//         content: `
-//             // ... all the embedded help HTML content ...
-//         `,
-//         buttons: [
-//             { text: 'Close Help', action: 'close', class: 'close-btn' }
-//         ]
-//     };
-// }
-//
-// DELETE THE ENTIRE getHelpContent() method from your chicago.js file
-// NOTE: The following method should be REMOVED entirely from chicago.js:
-// 
-// /**
-//  * Get help content specific to Chicago Bridge
-//  */
-// getHelpContent() {
-//     return {
-//         title: 'Chicago Bridge (4-Deal Cycle) Help',
-//         content: `
-//             // ... all the embedded help HTML content ...
-//         `,
-//         buttons: [
-//             { text: 'Close Help', action: 'close', class: 'close-btn' }
-//         ]
-//     };
-// }
-//
-// DELETE THE ENTIRE getHelpContent() method from your chicago.js file// SECTION SEVEN - Score Display Methods
     /**
-     * Show detailed deal-by-deal scores with Chicago Bridge cycle analysis - WITH PIXEL 9A FIX
+     * Show detailed scores using the proven mobile template
      */
     showDetailedScores() {
         const scores = this.gameState.scores;
         const history = this.gameState.history;
         
         if (history.length === 0) {
-            this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
+            this.showMobileOptimizedModal('📊 Game Scores', '<div class="content-section"><p>No deals have been played yet.</p></div>');
             return;
         }
 
         let dealSummary = `
-            <div class="scores-summary">
-                <h4>📊 Current Totals</h4>
-                <p><strong>North-South:</strong> ${scores.NS} points</p>
-                <p><strong>East-West:</strong> ${scores.EW} points</p>
-                <p><strong>Leader:</strong> ${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</p>
+            <div class="content-section">
+                <h4 style="margin: 0 0 12px 0; color: #1976d2;">📊 Current Totals</h4>
+                <div style="text-align: center; background: rgba(52,152,219,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-size: 18px; font-weight: bold; color: #2c3e50;">
+                        <span style="color: #27ae60;">North-South: ${scores.NS}</span> • 
+                        <span style="color: #e74c3c;">East-West: ${scores.EW}</span>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 14px; color: #666;">
+                        Leader: <strong>${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</strong>
+                    </div>
+                </div>
             </div>
             
-            <div class="deals-history">
-                <h4>🌉 Chicago Bridge - Deal by Deal</h4>
-                <div class="deal-scroll-container" style="
-                    max-height: 280px; 
-                    overflow-y: auto; 
-                    overflow-x: hidden;
-                    -webkit-overflow-scrolling: touch;
-                    font-size: 12px;
-                    border: 1px solid #444;
-                    border-radius: 4px;
-                    background: rgba(255,255,255,0.95);
-                    margin: 10px 0;
-                    position: relative;
-                ">
+            <div class="content-section">
+                <h4 style="margin: 0 0 12px 0; color: #1976d2;">🌉 Deal by Deal History</h4>
         `;
         
         // Group deals by cycles for better display
@@ -840,12 +1113,12 @@ class ChicagoBridgeMode extends BaseBridgeMode {
             dealSummary += `
                 <div style="
                     background: rgba(52, 152, 219, 0.1);
-                    margin: 8px 4px;
-                    padding: 8px;
-                    border-radius: 6px;
+                    margin: 12px 0;
+                    padding: 12px;
+                    border-radius: 8px;
                     border-left: 4px solid #3498db;
                 ">
-                    <div style="font-weight: bold; color: #2c3e50; margin-bottom: 6px; font-size: 13px;">
+                    <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">
                         🔄 Cycle ${cycleNum} ${isCompleteCycle ? '(Complete)' : `(${cycleDeals.length}/4)`}
                     </div>
             `;
@@ -867,33 +1140,33 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                 
                 dealSummary += `
                     <div style="
-                        border-bottom: 1px solid #ddd; 
-                        padding: 10px 6px; 
-                        background: ${deal.index % 2 === 0 ? 'rgba(240,240,240,0.6)' : 'rgba(255,255,255,0.8)'};
-                        margin: 2px 0;
-                        border-radius: 4px;
+                        border: 1px solid #ddd; 
+                        padding: 12px; 
+                        margin: 8px 0;
+                        border-radius: 6px;
+                        background: white;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
                     ">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: bold; margin-bottom: 2px; color: #222; font-size: 12px;">
-                                    Deal ${deal.deal} - Dealer ${dealer} - <span style="color: ${vulnColor};">${vulnerability}</span>
-                                </div>
-                                <div style="font-size: 11px; color: #333; font-weight: 500;">
-                                    ${contractStr} by ${contract.declarer} = ${contract.result}
-                                </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 4px; color: #222; font-size: 13px;">
+                                Deal ${deal.deal} - Dealer ${dealer} - <span style="color: ${vulnColor};">${vulnerability}</span>
                             </div>
-                            <div style="
-                                text-align: right;
-                                min-width: 70px;
-                                font-size: 11px;
-                                font-weight: bold;
-                            ">
-                                <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};">
-                                    ${scoreDisplay}
-                                </div>
-                                <div style="font-size: 10px; color: #666;">
-                                    ${scoringSide}
-                                </div>
+                            <div style="font-size: 12px; color: #333; font-weight: 500;">
+                                ${contractStr} by ${contract.declarer} = ${contract.result}
+                            </div>
+                        </div>
+                        <div style="
+                            text-align: right;
+                            min-width: 80px;
+                            font-weight: bold;
+                        ">
+                            <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'}; font-size: 14px;">
+                                ${scoreDisplay}
+                            </div>
+                            <div style="font-size: 11px; color: #666;">
+                                ${scoringSide}
                             </div>
                         </div>
                     </div>
@@ -904,170 +1177,29 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         });
         
         dealSummary += `
-                </div>
             </div>
             
-            <div style="
-                text-align: center; 
-                font-size: 11px; 
-                color: #666; 
-                margin-top: 10px;
-                display: block;
-            ">
-                🌉 Chicago Bridge: 4-deal cycles with automatic vulnerability rotation<br>
-                On mobile: Use Refresh Scroll if needed
+            <div class="content-section">
+                <div style="
+                    text-align: center; 
+                    font-size: 12px; 
+                    color: #666; 
+                    background: rgba(52,152,219,0.05);
+                    padding: 12px;
+                    border-radius: 6px;
+                ">
+                    🌉 Chicago Bridge: 4-deal cycles with automatic vulnerability rotation
+                </div>
             </div>
         `;
         
-        const buttons = [
-            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
-            { text: 'Refresh Scroll', action: () => this.refreshScoreSheet(), class: 'refresh-btn' },
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
-        ];
-        
-        this.bridgeApp.showModal('📊 Chicago Bridge - Detailed Analysis', dealSummary, buttons);
-        
-        // Apply Pixel 9a specific scrolling fixes after modal is shown
-        setTimeout(() => {
-            this.applyPixelScrollingFixes();
-        }, 100);
+        this.showMobileOptimizedModal('📊 Chicago Bridge - Detailed Analysis', dealSummary, [
+            { text: 'Back to Options', action: () => this.showQuit() },
+            { text: 'Continue Playing', action: () => this.closeMobileModal() }
+        ]);
     }
-    
-    /**
-     * Refresh the score sheet to force scrolling activation on problematic devices - PIXEL 9A FIX
-     */
-    refreshScoreSheet() {
-        console.log('🔄 Refreshing score sheet for better scrolling...');
-        
-        // Simply re-show the detailed scores - this forces DOM refresh
-        this.showDetailedScores();
-        
-        // Add a brief visual indication that refresh happened
-        setTimeout(() => {
-            const container = document.querySelector('.deal-scroll-container');
-            if (container) {
-                // Flash border to indicate refresh
-                container.style.border = '2px solid #27ae60';
-                container.style.transition = 'border-color 0.3s ease';
-                
-                setTimeout(() => {
-                    container.style.border = '1px solid #444';
-                }, 500);
-                
-                // Scroll to bottom and back to top to "wake up" scrolling
-                container.scrollTop = container.scrollHeight;
-                setTimeout(() => {
-                    container.scrollTop = 0;
-                }, 100);
-            }
-        }, 150);
-    }
-    
-    /**
-     * Apply specific scrolling fixes for Pixel 9a and other problematic devices - PIXEL 9A FIX
-     */
-    applyPixelScrollingFixes() {
-        console.log('🔧 Applying Pixel 9a scrolling fixes...');
-        
-        // Find the modal and scroll container
-        const modal = document.querySelector('.modal-content');
-        const scrollContainer = document.querySelector('.deal-scroll-container');
-        
-        if (modal && scrollContainer) {
-            // Force the modal to be scrollable
-            modal.style.maxHeight = '85vh';
-            modal.style.overflowY = 'auto';
-            modal.style.webkitOverflowScrolling = 'touch';
-            modal.style.position = 'relative';
-            
-            // Enhanced scroll container fixes
-            scrollContainer.style.height = '280px'; // Fixed height instead of max-height
-            scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
-            scrollContainer.style.webkitOverflowScrolling = 'touch';
-            scrollContainer.style.transform = 'translateZ(0)'; // Force hardware acceleration
-            scrollContainer.style.willChange = 'scroll-position';
-            
-            // Add visible scrollbar for mobile
-            const style = document.createElement('style');
-            style.textContent = `
-                .deal-scroll-container::-webkit-scrollbar {
-                    width: 8px !important;
-                    background: rgba(255, 255, 255, 0.1) !important;
-                }
-                .deal-scroll-container::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.4) !important;
-                    border-radius: 4px !important;
-                }
-                .deal-scroll-container::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.1) !important;
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Test scroll and log results
-            const testScroll = () => {
-                scrollContainer.scrollTop = 50;
-                setTimeout(() => {
-                    console.log(`📱 Scroll test - scrollTop: ${scrollContainer.scrollTop}, scrollHeight: ${scrollContainer.scrollHeight}, clientHeight: ${scrollContainer.clientHeight}`);
-                    if (scrollContainer.scrollTop === 0 && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
-                        console.warn('⚠️ Scrolling may not be working properly on this device');
-                        // Add a touch scroll hint
-                        scrollContainer.style.border = '2px solid #3498db';
-                        scrollContainer.style.boxShadow = 'inset 0 0 10px rgba(52, 152, 219, 0.3)';
-                        
-                        // Add a visible scroll indicator
-                        const scrollHint = document.createElement('div');
-                        scrollHint.innerHTML = '👆 Touch and drag to scroll';
-                        scrollHint.style.cssText = `
-                            position: absolute;
-                            top: 10px;
-                            right: 10px;
-                            background: rgba(52, 152, 219, 0.8);
-                            color: white;
-                            padding: 4px 8px;
-                            border-radius: 4px;
-                            font-size: 10px;
-                            z-index: 100;
-                            pointer-events: none;
-                        `;
-                        scrollContainer.style.position = 'relative';
-                        scrollContainer.appendChild(scrollHint);
-                    }
-                }, 100);
-            };
-            
-            testScroll();
-            
-            // Add touch event handlers for better mobile scrolling
-            let touchStart = null;
-            
-            scrollContainer.addEventListener('touchstart', (e) => {
-                touchStart = e.touches[0].clientY;
-                console.log('📱 Touch start detected');
-            }, { passive: true });
-            
-            scrollContainer.addEventListener('touchmove', (e) => {
-                if (touchStart !== null) {
-                    const touchY = e.touches[0].clientY;
-                    const deltaY = touchStart - touchY;
-                    scrollContainer.scrollTop += deltaY * 0.5; // Smooth scrolling
-                    touchStart = touchY;
-                    console.log(`📱 Touch scroll: ${scrollContainer.scrollTop}`);
-                }
-            }, { passive: true });
-            
-            scrollContainer.addEventListener('touchend', () => {
-                touchStart = null;
-                console.log('📱 Touch end');
-            }, { passive: true });
-            
-            console.log('✅ Pixel 9a scrolling fixes applied successfully');
-        } else {
-            console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
-        }
-    }
-// END SECTION SEVEN
-// SECTION EIGHT - Utility and Game Management
+// END SECTION SIX
+// SECTION SEVEN - Game Management Methods
     /**
      * Start a new game (reset scores and cycles)
      */
@@ -1091,6 +1223,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
             this.updateDisplay();
             
             console.log('🆕 New Chicago Bridge game started - Cycle 1 begins');
+            this.closeMobileModal();
         }
     }
     
@@ -1098,6 +1231,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      * Return to main menu
      */
     returnToMainMenu() {
+        this.closeMobileModal();
         this.bridgeApp.showLicensedMode({ 
             type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
         });
@@ -1136,29 +1270,238 @@ class ChicagoBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Get vulnerability schedule for current cycle
+     * Get game statistics for analysis
      */
-    getVulnerabilitySchedule() {
-        const cycleInfo = this.getCycleInfo();
-        const baseDealer = (cycleInfo.cycleNumber - 1) * 4 + 1;
+    getGameStatistics() {
+        const history = this.gameState.history;
+        const totalDeals = history.length;
         
-        const schedule = [];
-        for (let i = 0; i < 4; i++) {
-            const dealNumber = baseDealer + i;
-            const dealer = ['North', 'East', 'South', 'West'][i];
-            const vulnerability = ['None', 'NS', 'EW', 'Both'][i];
-            const isCurrentDeal = dealNumber === this.currentDeal;
+        let contractsMade = 0;
+        let contractsFailed = 0;
+        let gamesPlayed = 0;
+        let slamsBid = 0;
+        let doublesPlayed = 0;
+        let highestScore = 0;
+        
+        history.forEach(deal => {
+            const contract = deal.contract;
+            const result = contract.result;
             
-            schedule.push({
-                dealNumber,
-                dealer,
-                vulnerability,
-                isCurrentDeal,
-                isCompleted: dealNumber < this.currentDeal
+            // Count made vs failed contracts
+            if (result === '=' || result?.startsWith('+')) {
+                contractsMade++;
+            } else if (result?.startsWith('-')) {
+                contractsFailed++;
+            }
+            
+            // Count games (3NT, 4♥/♠, 5♣/♦)
+            if ((contract.level === 3 && contract.suit === 'NT') ||
+                (contract.level === 4 && ['♥', '♠'].includes(contract.suit)) ||
+                (contract.level === 5 && ['♣', '♦'].includes(contract.suit))) {
+                gamesPlayed++;
+            }
+            
+            // Count slams
+            if (contract.level >= 6) {
+                slamsBid++;
+            }
+            
+            // Count doubles
+            if (contract.doubled) {
+                doublesPlayed++;
+            }
+            
+            // Track highest single score
+            const absScore = Math.abs(deal.score);
+            if (absScore > highestScore) {
+                highestScore = absScore;
+            }
+        });
+        
+        const cyclesCompleted = Math.floor(totalDeals / 4);
+        
+        return {
+            totalDeals,
+            cyclesCompleted,
+            contractsMade,
+            contractsFailed,
+            gamesPlayed,
+            slamsBid,
+            doublesPlayed,
+            highestScore,
+            makePercentage: totalDeals > 0 ? Math.round((contractsMade / totalDeals) * 100) : 0
+        };
+    }
+    
+    /**
+     * Get cycle-aware game summary for external display
+     */
+    getGameSummary() {
+        const scores = this.gameState.scores;
+        const history = this.gameState.history;
+        const cycleInfo = this.getCycleInfo();
+        const stats = this.getGameStatistics();
+        
+        return {
+            mode: 'Chicago Bridge',
+            currentStatus: {
+                deal: this.currentDeal,
+                dealer: this.getDealerName(),
+                vulnerability: this.vulnerability,
+                cycle: cycleInfo,
+                scores: { ...scores }
+            },
+            statistics: stats,
+            cycleBreaks: this.getCycleBreakPoints(),
+            gameComplete: false, // Chicago Bridge can continue indefinitely
+            recommendations: this.getGameRecommendations()
+        };
+    }
+    
+    /**
+     * Get natural break points in the game
+     */
+    getCycleBreakPoints() {
+        const history = this.gameState.history;
+        const breakPoints = [];
+        
+        for (let i = 4; i <= history.length; i += 4) {
+            const cycleNum = i / 4;
+            const cycleDeals = history.slice(i - 4, i);
+            const cycleScores = { NS: 0, EW: 0 };
+            
+            cycleDeals.forEach(deal => {
+                const side = deal.scoringSide;
+                const points = deal.actualScore || Math.abs(deal.score);
+                if (side && points) {
+                    cycleScores[side] += points;
+                }
+            });
+            
+            breakPoints.push({
+                cycle: cycleNum,
+                dealsCompleted: i,
+                cycleScores: cycleScores,
+                cumulativeScores: {
+                    NS: history.slice(0, i).reduce((sum, deal) => {
+                        return sum + (deal.scoringSide === 'NS' ? (deal.actualScore || Math.abs(deal.score)) : 0);
+                    }, 0),
+                    EW: history.slice(0, i).reduce((sum, deal) => {
+                        return sum + (deal.scoringSide === 'EW' ? (deal.actualScore || Math.abs(deal.score)) : 0);
+                    }, 0)
+                }
             });
         }
         
-        return schedule;
+        return breakPoints;
+    }
+    
+    /**
+     * Get game recommendations based on current state
+     */
+    getGameRecommendations() {
+        const cycleInfo = this.getCycleInfo();
+        const scores = this.gameState.scores;
+        const recommendations = [];
+        
+        if (cycleInfo.isEndOfCycle) {
+            recommendations.push({
+                type: 'break',
+                message: 'Natural break point - cycle complete!',
+                action: 'Consider taking a break or reviewing scores'
+            });
+        }
+        
+        const scoreDiff = Math.abs(scores.NS - scores.EW);
+        if (scoreDiff > 1000) {
+            recommendations.push({
+                type: 'score',
+                message: 'Large score difference detected',
+                action: 'Consider starting a new game for closer competition'
+            });
+        }
+        
+        if (cycleInfo.cycleNumber >= 3) {
+            recommendations.push({
+                type: 'session',
+                message: 'Long session detected',
+                action: 'Good stopping point after this cycle'
+            });
+        }
+        
+        return recommendations;
+    }
+    
+    /**
+     * Reset to a specific cycle for teaching/practice
+     */
+    resetToCycle(cycleNumber) {
+        if (cycleNumber < 1) {
+            console.warn('Invalid cycle number');
+            return false;
+        }
+        
+        const startDeal = ((cycleNumber - 1) * 4) + 1;
+        
+        // Reset game state
+        this.currentDeal = startDeal;
+        this.updateVulnerabilityAndDealer();
+        this.resetContract();
+        this.inputState = 'level_selection';
+        
+        // Clear any deals from this cycle onward
+        this.gameState.history = this.gameState.history.filter(deal => deal.deal < startDeal);
+        
+        // Recalculate scores
+        this.gameState.scores = { NS: 0, EW: 0 };
+        this.gameState.history.forEach(deal => {
+            const side = deal.scoringSide;
+            const points = deal.actualScore || Math.abs(deal.score);
+            if (side && points) {
+                this.gameState.scores[side] += points;
+            }
+        });
+        
+        this.updateDisplay();
+        
+        console.log(`🔄 Reset to Cycle ${cycleNumber}, Deal ${startDeal}`);
+        return true;
+    }
+    
+    /**
+     * Quick setup for teaching scenarios
+     */
+    setupTeachingScenario(scenario) {
+        const scenarios = {
+            'vulnerability-demo': {
+                description: 'Demonstrate all vulnerability conditions',
+                startDeal: 1,
+                setupMessage: 'Starting vulnerability demonstration cycle'
+            },
+            'game-contracts': {
+                description: 'Practice game contracts in different vulnerabilities', 
+                startDeal: 1,
+                setupMessage: 'Ready for game contract practice'
+            },
+            'penalty-doubles': {
+                description: 'Learn penalty scoring across vulnerabilities',
+                startDeal: 1,
+                setupMessage: 'Set up for penalty double practice'
+            }
+        };
+        
+        const config = scenarios[scenario];
+        if (!config) {
+            console.warn('Unknown teaching scenario:', scenario);
+            return false;
+        }
+        
+        this.resetToCycle(Math.floor((config.startDeal - 1) / 4) + 1);
+        
+        console.log(`📚 Teaching scenario: ${config.description}`);
+        this.bridgeApp.showMessage(config.setupMessage, 'info');
+        
+        return true;
     }
     
     /**
@@ -1168,37 +1511,75 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         console.log('🧹 Chicago Bridge cleanup completed');
         // Chicago Bridge doesn't have special UI elements to clean up like some other modes
     }
+// END SECTION SEVEN
+// SECTION EIGHT - Game Management Methods
+    /**
+     * Start a new game (reset scores and cycles)
+     */
+    startNewGame() {
+        const confirmed = confirm(
+            'Start a new Chicago Bridge game?\n\nThis will reset all scores to zero and start a new 4-deal cycle.\n\nClick OK to start new game, Cancel to continue current game.'
+        );
+        
+        if (confirmed) {
+            // Reset all scores and history
+            this.gameState.scores = { NS: 0, EW: 0 };
+            this.gameState.history = [];
+            this.currentDeal = 1;
+            
+            // Reset vulnerability and dealer for deal 1
+            this.updateVulnerabilityAndDealer();
+            
+            // Reset to level selection
+            this.resetContract();
+            this.inputState = 'level_selection';
+            this.updateDisplay();
+            
+            console.log('🆕 New Chicago Bridge game started - Cycle 1 begins');
+            this.closeMobileModal();
+        }
+    }
     
     /**
-     * Export game data for external use
+     * Return to main menu
      */
-    exportGameData() {
+    returnToMainMenu() {
+        this.closeMobileModal();
+        this.bridgeApp.showLicensedMode({ 
+            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
+        });
+    }
+    
+    /**
+     * Get current deal information string
+     */
+    getDealInfo() {
+        const dealerName = this.getDealerName();
+        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability}`;
+    }
+    
+    /**
+     * Get current cycle summary for status displays
+     */
+    getCycleSummary() {
         const cycleInfo = this.getCycleInfo();
-        const scores = this.gameState.scores;
-        const history = this.gameState.history;
-        
-        return {
-            mode: 'chicago',
-            version: '1.0',
-            exportDate: new Date().toISOString(),
-            gameState: {
-                currentDeal: this.currentDeal,
-                currentCycle: cycleInfo,
-                scores: { ...scores },
-                totalDeals: history.length
-            },
-            history: history.map(deal => ({
-                deal: deal.deal,
-                dealer: deal.dealer,
-                vulnerability: deal.vulnerability,
-                contract: { ...deal.contract },
-                result: deal.contract.result,
-                score: deal.score,
-                scoringSide: deal.scoringSide,
-                cycleInfo: deal.cycleInfo
-            })),
-            statistics: this.getGameStatistics()
-        };
+        return `Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4)`;
+    }
+    
+    /**
+     * Check if current deal is at a natural break point (end of cycle)
+     */
+    isAtCycleBreak() {
+        const cycleInfo = this.getCycleInfo();
+        return cycleInfo.isEndOfCycle;
+    }
+    
+    /**
+     * Get deals remaining in current cycle
+     */
+    getDealsRemainingInCycle() {
+        const cycleInfo = this.getCycleInfo();
+        return 4 - cycleInfo.cyclePosition;
     }
     
     /**
@@ -1206,98 +1587,66 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      */
     getGameStatistics() {
         const history = this.gameState.history;
-        const scores = this.gameState.scores;
+        const totalDeals = history.length;
         
-        if (history.length === 0) {
-            return {
-                totalDeals: 0,
-                cyclesCompleted: 0,
-                averageScore: { NS: 0, EW: 0 }
-            };
-        }
+        let contractsMade = 0;
+        let contractsFailed = 0;
+        let gamesPlayed = 0;
+        let slamsBid = 0;
+        let doublesPlayed = 0;
+        let highestScore = 0;
         
-        const stats = {
-            totalDeals: history.length,
-            cyclesCompleted: Math.floor(history.length / 4),
-            currentCycleProgress: (history.length % 4),
-            scores: { ...scores },
-            averageScore: {
-                NS: Math.round(scores.NS / history.length),
-                EW: Math.round(scores.EW / history.length)
-            },
-            dealsByVulnerability: {
-                NV: history.filter(d => d.vulnerability === 'NV').length,
-                NS: history.filter(d => d.vulnerability === 'NS').length,
-                EW: history.filter(d => d.vulnerability === 'EW').length,
-                Both: history.filter(d => d.vulnerability === 'Both').length
-            },
-            contractsMade: history.filter(d => d.score >= 0).length,
-            contractsFailed: history.filter(d => d.score < 0).length,
-            highestScore: Math.max(...history.map(d => Math.abs(d.score))),
-            gamesPlayed: history.filter(d => {
-                const contract = d.contract;
-                const level = contract.level;
-                const suit = contract.suit;
-                return (level === 3 && suit === 'NT') ||
-                       (level === 4 && (suit === '♥' || suit === '♠')) ||
-                       (level === 5 && (suit === '♣' || suit === '♦')) ||
-                       level >= 6;
-            }).length
-        };
-        
-        return stats;
-    }
-    
-    /**
-     * Validate game state consistency
-     */
-    validateGameState() {
-        const issues = [];
-        
-        // Check deal sequence
-        if (this.currentDeal < 1) {
-            issues.push('Invalid current deal number');
-        }
-        
-        // Check vulnerability matches deal
-        const expectedVuln = ['NV', 'NS', 'EW', 'Both'][(this.currentDeal - 1) % 4];
-        if (this.vulnerability !== expectedVuln) {
-            issues.push(`Vulnerability mismatch: expected ${expectedVuln}, got ${this.vulnerability}`);
-        }
-        
-        // Check dealer matches deal
-        const expectedDealer = (this.currentDeal - 1) % 4;
-        if (this.currentDealer !== expectedDealer) {
-            issues.push(`Dealer mismatch: expected ${expectedDealer}, got ${this.currentDealer}`);
-        }
-        
-        // Check score consistency
-        const calculatedScores = { NS: 0, EW: 0 };
-        this.gameState.history.forEach(deal => {
-            const side = deal.scoringSide;
-            const points = deal.actualScore || Math.abs(deal.score);
-            if (side && points) {
-                calculatedScores[side] += points;
+        history.forEach(deal => {
+            const contract = deal.contract;
+            const result = contract.result;
+            
+            // Count made vs failed contracts
+            if (result === '=' || result?.startsWith('+')) {
+                contractsMade++;
+            } else if (result?.startsWith('-')) {
+                contractsFailed++;
+            }
+            
+            // Count games (3NT, 4♥/♠, 5♣/♦)
+            if ((contract.level === 3 && contract.suit === 'NT') ||
+                (contract.level === 4 && ['♥', '♠'].includes(contract.suit)) ||
+                (contract.level === 5 && ['♣', '♦'].includes(contract.suit))) {
+                gamesPlayed++;
+            }
+            
+            // Count slams
+            if (contract.level >= 6) {
+                slamsBid++;
+            }
+            
+            // Count doubles
+            if (contract.doubled) {
+                doublesPlayed++;
+            }
+            
+            // Track highest single score
+            const absScore = Math.abs(deal.score);
+            if (absScore > highestScore) {
+                highestScore = absScore;
             }
         });
         
-        if (calculatedScores.NS !== this.gameState.scores.NS) {
-            issues.push(`NS score mismatch: calculated ${calculatedScores.NS}, stored ${this.gameState.scores.NS}`);
-        }
+        const cyclesCompleted = Math.floor(totalDeals / 4);
         
-        if (calculatedScores.EW !== this.gameState.scores.EW) {
-            issues.push(`EW score mismatch: calculated ${calculatedScores.EW}, stored ${this.gameState.scores.EW}`);
-        }
-        
-        if (issues.length > 0) {
-            console.warn('🚨 Chicago Bridge game state validation issues:', issues);
-            return { valid: false, issues };
-        }
-        
-        console.log('✅ Chicago Bridge game state validation passed');
-        return { valid: true, issues: [] };
+        return {
+            totalDeals,
+            cyclesCompleted,
+            contractsMade,
+            contractsFailed,
+            gamesPlayed,
+            slamsBid,
+            doublesPlayed,
+            highestScore,
+            makePercentage: totalDeals > 0 ? Math.round((contractsMade / totalDeals) * 100) : 0
+        };
     }
 // END SECTION EIGHT
+
 // SECTION NINE - Display Content Methods
     /**
      * Get display content for current state - CHICAGO BRIDGE ENHANCED
@@ -1527,48 +1876,30 @@ class ChicagoBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Get compact deal summary for mobile displays
+     * Get vulnerability schedule for current cycle
      */
-    getCompactDealSummary() {
+    getVulnerabilitySchedule() {
         const cycleInfo = this.getCycleInfo();
-        const remainingDeals = this.getDealsRemainingInCycle();
+        const cycleStartDeal = ((cycleInfo.cycleNumber - 1) * 4) + 1;
+        const schedule = [];
         
-        return {
-            current: `D${this.currentDeal} (${this.getDealerAbbreviation()}) ${this.vulnerability}`,
-            cycle: `${cycleInfo.cyclePosition}/4`,
-            remaining: remainingDeals,
-            isBreakPoint: cycleInfo.isEndOfCycle
-        };
-    }
-    
-    /**
-     * Format vulnerability for display with appropriate styling
-     */
-    formatVulnerabilityDisplay(vulnerability) {
-        const vulnConfig = {
-            'NV': { text: 'None', color: '#95a5a6', bgColor: 'rgba(149, 165, 166, 0.1)' },
-            'NS': { text: 'NS Vul', color: '#27ae60', bgColor: 'rgba(39, 174, 96, 0.1)' },
-            'EW': { text: 'EW Vul', color: '#e74c3c', bgColor: 'rgba(231, 76, 60, 0.1)' },
-            'Both': { text: 'Both Vul', color: '#f39c12', bgColor: 'rgba(243, 156, 18, 0.1)' }
-        };
+        for (let i = 0; i < 4; i++) {
+            const dealNum = cycleStartDeal + i;
+            const vulnCycle = ['None', 'NS', 'EW', 'Both'];
+            
+            schedule.push({
+                dealNumber: dealNum,
+                vulnerability: vulnCycle[i],
+                isCompleted: dealNum < this.currentDeal,
+                isCurrentDeal: dealNum === this.currentDeal
+            });
+        }
         
-        const config = vulnConfig[vulnerability] || vulnConfig['NV'];
-        
-        return `
-            <span style="
-                color: ${config.color};
-                background: ${config.bgColor};
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-weight: bold;
-                font-size: 11px;
-            ">
-                ${config.text}
-            </span>
-        `;
+        return schedule;
     }
 // END SECTION NINE
-// SECTION TEN - Export and Final Methods
+
+// SECTION TEN - Final Export and Utility Methods
     /**
      * Get cycle-aware game summary for external display
      */
@@ -1787,7 +2118,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      */
     cleanup() {
         console.log('🧹 Chicago Bridge cleanup completed');
-        // Chicago Bridge doesn't have special UI elements to clean up
+        // Chicago Bridge doesn't have special UI elements to clean up like some other modes
     }
 }
 
@@ -1798,6 +2129,5 @@ if (typeof module !== 'undefined' && module.exports) {
     window.ChicagoBridgeMode = ChicagoBridgeMode;
 }
 
-console.log('🌉 Chicago Bridge module loaded successfully with 4-deal cycle management');
+console.log('🌉 Chicago Bridge module loaded successfully with 4-deal cycle management and proven mobile template');
 // END SECTION TEN - FILE COMPLETE
-
