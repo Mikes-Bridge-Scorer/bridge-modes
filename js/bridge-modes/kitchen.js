@@ -1202,7 +1202,7 @@ flex: 1;
     { text: 'Return to Main Menu', action: () => this.returnToMainMenu() }
 ];
         
-        this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
+        this.showMobileOptimizedModal('🍳 Kitchen Bridge Options', content, buttons);
     }
 
     /**
