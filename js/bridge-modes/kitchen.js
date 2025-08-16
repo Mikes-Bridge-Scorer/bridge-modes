@@ -1196,12 +1196,11 @@ flex: 1;
         `;
         
         const buttons = [
-            { text: 'Continue Playing', action: () => this.closeMobileModal() },
-            { text: 'Show Scores', action: () => this.showDetailedScores() },
-            { text: 'New Game', action: () => this.startNewGame() },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu() },
-            { text: 'Show Help', action: () => this.showHelp() }
-        ];
+    { text: 'Continue Playing', action: () => this.closeMobileModal() },
+    { text: 'Show Scores', action: () => this.showDetailedScores() },
+    { text: 'New Game', action: () => this.startNewGame() },
+    { text: 'Return to Main Menu', action: () => this.returnToMainMenu() }
+];
         
         this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
     }
