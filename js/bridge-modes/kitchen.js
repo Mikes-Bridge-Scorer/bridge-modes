@@ -718,7 +718,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                         <button class="modal-btn" data-action="${modalButtons[0].text}" style="
-                           padding: 10px 4px;
+                           padding: 12px 6px;
                             border: none;
                             border-radius: 6px;
                             font-size: 12px;
@@ -731,7 +731,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[0].text}</button>
                         <button class="modal-btn" data-action="${modalButtons[1].text}" style="
-                            padding: 10px 4px;
+                             padding: 12px 6px;
                             border: none;
                             border-radius: 6px;
                             font-size: 12px;
@@ -744,7 +744,8 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[1].text}</button>
                         <button class="modal-btn" data-action="${modalButtons[2].text}" style="
-                            padding: 10px 4px;
+flex: 1;
+                            padding: 12px 6px;
                             border: none;
                             border-radius: 6px;
                             font-size: 12px;
@@ -757,8 +758,9 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[2].text}</button>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="display: flex; gap: 6px;">
                         <button class="modal-btn" data-action="${modalButtons[3].text}" style="
+flex: 1;
                             padding: 12px 8px;
                             border: none;
                             border-radius: 6px;
@@ -772,6 +774,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[3].text}</button>
                         <button class="modal-btn" data-action="${modalButtons[4].text}" style="
+flex: 1;
                             padding: 12px 8px;
                             border: none;
                             border-radius: 6px;
