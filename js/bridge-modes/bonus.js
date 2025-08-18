@@ -1327,39 +1327,89 @@ showMobileOptimizedQuitModal(content) {
 }
 // END SECTION SIX - Part 1
 
-// SECTION SIX - Part 2: Mobile-Optimized Modal System (CALCULATE SCORE BUTTON FIXED)
+// SECTION SIX - Part 2: Mobile-Optimized Modal System (PIXEL 9A FIXED)
 
 /**
  * Setup quit modal handlers with mobile optimization
  */
 setupQuitModalHandlers() {
-    const modal = document.querySelector('.modal-overlay');
-    const buttons = modal.querySelectorAll('.quit-btn');
+    console.log('📱 Setting up PIXEL 9A optimized quit handlers...');
     
-    buttons.forEach(button => {
-        const action = button.dataset.action;
-        
-        // Click handler
-        button.addEventListener('click', (e) => {
+    const createQuitHandler = (action) => {
+        return (e) => {
             e.preventDefault();
-            this.handleQuitAction(action);
-        }, { passive: false });
-        
-        // Touch feedback
-        button.addEventListener('touchstart', (e) => {
-            const originalBg = button.style.background;
-            button.style.background = this.getDarkerColor(originalBg);
-            button.style.transform = 'scale(0.95)';
-        }, { passive: true });
-        
-        button.addEventListener('touchend', (e) => {
-            const originalBg = this.getOriginalButtonColor(action);
-            button.style.background = originalBg;
-            button.style.transform = 'scale(1)';
-        }, { passive: true });
+            e.stopPropagation();
+            
+            console.log(`🔥 Pixel 9a quit action: ${action}`);
+            
+            // Visual feedback
+            const btn = e.target;
+            btn.style.transform = 'scale(0.95)';
+            btn.style.opacity = '0.8';
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([30]);
+            }
+            
+            // Execute action after feedback
+            setTimeout(() => {
+                switch(action) {
+                    case 'continue':
+                        this.closeQuitModal();
+                        break;
+                    case 'scores':
+                        this.closeQuitModal();
+                        this.showMobileOptimizedScores();
+                        break;
+                    case 'help':
+                        this.closeQuitModal();
+                        this.showHelp();
+                        break;
+                    case 'newgame':
+                        this.closeQuitModal();
+                        this.startNewGame();
+                        break;
+                    case 'menu':
+                        this.closeQuitModal();
+                        this.returnToMainMenu();
+                        break;
+                    default:
+                        console.warn(`Unknown quit action: ${action}`);
+                        this.closeQuitModal();
+                }
+                
+                // Reset visual feedback
+                btn.style.transform = 'scale(1)';
+                btn.style.opacity = '1';
+            }, 100);
+        };
+    };
+    
+    const buttonMappings = [
+        { id: 'continue-btn', action: 'continue' },
+        { id: 'scores-btn', action: 'scores' },
+        { id: 'help-btn', action: 'help' },
+        { id: 'newgame-btn', action: 'newgame' },
+        { id: 'menu-btn', action: 'menu' }
+    ];
+    
+    buttonMappings.forEach(({ id, action }) => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            const handler = createQuitHandler(action);
+            
+            // Multiple event types for maximum Pixel 9a compatibility
+            btn.addEventListener('click', handler, { passive: false });
+            btn.addEventListener('touchend', handler, { passive: false });
+            
+            console.log(`✅ Pixel 9a quit handler bound for: ${id}`);
+        } else {
+            console.warn(`❌ Quit button not found: ${id}`);
+        }
     });
     
-    console.log('✅ Quit modal handlers setup complete');
+    console.log('✅ All Pixel 9a quit handlers setup complete');
 }
 
 /**
@@ -1860,11 +1910,13 @@ showSimpleModal(title, content) {
     this.showMobileOptimizedQuitModal(`<div class="content-section">${content}</div>`);
 }
 
-// FIXED HCP ANALYSIS POPUP - PROPER BUTTON HANDLING
+/**
+ * PIXEL 9A FIXED HCP ANALYSIS POPUP - NO CLONING, DIRECT EVENT BINDING
+ */
 showHCPAnalysisPopup() {
     const contract = `${this.currentContract.level}${this.currentContract.suit}${this.currentContract.doubled}`;
     
-    console.log('🔍 Showing MOBILE-OPTIMIZED HCP Analysis popup for contract:', contract);
+    console.log('🔍 Showing PIXEL 9A OPTIMIZED HCP Analysis popup for contract:', contract);
     
     this.closeMobileModal();
     this.inputState = 'hcp_analysis';
@@ -1874,213 +1926,431 @@ showHCPAnalysisPopup() {
                          this.vulnerability === 'Both' ? 'Vulnerable' : 
                          `${this.vulnerability} Vulnerable`;
     
-    const content = `
-        <div class="content-section">
-            <div style="
-                text-align: center; 
-                margin-bottom: 15px; 
-                padding: 12px; 
-                background: #2c3e50; 
-                border-radius: 8px; 
-                border: 2px solid #34495e;
+    // Prevent body scroll when modal opens
+    document.body.classList.add('modal-open');
+    
+    // Create modal overlay using PROVEN template with PIXEL 9A FIXES
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay hcp-analysis-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 10px;
+        touch-action: manipulation;
+    `;
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        ">
+            <div class="modal-header" style="
+                padding: 20px;
+                background: #e67e22;
+                color: white;
+                text-align: center;
+                flex-shrink: 0;
             ">
-                <strong style="font-size: 16px; color: #ffffff; font-weight: bold;">${contract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong><br>
-                <strong style="font-size: 14px; color: #ecf0f1;">${vulnerability}</strong><br>
-                <span style="color: #f39c12; font-size: 15px; font-weight: bold;">Raw Score: ${this.currentContract.rawScore} points</span>
+                <h2 style="font-size: 18px; margin: 0;">⭐ Hand Analysis Required</h2>
             </div>
             
-            <div style="background: rgba(255,193,7,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #f39c12;">
-                <strong>Count the combined cards of declarer + dummy:</strong><br>
-                <span style="font-size: 14px;">Ace=4, King=3, Queen=2, Jack=1</span>
-            </div>
-            
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #3498db;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="color: #2c3e50; font-size: 16px;">High Card Points:</strong>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="hcp-btn-minus" style="width: 44px; height: 44px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">-</button>
-                        <span class="hcp-display" style="font-size: 24px; font-weight: bold; min-width: 40px; text-align: center; color: #2c3e50;">${totalHCP}</span>
-                        <button class="hcp-btn-plus" style="width: 44px; height: 44px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">+</button>
+            <div class="modal-body" style="
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                background: white;
+                position: relative;
+                min-height: 0;
+                padding: 20px;
+            ">
+                <div style="
+                    text-align: center; 
+                    margin-bottom: 15px; 
+                    padding: 12px; 
+                    background: #2c3e50; 
+                    border-radius: 8px; 
+                    border: 2px solid #34495e;
+                ">
+                    <strong style="font-size: 16px; color: #ffffff; font-weight: bold;">${contract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong><br>
+                    <strong style="font-size: 14px; color: #ecf0f1;">${vulnerability}</strong><br>
+                    <span style="color: #f39c12; font-size: 15px; font-weight: bold;">Raw Score: ${this.currentContract.rawScore} points</span>
+                </div>
+                
+                <div style="background: rgba(255,193,7,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #f39c12;">
+                    <strong>Count the combined cards of declarer + dummy:</strong><br>
+                    <span style="font-size: 14px;">Ace=4, King=3, Queen=2, Jack=1</span>
+                </div>
+                
+                <!-- HCP Section with PIXEL 9A OPTIMIZED BUTTONS -->
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #3498db;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong style="color: #2c3e50; font-size: 16px;">High Card Points:</strong>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button id="hcp-minus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #e74c3c; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">−</button>
+                            <span id="hcp-display" style="font-size: 28px; font-weight: bold; min-width: 50px; text-align: center; color: #2c3e50;">${totalHCP}</span>
+                            <button id="hcp-plus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #27ae60; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Singletons Section -->
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #95a5a6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #2c3e50; font-size: 16px;">Singletons:</strong><br>
+                            <span style="font-size: 12px; color: #7f8c8d;">1-card suits</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button id="singleton-minus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #e74c3c; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">−</button>
+                            <span id="singleton-display" style="font-size: 28px; font-weight: bold; min-width: 50px; text-align: center; color: #2c3e50;">${singletons}</span>
+                            <button id="singleton-plus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #27ae60; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Voids Section -->
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #95a5a6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #2c3e50; font-size: 16px;">Voids:</strong><br>
+                            <span style="font-size: 12px; color: #7f8c8d;">0-card suits</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button id="void-minus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #e74c3c; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">−</button>
+                            <span id="void-display" style="font-size: 28px; font-weight: bold; min-width: 50px; text-align: center; color: #2c3e50;">${voids}</span>
+                            <button id="void-plus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #27ae60; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Long Suits Section -->
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #95a5a6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #2c3e50; font-size: 16px;">Long Suits:</strong><br>
+                            <span style="font-size: 12px; color: #7f8c8d;">6+ card suits</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button id="longsuit-minus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #e74c3c; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">−</button>
+                            <span id="longsuit-display" style="font-size: 28px; font-weight: bold; min-width: 50px; text-align: center; color: #2c3e50;">${longSuits}</span>
+                            <button id="longsuit-plus-btn" style="
+                                width: 50px; 
+                                height: 50px; 
+                                background: #27ae60; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 8px; 
+                                font-size: 24px; 
+                                font-weight: bold;
+                                cursor: pointer; 
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-width: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">+</button>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #95a5a6;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color: #2c3e50; font-size: 16px;">Singletons:</strong><br>
-                        <span style="font-size: 12px; color: #7f8c8d;">1-card suits</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="singleton-btn-minus" style="width: 44px; height: 44px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">-</button>
-                        <span class="singleton-display" style="font-size: 24px; font-weight: bold; min-width: 40px; text-align: center; color: #2c3e50;">${singletons}</span>
-                        <button class="singleton-btn-plus" style="width: 44px; height: 44px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">+</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #95a5a6;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color: #2c3e50; font-size: 16px;">Voids:</strong><br>
-                        <span style="font-size: 12px; color: #7f8c8d;">0-card suits</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="void-btn-minus" style="width: 44px; height: 44px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">-</button>
-                        <span class="void-display" style="font-size: 24px; font-weight: bold; min-width: 40px; text-align: center; color: #2c3e50;">${voids}</span>
-                        <button class="void-btn-plus" style="width: 44px; height: 44px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">+</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #95a5a6;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color: #2c3e50; font-size: 16px;">Long Suits:</strong><br>
-                        <span style="font-size: 12px; color: #7f8c8d;">6+ card suits</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="longsuit-btn-minus" style="width: 44px; height: 44px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">-</button>
-                        <span class="longsuit-display" style="font-size: 24px; font-weight: bold; min-width: 40px; text-align: center; color: #2c3e50;">${longSuits}</span>
-                        <button class="longsuit-btn-plus" style="width: 44px; height: 44px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; touch-action: manipulation;">+</button>
-                    </div>
-                </div>
+            <!-- FIXED ACTION BUTTONS -->
+            <div style="
+                display: flex; 
+                gap: 15px; 
+                justify-content: center;
+                margin: 0;
+                padding: 20px;
+                border-top: 2px solid #ddd;
+                flex-shrink: 0;
+                background: white;
+                border-radius: 0 0 12px 12px;
+            ">
+                <button id="cancel-analysis-btn" style="
+                    flex: 1; 
+                    height: 55px; 
+                    background: #95a5a6; 
+                    color: white; 
+                    border: none; 
+                    border-radius: 8px; 
+                    font-size: 16px; 
+                    font-weight: bold; 
+                    cursor: pointer; 
+                    touch-action: manipulation;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                    min-width: 100px;
+                ">Cancel</button>
+                <button id="calculate-score-btn" style="
+                    flex: 2; 
+                    height: 55px; 
+                    background: #27ae60; 
+                    color: white; 
+                    border: none; 
+                    border-radius: 8px; 
+                    font-size: 16px; 
+                    font-weight: bold; 
+                    cursor: pointer; 
+                    touch-action: manipulation;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                    min-width: 140px;
+                ">Calculate Score</button>
             </div>
         </div>
     `;
     
-    // CRITICAL FIX: Use proper button objects array for HCP Analysis
-    const buttons = [
-        { text: 'Cancel', action: () => this.cancelHCPAnalysis() },
-        { text: 'Calculate Score', action: () => this.completeHCPAnalysis() }
-    ];
+    document.body.appendChild(modal);
     
-    // Use the regular modal method with button objects array
-    this.showMobileOptimizedModal('⭐ Hand Analysis Required', content, buttons);
-    
+    // PIXEL 9A OPTIMIZED EVENT HANDLERS - NO CLONING!
     setTimeout(() => {
-        console.log('🔧 Setting up HCP Analysis popup handlers with ENHANCED mobile support');
-        this.setupHCPAnalysisPopup();
-    }, 200);
+        this.setupPixel9aHCPHandlers();
+    }, 100);
 }
 
 /**
- * Setup HCP Analysis popup handlers with proven mobile techniques
+ * PIXEL 9A OPTIMIZED HCP HANDLERS - Direct event binding, no cloning
  */
-setupHCPAnalysisPopup() {
-    const modal = document.querySelector('.modal-overlay');
-    if (!modal) {
-        console.log('❌ Modal not found for HCP analysis setup');
-        return;
-    }
+setupPixel9aHCPHandlers() {
+    console.log('📱 Setting up PIXEL 9A optimized HCP handlers...');
     
-    console.log('📱 Setting up HCP Analysis popup with ENHANCED mobile support');
-    
-    const setupEnhancedMobileButton = (selector, handler) => {
-        const button = modal.querySelector(selector);
-        if (!button) {
-            console.log(`❌ Button not found: ${selector}`);
-            return;
-        }
-        
-        button.style.touchAction = 'manipulation';
-        button.style.userSelect = 'none';
-        button.style.webkitTapHighlightColor = 'transparent';
-        
-        const enhancedMobileHandler = (e) => {
+    // Create unified touch handler for Pixel 9a
+    const createPixelTouchHandler = (action) => {
+        return (e) => {
             e.preventDefault();
             e.stopPropagation();
             
-            button.style.transform = 'scale(0.9)';
-            button.style.opacity = '0.7';
+            console.log(`🔥 Pixel 9a touch detected: ${action}`);
             
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-                button.style.opacity = '1';
-            }, 150);
+            // Visual feedback
+            const btn = e.target;
+            btn.style.transform = 'scale(0.9)';
+            btn.style.opacity = '0.7';
             
+            // Haptic feedback if available
             if (navigator.vibrate) {
-                navigator.vibrate([30]);
+                navigator.vibrate([25]);
             }
             
+            // Execute action
             try {
-                handler();
+                switch(action) {
+                    case 'hcp-minus': this.adjustHCP(-1); break;
+                    case 'hcp-plus': this.adjustHCP(1); break;
+                    case 'singleton-minus': this.adjustSingletons(-1); break;
+                    case 'singleton-plus': this.adjustSingletons(1); break;
+                    case 'void-minus': this.adjustVoids(-1); break;
+                    case 'void-plus': this.adjustVoids(1); break;
+                    case 'longsuit-minus': this.adjustLongSuits(-1); break;
+                    case 'longsuit-plus': this.adjustLongSuits(1); break;
+                    case 'cancel': this.cancelHCPAnalysis(); return;
+                    case 'calculate': this.completeHCPAnalysis(); return;
+                }
+                this.updatePixelHCPDisplay();
             } catch (error) {
-                console.error(`Error executing button handler for ${selector}:`, error);
+                console.error('Error in Pixel 9a handler:', error);
             }
+            
+            // Reset visual feedback
+            setTimeout(() => {
+                btn.style.transform = 'scale(1)';
+                btn.style.opacity = '1';
+            }, 150);
         };
-        
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-        
-        newButton.addEventListener('click', enhancedMobileHandler, { passive: false });
-        
-        return newButton;
     };
     
-    setupEnhancedMobileButton('.hcp-btn-minus', () => {
-        this.adjustHCP(-1);
-        this.updatePopupDisplay();
+    // Bind events to all buttons with multiple event types for Pixel 9a
+    const buttonMappings = [
+        { id: 'hcp-minus-btn', action: 'hcp-minus' },
+        { id: 'hcp-plus-btn', action: 'hcp-plus' },
+        { id: 'singleton-minus-btn', action: 'singleton-minus' },
+        { id: 'singleton-plus-btn', action: 'singleton-plus' },
+        { id: 'void-minus-btn', action: 'void-minus' },
+        { id: 'void-plus-btn', action: 'void-plus' },
+        { id: 'longsuit-minus-btn', action: 'longsuit-minus' },
+        { id: 'longsuit-plus-btn', action: 'longsuit-plus' },
+        { id: 'cancel-analysis-btn', action: 'cancel' },
+        { id: 'calculate-score-btn', action: 'calculate' }
+    ];
+    
+    buttonMappings.forEach(({ id, action }) => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            const handler = createPixelTouchHandler(action);
+            
+            // Multiple event types for maximum Pixel 9a compatibility
+            btn.addEventListener('click', handler, { passive: false });
+            btn.addEventListener('touchend', handler, { passive: false });
+            btn.addEventListener('touchstart', (e) => {
+                console.log(`📱 Touch start: ${action}`);
+            }, { passive: true });
+            
+            console.log(`✅ Pixel 9a handler bound for: ${id}`);
+        } else {
+            console.warn(`❌ Button not found: ${id}`);
+        }
     });
     
-    setupEnhancedMobileButton('.hcp-btn-plus', () => {
-        this.adjustHCP(1);
-        this.updatePopupDisplay();
-    });
-    
-    setupEnhancedMobileButton('.singleton-btn-minus', () => {
-        this.adjustSingletons(-1);
-        this.updatePopupDisplay();
-    });
-    
-    setupEnhancedMobileButton('.singleton-btn-plus', () => {
-        this.adjustSingletons(1);
-        this.updatePopupDisplay();
-    });
-    
-    setupEnhancedMobileButton('.void-btn-minus', () => {
-        this.adjustVoids(-1);
-        this.updatePopupDisplay();
-    });
-    
-    setupEnhancedMobileButton('.void-btn-plus', () => {
-        this.adjustVoids(1);
-        this.updatePopupDisplay();
-    });
-    
-    setupEnhancedMobileButton('.longsuit-btn-minus', () => {
-        this.adjustLongSuits(-1);
-        this.updatePopupDisplay();
-    });
-    
-    setupEnhancedMobileButton('.longsuit-btn-plus', () => {
-        this.adjustLongSuits(1);
-        this.updatePopupDisplay();
-    });
-    
-    console.log('✅ Enhanced HCP Analysis popup setup complete');
+    console.log('✅ All Pixel 9a HCP handlers setup complete');
 }
 
 /**
- * Update popup display values
+ * Update HCP display values - PIXEL 9A OPTIMIZED
  */
-updatePopupDisplay() {
-    const modal = document.querySelector('.modal-overlay');
-    if (!modal) return;
-    
+updatePixelHCPDisplay() {
     const { totalHCP, singletons, voids, longSuits } = this.handAnalysis;
     
-    const hcpDisplay = modal.querySelector('.hcp-display');
+    const hcpDisplay = document.getElementById('hcp-display');
     if (hcpDisplay) hcpDisplay.textContent = totalHCP;
     
-    const singletonDisplay = modal.querySelector('.singleton-display');
+    const singletonDisplay = document.getElementById('singleton-display');
     if (singletonDisplay) singletonDisplay.textContent = singletons;
     
-    const voidDisplay = modal.querySelector('.void-display');
+    const voidDisplay = document.getElementById('void-display');
     if (voidDisplay) voidDisplay.textContent = voids;
     
-    const longsuitDisplay = modal.querySelector('.longsuit-display');
+    const longsuitDisplay = document.getElementById('longsuit-display');
     if (longsuitDisplay) longsuitDisplay.textContent = longSuits;
+    
+    console.log(`📊 Display updated: HCP=${totalHCP}, S=${singletons}, V=${voids}, L=${longSuits}`);
 }
 
 /**
@@ -2133,8 +2403,236 @@ completeHCPAnalysis() {
         this.updateDisplay();
     }
 }
-// END SECTION SIX - Part 2
-// SECTION SEVEN - Scoring Logic
+
+/**
+ * PIXEL 9A FIXED QUIT MODAL - OPTIMIZED VERSION
+ */
+showQuit() {
+    console.log('🎮 Showing PIXEL 9A optimized quit options');
+    
+    const scores = this.gameState.scores;
+    const totalDeals = this.gameState.history.length;
+    const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
+    
+    // Build the content sections
+    let currentScoreContent = '';
+    if (totalDeals > 0) {
+        const leader = scores.NS > scores.EW ? 'North-South' : 
+                      scores.EW > scores.NS ? 'East-West' : 'Tied';
+        
+        currentScoreContent = `
+            <div style="padding: 15px; border-bottom: 1px solid #eee;">
+                <h3 style="color: #e67e22; margin-bottom: 10px;">📊 Current Game Status</h3>
+                <p><strong>Deals Played:</strong> ${totalDeals}</p>
+                <p><strong>Current Leader:</strong> ${leader}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div style="text-align: center; padding: 10px; background: #27ae60; color: white; border-radius: 6px;">
+                        <div style="font-size: 12px;">North-South</div>
+                        <div style="font-size: 20px; font-weight: bold;">${scores.NS}</div>
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: #e74c3c; color: white; border-radius: 6px;">
+                        <div style="font-size: 12px;">East-West</div>
+                        <div style="font-size: 20px; font-weight: bold;">${scores.EW}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    let licenseSection = '';
+    if (licenseStatus.status === 'trial') {
+        licenseSection = `
+            <div style="padding: 15px; border-bottom: 1px solid #eee;">
+                <h3 style="color: #e67e22; margin-bottom: 10px;">📅 License Status</h3>
+                <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days remaining</p>
+                <p><strong>Deals Left:</strong> ${licenseStatus.dealsLeft} deals</p>
+            </div>
+        `;
+    }
+    
+    // Prevent body scroll when modal opens
+    document.body.classList.add('modal-open');
+    
+    // Create modal overlay using PIXEL 9A OPTIMIZED template
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay quit-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 10px;
+        touch-action: manipulation;
+    `;
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        ">
+            <div class="modal-header" style="
+                padding: 20px;
+                background: #e67e22;
+                color: white;
+                text-align: center;
+                flex-shrink: 0;
+            ">
+                <h2 style="font-size: 18px; margin: 0;">⭐ Bonus Bridge Options</h2>
+            </div>
+            
+            <div class="modal-body" style="
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                background: white;
+                position: relative;
+                min-height: 0;
+            ">
+                ${currentScoreContent}
+                ${licenseSection}
+                <div style="padding: 15px;">
+                    <h3 style="color: #e67e22; margin-bottom: 10px;">🎮 Game Options</h3>
+                    <p>What would you like to do?</p>
+                </div>
+            </div>
+            
+            <!-- PIXEL 9A OPTIMIZED BUTTON LAYOUT -->
+            <div style="
+                padding: 20px;
+                background: #f8f9fa;
+                border-top: 1px solid #ddd;
+                flex-shrink: 0;
+            ">
+                <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 12px; width: 100%;">
+                    <!-- Top row: 3 buttons -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <button id="continue-btn" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #27ae60;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            min-height: 50px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">Continue Playing</button>
+                        <button id="scores-btn" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #3498db;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            min-height: 50px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">Show Scores</button>
+                        <button id="help-btn" style="
+                            padding: 12px 8px;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #f39c12;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            min-height: 50px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">Show Help</button>
+                    </div>
+                    <!-- Bottom row: 2 buttons -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button id="newgame-btn" style="
+                            padding: 12px 10px;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #9b59b6;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            min-height: 50px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">New Game</button>
+                        <button id="menu-btn" style="
+                            padding: 12px 10px;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            background: #95a5a6;
+                            color: white;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            min-height: 50px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">Main Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Setup PIXEL 9A OPTIMIZED button handlers
+    setTimeout(() => {
+        this.setupQuitModalHandlers();
+    }, 100);
+}
+
+closeMobileModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+        document.body.classList.remove('modal-open');
+        console.log('📱 Mobile modal closed');
+    }
+}
+
+// END SECTION SIX - Part 2 (PIXEL 9A FIXED)// SECTION SEVEN - Scoring Logic
 
 /**
  * Calculate raw bridge score
