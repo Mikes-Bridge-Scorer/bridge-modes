@@ -1326,7 +1326,6 @@ showMobileOptimizedQuitModal(content) {
     }, 100);
 }
 // END SECTION SIX - Part 1
-
 // SECTION SIX - Part 2: Mobile-Optimized Modal System (PIXEL 9A FIXED)
 
 /**
@@ -1815,10 +1814,10 @@ showMobileOptimizedScoresModal(content) {
                 gap: 10px;
                 justify-content: center;
             ">
-                <button class="scores-close-btn" style="
-                    padding: 10px 20px;
+                <button id="scores-close-btn" style="
+                    padding: 12px 20px;
                     border: none;
-                    border-radius: 6px;
+                    border-radius: 8px;
                     font-size: 14px;
                     font-weight: 600;
                     cursor: pointer;
@@ -1827,11 +1826,15 @@ showMobileOptimizedScoresModal(content) {
                     touch-action: manipulation;
                     user-select: none;
                     -webkit-tap-highlight-color: transparent;
+                    min-height: 50px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 ">Close Scores</button>
-                <button class="back-to-quit-btn" style="
-                    padding: 10px 20px;
+                <button id="scores-back-btn" style="
+                    padding: 12px 20px;
                     border: none;
-                    border-radius: 6px;
+                    border-radius: 8px;
                     font-size: 14px;
                     font-weight: 600;
                     cursor: pointer;
@@ -1840,6 +1843,10 @@ showMobileOptimizedScoresModal(content) {
                     touch-action: manipulation;
                     user-select: none;
                     -webkit-tap-highlight-color: transparent;
+                    min-height: 50px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 ">Back to Options</button>
             </div>
         </div>
@@ -1854,40 +1861,72 @@ showMobileOptimizedScoresModal(content) {
 }
 
 /**
- * Setup scores modal handlers
+ * Setup scores modal handlers - PIXEL 9A FIXED
  */
 setupScoresModalHandlers() {
-    const modal = document.querySelector('.modal-overlay');
-    const closeBtn = modal.querySelector('.scores-close-btn');
-    const backBtn = modal.querySelector('.back-to-quit-btn');
+    console.log('📱 Setting up PIXEL 9A optimized scores modal handlers...');
     
-    // Close button
-    closeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.closeScoresModal();
-    }, { passive: false });
+    // Create unified scores handler for Pixel 9a
+    const createScoresHandler = (action) => {
+        return (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log(`🔥 Pixel 9a scores action: ${action}`);
+            
+            // Visual feedback
+            const btn = e.target;
+            btn.style.transform = 'scale(0.95)';
+            btn.style.opacity = '0.8';
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([30]);
+            }
+            
+            // Execute action after feedback
+            setTimeout(() => {
+                switch(action) {
+                    case 'close':
+                        this.closeScoresModal();
+                        break;
+                    case 'back':
+                        this.closeScoresModal();
+                        setTimeout(() => this.showQuit(), 100);
+                        break;
+                    default:
+                        console.warn(`Unknown scores action: ${action}`);
+                        this.closeScoresModal();
+                }
+                
+                // Reset visual feedback
+                btn.style.transform = 'scale(1)';
+                btn.style.opacity = '1';
+            }, 100);
+        };
+    };
     
-    // Back to quit options button
-    backBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.closeScoresModal();
-        setTimeout(() => this.showQuit(), 100);
-    }, { passive: false });
+    const buttonMappings = [
+        { id: 'scores-close-btn', action: 'close' },
+        { id: 'scores-back-btn', action: 'back' }
+    ];
     
-    // Touch feedback for both buttons
-    [closeBtn, backBtn].forEach(button => {
-        button.addEventListener('touchstart', (e) => {
-            button.style.transform = 'scale(0.95)';
-            button.style.opacity = '0.8';
-        }, { passive: true });
-        
-        button.addEventListener('touchend', (e) => {
-            button.style.transform = 'scale(1)';
-            button.style.opacity = '1';
-        }, { passive: true });
+    buttonMappings.forEach(({ id, action }) => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            const handler = createScoresHandler(action);
+            
+            // Multiple event types for maximum Pixel 9a compatibility
+            btn.addEventListener('click', handler, { passive: false });
+            btn.addEventListener('touchend', handler, { passive: false });
+            
+            console.log(`✅ Pixel 9a scores handler bound for: ${id}`);
+        } else {
+            console.warn(`❌ Scores button not found: ${id}`);
+        }
     });
     
-    console.log('✅ Scores modal handlers setup complete');
+    console.log('✅ All Pixel 9a scores handlers setup complete');
 }
 
 /**
@@ -2632,7 +2671,8 @@ closeMobileModal() {
     }
 }
 
-// END SECTION SIX - Part 2 (PIXEL 9A FIXED)// SECTION SEVEN - Scoring Logic
+// END SECTION SIX - Part 2 (PIXEL 9A FIXED)
+// SECTION SEVEN - Scoring Logic
 
 /**
  * Calculate raw bridge score
