@@ -996,76 +996,467 @@ class RubberBridgeMode extends BaseBridgeMode {
         return { valid: true, issues: [] };
     }
 // END SECTION FIVE
-// SECTION SIX - Help and Quit Methods
+// SECTION SIX - Part 1: Mobile Help System (UPDATED WITH PIXEL 9A OPTIMIZATION)
     /**
-     * Get help content specific to Rubber Bridge
+     * Show Rubber Bridge specific help - MOBILE OPTIMIZED WITH PROVEN TEMPLATE
      */
-    getHelpContent() {
-        return {
-            title: 'Rubber Bridge (Classic) Help',
-            content: `
-                <div class="help-section">
-                    <h4>🎩 What is Rubber Bridge?</h4>
-                    <p><strong>Rubber Bridge</strong> is the classic form of bridge featuring the famous "above and below the line" scoring system. It's the original way bridge was played before duplicate and other variants were invented.</p>
+    showHelp() {
+        console.log('📖 Showing Rubber Bridge help with proven mobile template');
+        
+        // Use the proven mobile modal template
+        this.showMobileOptimizedHelpModal();
+    }
+    
+    /**
+     * Show mobile-optimized help modal using proven template
+     */
+    showMobileOptimizedHelpModal() {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay using PROVEN template from bonus.js
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #e67e22;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">🎩 Rubber Bridge Help</h2>
                 </div>
                 
-                <div class="help-section">
-                    <h4>📊 Above/Below the Line Scoring</h4>
-                    <p><strong>Below the Line (Game Points):</strong></p>
-                    <ul>
-                        <li>Only basic contract points count here</li>
-                        <li>♣/♦: 20 points per trick • ♥/♠: 30 points per trick • NT: 30 + 10 bonus</li>
-                        <li><strong>Game = 100+ below-the-line points</strong></li>
-                        <li>Can accumulate over multiple deals</li>
-                    </ul>
+                <!-- CRITICAL: The scrollable content area using PROVEN technique -->
+                <div class="modal-body" id="rubberHelpBody" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        /* Enhanced scrollbar for mobile visibility - PROVEN */
+                        #rubberHelpBody::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        #rubberHelpBody::-webkit-scrollbar-thumb {
+                            background: rgba(230, 126, 34, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        #rubberHelpBody::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                        .content-section {
+                            padding: 20px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .content-section:last-child {
+                            border-bottom: none;
+                            padding-bottom: 30px;
+                        }
+                        .content-section h3 {
+                            color: #e67e22;
+                            margin-bottom: 10px;
+                            font-size: 16px;
+                        }
+                        .content-section p {
+                            line-height: 1.5;
+                            margin-bottom: 10px;
+                            color: #555;
+                            font-size: 14px;
+                        }
+                        .feature-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 12px;
+                            margin: 15px 0;
+                        }
+                        .feature-item {
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 8px;
+                            border-left: 4px solid #e67e22;
+                        }
+                        .feature-item h4 {
+                            color: #2c3e50;
+                            font-size: 14px;
+                            margin-bottom: 6px;
+                        }
+                        .feature-item p {
+                            font-size: 12px;
+                            color: #666;
+                            margin: 0;
+                        }
+                        .highlight-box {
+                            background: #fff8e1;
+                            padding: 12px;
+                            border-radius: 8px;
+                            border-left: 4px solid #f39c12;
+                            margin: 15px 0;
+                        }
+                        .highlight-box h4 {
+                            margin: 0 0 8px 0;
+                            color: #e67e22;
+                            font-size: 14px;
+                        }
+                        .highlight-box p {
+                            margin: 0;
+                            font-size: 13px;
+                            color: #e67e22;
+                        }
+                        .steps-grid {
+                            display: grid; 
+                            grid-template-columns: 1fr 1fr; 
+                            gap: 8px; 
+                            margin: 16px 0; 
+                            background: #f5f5f5; 
+                            padding: 12px; 
+                            border-radius: 8px;
+                        }
+                        .step-item {
+                            text-align: center; 
+                            padding: 10px; 
+                            background: white; 
+                            border-radius: 6px;
+                        }
+                        .step-item.step-1 {
+                            border-left: 3px solid #3498db;
+                        }
+                        .step-item.step-2 {
+                            border-left: 3px solid #e67e22;
+                        }
+                        .example-box {
+                            background: #f8f9fa;
+                            padding: 14px;
+                            border-radius: 8px;
+                            margin: 12px 0;
+                            border-left: 4px solid #3498db;
+                        }
+                        .example-box h5 {
+                            margin: 0 0 8px 0;
+                            color: #2c3e50;
+                            font-size: 13px;
+                        }
+                        .example-box .example-content {
+                            background: rgba(255,255,255,0.8);
+                            padding: 8px;
+                            border-radius: 4px;
+                            font-size: 12px;
+                            color: #333;
+                            margin: 4px 0;
+                        }
+                        .benefits-box {
+                            background: #e8f5e8;
+                            padding: 12px;
+                            border-radius: 8px;
+                            border-left: 4px solid #27ae60;
+                            margin: 15px 0;
+                        }
+                        .benefits-box h4 {
+                            margin: 0 0 8px 0;
+                            color: #155724;
+                            font-size: 14px;
+                        }
+                        .benefits-box ul {
+                            margin: 0;
+                            padding-left: 18px;
+                            font-size: 13px;
+                            color: #155724;
+                            line-height: 1.3;
+                        }
+                        .scroll-indicator {
+                            position: absolute;
+                            top: 50%;
+                            right: 5px;
+                            transform: translateY(-50%);
+                            background: rgba(230, 126, 34, 0.8);
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            z-index: 10;
+                            pointer-events: none;
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        }
+                        .scroll-indicator.visible {
+                            opacity: 1;
+                        }
+                    </style>
                     
-                    <p><strong>Above the Line (Bonus Points):</strong></p>
-                    <ul>
-                        <li>Game bonuses, slam bonuses, doubled bonuses, honors, penalties</li>
-                        <li>Add to your total score but don't count toward making game</li>
-                        <li>All overtricks, bonuses, and penalties go here</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🎯 Game & Rubber Rules</h4>
-                    <ul>
-                        <li><strong>Making Game:</strong> Accumulate 100+ below-the-line points</li>
-                        <li><strong>Game Examples:</strong> 3NT (100), 4♥/♠ (120), 5♣/♦ (100)</li>
-                        <li><strong>Part-Score Building:</strong> 2♣ (40) + 3♦ (60) = Game!</li>
-                        <li><strong>After Game:</strong> Part-scores reset, winner becomes vulnerable</li>
-                        <li><strong>Rubber:</strong> First side to win 2 games wins the rubber</li>
-                        <li><strong>Rubber Bonus:</strong> 700 points (2-0) or 500 points (2-1)</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>🏅 Honor Bonuses (Detailed)</h4>
-                    <p><strong>What are honors?</strong> The top 5 cards of trump suit: A, K, Q, J, 10</p>
+                    <div class="scroll-indicator" id="rubberScrollIndicator">👆 Scroll to see more</div>
                     
-                    <p><strong>Honor Scoring:</strong></p>
-                    <ul>
-                        <li><strong>4 Honors in trump:</strong> 100 points (any 4 of A-K-Q-J-10)</li>
-                        <li><strong>5 Honors in trump:</strong> 150 points (all A-K-Q-J-10)</li>
-                        <li><strong>4 Aces in NT:</strong> 150 points (all four aces)</li>
-                    </ul>
-                    
-                    <p><strong>Important:</strong> Honor bonuses go to whichever side (declarer + dummy) holds the honors, regardless of whether the contract made or failed. Click the <strong>Honors</strong> button after each deal to claim any bonuses.</p>
+                    ${this.getRubberHelpContent()}
                 </div>
                 
-                <div class="help-section">
-                    <h4>📈 Scoring Examples</h4>
-                    <p><strong>Example 1 - Making Game:</strong></p>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    gap: 10px;
+                    justify-content: center;
+                ">
+                    <button class="help-close-btn" style="
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #e67e22;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">Close Help</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Setup button handlers and scroll indicators
+        setTimeout(() => {
+            this.setupHelpModalHandlers();
+        }, 100);
+    }
+    
+    /**
+     * Setup help modal handlers with proven mobile techniques
+     */
+    setupHelpModalHandlers() {
+        const modal = document.querySelector('.modal-overlay');
+        const modalBody = document.getElementById('rubberHelpBody');
+        const indicator = document.getElementById('rubberScrollIndicator');
+        const closeBtn = modal.querySelector('.help-close-btn');
+        
+        // Close button handler with PIXEL 9A optimization
+        const createCloseHandler = () => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('🔥 Pixel 9a help close action');
+                
+                // Visual feedback
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                // Execute action after feedback
+                setTimeout(() => {
+                    this.closeHelpModal();
+                    
+                    // Reset visual feedback
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                }, 100);
+            };
+        };
+        
+        const closeHandler = createCloseHandler();
+        
+        // Multiple event types for maximum Pixel 9a compatibility
+        closeBtn.addEventListener('click', closeHandler, { passive: false });
+        closeBtn.addEventListener('touchend', closeHandler, { passive: false });
+        
+        // Touch feedback for close button
+        closeBtn.addEventListener('touchstart', (e) => {
+            closeBtn.style.background = 'rgba(230, 126, 34, 0.8)';
+            closeBtn.style.transform = 'scale(0.95)';
+        }, { passive: true });
+        
+        closeBtn.addEventListener('touchend', (e) => {
+            closeBtn.style.background = '#e67e22';
+            closeBtn.style.transform = 'scale(1)';
+        }, { passive: true });
+        
+        // Scroll indicator logic (proven from bonus.js)
+        modalBody.addEventListener('scroll', () => {
+            if (modalBody.scrollHeight > modalBody.clientHeight && modalBody.scrollTop < 50) {
+                indicator.classList.add('visible');
+                setTimeout(() => indicator.classList.remove('visible'), 2000);
+            }
+        });
+        
+        // Show indicator on load if content is scrollable
+        setTimeout(() => {
+            if (modalBody.scrollHeight > modalBody.clientHeight) {
+                indicator.classList.add('visible');
+                setTimeout(() => indicator.classList.remove('visible'), 3000);
+                console.log('📱 Help content is scrollable - indicator shown');
+            } else {
+                console.log('📱 Help content fits in viewport - no scroll needed');
+            }
+        }, 500);
+        
+        console.log('✅ Help modal handlers setup complete');
+    }
+    
+    /**
+     * Close help modal
+     */
+    closeHelpModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.classList.remove('modal-open');
+            console.log('📖 Help modal closed');
+        }
+    }
+    
+    /**
+     * Get Rubber Bridge help content - MOBILE FORMATTED
+     */
+    getRubberHelpContent() {
+        return `
+            <div class="content-section">
+                <h3>What is Rubber Bridge?</h3>
+                <p><strong>Rubber Bridge</strong> is the classic form of bridge featuring the famous "above and below the line" scoring system. It's the original way bridge was played before duplicate and other variants were invented.</p>
+                
+                <div class="highlight-box">
+                    <h4>Perfect For</h4>
+                    <p>Classic play • Traditional scoring • Social bridge • Learning fundamentals</p>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <h3>Above/Below the Line Scoring</h3>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>📊 Below the Line</h4>
+                        <p>Only basic contract points count here. Need 100+ points to make game.</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <h4>🎯 Above the Line</h4>
+                        <p>Game bonuses, slam bonuses, honors, penalties. Add to total but don't make game.</p>
+                    </div>
+                </div>
+                
+                <div class="example-box">
+                    <h5>Contract Points (Below Line):</h5>
+                    <div class="example-content">
+                        <strong>♣/♦:</strong> 20 points per trick<br>
+                        <strong>♥/♠:</strong> 30 points per trick<br>
+                        <strong>NT:</strong> 30 points per trick + 10 bonus
+                    </div>
+                </div>
+                
+                <div class="example-box">
+                    <h5>Bonus Points (Above Line):</h5>
+                    <div class="example-content">
+                        Game bonuses • Slam bonuses • Doubled bonuses<br>
+                        Honor cards • Penalties • Overtricks
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <h3>Game & Rubber Rules</h3>
+                
+                <div class="steps-grid">
+                    <div class="step-item step-1">
+                        <div style="font-weight: bold; font-size: 14px; color: #3498db;">Making Game</div>
+                        <div style="font-size: 12px; color: #666;">100+ below-line</div>
+                        <div style="font-size: 12px; color: #666;">points accumulated</div>
+                    </div>
+                    <div class="step-item step-2">
+                        <div style="font-weight: bold; color: #e67e22; font-size: 14px;">After Game</div>
+                        <div style="font-size: 12px; color: #666;">Part-scores reset</div>
+                        <div style="font-size: 12px; color: #666;">Winner vulnerable</div>
+                    </div>
+                </div>
+                
+                <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                    <li><strong>Game Examples:</strong> 3NT (100), 4♥/♠ (120), 5♣/♦ (100)</li>
+                    <li><strong>Part-Score Building:</strong> 2♣ (40) + 3♦ (60) = Game!</li>
+                    <li><strong>Rubber:</strong> First side to win 2 games wins rubber</li>
+                    <li><strong>Rubber Bonus:</strong> 700 points (2-0) or 500 points (2-1)</li>
+                </ul>
+            </div>
+            
+            <div class="content-section">
+                <h3>Honor Bonuses (Detailed)</h3>
+                <p><strong>What are honors?</strong> The top 5 cards of trump suit: A, K, Q, J, 10</p>
+                
+                <div class="example-box">
+                    <h5>Honor Scoring:</h5>
+                    <div class="example-content">
+                        <strong>4 Honors in trump:</strong> 100 points (any 4 of A-K-Q-J-10)<br>
+                        <strong>5 Honors in trump:</strong> 150 points (all A-K-Q-J-10)<br>
+                        <strong>4 Aces in NT:</strong> 150 points (all four aces)
+                    </div>
+                </div>
+                
+                <div class="benefits-box">
+                    <h4>Honor Rules</h4>
+                    <ul>
+                        <li>Go to whichever side holds the honors</li>
+                        <li>Awarded regardless of contract success</li>
+                        <li>Count above the line (bonus points)</li>
+                        <li>Click X button after deals to claim</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <h3>Scoring Examples</h3>
+                
+                <div class="example-box">
+                    <h5>Example 1 - Making Game:</h5>
+                    <div class="example-content">
                         4♥ by N = Made exactly (not vulnerable)<br>
                         • Below line: 4 × 30 = <strong>120 points</strong> → GAME!<br>
                         • Above line: 300 (game bonus)<br>
                         • Total: 420 points to NS<br>
                         • Result: NS wins first game, becomes vulnerable
                     </div>
-                    
-                    <p><strong>Example 2 - Part-Score Building:</strong></p>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                </div>
+                
+                <div class="example-box">
+                    <h5>Example 2 - Part-Score Building:</h5>
+                    <div class="example-content">
                         Deal 1: 2♣ by S = Made exactly<br>
                         • Below line: 40 points (toward game)<br>
                         • Above line: 50 (part-game bonus)<br>
@@ -1075,9 +1466,11 @@ class RubberBridgeMode extends BaseBridgeMode {
                         • Above line: 300 (game bonus)<br>
                         • Result: NS wins game from accumulated part-scores
                     </div>
-                    
-                    <p><strong>Example 3 - With Honors:</strong></p>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 4px 0;">
+                </div>
+                
+                <div class="example-box">
+                    <h5>Example 3 - With Honors:</h5>
+                    <div class="example-content">
                         3NT by E = Made +1 + 4 Aces<br>
                         • Below line: 100 points → GAME!<br>
                         • Above line: 300 (game) + 30 (overtrick) + 150 (4 aces)<br>
@@ -1085,118 +1478,122 @@ class RubberBridgeMode extends BaseBridgeMode {
                         • Result: EW wins game, becomes vulnerable
                     </div>
                 </div>
+            </div>
+            
+            <div class="content-section">
+                <h3>Vulnerability System</h3>
                 
-                <div class="help-section">
-                    <h4>🔴🟢 Vulnerability System</h4>
-                    <ul>
-                        <li><strong>🟢 Green:</strong> Not vulnerable (haven't won a game yet)</li>
-                        <li><strong>🔴 Red:</strong> Vulnerable (won at least one game)</li>
-                        <li><strong>Effects:</strong> Higher game bonuses (+500 vs +300) and penalties</li>
-                        <li><strong>Slam Bonuses:</strong> Also increased when vulnerable</li>
-                    </ul>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>🟢 Fresh</h4>
+                        <p>Haven't won a game yet. Lower bonuses and penalties.</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <h4>🔴 Vulnerable</h4>
+                        <p>Won at least one game. Higher bonuses and penalties.</p>
+                    </div>
                 </div>
                 
-                <div class="help-section">
-                    <h4>🎮 How to Play</h4>
-                    <ol>
-                        <li><strong>Enter Contract:</strong> Level → Suit → Declarer</li>
-                        <li><strong>Doubling:</strong> Use X button for doubles/redoubles</li>
-                        <li><strong>Enter Result:</strong> Made/Plus/Down</li>
-                        <li><strong>Claim Honors:</strong> Click Honors button if you held 4+ honors</li>
-                        <li><strong>Continue:</strong> Deal continues until rubber is complete</li>
-                        <li><strong>New Rubber:</strong> Start fresh when rubber ends</li>
-                    </ol>
+                <div class="example-box">
+                    <h5>Vulnerability Effects:</h5>
+                    <div class="example-content">
+                        <strong>Game Bonuses:</strong> +500 (vulnerable) vs +300 (fresh)<br>
+                        <strong>Slam Bonuses:</strong> Also increased when vulnerable<br>
+                        <strong>Penalties:</strong> Higher when vulnerable
+                    </div>
                 </div>
+            </div>
+            
+            <div class="content-section">
+                <h3>How to Play</h3>
+                <ol style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                    <li><strong>Enter Contract:</strong> Level → Suit → Declarer</li>
+                    <li><strong>Doubling:</strong> Use X button for doubles/redoubles</li>
+                    <li><strong>Enter Result:</strong> Made/Plus/Down</li>
+                    <li><strong>Claim Honors:</strong> Click X button if you held 4+ honors</li>
+                    <li><strong>Continue:</strong> Deal continues until rubber is complete</li>
+                    <li><strong>New Rubber:</strong> Start fresh when rubber ends</li>
+                </ol>
+            </div>
+            
+            <div class="content-section">
+                <h3>Display Guide</h3>
+                <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                    <li><strong>Games Won:</strong> Shown as "Games: 1-0" in top right</li>
+                    <li><strong>Game Points:</strong> Red numbers (below-line, count toward game)</li>
+                    <li><strong>Bonus Points:</strong> Blue numbers (above-line, bonuses only)</li>
+                    <li><strong>Total:</strong> Green numbers (final score)</li>
+                    <li><strong>Vulnerability:</strong> 🔴/🟢 indicators show vulnerability status</li>
+                </ul>
+            </div>
+            
+            <div class="content-section">
+                <h3>Rubber Completion</h3>
+                <p>When a side wins 2 games:</p>
+                <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                    <li><strong>2-0 Rubber:</strong> +700 bonus to winner</li>
+                    <li><strong>2-1 Rubber:</strong> +500 bonus to winner</li>
+                    <li><strong>Final Score:</strong> Sum of all above and below line points</li>
+                    <li><strong>New Rubber:</strong> Everything resets for fresh start</li>
+                </ul>
+            </div>
+            
+            <div class="content-section">
+                <h3>Strategy Tips</h3>
+                <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
+                    <li><strong>Part-Score Pressure:</strong> When opponents have part-score, bid aggressively</li>
+                    <li><strong>Vulnerability Awareness:</strong> Take more risks when not vulnerable</li>
+                    <li><strong>Game Timing:</strong> Sometimes better to make 3NT than build part-scores</li>
+                    <li><strong>Honor Cards:</strong> Don't forget to claim honor bonuses!</li>
+                </ul>
                 
-                <div class="help-section">
-                    <h4>📱 Display Guide</h4>
-                    <ul>
-                        <li><strong>Games Won:</strong> Shown as "Games: 1-0" in top right</li>
-                        <li><strong>Game Points:</strong> Red numbers (below-line, count toward game)</li>
-                        <li><strong>Bonus Points:</strong> Blue numbers (above-line, bonuses only)</li>
-                        <li><strong>Total:</strong> Green numbers (final score)</li>
-                        <li><strong>Vulnerability:</strong> 🔴/🟢 indicators show vulnerability status</li>
-                    </ul>
+                <div style="height: 50px; background: linear-gradient(45deg, #e67e22, #f39c12); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-top: 15px;">
+                    🎩 Master the Classic Game!
                 </div>
-                
-                <div class="help-section">
-                    <h4>🏆 Rubber Completion</h4>
-                    <p>When a side wins 2 games:</p>
-                    <ul>
-                        <li><strong>2-0 Rubber:</strong> +700 bonus to winner</li>
-                        <li><strong>2-1 Rubber:</strong> +500 bonus to winner</li>
-                        <li><strong>Final Score:</strong> Sum of all above and below line points</li>
-                        <li><strong>New Rubber:</strong> Everything resets for fresh start</li>
-                    </ul>
-                </div>
-                
-                <div class="help-section">
-                    <h4>💡 Strategy Tips</h4>
-                    <ul>
-                        <li><strong>Part-Score Pressure:</strong> When opponents have part-score, bid aggressively</li>
-                        <li><strong>Vulnerability Awareness:</strong> Take more risks when not vulnerable</li>
-                        <li><strong>Game Timing:</strong> Sometimes better to make 3NT than build part-scores</li>
-                        <li><strong>Honor Cards:</strong> Don't forget to claim honor bonuses!</li>
-                    </ul>
-                </div>
-            `,
-            modalButtons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
+            </div>
+        `;
     }
-    
+// END SECTION SIX - Part 1
+
+// SECTION SIX - Part 2: Mobile Quit System & Score Sheet (PIXEL 9A OPTIMIZED)
     /**
-     * Show Rubber Bridge specific help
-     */
-    showHelp() {
-        const helpContent = this.getHelpContent();
-        this.bridgeApp.showModal(helpContent.title, helpContent.content);
-    }
-    
-    /**
-     * Show Rubber Bridge specific quit options
+     * Show Rubber Bridge specific quit options - PIXEL 9A OPTIMIZED
      */
     showQuit() {
+        console.log('🎮 Showing PIXEL 9A optimized quit options for Rubber Bridge');
+        
         const scores = this.gameState.scores;
         const totalDeals = this.gameState.history.filter(deal => deal.mode === 'rubber' && !deal.honorBonus && !deal.rubberBonus).length;
         const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
         const rubberStatus = this.getRubberStatus();
         const breakdown = this.getScoringBreakdown();
         
+        // Build the content sections
         let currentScoreContent = '';
         if (totalDeals > 0) {
             const leader = scores.NS > scores.EW ? 'North-South' : 
                           scores.EW > scores.NS ? 'East-West' : 'Tied';
             
             currentScoreContent = `
-                <div class="help-section">
-                    <h4>📊 Current Rubber Status</h4>
+                <div style="padding: 15px; border-bottom: 1px solid #eee;">
+                    <h3 style="color: #e67e22; margin-bottom: 10px;">📊 Current Rubber Status</h3>
                     <p><strong>Games Won:</strong> NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}</p>
                     <p><strong>Vulnerability:</strong> ${rubberStatus.vulnerability.NS ? 'NS 🔴' : 'NS 🟢'} | ${rubberStatus.vulnerability.EW ? 'EW 🔴' : 'EW 🟢'}</p>
                     <p><strong>Deals Played:</strong> ${totalDeals}</p>
-                    
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 8px 0;">
-                        <p><strong>Score Breakdown:</strong></p>
-                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
-                            <div>
-                                <strong>NS:</strong><br>
-                                Game: ${breakdown.partScores.NS}<br>
-                                Bonus: ${breakdown.aboveScores.NS}<br>
-                                <strong>Total: ${breakdown.totals.NS}</strong>
-                            </div>
-                            <div>
-                                <strong>EW:</strong><br>
-                                Game: ${breakdown.partScores.EW}<br>
-                                Bonus: ${breakdown.aboveScores.EW}<br>
-                                <strong>Total: ${breakdown.totals.EW}</strong>
-                            </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div style="text-align: center; padding: 10px; background: #27ae60; color: white; border-radius: 6px;">
+                            <div style="font-size: 12px;">North-South</div>
+                            <div style="font-size: 20px; font-weight: bold;">${scores.NS}</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: #e74c3c; color: white; border-radius: 6px;">
+                            <div style="font-size: 12px;">East-West</div>
+                            <div style="font-size: 20px; font-weight: bold;">${scores.EW}</div>
                         </div>
                     </div>
-                    
                     ${rubberStatus.rubberComplete ? 
-                        `<p style="color: #f39c12;"><strong>🏆 Rubber Complete!</strong> Winner: ${rubberStatus.rubberWinner}</p>` : 
-                        `<p><strong>Current Leader:</strong> ${leader}</p>`
+                        `<p style="color: #f39c12; margin-top: 10px;"><strong>🏆 Rubber Complete!</strong> Winner: ${rubberStatus.rubberWinner}</p>` : 
+                        `<p style="margin-top: 10px;"><strong>Current Leader:</strong> ${leader}</p>`
                     }
                 </div>
             `;
@@ -1205,31 +1602,864 @@ class RubberBridgeMode extends BaseBridgeMode {
         let licenseSection = '';
         if (licenseStatus.status === 'trial') {
             licenseSection = `
-                <div class="help-section">
-                    <h4>📅 License Status</h4>
-                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
+                <div style="padding: 15px; border-bottom: 1px solid #eee;">
+                    <h3 style="color: #e67e22; margin-bottom: 10px;">📅 License Status</h3>
+                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days remaining</p>
+                    <p><strong>Deals Left:</strong> ${licenseStatus.dealsLeft} deals</p>
                 </div>
             `;
         }
         
-        const content = `
-            ${currentScoreContent}
-            ${licenseSection}
-            <div class="help-section">
-                <h4>🎮 Game Options</h4>
-                <p>What would you like to do?</p>
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay using PIXEL 9A OPTIMIZED template
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay quit-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+            touch-action: manipulation;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #e67e22;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">🎩 Rubber Bridge Options</h2>
+                </div>
+                
+                <div class="modal-body" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    ${currentScoreContent}
+                    ${licenseSection}
+                    <div style="padding: 15px;">
+                        <h3 style="color: #e67e22; margin-bottom: 10px;">🎮 Game Options</h3>
+                        <p>What would you like to do?</p>
+                    </div>
+                </div>
+                
+                <!-- PIXEL 9A OPTIMIZED BUTTON LAYOUT -->
+                <div style="
+                    padding: 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                ">
+                    <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 12px; width: 100%;">
+                        <!-- Top row: 3 buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <button id="continue-btn" style="
+                                padding: 12px 8px;
+                                border: none;
+                                border-radius: 8px;
+                                font-size: 12px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                background: #27ae60;
+                                color: white;
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">Continue Playing</button>
+                            <button id="scores-btn" style="
+                                padding: 12px 8px;
+                                border: none;
+                                border-radius: 8px;
+                                font-size: 12px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                background: #3498db;
+                                color: white;
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">Show Scores</button>
+                            <button id="help-btn" style="
+                                padding: 12px 8px;
+                                border: none;
+                                border-radius: 8px;
+                                font-size: 12px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                background: #f39c12;
+                                color: white;
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">Show Help</button>
+                        </div>
+                        <!-- Bottom row: 2 buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <button id="newgame-btn" style="
+                                padding: 12px 10px;
+                                border: none;
+                                border-radius: 8px;
+                                font-size: 13px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                background: #9b59b6;
+                                color: white;
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">New Rubber</button>
+                            <button id="menu-btn" style="
+                                padding: 12px 10px;
+                                border: none;
+                                border-radius: 8px;
+                                font-size: 13px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                background: #95a5a6;
+                                color: white;
+                                touch-action: manipulation;
+                                user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                                min-height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">Main Menu</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
         
-        const modalButtons = [
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' },
-            { text: 'Show Scores', action: () => this.showDetailedScores(), class: 'scores-btn' },
-            { text: 'New Rubber', action: () => this.confirmNewRubber(), class: 'new-game-btn' },
-            { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' },
-            { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' }
+        document.body.appendChild(modal);
+        
+        // Setup PIXEL 9A OPTIMIZED button handlers
+        setTimeout(() => {
+            this.setupRubberQuitModalHandlers();
+        }, 100);
+    }
+    
+    /**
+     * Setup quit modal handlers - PIXEL 9A OPTIMIZED FOR RUBBER BRIDGE
+     */
+    setupRubberQuitModalHandlers() {
+        console.log('📱 Setting up PIXEL 9A optimized quit handlers for Rubber Bridge...');
+        
+        // Create unified quit handler for Pixel 9a
+        const createQuitHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log(`🔥 Pixel 9a quit action: ${action}`);
+                
+                // Visual feedback
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                // Execute action after feedback
+                setTimeout(() => {
+                    switch(action) {
+                        case 'continue':
+                            this.closeQuitModal();
+                            break;
+                        case 'scores':
+                            this.closeQuitModal();
+                            this.showMobileOptimizedRubberScores();
+                            break;
+                        case 'help':
+                            this.closeQuitModal();
+                            this.showHelp();
+                            break;
+                        case 'newgame':
+                            this.closeQuitModal();
+                            this.confirmNewRubber();
+                            break;
+                        case 'menu':
+                            this.closeQuitModal();
+                            this.returnToMainMenu();
+                            break;
+                        default:
+                            console.warn(`Unknown quit action: ${action}`);
+                            this.closeQuitModal();
+                    }
+                    
+                    // Reset visual feedback
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                }, 100);
+            };
+        };
+        
+        const buttonMappings = [
+            { id: 'continue-btn', action: 'continue' },
+            { id: 'scores-btn', action: 'scores' },
+            { id: 'help-btn', action: 'help' },
+            { id: 'newgame-btn', action: 'newgame' },
+            { id: 'menu-btn', action: 'menu' }
         ];
         
-        this.bridgeApp.showModal('🎩 Rubber Bridge Options', content, modalButtons);
+        buttonMappings.forEach(({ id, action }) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                const handler = createQuitHandler(action);
+                
+                // Multiple event types for maximum Pixel 9a compatibility
+                btn.addEventListener('click', handler, { passive: false });
+                btn.addEventListener('touchend', handler, { passive: false });
+                
+                console.log(`✅ Pixel 9a quit handler bound for: ${id}`);
+            } else {
+                console.warn(`❌ Quit button not found: ${id}`);
+            }
+        });
+        
+        console.log('✅ All Pixel 9a quit handlers setup complete');
+    }
+    
+    /**
+     * Close quit modal
+     */
+    closeQuitModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.classList.remove('modal-open');
+            console.log('🎮 Quit modal closed');
+        }
+    }
+    
+    /**
+     * Show mobile-optimized Rubber Bridge scores - WITH PIXEL 9A SCROLLING FIX
+     */
+    showMobileOptimizedRubberScores() {
+        console.log('📊 Showing mobile-optimized Rubber Bridge detailed scores');
+        
+        const scores = this.gameState.scores;
+        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
+        
+        if (history.length === 0) {
+            this.showSimpleModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
+            return;
+        }
+
+        const rubberStatus = this.getRubberStatus();
+        const breakdown = this.getScoringBreakdown();
+
+        let dealSummary = `
+            <div class="scores-summary">
+                <h4>📊 Rubber Bridge Score Sheet</h4>
+                <div style="display: flex; justify-content: space-between; margin: 10px 0; font-size: 13px;">
+                    <div><strong>Games Won:</strong> NS ${rubberStatus.gamesWon.NS} - EW ${rubberStatus.gamesWon.EW}</div>
+                    <div><strong>Vulnerability:</strong> ${rubberStatus.vulnerability.NS ? 'NS 🔴' : 'NS 🟢'} | ${rubberStatus.vulnerability.EW ? 'EW 🔴' : 'EW 🟢'}</div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.95); padding: 12px; border-radius: 6px; margin: 8px 0; border: 2px solid #e67e22;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
+                        <span>North-South</span>
+                        <span>East-West</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #e74c3c; font-weight: bold;">
+                        <span>Game Points: ${breakdown.partScores.NS}</span>
+                        <span>Game Points: ${breakdown.partScores.EW}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 6px; text-align: center;">
+                        (Below-the-line • Need 100+ for game)
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #3498db; font-weight: bold;">
+                        <span>Bonus Points: ${breakdown.aboveScores.NS}</span>
+                        <span>Bonus Points: ${breakdown.aboveScores.EW}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #7f8c8d; margin-bottom: 8px; text-align: center;">
+                        (Above-the-line • Bonuses, penalties, honors)
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 2px solid #34495e; padding-top: 6px; font-weight: bold; color: #27ae60; font-size: 16px;">
+                        <span>Total: ${breakdown.totals.NS}</span>
+                        <span>Total: ${breakdown.totals.EW}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="deals-history">
+                <h4>🎩 Deal by Deal History</h4>
+                <div class="deal-scroll-container" style="
+                    max-height: 280px; 
+                    overflow-y: auto; 
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    font-size: 12px;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    background: rgba(255,255,255,0.95);
+                    margin: 10px 0;
+                    position: relative;
+                ">
+        `;
+        
+        // Group deals and bonuses together
+        let dealNumber = 1;
+        history.forEach((deal, index) => {
+            if (deal.honorBonus) {
+                // Honor bonus entry
+                dealSummary += `
+                    <div style="
+                        border-left: 4px solid #f39c12;
+                        padding: 8px 12px;
+                        background: rgba(243, 156, 18, 0.1);
+                        margin: 2px 4px;
+                        border-radius: 4px;
+                    ">
+                        <div style="font-weight: bold; color: #d68910; font-size: 11px;">
+                            🏅 Honor Bonus: +${deal.score} to ${deal.scoringSide}
+                        </div>
+                        <div style="font-size: 10px; color: #85701f;">
+                            ${deal.contract.suit === 'HONOR' ? 'Honor cards held' : 'Honor bonus awarded'}
+                        </div>
+                    </div>
+                `;
+            } else if (deal.rubberBonus) {
+                // Rubber bonus entry
+                const rubberScore = deal.rubberScoring?.rubberComplete ? '2-0' : '2-1';
+                dealSummary += `
+                    <div style="
+                        border-left: 4px solid #e74c3c;
+                        padding: 12px;
+                        background: rgba(231, 76, 60, 0.1);
+                        margin: 4px;
+                        border-radius: 6px;
+                        text-align: center;
+                    ">
+                        <div style="font-weight: bold; color: #c0392b; font-size: 14px;">
+                            🏆 RUBBER COMPLETE!
+                        </div>
+                        <div style="font-size: 12px; color: #a93226; margin: 2px 0;">
+                            ${deal.scoringSide} wins ${rubberScore} rubber
+                        </div>
+                        <div style="font-size: 11px; color: #943126;">
+                            Rubber bonus: +${deal.score} points
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Regular deal
+                const contract = deal.contract;
+                const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
+                const vulnerability = deal.vulnerability || 'None';
+                const rubberScoring = deal.rubberScoring || {};
+                
+                // Vulnerability color
+                const vulnColor = vulnerability === 'None' ? '#95a5a6' : 
+                                 vulnerability === 'NS' ? '#27ae60' : 
+                                 vulnerability === 'EW' ? '#e74c3c' : '#f39c12';
+                
+                const scoreDisplay = deal.score >= 0 ? `+${deal.score}` : `${deal.score}`;
+                const scoringSide = deal.scoringSide;
+                
+                dealSummary += `
+                    <div style="
+                        border-bottom: 1px solid #ddd; 
+                        padding: 12px 8px; 
+                        background: ${index % 2 === 0 ? 'rgba(240,240,240,0.8)' : 'rgba(255,255,255,0.9)'};
+                        margin: 2px 0;
+                        border-radius: 4px;
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: bold; margin-bottom: 3px; color: #222; font-size: 12px;">
+                                    Deal ${dealNumber} - <span style="color: ${vulnColor};">${vulnerability}</span>
+                                </div>
+                                <div style="font-size: 11px; color: #333; font-weight: 500; margin-bottom: 2px;">
+                                    ${contractStr} by ${contract.declarer} = ${contract.result}
+                                </div>
+                                ${rubberScoring.belowLine || rubberScoring.aboveLine ? `
+                                    <div style="font-size: 10px; color: #666;">
+                                        Below: ${rubberScoring.belowLine || 0} | Above: ${rubberScoring.aboveLine || 0}
+                                        ${rubberScoring.gameWon ? ' | 🎯 GAME!' : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="
+                                text-align: right;
+                                min-width: 70px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            ">
+                                <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'};">
+                                    ${scoreDisplay}
+                                </div>
+                                <div style="font-size: 10px; color: #666;">
+                                    ${scoringSide}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                dealNumber++;
+            }
+        });
+        
+        dealSummary += `
+                </div>
+            </div>
+            
+            <div style="
+                text-align: center; 
+                font-size: 11px; 
+                color: #666; 
+                margin-top: 10px;
+                display: block;
+            ">
+                🎩 Rubber Bridge: Classic above/below line scoring<br>
+                On mobile: Use Refresh Scroll if needed
+            </div>
+        `;
+        
+        // Show with mobile-optimized template
+        this.showMobileOptimizedScoresModal(dealSummary);
+    }
+    
+    /**
+     * Show mobile-optimized scores modal - PIXEL 9A FIXED
+     */
+    showMobileOptimizedScoresModal(content) {
+        // Prevent body scroll when modal opens
+        document.body.classList.add('modal-open');
+        
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 450px;
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                position: relative;
+            ">
+                <div class="modal-header" style="
+                    padding: 20px;
+                    background: #e67e22;
+                    color: white;
+                    text-align: center;
+                    flex-shrink: 0;
+                ">
+                    <h2 style="font-size: 18px; margin: 0;">📊 Rubber Bridge - Score Sheet</h2>
+                </div>
+                
+                <div class="modal-body" id="scoresModalBody" style="
+                    flex: 1;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    background: white;
+                    position: relative;
+                    min-height: 0;
+                ">
+                    <style>
+                        /* Enhanced scrollbar for mobile */
+                        #scoresModalBody::-webkit-scrollbar {
+                            width: 12px;
+                            background: rgba(0, 0, 0, 0.1);
+                        }
+                        #scoresModalBody::-webkit-scrollbar-thumb {
+                            background: rgba(230, 126, 34, 0.6);
+                            border-radius: 6px;
+                            border: 2px solid rgba(255, 255, 255, 0.1);
+                        }
+                        #scoresModalBody::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                        .scores-summary h4 {
+                            color: #e67e22;
+                            margin-bottom: 15px;
+                            font-size: 16px;
+                            padding: 0 20px;
+                            padding-top: 20px;
+                        }
+                        .scores-summary {
+                            padding: 0 20px 20px 20px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .deals-history {
+                            padding: 20px;
+                        }
+                        .deals-history h4 {
+                            color: #e67e22;
+                            margin-bottom: 15px;
+                            font-size: 16px;
+                        }
+                    </style>
+                    
+                    ${content}
+                </div>
+                
+                <div class="modal-footer" style="
+                    padding: 15px 20px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #ddd;
+                    flex-shrink: 0;
+                    display: flex;
+                    gap: 10px;
+                    justify-content: center;
+                ">
+                    <button id="scores-close-btn" style="
+                        padding: 12px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #e67e22;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        min-height: 50px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">Close Scores</button>
+                    <button id="refresh-scroll-btn" style="
+                        padding: 12px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #3498db;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        min-height: 50px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">Refresh Scroll</button>
+                    <button id="scores-back-btn" style="
+                        padding: 12px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #95a5a6;
+                        color: white;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        min-height: 50px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">Back to Options</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Setup button handlers
+        setTimeout(() => {
+            this.setupScoresModalHandlers();
+            this.applyPixelScrollingFixes();
+        }, 100);
+    }
+    
+    /**
+     * Setup scores modal handlers - PIXEL 9A FIXED
+     */
+    setupScoresModalHandlers() {
+        console.log('📱 Setting up PIXEL 9A optimized scores modal handlers...');
+        
+        // Create unified scores handler for Pixel 9a
+        const createScoresHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log(`🔥 Pixel 9a scores action: ${action}`);
+                
+                // Visual feedback
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                // Execute action after feedback
+                setTimeout(() => {
+                    switch(action) {
+                        case 'close':
+                            this.closeScoresModal();
+                            break;
+                        case 'refresh':
+                            this.refreshRubberScoreSheet();
+                            break;
+                        case 'back':
+                            this.closeScoresModal();
+                            setTimeout(() => this.showQuit(), 100);
+                            break;
+                        default:
+                            console.warn(`Unknown scores action: ${action}`);
+                            this.closeScoresModal();
+                    }
+                    
+                    // Reset visual feedback
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                }, 100);
+            };
+        };
+        
+        const buttonMappings = [
+            { id: 'scores-close-btn', action: 'close' },
+            { id: 'refresh-scroll-btn', action: 'refresh' },
+            { id: 'scores-back-btn', action: 'back' }
+        ];
+        
+        buttonMappings.forEach(({ id, action }) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                const handler = createScoresHandler(action);
+                
+                // Multiple event types for maximum Pixel 9a compatibility
+                btn.addEventListener('click', handler, { passive: false });
+                btn.addEventListener('touchend', handler, { passive: false });
+                
+                console.log(`✅ Pixel 9a scores handler bound for: ${id}`);
+            } else {
+                console.warn(`❌ Scores button not found: ${id}`);
+            }
+        });
+        
+        console.log('✅ All Pixel 9a scores handlers setup complete');
+    }
+    
+    /**
+     * Refresh the score sheet to force scrolling activation - PIXEL 9A FIX
+     */
+    refreshRubberScoreSheet() {
+        console.log('🔄 Refreshing Rubber Bridge score sheet for better scrolling...');
+        
+        // Simply re-show the detailed scores - this forces DOM refresh
+        this.showMobileOptimizedRubberScores();
+        
+        // Add a brief visual indication that refresh happened
+        setTimeout(() => {
+            const container = document.querySelector('.deal-scroll-container');
+            if (container) {
+                // Flash border to indicate refresh
+                container.style.border = '2px solid #27ae60';
+                container.style.transition = 'border-color 0.3s ease';
+                
+                setTimeout(() => {
+                    container.style.border = '1px solid #444';
+                }, 500);
+                
+                // Scroll to bottom and back to top to "wake up" scrolling
+                container.scrollTop = container.scrollHeight;
+                setTimeout(() => {
+                    container.scrollTop = 0;
+                }, 100);
+            }
+        }, 150);
+    }
+    
+    /**
+     * Apply specific scrolling fixes for Pixel 9a - RUBBER BRIDGE VERSION
+     */
+    applyPixelScrollingFixes() {
+        console.log('🔧 Applying Pixel 9a scrolling fixes for Rubber Bridge scores...');
+        
+        // Find the modal and scroll container
+        const modal = document.querySelector('.modal-content');
+        const scrollContainer = document.querySelector('.deal-scroll-container');
+        
+        if (modal && scrollContainer) {
+            // Force the modal to be scrollable
+            modal.style.maxHeight = '85vh';
+            modal.style.overflowY = 'auto';
+            modal.style.webkitOverflowScrolling = 'touch';
+            modal.style.position = 'relative';
+            
+            // Enhanced scroll container fixes
+            scrollContainer.style.height = '280px'; // Fixed height instead of max-height
+            scrollContainer.style.overflowY = 'scroll'; // Force scroll instead of auto
+            scrollContainer.style.webkitOverflowScrolling = 'touch';
+            scrollContainer.style.transform = 'translateZ(0)'; // Force hardware acceleration
+            scrollContainer.style.willChange = 'scroll-position';
+            
+            // Add visible scrollbar for mobile
+            const style = document.createElement('style');
+            style.textContent = `
+                .deal-scroll-container::-webkit-scrollbar {
+                    width: 8px !important;
+                    background: rgba(255, 255, 255, 0.1) !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-thumb {
+                    background: rgba(230, 126, 34, 0.6) !important;
+                    border-radius: 4px !important;
+                }
+                .deal-scroll-container::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.1) !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Test scroll and log results
+            const testScroll = () => {
+                scrollContainer.scrollTop = 50;
+                setTimeout(() => {
+                    console.log(`📱 Scroll test - scrollTop: ${scrollContainer.scrollTop}, scrollHeight: ${scrollContainer.scrollHeight}, clientHeight: ${scrollContainer.clientHeight}`);
+                    if (scrollContainer.scrollTop === 0 && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                        console.warn('⚠️ Scrolling may not be working properly on this device');
+                        // Add a touch scroll hint
+                        scrollContainer.style.border = '2px solid #e67e22';
+                        scrollContainer.style.boxShadow = 'inset 0 0 10px rgba(230, 126, 34, 0.3)';
+                        
+                        // Add a visible scroll indicator
+                        const scrollHint = document.createElement('div');
+                        scrollHint.innerHTML = '👆 Touch and drag to scroll';
+                        scrollHint.style.cssText = `
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: rgba(230, 126, 34, 0.8);
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            z-index: 100;
+                            pointer-events: none;
+                        `;
+                        scrollContainer.style.position = 'relative';
+                        scrollContainer.appendChild(scrollHint);
+                    }
+                }, 100);
+            };
+            
+            testScroll();
+            
+            // Add touch event handlers for better mobile scrolling
+            let touchStart = null;
+            
+            scrollContainer.addEventListener('touchstart', (e) => {
+                touchStart = e.touches[0].clientY;
+                console.log('📱 Touch start detected');
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchmove', (e) => {
+                if (touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const deltaY = touchStart - touchY;
+                    scrollContainer.scrollTop += deltaY * 0.5; // Smooth scrolling
+                    touchStart = touchY;
+                    console.log(`📱 Touch scroll: ${scrollContainer.scrollTop}`);
+                }
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchend', () => {
+                touchStart = null;
+                console.log('📱 Touch end');
+            }, { passive: true });
+            
+            console.log('✅ Pixel 9a scrolling fixes applied successfully');
+        } else {
+            console.warn('⚠️ Could not find modal or scroll container for scrolling fixes');
+        }
+    }
+    
+    /**
+     * Close scores modal
+     */
+    closeScoresModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+            document.body.classList.remove('modal-open');
+            console.log('📊 Scores modal closed');
+        }
+    }
+    
+    /**
+     * Show simple modal for basic messages
+     */
+    showSimpleModal(title, content) {
+        // Fallback for simple messages
+        this.showMobileOptimizedQuitModal(`<div style="padding: 15px;">${content}</div>`);
     }
     
     /**
@@ -1285,281 +2515,13 @@ class RubberBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Get current deal information string
-     */
-    getDealInfo() {
-        const vulnerability = this.getCurrentVulnerabilityString();
-        return `Deal ${this.currentDeal} - ${vulnerability}`;
-    }
-    
-    /**
-     * Get rubber progress summary
-     */
-    getRubberProgressSummary() {
-        const rubberStatus = this.getRubberStatus();
-        const breakdown = this.getScoringBreakdown();
-        
-        return {
-            gamesWon: rubberStatus.gamesWon,
-            vulnerability: rubberStatus.vulnerability,
-            partScores: breakdown.partScores,
-            totals: breakdown.totals,
-            isComplete: rubberStatus.rubberComplete,
-            winner: rubberStatus.rubberWinner,
-            dealsPlayed: rubberStatus.dealsPlayed
-        };
-    }
-    
-    /**
-     * Check if rubber is at a natural break point
-     */
-    isAtRubberBreak() {
-        const rubberStatus = this.getRubberStatus();
-        
-        if (rubberStatus.rubberComplete) {
-            return { 
-                isBreak: true, 
-                reason: `Rubber Complete - ${rubberStatus.rubberWinner} wins`, 
-                severity: 'major' 
-            };
-        }
-        
-        // Game completion is a minor break point
-        const totalGames = rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW;
-        if (totalGames > 0) {
-            const gameWinner = rubberStatus.gamesWon.NS > rubberStatus.gamesWon.EW ? 'NS' : 'EW';
-            return { 
-                isBreak: true, 
-                reason: `Game Complete - ${gameWinner} leads ${Math.max(rubberStatus.gamesWon.NS, rubberStatus.gamesWon.EW)}-${Math.min(rubberStatus.gamesWon.NS, rubberStatus.gamesWon.EW)}`, 
-                severity: 'minor' 
-            };
-        }
-        
-        return { isBreak: false, reason: null, severity: null };
-    }
-    
-    /**
-     * Get part-score pressure analysis
-     */
-    getPartScorePressure() {
-        const breakdown = this.getScoringBreakdown();
-        const nsPartScore = breakdown.partScores.NS;
-        const ewPartScore = breakdown.partScores.EW;
-        
-        const analysis = {
-            NS: {
-                points: nsPartScore,
-                needed: Math.max(0, 100 - nsPartScore),
-                pressure: nsPartScore >= 60 ? 'high' : nsPartScore >= 40 ? 'medium' : 'low',
-                percentage: Math.round((nsPartScore / 100) * 100)
-            },
-            EW: {
-                points: ewPartScore,
-                needed: Math.max(0, 100 - ewPartScore),
-                pressure: ewPartScore >= 60 ? 'high' : ewPartScore >= 40 ? 'medium' : 'low',
-                percentage: Math.round((ewPartScore / 100) * 100)
-            }
-        };
-        
-        return analysis;
-    }
-    
-    /**
-     * Export rubber bridge game data
-     */
-    exportRubberData() {
-        const rubberStatus = this.getRubberStatus();
-        const breakdown = this.getScoringBreakdown();
-        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
-        
-        return {
-            mode: 'rubber',
-            version: '1.0',
-            exportDate: new Date().toISOString(),
-            gameState: {
-                currentDeal: this.currentDeal,
-                rubberStatus: rubberStatus,
-                scoreBreakdown: breakdown,
-                vulnerability: this.getCurrentVulnerabilityString()
-            },
-            rubberState: {
-                gamesWon: { ...this.rubberState.gamesWon },
-                belowLineScores: { ...this.rubberState.belowLineScores },
-                aboveLineScores: { ...this.rubberState.aboveLineScores },
-                partScores: { ...this.rubberState.partScores },
-                vulnerability: { ...this.rubberState.vulnerability },
-                rubberComplete: this.rubberState.rubberComplete,
-                rubberWinner: this.rubberState.rubberWinner
-            },
-            history: history.map(deal => ({
-                deal: deal.deal,
-                contract: { ...deal.contract },
-                result: deal.contract.result,
-                score: deal.score,
-                scoringSide: deal.scoringSide,
-                vulnerability: deal.vulnerability,
-                rubberScoring: deal.rubberScoring,
-                isHonorBonus: deal.honorBonus || false,
-                isRubberBonus: deal.rubberBonus || false
-            })),
-            statistics: this.getRubberStatistics()
-        };
-    }
-    
-    /**
-     * Get comprehensive rubber bridge statistics
-     */
-    getRubberStatistics() {
-        const history = this.gameState.history.filter(deal => deal.mode === 'rubber');
-        const breakdown = this.getScoringBreakdown();
-        const rubberStatus = this.getRubberStatus();
-        
-        if (history.length === 0) {
-            return {
-                totalDeals: 0,
-                rubbersCompleted: 0,
-                averageScore: { NS: 0, EW: 0 }
-            };
-        }
-        
-        const regularDeals = history.filter(deal => !deal.honorBonus && !deal.rubberBonus);
-        const honorBonuses = history.filter(deal => deal.honorBonus);
-        const rubberBonuses = history.filter(deal => deal.rubberBonus);
-        
-        const stats = {
-            totalDeals: regularDeals.length,
-            honorBonuses: honorBonuses.length,
-            rubberBonuses: rubberBonuses.length,
-            rubbersCompleted: rubberBonuses.length,
-            currentRubber: {
-                gamesWon: { ...rubberStatus.gamesWon },
-                totalScore: { ...breakdown.totals },
-                belowLine: { ...breakdown.partScores },
-                aboveLine: { ...breakdown.aboveScores }
-            },
-            contractsMade: regularDeals.filter(d => d.score >= 0).length,
-            contractsFailed: regularDeals.filter(d => d.score < 0).length,
-            gamesWon: {
-                NS: rubberStatus.gamesWon.NS,
-                EW: rubberStatus.gamesWon.EW,
-                total: rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW
-            },
-            averageScore: {
-                NS: regularDeals.length > 0 ? Math.round(breakdown.totals.NS / regularDeals.length) : 0,
-                EW: regularDeals.length > 0 ? Math.round(breakdown.totals.EW / regularDeals.length) : 0
-            },
-            highestScore: regularDeals.length > 0 ? Math.max(...regularDeals.map(d => Math.abs(d.score))) : 0,
-            slamsBid: regularDeals.filter(d => {
-                const contract = d.contract;
-                return contract.level >= 6;
-            }).length,
-            doublesPlayed: regularDeals.filter(d => d.contract.doubled !== '').length,
-            honorBonusValue: honorBonuses.reduce((sum, deal) => sum + deal.score, 0),
-            rubberBonusValue: rubberBonuses.reduce((sum, deal) => sum + deal.score, 0)
-        };
-        
-        return stats;
-    }
-    
-    /**
-     * Calculate rubber efficiency (games per deal ratio)
-     */
-    calculateRubberEfficiency() {
-        const stats = this.getRubberStatistics();
-        const rubberStatus = this.getRubberStatus();
-        
-        if (stats.totalDeals === 0) return 0;
-        
-        const totalGames = rubberStatus.gamesWon.NS + rubberStatus.gamesWon.EW;
-        return totalGames / stats.totalDeals;
-    }
-    
-    /**
-     * Get game recommendations based on rubber state
-     */
-    getRubberRecommendations() {
-        const rubberStatus = this.getRubberStatus();
-        const partScorePressure = this.getPartScorePressure();
-        const breakPoint = this.isAtRubberBreak();
-        const recommendations = [];
-        
-        if (breakPoint.isBreak && breakPoint.severity === 'major') {
-            recommendations.push({
-                type: 'break',
-                message: 'Rubber complete - natural stopping point!',
-                action: 'Perfect time for a break or to start a new rubber'
-            });
-        }
-        
-        if (partScorePressure.NS.pressure === 'high' || partScorePressure.EW.pressure === 'high') {
-            const highPressureSide = partScorePressure.NS.pressure === 'high' ? 'NS' : 'EW';
-            recommendations.push({
-                type: 'strategy',
-                message: `${highPressureSide} has part-score pressure (${partScorePressure[highPressureSide].points}/100)`,
-                action: 'Consider aggressive bidding or defensive tactics'
-            });
-        }
-        
-        if (rubberStatus.gamesWon.NS === 1 && rubberStatus.gamesWon.EW === 1) {
-            recommendations.push({
-                type: 'excitement',
-                message: 'Rubber tied 1-1 - decisive game coming!',
-                action: 'Next game wins the rubber'
-            });
-        }
-        
-        if (rubberStatus.dealsPlayed >= 20) {
-            recommendations.push({
-                type: 'session',
-                message: 'Long rubber session detected',
-                action: 'Consider natural break after current game'
-            });
-        }
-        
-        return recommendations;
-    }
-    
-    /**
-     * Reset to specific game for teaching/practice
-     */
-    resetToGame(gameNumber) {
-        if (gameNumber < 1 || gameNumber > 3) {
-            console.warn('Invalid game number for rubber bridge');
-            return false;
-        }
-        
-        this.resetRubber();
-        
-        // Set up the specified game state
-        if (gameNumber === 2) {
-            // Start of second game - NS won first game
-            this.rubberState.gamesWon.NS = 1;
-            this.rubberState.vulnerability.NS = true;
-        } else if (gameNumber === 3) {
-            // Start of third game - both sides won one game
-            this.rubberState.gamesWon.NS = 1;
-            this.rubberState.gamesWon.EW = 1;
-            this.rubberState.vulnerability.NS = true;
-            this.rubberState.vulnerability.EW = true;
-        }
-        
-        this.resetContract();
-        this.inputState = 'level_selection';
-        this.updateDisplay();
-        
-        console.log(`🔄 Reset to Game ${gameNumber} - Games: ${this.rubberState.gamesWon.NS}-${this.rubberState.gamesWon.EW}`);
-        return true;
-    }
-    
-    /**
      * Cleanup when switching modes
      */
     cleanup() {
         console.log('🧹 Rubber Bridge cleanup completed');
         // Rubber Bridge doesn't have special UI elements to clean up
     }
-// END SECTION SIX
-// SECTION SEVEN - Score Display Methods
+// END SECTION SIX - Part 2// SECTION SEVEN - Score Display Methods
     /**
      * Show detailed deal-by-deal scores with Rubber Bridge analysis - WITH PIXEL 9A FIX
      */
