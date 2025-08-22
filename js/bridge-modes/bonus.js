@@ -3278,320 +3278,36 @@ cleanup() {
 // SECTION TEN - UI Methods and Export (UPDATED - MOBILE HELP SYSTEM FIXED - DUPLICATES REMOVED)
 
 /**
- * Show Bonus Bridge specific help - MOBILE OPTIMIZED WITH PROVEN TEMPLATE
+ * Show Bonus Bridge specific help - UNIFIED WITH KITCHEN/CHICAGO SYSTEM
  */
 showHelp() {
-    console.log('📖 Showing Bonus Bridge help with proven mobile template');
-    
-    // Use the proven mobile modal template
-    this.showMobileOptimizedHelpModal();
+    const helpContent = this.getBonusHelpContent();
+    this.showMobileOptimizedModal('⭐ Bonus Bridge Help', helpContent, [
+        { text: 'Close Help', action: () => this.closeMobileModal() }
+    ]);
 }
 
 /**
- * Show mobile-optimized help modal using proven template
- */
-showMobileOptimizedHelpModal() {
-    // Prevent body scroll when modal opens
-    document.body.classList.add('modal-open');
-    
-    // Create modal overlay using PROVEN template from test-help.html
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        padding: 10px;
-    `;
-    
-    modal.innerHTML = `
-        <div class="modal-content" style="
-            background: white;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 450px;
-            max-height: 85vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            position: relative;
-        ">
-            <div class="modal-header" style="
-                padding: 20px;
-                background: #e67e22;
-                color: white;
-                text-align: center;
-                flex-shrink: 0;
-            ">
-                <h2 style="font-size: 18px; margin: 0;">⭐ Bonus Bridge Help</h2>
-            </div>
-            
-            <!-- CRITICAL: The scrollable content area using PROVEN technique -->
-            <div class="modal-body" id="bonusHelpBody" style="
-                flex: 1;
-                overflow-y: auto;
-                overflow-x: hidden;
-                -webkit-overflow-scrolling: touch;
-                background: white;
-                position: relative;
-                min-height: 0;
-            ">
-                <style>
-                    /* Enhanced scrollbar for mobile visibility - PROVEN */
-                    #bonusHelpBody::-webkit-scrollbar {
-                        width: 12px;
-                        background: rgba(0, 0, 0, 0.1);
-                    }
-                    #bonusHelpBody::-webkit-scrollbar-thumb {
-                        background: rgba(230, 126, 34, 0.6);
-                        border-radius: 6px;
-                        border: 2px solid rgba(255, 255, 255, 0.1);
-                    }
-                    #bonusHelpBody::-webkit-scrollbar-track {
-                        background: rgba(0, 0, 0, 0.05);
-                    }
-                    .content-section {
-                        padding: 20px;
-                        border-bottom: 1px solid #eee;
-                    }
-                    .content-section:last-child {
-                        border-bottom: none;
-                        padding-bottom: 30px;
-                    }
-                    .content-section h3 {
-                        color: #e67e22;
-                        margin-bottom: 10px;
-                        font-size: 16px;
-                    }
-                    .content-section p {
-                        line-height: 1.5;
-                        margin-bottom: 10px;
-                        color: #555;
-                        font-size: 14px;
-                    }
-                    .feature-grid {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 12px;
-                        margin: 15px 0;
-                    }
-                    .feature-item {
-                        background: #f8f9fa;
-                        padding: 12px;
-                        border-radius: 8px;
-                        border-left: 4px solid #e67e22;
-                    }
-                    .feature-item h4 {
-                        color: #2c3e50;
-                        font-size: 14px;
-                        margin-bottom: 6px;
-                    }
-                    .feature-item p {
-                        font-size: 12px;
-                        color: #666;
-                        margin: 0;
-                    }
-                    .highlight-box {
-                        background: #fff8e1;
-                        padding: 12px;
-                        border-radius: 8px;
-                        border-left: 4px solid #f39c12;
-                        margin: 15px 0;
-                    }
-                    .highlight-box h4 {
-                        margin: 0 0 8px 0;
-                        color: #e67e22;
-                        font-size: 14px;
-                    }
-                    .highlight-box p {
-                        margin: 0;
-                        font-size: 13px;
-                        color: #e67e22;
-                    }
-                    .steps-grid {
-                        display: grid; 
-                        grid-template-columns: 1fr 1fr; 
-                        gap: 8px; 
-                        margin: 16px 0; 
-                        background: #f5f5f5; 
-                        padding: 12px; 
-                        border-radius: 8px;
-                    }
-                    .step-item {
-                        text-align: center; 
-                        padding: 10px; 
-                        background: white; 
-                        border-radius: 6px;
-                    }
-                    .step-item.step-1 {
-                        border-left: 3px solid #3498db;
-                    }
-                    .step-item.step-2 {
-                        border-left: 3px solid #e67e22;
-                    }
-                    .hcp-guidelines {
-                        background: #f8f9fa;
-                        padding: 14px;
-                        border-radius: 8px;
-                        margin: 12px 0;
-                    }
-                    .hcp-grid {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 8px;
-                        font-size: 12px;
-                    }
-                    .benefits-box {
-                        background: #e8f5e8;
-                        padding: 12px;
-                        border-radius: 8px;
-                        border-left: 4px solid #27ae60;
-                        margin: 15px 0;
-                    }
-                    .benefits-box h4 {
-                        margin: 0 0 8px 0;
-                        color: #155724;
-                        font-size: 14px;
-                    }
-                    .benefits-box ul {
-                        margin: 0;
-                        padding-left: 18px;
-                        font-size: 13px;
-                        color: #155724;
-                        line-height: 1.3;
-                    }
-                    .scroll-indicator {
-                        position: absolute;
-                        top: 50%;
-                        right: 5px;
-                        transform: translateY(-50%);
-                        background: rgba(230, 126, 34, 0.8);
-                        color: white;
-                        padding: 4px 8px;
-                        border-radius: 4px;
-                        font-size: 10px;
-                        z-index: 10;
-                        pointer-events: none;
-                        opacity: 0;
-                        transition: opacity 0.3s ease;
-                    }
-                    .scroll-indicator.visible {
-                        opacity: 1;
-                    }
-                </style>
-                
-                <div class="scroll-indicator" id="bonusScrollIndicator">👆 Scroll to see more</div>
-                
-                ${this.getBonusHelpContent()}
-            </div>
-            
-            <div class="modal-footer" style="
-                padding: 15px 20px;
-                background: #f8f9fa;
-                border-top: 1px solid #ddd;
-                flex-shrink: 0;
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-            ">
-                <button class="help-close-btn" style="
-                    padding: 10px 20px;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    background: #e67e22;
-                    color: white;
-                    touch-action: manipulation;
-                    user-select: none;
-                    -webkit-tap-highlight-color: transparent;
-                ">Close Help</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Setup button handlers and scroll indicators
-    setTimeout(() => {
-        this.setupHelpModalHandlers();
-    }, 100);
-}
-
-/**
- * Setup help modal handlers with proven mobile techniques - FIXED CLOSE BUTTON
- */
-setupHelpModalHandlers() {
-    const modal = document.querySelector('.modal-overlay');
-    const modalBody = document.getElementById('bonusHelpBody');
-    const indicator = document.getElementById('bonusScrollIndicator');
-    const closeBtn = modal.querySelector('.help-close-btn');
-    
-    // FIXED: Close button handler - use existing closeMobileModal method
-    closeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.closeMobileModal();  // ← FIXED: Use the correct method name
-    }, { passive: false });
-    
-    // Touch feedback for close button
-    closeBtn.addEventListener('touchstart', (e) => {
-        closeBtn.style.background = 'rgba(230, 126, 34, 0.8)';
-        closeBtn.style.transform = 'scale(0.95)';
-    }, { passive: true });
-    
-    closeBtn.addEventListener('touchend', (e) => {
-        closeBtn.style.background = '#e67e22';
-        closeBtn.style.transform = 'scale(1)';
-    }, { passive: true });
-    
-    // Scroll indicator logic (proven from test-help.html)
-    modalBody.addEventListener('scroll', () => {
-        if (modalBody.scrollHeight > modalBody.clientHeight && modalBody.scrollTop < 50) {
-            indicator.classList.add('visible');
-            setTimeout(() => indicator.classList.remove('visible'), 2000);
-        }
-    });
-    
-    // Show indicator on load if content is scrollable
-    setTimeout(() => {
-        if (modalBody.scrollHeight > modalBody.clientHeight) {
-            indicator.classList.add('visible');
-            setTimeout(() => indicator.classList.remove('visible'), 3000);
-            console.log('📱 Help content is scrollable - indicator shown');
-        } else {
-            console.log('📱 Help content fits in viewport - no scroll needed');
-        }
-    }, 500);
-    
-    console.log('✅ Help modal handlers setup complete');
-}
-
-/**
- * Get Bonus Bridge help content - MOBILE FORMATTED
+ * Get Bonus Bridge help content - FORMATTED FOR UNIFIED MODAL SYSTEM
  */
 getBonusHelpContent() {
     return `
         <div class="content-section">
-            <h3>What is Bonus Bridge?</h3>
-            <p>An enhanced scoring system that rewards both declarers and defenders based on hand strength and performance versus expectations.</p>
+            <h3 style="margin: 0 0 12px 0; color: #e67e22; font-size: 18px;">What is Bonus Bridge?</h3>
+            <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.4; color: #333;">
+                An enhanced scoring system that rewards both declarers and defenders based on hand strength and performance versus expectations.
+            </p>
             
-            <div class="highlight-box">
-                <h4>Perfect For</h4>
-                <p>Skill-based scoring • Fair competition • Teaching hand evaluation • Rewarding good defense</p>
+            <div style="background: #fff8e1; padding: 12px; border-radius: 8px; border-left: 4px solid #f39c12;">
+                <h4 style="margin: 0 0 8px 0; color: #e67e22; font-size: 14px;">Perfect For</h4>
+                <p style="margin: 0; font-size: 13px; color: #e67e22;">
+                    Skill-based scoring • Fair competition • Teaching hand evaluation • Rewarding good defense
+                </p>
             </div>
         </div>
         
         <div class="content-section">
-            <h3>Key Features</h3>
+            <h3 style="margin: 0 0 16px 0; color: #e67e22; font-size: 18px;">Key Features</h3>
             <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
                 <li><strong>HCP Balance:</strong> Evaluates point distribution between teams</li>
                 <li><strong>Performance Analysis:</strong> Compares expected vs. actual tricks</li>
@@ -3601,15 +3317,23 @@ getBonusHelpContent() {
         </div>
         
         <div class="content-section">
-            <h3>How It Works</h3>
+            <h3 style="margin: 0 0 16px 0; color: #e67e22; font-size: 18px;">How It Works</h3>
             
-            <div class="steps-grid">
-                <div class="step-item step-1">
+            <div style="
+                display: grid; 
+                grid-template-columns: 1fr 1fr; 
+                gap: 8px; 
+                margin: 16px 0; 
+                background: #f5f5f5; 
+                padding: 12px; 
+                border-radius: 8px;
+            ">
+                <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #3498db;">
                     <div style="font-weight: bold; font-size: 14px; color: #3498db;">Step 1</div>
                     <div style="font-size: 12px; color: #666;">Enter contract</div>
                     <div style="font-size: 12px; color: #666;">& result</div>
                 </div>
-                <div class="step-item step-2">
+                <div style="text-align: center; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #e67e22;">
                     <div style="font-weight: bold; color: #e67e22; font-size: 14px;">Step 2</div>
                     <div style="font-size: 12px; color: #666;">HCP Analysis</div>
                     <div style="font-size: 12px; color: #666;">popup appears</div>
@@ -3623,7 +3347,7 @@ getBonusHelpContent() {
         </div>
         
         <div class="content-section">
-            <h3>HCP Analysis Details</h3>
+            <h3 style="margin: 0 0 16px 0; color: #e67e22; font-size: 18px;">HCP Analysis Details</h3>
             
             <div class="feature-grid">
                 <div class="feature-item">
@@ -3637,7 +3361,7 @@ getBonusHelpContent() {
                 </div>
                 
                 <div class="feature-item">
-                    <h4>⚖️ Expected vs Actual</h4>
+                    <h4⚖️ Expected vs Actual</h4>
                     <p>System compares expected tricks to actual performance for fair scoring.</p>
                 </div>
                 
@@ -3649,10 +3373,10 @@ getBonusHelpContent() {
         </div>
         
         <div class="content-section">
-            <h3>Expected HCP Guidelines</h3>
+            <h3 style="margin: 0 0 16px 0; color: #e67e22; font-size: 18px;">Expected HCP Guidelines</h3>
             
-            <div class="hcp-guidelines">
-                <div class="hcp-grid">
+            <div style="background: #f8f9fa; padding: 14px; border-radius: 8px; margin: 12px 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
                     <div><strong>Part Scores (1-2):</strong> 20-24 HCP</div>
                     <div><strong>3NT:</strong> 25-26 HCP</div>
                     <div><strong>4 Major:</strong> 27-28 HCP</div>
@@ -3662,9 +3386,9 @@ getBonusHelpContent() {
                 </div>
             </div>
             
-            <div class="benefits-box">
-                <h4>Scoring Benefits</h4>
-                <ul>
+            <div style="background: #e8f5e8; padding: 12px; border-radius: 8px; border-left: 4px solid #27ae60; margin: 15px 0;">
+                <h4 style="margin: 0 0 8px 0; color: #155724; font-size: 14px;">Scoring Benefits</h4>
+                <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #155724; line-height: 1.3;">
                     <li>Making with fewer HCP = bonus points</li>
                     <li>Good defense rewarded even when contracts make</li>
                     <li>Overbidding with weak hands penalized</li>
@@ -3674,7 +3398,7 @@ getBonusHelpContent() {
         </div>
         
         <div class="content-section">
-            <h3>Vulnerability Cycle</h3>
+            <h3 style="margin: 0 0 16px 0; color: #e67e22; font-size: 18px;">Vulnerability Cycle</h3>
             <p>Bonus Bridge uses automatic vulnerability cycle (Chicago style):</p>
             <ul style="margin: 10px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
                 <li><strong>Deal 1:</strong> None Vulnerable (NV)</li>
@@ -3686,7 +3410,7 @@ getBonusHelpContent() {
         </div>
         
         <div class="content-section">
-            <h3>Mobile Tips</h3>
+            <h3 style="margin: 0 0 12px 0; color: #e67e22; font-size: 18px;">Mobile Tips</h3>
             <ol style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
                 <li>HCP Analysis popup has enhanced scrolling for all data entry</li>
                 <li>Use +/- buttons in popup to adjust HCP and distribution values</li>
@@ -3708,7 +3432,7 @@ getBonusHelpContent() {
         </div>
         
         <div class="content-section">
-            <h3>Scoring Philosophy</h3>
+            <h3 style="margin: 0 0 12px 0; color: #e67e22; font-size: 18px;">Scoring Philosophy</h3>
             <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
                 <li><strong>Made Contracts:</strong> Points adjusted based on HCP advantage/disadvantage</li>
                 <li><strong>Failed Contracts:</strong> Defenders rewarded, declarers get consolation if weak</li>
@@ -3716,7 +3440,15 @@ getBonusHelpContent() {
                 <li><strong>Skill Recognition:</strong> Better performance with weaker hands = more points</li>
             </ul>
             
-            <div style="height: 50px; background: linear-gradient(45deg, #e67e22, #f39c12); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-top: 15px;">
+            <div style="
+                text-align: center; 
+                font-size: 12px; 
+                color: #666; 
+                background: rgba(230,126,34,0.05);
+                padding: 12px;
+                border-radius: 6px;
+                margin-top: 16px;
+            ">
                 🎉 You've mastered Bonus Bridge!
             </div>
         </div>
