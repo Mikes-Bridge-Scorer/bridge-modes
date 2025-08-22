@@ -345,7 +345,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
 
 // SECTION FIVE - Scoring Logic
     /**
-     * Calculate score using Kitchen Bridge rules - using original proven method
+     * Calculate score using Kitchen Bridge rules - FIXED NT SCORING
      */
     calculateScore() {
         const { level, suit, result, doubled, declarer } = this.currentContract;
@@ -353,13 +353,21 @@ class KitchenBridgeMode extends BaseBridgeMode {
         console.log(`💰 Calculating Kitchen Bridge score for ${level}${suit}${doubled} by ${declarer} = ${result}`);
         
         // Basic suit values per trick
-        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30 };
         let score = 0;
         
         if (result === '=' || result?.startsWith('+')) {
             // Contract made
-            let basicScore = level * suitValues[suit];
-            if (suit === 'NT') basicScore += 10; // NT first trick bonus
+            let basicScore;
+            
+            // FIXED: Correct NT scoring calculation
+            if (suit === 'NT') {
+                // NT: 40 points for first trick, 30 points for each additional trick
+                basicScore = 40 + (level - 1) * 30;
+            } else {
+                // Other suits: multiply level by suit value
+                basicScore = level * suitValues[suit];
+            }
             
             // Handle doubling of basic score
             let contractScore = basicScore;
@@ -375,7 +383,11 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 
                 if (doubled === '') {
                     // Undoubled overtricks
-                    overtrickValue = suitValues[suit] * overtricks;
+                    if (suit === 'NT') {
+                        overtrickValue = overtricks * 30; // NT overtricks are 30 each
+                    } else {
+                        overtrickValue = suitValues[suit] * overtricks;
+                    }
                 } else {
                     // Doubled overtricks (100 NV, 200 Vul)
                     const isVulnerable = this.isVulnerable(declarer);
@@ -390,12 +402,21 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 // Game made
                 const isVulnerable = this.isVulnerable(declarer);
                 score += isVulnerable ? 500 : 300;
+                
+                // Slam bonuses
+                if (level === 6) {
+                    // Small slam bonus
+                    score += isVulnerable ? 750 : 500;
+                } else if (level === 7) {
+                    // Grand slam bonus
+                    score += isVulnerable ? 1500 : 1000;
+                }
             } else {
                 // Part-game
                 score += 50;
             }
             
-            // Double bonuses
+            // Double bonuses (insult bonus)
             if (doubled === 'X') score += 50;
             else if (doubled === 'XX') score += 100;
             
@@ -485,7 +506,6 @@ class KitchenBridgeMode extends BaseBridgeMode {
         console.log(`💾 Score recorded: ${score >= 0 ? score + ' for ' + declarerSide : Math.abs(score) + ' penalty for ' + (declarerSide === 'NS' ? 'EW' : 'NS')}`);
     }
 // END SECTION FIVE
-
 // SECTION SIX - Mobile Template System (PROVEN FROM Chicago Bridge)
     /**
      * Mobile-optimized modal using proven template from test-help.html
@@ -718,7 +738,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                         <button class="modal-btn" data-action="${modalButtons[0].text}" style="
-                           padding: 12px 6px;
+                            padding: 12px 6px;
                             border: none;
                             border-radius: 6px;
                             font-size: 12px;
@@ -731,7 +751,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[0].text}</button>
                         <button class="modal-btn" data-action="${modalButtons[1].text}" style="
-                             padding: 12px 6px;
+                            padding: 12px 6px;
                             border: none;
                             border-radius: 6px;
                             font-size: 12px;
@@ -744,7 +764,6 @@ class KitchenBridgeMode extends BaseBridgeMode {
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[1].text}</button>
                         <button class="modal-btn" data-action="${modalButtons[2].text}" style="
-flex: 1;
                             padding: 12px 6px;
                             border: none;
                             border-radius: 6px;
@@ -758,9 +777,8 @@ flex: 1;
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[2].text}</button>
                     </div>
-                    <div style="display: flex; gap: 6px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <button class="modal-btn" data-action="${modalButtons[3].text}" style="
-flex: 1;
                             padding: 12px 8px;
                             border: none;
                             border-radius: 6px;
@@ -774,7 +792,6 @@ flex: 1;
                             -webkit-tap-highlight-color: transparent;
                         ">${modalButtons[3].text}</button>
                         <button class="modal-btn" data-action="${modalButtons[4].text}" style="
-flex: 1;
                             padding: 12px 8px;
                             border: none;
                             border-radius: 6px;
@@ -1196,13 +1213,14 @@ flex: 1;
         `;
         
         const buttons = [
-    { text: 'Continue Playing', action: () => this.closeMobileModal() },
-    { text: 'Show Scores', action: () => this.showDetailedScores() },
-    { text: 'New Game', action: () => this.startNewGame() },
-    { text: 'Return to Main Menu', action: () => this.returnToMainMenu() }
-];
+            { text: 'Continue Playing', action: () => this.closeMobileModal() },
+            { text: 'Show Scores', action: () => this.showDetailedScores() },
+            { text: 'New Game', action: () => this.startNewGame() },
+            { text: 'Return to Main Menu', action: () => this.returnToMainMenu() },
+            { text: 'Show Help', action: () => this.showHelp() }
+        ];
         
-        this.showMobileOptimizedModal('🍳 Kitchen Bridge Options', content, buttons);
+        this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
     }
 
     /**
@@ -1349,208 +1367,7 @@ flex: 1;
         });
     }
 // END SECTION SIX
-// SECTION SEVEN - Score Display & Game Options
-    /**
-     * Show Kitchen Bridge specific quit options
-     */
-    showQuit() {
-        const scores = this.gameState.scores;
-        const totalDeals = this.gameState.history.length;
-        const licenseStatus = this.bridgeApp.licenseManager.checkLicenseStatus();
-        
-        let currentScoreContent = '';
-        if (totalDeals > 0) {
-            const leader = scores.NS > scores.EW ? 'North-South' : 
-                          scores.EW > scores.NS ? 'East-West' : 'Tied';
-            
-            currentScoreContent = `
-                <div class="help-section">
-                    <h4>📊 Current Game Status</h4>
-                    <p><strong>Deals Played:</strong> ${totalDeals}</p>
-                    <p><strong>Current Scores:</strong></p>
-                    <ul>
-                        <li>North-South: ${scores.NS} points</li>
-                        <li>East-West: ${scores.EW} points</li>
-                    </ul>
-                    <p><strong>Current Leader:</strong> ${leader}</p>
-                </div>
-            `;
-        }
-        
-        let licenseSection = '';
-        if (licenseStatus.status === 'trial') {
-            licenseSection = `
-                <div class="help-section">
-                    <h4>📅 License Status</h4>
-                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
-                </div>
-            `;
-        }
-        
-        const content = `
-            ${currentScoreContent}
-            ${licenseSection}
-            <div class="help-section">
-                <h4>🎮 Game Options</h4>
-                <p>What would you like to do?</p>
-            </div>
-        `;
-        
-const buttons = [
-    { text: 'Continue', action: () => this.closeMobileModal() },
-    { text: 'Scores', action: () => this.showDetailedScores() },
-    { text: 'New Game', action: () => this.startNewGame() },
-    { text: 'Main Menu', action: () => this.returnToMainMenu() },
-    { text: 'Help', action: () => this.showHelp() }
-];
-        
-        this.showMobileOptimizedModalWithCustomButtons('🍳 Kitchen Bridge Options', content, buttons);
-    }
-    
-    /**
-     * Show detailed deal-by-deal scores - SIMPLIFIED VERSION (NO COMPLEX SCROLLING)
-     */
-    showDetailedScores() {
-        const scores = this.gameState.scores;
-        const history = this.gameState.history;
-        
-        if (history.length === 0) {
-            this.bridgeApp.showModal('📊 Game Scores', '<p>No deals have been played yet.</p>');
-            return;
-        }
 
-        // SIMPLIFIED - Show only summary and recent deals (no scrolling needed)
-        const recentDeals = history.slice(-8); // Show last 8 deals max
-        const hasMoreDeals = history.length > 8;
-        
-        let dealSummary = `
-            <div style="padding: 15px; font-size: 13px;">
-                <div style="margin-bottom: 15px; text-align: center; background: rgba(52,152,219,0.1); padding: 12px; border-radius: 8px;">
-                    <h4 style="margin: 0 0 8px 0;">📊 Current Totals</h4>
-                    <div style="font-size: 16px; font-weight: bold;">
-                        <span style="color: #27ae60;">North-South: ${scores.NS}</span> • 
-                        <span style="color: #e74c3c;">East-West: ${scores.EW}</span>
-                    </div>
-                    <div style="margin-top: 8px; font-size: 14px; color: #666;">
-                        Leader: <strong>${scores.NS > scores.EW ? 'North-South' : scores.EW > scores.NS ? 'East-West' : 'Tied'}</strong>
-                    </div>
-                </div>
-                
-                <h4 style="margin: 15px 0 8px 0;">🃏 Recent Deals ${hasMoreDeals ? `(Last ${recentDeals.length} of ${history.length})` : `(All ${history.length})`}</h4>
-        `;
-        
-        recentDeals.forEach((deal, index) => {
-            const contract = deal.contract;
-            const contractStr = `${contract.level}${contract.suit}${contract.doubled ? ' ' + contract.doubled : ''}`;
-            const scoreDisplay = deal.score >= 0 ? `+${deal.score}` : `${deal.score}`;
-            const scoringSide = deal.scoringSide || (deal.score >= 0 ? 
-                (['N', 'S'].includes(contract.declarer) ? 'NS' : 'EW') :
-                (['N', 'S'].includes(contract.declarer) ? 'EW' : 'NS'));
-            
-            const vulnerability = deal.vulnerability || 'NV';
-            
-            dealSummary += `
-                <div style="
-                    border: 1px solid #ddd; 
-                    padding: 10px; 
-                    margin: 5px 0;
-                    border-radius: 6px;
-                    background: ${index % 2 === 0 ? 'rgba(240,248,255,0.8)' : 'rgba(248,249,250,0.8)'};
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                ">
-                    <div style="flex: 1;">
-                        <div style="font-weight: bold; margin-bottom: 2px;">
-                            Deal ${deal.deal} - ${vulnerability}
-                        </div>
-                        <div style="font-size: 12px; color: #666;">
-                            ${contractStr} by ${contract.declarer} = ${contract.result}
-                        </div>
-                    </div>
-                    <div style="
-                        text-align: right;
-                        min-width: 80px;
-                        font-weight: bold;
-                    ">
-                        <div style="color: ${deal.score >= 0 ? '#27ae60' : '#e74c3c'}; font-size: 14px;">
-                            ${scoreDisplay}
-                        </div>
-                        <div style="font-size: 11px; color: #666;">
-                            ${scoringSide}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        if (hasMoreDeals) {
-            dealSummary += `
-                <div style="
-                    text-align: center; 
-                    padding: 10px; 
-                    margin-top: 10px;
-                    background: rgba(255,193,7,0.1); 
-                    border-radius: 6px;
-                    color: #856404;
-                    font-size: 12px;
-                ">
-                    📝 Showing recent ${recentDeals.length} deals of ${history.length} total deals played
-                </div>
-            `;
-        }
-        
-        dealSummary += `
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Back to Options', action: () => this.showQuit(), class: 'back-btn' },
-            { text: 'Continue Playing', action: () => {}, class: 'continue-btn' }
-        ];
-        
-        this.showMobileOptimizedModal('📊 Kitchen Bridge - Detailed Analysis', dealSummary, buttons);
-    }
-    
-    /**
-     * Start a new game (reset scores)
-     */
-    startNewGame() {
-        const confirmed = confirm(
-            'Start a new game?\n\nThis will reset all scores to zero and start over.\n\nClick OK to start new game, Cancel to continue current game.'
-        );
-        
-        if (confirmed) {
-            // Reset all scores and history
-            this.gameState.scores = { NS: 0, EW: 0 };
-            this.gameState.history = [];
-            this.currentDeal = 1;
-            this.vulnerability = 'NV';
-            
-            // Update vulnerability display
-            const vulnText = document.getElementById('vulnText');
-            if (vulnText) {
-                vulnText.textContent = 'NV';
-            }
-            
-            // Reset to level selection
-            this.resetContract();
-            this.inputState = 'level_selection';
-            this.updateDisplay();
-            
-            console.log('🆕 New Kitchen Bridge game started');
-        }
-    }
-    
-    /**
-     * Return to main menu
-     */
-    returnToMainMenu() {
-        this.bridgeApp.showLicensedMode({ 
-            type: this.bridgeApp.licenseManager.getLicenseData()?.type || 'FULL' 
-        });
-    }
-// END SECTION SEVEN
 
 // SECTION EIGHT - Display Content & Final Methods
     /**

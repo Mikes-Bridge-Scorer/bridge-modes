@@ -333,7 +333,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
 
 // SECTION FOUR - Contract Logic
     /**
-     * Calculate score using standard Chicago Bridge rules
+     * Calculate score using standard Chicago Bridge rules - FIXED NT SCORING
      */
     calculateScore() {
         const { level, suit, result, doubled, declarer } = this.currentContract;
@@ -341,13 +341,21 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         console.log(`💰 Calculating Chicago Bridge score for ${level}${suit}${doubled} by ${declarer} = ${result}`);
         
         // Basic suit values per trick
-        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+        const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30 };
         let score = 0;
         
         if (result === '=' || result?.startsWith('+')) {
             // Contract made
-            let basicScore = level * suitValues[suit];
-            if (suit === 'NT') basicScore += 10; // NT first trick bonus
+            let basicScore;
+            
+            // FIXED: Correct NT scoring calculation
+            if (suit === 'NT') {
+                // NT: 40 points for first trick, 30 points for each additional trick
+                basicScore = 40 + (level - 1) * 30;
+            } else {
+                // Other suits: multiply level by suit value
+                basicScore = level * suitValues[suit];
+            }
             
             // Handle doubling of basic score
             let contractScore = basicScore;
@@ -363,7 +371,11 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                 
                 if (doubled === '') {
                     // Undoubled overtricks
-                    overtrickValue = suitValues[suit] * overtricks;
+                    if (suit === 'NT') {
+                        overtrickValue = overtricks * 30; // NT overtricks are 30 each
+                    } else {
+                        overtrickValue = suitValues[suit] * overtricks;
+                    }
                 } else {
                     // Doubled overtricks (100 NV, 200 Vul)
                     const isVulnerable = this.isDeclarerVulnerable();
@@ -378,12 +390,21 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                 // Game made
                 const isVulnerable = this.isDeclarerVulnerable();
                 score += isVulnerable ? 500 : 300;
+                
+                // Slam bonuses
+                if (level === 6) {
+                    // Small slam bonus
+                    score += isVulnerable ? 750 : 500;
+                } else if (level === 7) {
+                    // Grand slam bonus
+                    score += isVulnerable ? 1500 : 1000;
+                }
             } else {
                 // Part-game
                 score += 50;
             }
             
-            // Double bonuses
+            // Double bonuses (insult bonus)
             if (doubled === 'X') score += 50;
             else if (doubled === 'XX') score += 100;
             
@@ -505,7 +526,6 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         return `Deal ${nextDeal} • Dealer: ${nextDealer} • Vuln: ${vulnDisplay[nextVuln]} • Cycle ${nextCycleNum} (${nextCyclePos}/4)`;
     }
 // END SECTION FOUR
-
 // SECTION FIVE - Game Management
     /**
      * Move to next deal with automatic Chicago vulnerability cycling

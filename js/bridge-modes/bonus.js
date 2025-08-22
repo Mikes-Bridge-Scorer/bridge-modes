@@ -2675,7 +2675,7 @@ closeMobileModal() {
 // SECTION SEVEN - Scoring Logic
 
 /**
- * Calculate raw bridge score
+ * Calculate raw bridge score - FIXED NT SCORING
  */
 calculateRawScore() {
     const { level, suit, result, doubled, declarer } = this.currentContract;
@@ -2683,13 +2683,21 @@ calculateRawScore() {
     console.log(`💰 Calculating Bonus Bridge raw score for ${level}${suit}${doubled} by ${declarer} = ${result}`);
     
     // Basic suit values per trick
-    const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+    const suitValues = { '♣': 20, '♦': 20, '♥': 30, '♠': 30 };
     let score = 0;
     
     if (result === '=' || result?.startsWith('+')) {
         // Contract made
-        let basicScore = level * suitValues[suit];
-        if (suit === 'NT') basicScore += 10; // NT first trick bonus
+        let basicScore;
+        
+        // FIXED: Correct NT scoring calculation
+        if (suit === 'NT') {
+            // NT: 40 points for first trick, 30 points for each additional trick
+            basicScore = 40 + (level - 1) * 30;
+        } else {
+            // Other suits: multiply level by suit value
+            basicScore = level * suitValues[suit];
+        }
         
         // Handle doubling of basic score
         let contractScore = basicScore;
@@ -2704,8 +2712,14 @@ calculateRawScore() {
             let overtrickValue;
             
             if (doubled === '') {
-                overtrickValue = suitValues[suit] * overtricks;
+                // Undoubled overtricks
+                if (suit === 'NT') {
+                    overtrickValue = overtricks * 30; // NT overtricks are 30 each
+                } else {
+                    overtrickValue = suitValues[suit] * overtricks;
+                }
             } else {
+                // Doubled overtricks (100 NV, 200 Vul)
                 const isVulnerable = this.isVulnerable(declarer);
                 overtrickValue = overtricks * (isVulnerable ? 200 : 100);
                 if (doubled === 'XX') overtrickValue *= 2;
@@ -2715,13 +2729,24 @@ calculateRawScore() {
         
         // Game/Part-game bonus
         if (contractScore >= 100) {
+            // Game made
             const isVulnerable = this.isVulnerable(declarer);
             score += isVulnerable ? 500 : 300;
+            
+            // Slam bonuses
+            if (level === 6) {
+                // Small slam bonus
+                score += isVulnerable ? 750 : 500;
+            } else if (level === 7) {
+                // Grand slam bonus
+                score += isVulnerable ? 1500 : 1000;
+            }
         } else {
+            // Part-game
             score += 50;
         }
         
-        // Double bonuses
+        // Double bonuses (insult bonus)
         if (doubled === 'X') score += 50;
         else if (doubled === 'XX') score += 100;
         
@@ -2731,8 +2756,10 @@ calculateRawScore() {
         const isVulnerable = this.isVulnerable(declarer);
         
         if (doubled === '') {
+            // Undoubled penalties
             score = -undertricks * (isVulnerable ? 100 : 50);
         } else {
+            // Doubled penalties
             let penalty = 0;
             for (let i = 1; i <= undertricks; i++) {
                 if (i === 1) {
@@ -2807,8 +2834,7 @@ calculateBonusScore() {
     
     console.log(`💾 Bonus Bridge score recorded: NS=${nsPoints}, EW=${ewPoints}`);
 }
-// END SECTION SEVEN
-// SECTION EIGHT - Analysis Algorithm
+// END SECTION SEVEN// SECTION EIGHT - Analysis Algorithm
 
 /**
  * Calculate final analysis (main Bonus Bridge logic)
