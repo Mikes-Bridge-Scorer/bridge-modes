@@ -3528,7 +3528,7 @@ showMobileOptimizedHelpModal() {
 }
 
 /**
- * Setup help modal handlers with proven mobile techniques
+ * Setup help modal handlers with proven mobile techniques - FIXED CLOSE BUTTON
  */
 setupHelpModalHandlers() {
     const modal = document.querySelector('.modal-overlay');
@@ -3536,10 +3536,10 @@ setupHelpModalHandlers() {
     const indicator = document.getElementById('bonusScrollIndicator');
     const closeBtn = modal.querySelector('.help-close-btn');
     
-    // Close button handler
+    // FIXED: Close button handler - use existing closeMobileModal method
     closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        this.closeHelpModal();
+        this.closeMobileModal();  // ← FIXED: Use the correct method name
     }, { passive: false });
     
     // Touch feedback for close button
@@ -3573,18 +3573,6 @@ setupHelpModalHandlers() {
     }, 500);
     
     console.log('✅ Help modal handlers setup complete');
-}
-
-/**
- * Close help modal
- */
-closeHelpModal() {
-    const modal = document.querySelector('.modal-overlay');
-    if (modal) {
-        modal.remove();
-        document.body.classList.remove('modal-open');
-        console.log('📖 Help modal closed');
-    }
 }
 
 /**
