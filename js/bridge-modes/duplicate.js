@@ -2013,7 +2013,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Show detailed results with mobile scrolling fixes
+     * Show detailed results with mobile scrolling fixes - PIXEL 9A FIXED VERSION
      */
     showDetailedResults() {
         if (!this.session.isSetup) {
@@ -2041,9 +2041,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             
             <div class="results-details">
                 <h4>Board Results</h4>
-                <div class="results-scroll-container" style="
+                <div id="results-scroll-container" style="
                     max-height: 350px; 
-                    overflow-y: auto; 
+                    overflow-y: scroll; 
                     overflow-x: hidden;
                     -webkit-overflow-scrolling: touch;
                     font-size: 12px;
@@ -2053,6 +2053,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     margin: 10px 0;
                     position: relative;
                     box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+                    transform: translateZ(0);
+                    will-change: scroll-position;
+                    overscroll-behavior: contain;
                 ">
         `;
         
@@ -2195,6 +2198,23 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         resultsContent += `
                 </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <button id="results-refresh-scroll-btn" style="
+                        background: #3498db; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        font-size: 12px; 
+                        cursor: pointer;
+                        font-weight: bold;
+                        min-height: 44px;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                    ">Fix Scroll</button>
+                </div>
             </div>
             
             <div style="
@@ -2215,7 +2235,82 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             { text: 'Export Results', action: () => this.exportResults(), class: 'export-btn' }
         ];
         
+        // Show modal and setup scroll fixes
         this.bridgeApp.showModal('Duplicate Bridge Results', resultsContent, buttons);
+        
+        // Setup scroll fixes after modal is shown
+        setTimeout(() => {
+            this.setupResultsScrollFixes();
+        }, 200);
+    }
+
+    /**
+     * Setup results scroll fixes for Pixel 9a
+     */
+    setupResultsScrollFixes() {
+        const container = document.getElementById('results-scroll-container');
+        const refreshBtn = document.getElementById('results-refresh-scroll-btn');
+        
+        if (container) {
+            // Apply Pixel 9a scroll fixes
+            container.style.overflowY = 'scroll';
+            container.style.overflowX = 'hidden';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            container.style.overscrollBehavior = 'contain';
+            container.style.position = 'relative';
+            
+            // Force layout recalculation
+            container.offsetHeight;
+        }
+        
+        if (refreshBtn) {
+            const refreshHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                refreshBtn.style.transform = 'scale(0.95)';
+                refreshBtn.style.opacity = '0.8';
+                
+                setTimeout(() => {
+                    this.refreshResultsScroll();
+                    refreshBtn.style.transform = 'scale(1)';
+                    refreshBtn.style.opacity = '1';
+                }, 100);
+            };
+            
+            refreshBtn.addEventListener('click', refreshHandler, { passive: false });
+            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
+        }
+    }
+
+    /**
+     * Refresh results scroll container
+     */
+    refreshResultsScroll() {
+        const container = document.getElementById('results-scroll-container');
+        if (container) {
+            // Visual feedback
+            container.style.border = '2px solid #27ae60';
+            container.style.transition = 'border-color 0.3s ease';
+            
+            // Force scroll reset
+            container.scrollTop = container.scrollHeight;
+            setTimeout(() => {
+                container.scrollTop = 0;
+            }, 100);
+            
+            // Reapply scroll properties
+            container.style.overflowY = 'scroll';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            
+            setTimeout(() => {
+                container.style.border = '1px solid #444';
+            }, 600);
+        }
     }
 
     /**
