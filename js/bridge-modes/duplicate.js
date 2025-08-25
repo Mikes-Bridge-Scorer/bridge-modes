@@ -1307,47 +1307,54 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 
                 ${this.getMovementTableHTML()}
                 
-                <div style="text-align: center; margin-top: 20px; position: sticky; bottom: 0; background: white; padding-top: 15px;">
+                <div style="
+                    display: flex; 
+                    justify-content: center; 
+                    align-items: center;
+                    gap: 15px; 
+                    margin-top: 20px; 
+                    position: sticky; 
+                    bottom: 0; 
+                    background: white; 
+                    padding: 15px 0;
+                    flex-wrap: nowrap;
+                ">
                     <button id="movement-close-btn" style="
                         background: #3498db; 
                         color: white; 
                         border: none; 
-                        padding: 12px 24px; 
-                        border-radius: 6px; 
-                        margin: 5px;
-                        font-size: 16px; 
+                        padding: 10px 16px; 
+                        border-radius: 6px;
+                        font-size: 13px; 
                         cursor: pointer; 
                         font-weight: bold;
                         min-height: 50px; 
-                        min-width: 120px;
+                        width: 110px;
                         touch-action: manipulation; 
                         user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        width: auto;
                     ">Close</button>
                     <button id="movement-confirm-btn" style="
                         background: #27ae60; 
                         color: white; 
                         border: none; 
-                        padding: 12px 24px; 
-                        border-radius: 6px; 
-                        margin: 5px;
-                        font-size: 16px; 
+                        padding: 10px 16px; 
+                        border-radius: 6px;
+                        font-size: 13px; 
                         cursor: pointer; 
                         font-weight: bold;
                         min-height: 50px; 
-                        min-width: 120px;
+                        width: 110px;
                         touch-action: manipulation; 
                         user-select: none;
                         -webkit-tap-highlight-color: transparent;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        width: auto;
-                    ">Confirm & Start</button>
+                    ">Start</button>
                 </div>
             </div>
         `;
@@ -1438,7 +1445,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
         // 'close' action just closes the popup (already done above)
     }
-// END SECTION FIVE// SECTION SIX
+// END SECTION FIVE
+// SECTION SIX
 /**
      * Generate movement table HTML with responsive design
      */
