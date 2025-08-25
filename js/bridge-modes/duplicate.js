@@ -1445,8 +1445,253 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
         // 'close' action just closes the popup (already done above)
     }
-// END SECTION FIVE
-// SECTION SIX
+
+    /**
+     * Get help content specific to Duplicate Bridge - FIXED WITH SCROLLING
+     */
+    getHelpContent() {
+        return {
+            title: 'Duplicate Bridge Help',
+            content: `
+                <div id="help-scroll-container" style="
+                    max-height: 400px;
+                    overflow-y: scroll;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    transform: translateZ(0);
+                    will-change: scroll-position;
+                    overscroll-behavior: contain;
+                    padding-right: 10px;
+                    margin-bottom: 15px;
+                ">
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">What is Duplicate Bridge?</h4>
+                        <p style="line-height: 1.5;"><strong>Duplicate Bridge</strong> is the tournament form of bridge where multiple pairs play the same deals, allowing direct comparison of results. This creates fair competition by eliminating the luck of the cards.</p>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Quick Start Guide</h4>
+                        <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4, 6, or 8)<br>
+                        • 4 pairs = 2 tables, 12 boards, ~2 hours<br>
+                        • 6 pairs = 3 tables, 10 boards, ~1.5 hours<br>
+                        • 8 pairs = 4 tables, 14 boards, ~2.5 hours</p>
+                        
+                        <p style="line-height: 1.5;"><strong>2. Movement:</strong> Review and confirm the movement schedule<br>
+                        <strong>3. Play:</strong> Select boards to enter traveler results<br>
+                        <strong>4. Results:</strong> View final standings when complete</p>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Traveler Entry</h4>
+                        <p style="line-height: 1.5;">Follow the button sequence to enter each contract:<br>
+                        <strong>Level → Suit → Declarer → Double (optional) → Result</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>"Made" = contract exactly made</li>
+                            <li>"Plus" = overtricks (select number)</li>
+                            <li>"Down" = undertricks (select number)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Scoring System</h4>
+                        <p style="line-height: 1.5;"><strong>Matchpoints:</strong> Compare your result to others on same board<br>
+                        • Beat another pair = 2 matchpoints<br>
+                        • Tie with another pair = 1 matchpoint each<br>
+                        • Lose to another pair = 0 matchpoints</p>
+                        <p style="line-height: 1.5;"><strong>Percentage:</strong> Your matchpoints ÷ maximum possible × 100</p>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Mobile Tips</h4>
+                        <p style="line-height: 1.5;"><strong>Scrolling Issues:</strong> Use "Fix Scroll" buttons if scrolling stops<br>
+                        <strong>Touch Optimized:</strong> All buttons sized for mobile devices<br>
+                        <strong>Visual Feedback:</strong> Buttons provide haptic and visual response</p>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Board Management</h4>
+                        <p style="line-height: 1.5;">• Green checkmarks show completed boards<br>
+                        • Vulnerability follows standard 16-board cycle<br>
+                        • Progress bar shows overall completion<br>
+                        • Enter results after each round for best experience</p>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Final Results</h4>
+                        <p style="line-height: 1.5;">• Ranked by percentage score<br>
+                        • Export standings and detailed results<br>
+                        • Medal indicators for top 3 positions<br>
+                        • Complete matchpoint calculations included</p>
+                    </div>
+                    
+                    <div class="help-section" style="margin-bottom: 30px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Printable Templates</h4>
+                        <p style="line-height: 1.5;"><strong>For home games and tournaments!</strong></p>
+                        <div style="margin: 15px 0; text-align: center;">
+                            <button onclick="window.duplicateBridge.showTemplates('board')" style="
+                                background: #27ae60; color: white; border: none; 
+                                padding: 12px 16px; border-radius: 4px; margin: 5px;
+                                cursor: pointer; font-size: 13px; font-weight: bold;
+                                min-height: 50px; min-width: 140px;
+                                touch-action: manipulation; user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                            ">Board Templates</button>
+                            <button onclick="window.duplicateBridge.showTemplates('traveler')" style="
+                                background: #3498db; color: white; border: none; 
+                                padding: 12px 16px; border-radius: 4px; margin: 5px;
+                                cursor: pointer; font-size: 13px; font-weight: bold;
+                                min-height: 50px; min-width: 140px;
+                                touch-action: manipulation; user-select: none;
+                                -webkit-tap-highlight-color: transparent;
+                            ">Traveler Sheets</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <button id="help-refresh-scroll-btn" style="
+                        background: #3498db; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        font-size: 12px; 
+                        cursor: pointer;
+                        font-weight: bold;
+                        min-height: 44px;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        margin-bottom: 10px;
+                    ">Fix Help Scroll</button>
+                </div>
+            `,
+            buttons: [
+                { text: 'Close Help', action: 'close', class: 'close-btn' }
+            ]
+        };
+    }
+
+    /**
+     * Show templates using external template generator
+     */
+    showTemplates(type) {
+        if (typeof window.DuplicateTemplates !== 'undefined') {
+            const templateGenerator = new DuplicateTemplates();
+            if (type === 'board') {
+                templateGenerator.showBoardTemplates();
+            } else if (type === 'traveler') {
+                templateGenerator.showTravelerTemplates();
+            }
+        } else {
+            this.bridgeApp.showMessage('Template generator not available. Please load duplicateTemplates.js', 'warning');
+        }
+    }
+
+    /**
+     * Show help
+     */
+    showHelp() {
+        try {
+            const helpContent = this.getHelpContent();
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                this.bridgeApp.showModal(helpContent.title, helpContent.content);
+                
+                // Setup help scroll fixes after modal is shown
+                setTimeout(() => {
+                    this.setupHelpScrollHandlers();
+                }, 200);
+            }
+        } catch (error) {
+            console.error('Error showing help:', error);
+        }
+    }
+
+    /**
+     * Setup help scroll handlers for Pixel 9a
+     */
+    setupHelpScrollHandlers() {
+        const container = document.getElementById('help-scroll-container');
+        const refreshBtn = document.getElementById('help-refresh-scroll-btn');
+        
+        if (container) {
+            // Force scroll properties
+            container.style.maxHeight = '400px';
+            container.style.overflowY = 'scroll';
+            container.style.overflowX = 'hidden';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            container.style.overscrollBehavior = 'contain';
+            
+            // Force layout recalculation
+            container.offsetHeight;
+        }
+        
+        if (refreshBtn) {
+            const refreshHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                refreshBtn.style.transform = 'scale(0.95)';
+                refreshBtn.style.opacity = '0.8';
+                refreshBtn.style.background = '#2980b9';
+                
+                setTimeout(() => {
+                    this.refreshHelpScroll();
+                    refreshBtn.style.transform = 'scale(1)';
+                    refreshBtn.style.opacity = '1';
+                    refreshBtn.style.background = '#3498db';
+                }, 100);
+            };
+            
+            refreshBtn.addEventListener('click', refreshHandler, { passive: false });
+            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
+            
+            refreshBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                refreshBtn.style.transform = 'scale(0.95)';
+                refreshBtn.style.opacity = '0.8';
+                refreshBtn.style.background = '#2980b9';
+            }, { passive: false });
+        }
+    }
+
+    /**
+     * Refresh help scroll container
+     */
+    refreshHelpScroll() {
+        const container = document.getElementById('help-scroll-container');
+        if (container) {
+            // Visual feedback
+            container.style.border = '2px solid #27ae60';
+            container.style.transition = 'border-color 0.3s ease';
+            
+            // Force complete scroll reset
+            container.scrollTop = 0;
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+            setTimeout(() => {
+                container.scrollTop = 0;
+            }, 150);
+            
+            // Reapply all scroll properties
+            container.style.maxHeight = '400px';
+            container.style.overflowY = 'scroll';
+            container.style.overflowX = 'hidden';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            container.style.overscrollBehavior = 'contain';
+            
+            // Reset border after feedback
+            setTimeout(() => {
+                container.style.border = 'none';
+            }, 600);
+        }
+    }
+// END SECTION FIVE// SECTION SIX
 /**
      * Generate movement table HTML with responsive design
      */
@@ -2021,7 +2266,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Show detailed results with mobile scrolling fixes - PIXEL 9A FIXED VERSION
+     * Show detailed results with mobile scrolling fixes - COMPLETE PIXEL 9A FIX
      */
     showDetailedResults() {
         if (!this.session.isSetup) {
@@ -2037,33 +2282,33 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
 
         let resultsContent = `
-            <div class="results-summary">
-                <h4>Session Summary</h4>
-                <p><strong>Movement:</strong> ${this.session.movement.description}</p>
-                <p><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
+            <div class="results-summary" style="margin-bottom: 15px;">
+                <h4 style="margin: 0 0 10px 0;">Session Summary</h4>
+                <p style="margin: 5px 0;"><strong>Movement:</strong> ${this.session.movement.description}</p>
+                <p style="margin: 5px 0;"><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
                 ${completionStatus.percentage === 100 ? 
-                    '<p style="color: #27ae60; font-weight: bold;">All boards complete!</p>' :
-                    '<p style="color: #f39c12;">Session in progress...</p>'
+                    '<p style="color: #27ae60; font-weight: bold; margin: 5px 0;">All boards complete!</p>' :
+                    '<p style="color: #f39c12; margin: 5px 0;">Session in progress...</p>'
                 }
             </div>
             
             <div class="results-details">
-                <h4>Board Results</h4>
+                <h4 style="margin: 0 0 10px 0;">Board Results</h4>
                 <div id="results-scroll-container" style="
-                    max-height: 350px; 
+                    height: 300px; 
                     overflow-y: scroll; 
                     overflow-x: hidden;
                     -webkit-overflow-scrolling: touch;
                     font-size: 12px;
-                    border: 1px solid #444;
+                    border: 1px solid #bdc3c7;
                     border-radius: 6px;
                     background: rgba(255,255,255,0.98);
-                    margin: 10px 0;
+                    margin: 10px 0 15px 0;
                     position: relative;
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
                     transform: translateZ(0);
                     will-change: scroll-position;
                     overscroll-behavior: contain;
+                    padding: 0;
                 ">
         `;
         
@@ -2087,7 +2332,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 resultsContent += `
                     <div style="
                         background: rgba(52, 152, 219, 0.08);
-                        margin: 8px 6px;
+                        margin: 8px;
                         padding: 12px;
                         border-radius: 8px;
                         border-left: 4px solid #3498db;
@@ -2207,9 +2452,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         resultsContent += `
                 </div>
                 
-                <div style="text-align: center; margin-top: 15px;">
+                <div style="text-align: center; margin-bottom: 15px;">
                     <button id="results-refresh-scroll-btn" style="
-                        background: #3498db; 
+                        background: #e74c3c; 
                         color: white; 
                         border: none; 
                         padding: 10px 20px; 
@@ -2221,7 +2466,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         touch-action: manipulation;
                         user-select: none;
                         -webkit-tap-highlight-color: transparent;
-                    ">Fix Scroll</button>
+                    ">Fix Results Scroll</button>
                 </div>
             </div>
             
@@ -2229,8 +2474,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 text-align: center; 
                 font-size: 11px; 
                 color: #666; 
-                margin-top: 15px;
-                padding: 10px;
+                margin-top: 10px;
+                padding: 8px;
                 background: rgba(52, 152, 219, 0.05);
                 border-radius: 6px;
             ">
@@ -2248,26 +2493,26 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         // Setup scroll fixes after modal is shown
         setTimeout(() => {
-            this.setupResultsScrollFixes();
+            this.setupDetailedResultsScrollHandlers();
         }, 200);
     }
 
     /**
-     * Setup results scroll fixes for Pixel 9a
+     * Setup detailed results scroll handlers for Pixel 9a
      */
-    setupResultsScrollFixes() {
+    setupDetailedResultsScrollHandlers() {
         const container = document.getElementById('results-scroll-container');
         const refreshBtn = document.getElementById('results-refresh-scroll-btn');
         
         if (container) {
-            // Apply Pixel 9a scroll fixes
+            // Force scroll properties
+            container.style.height = '300px';
             container.style.overflowY = 'scroll';
             container.style.overflowX = 'hidden';
             container.style.webkitOverflowScrolling = 'touch';
             container.style.transform = 'translateZ(0)';
             container.style.willChange = 'scroll-position';
             container.style.overscrollBehavior = 'contain';
-            container.style.position = 'relative';
             
             // Force layout recalculation
             container.offsetHeight;
@@ -2280,43 +2525,59 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 
                 refreshBtn.style.transform = 'scale(0.95)';
                 refreshBtn.style.opacity = '0.8';
+                refreshBtn.style.background = '#c0392b';
                 
                 setTimeout(() => {
-                    this.refreshResultsScroll();
+                    this.refreshDetailedResultsScroll();
                     refreshBtn.style.transform = 'scale(1)';
                     refreshBtn.style.opacity = '1';
+                    refreshBtn.style.background = '#e74c3c';
                 }, 100);
             };
             
             refreshBtn.addEventListener('click', refreshHandler, { passive: false });
             refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
+            
+            refreshBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                refreshBtn.style.transform = 'scale(0.95)';
+                refreshBtn.style.opacity = '0.8';
+                refreshBtn.style.background = '#c0392b';
+            }, { passive: false });
         }
     }
 
     /**
-     * Refresh results scroll container
+     * Refresh detailed results scroll container
      */
-    refreshResultsScroll() {
+    refreshDetailedResultsScroll() {
         const container = document.getElementById('results-scroll-container');
         if (container) {
             // Visual feedback
             container.style.border = '2px solid #27ae60';
             container.style.transition = 'border-color 0.3s ease';
             
-            // Force scroll reset
-            container.scrollTop = container.scrollHeight;
+            // Force complete scroll reset
+            container.scrollTop = 0;
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
             setTimeout(() => {
                 container.scrollTop = 0;
-            }, 100);
+            }, 150);
             
-            // Reapply scroll properties
+            // Reapply all scroll properties
+            container.style.height = '300px';
             container.style.overflowY = 'scroll';
+            container.style.overflowX = 'hidden';
             container.style.webkitOverflowScrolling = 'touch';
             container.style.transform = 'translateZ(0)';
             container.style.willChange = 'scroll-position';
+            container.style.overscrollBehavior = 'contain';
             
+            // Reset border after feedback
             setTimeout(() => {
-                container.style.border = '1px solid #444';
+                container.style.border = '1px solid #bdc3c7';
             }, 600);
         }
     }
@@ -2394,8 +2655,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         return text;
     }
-// END SECTION SEVEN
-// SECTION EIGHT
+// END SECTION SEVEN// SECTION EIGHT
 /**
      * Handle back navigation with state management
      */
