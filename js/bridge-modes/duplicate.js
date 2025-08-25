@@ -1273,7 +1273,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Show movement popup with mobile-optimized table
+     * Show movement popup with mobile-optimized table - PIXEL 9A FIXED VERSION
      */
     showMovementPopup() {
         const movement = this.session.movement;
@@ -1308,31 +1308,137 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 ${this.getMovementTableHTML()}
                 
                 <div style="text-align: center; margin-top: 20px; position: sticky; bottom: 0; background: white; padding-top: 15px;">
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                        background: #3498db; color: white; border: none; 
-                        padding: 12px 24px; border-radius: 6px; margin: 5px;
-                        font-size: 16px; cursor: pointer; font-weight: bold;
-                        min-height: 44px; min-width: 100px;
-                        touch-action: manipulation; user-select: none;
+                    <button id="movement-close-btn" style="
+                        background: #3498db; 
+                        color: white; 
+                        border: none; 
+                        padding: 12px 24px; 
+                        border-radius: 6px; 
+                        margin: 5px;
+                        font-size: 16px; 
+                        cursor: pointer; 
+                        font-weight: bold;
+                        min-height: 50px; 
+                        min-width: 120px;
+                        touch-action: manipulation; 
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: auto;
                     ">Close</button>
-                    <button onclick="
-                        this.parentElement.parentElement.parentElement.remove(); 
-                        window.duplicateBridge.handleAction('2');
-                    " style="
-                        background: #27ae60; color: white; border: none; 
-                        padding: 12px 24px; border-radius: 6px; margin: 5px;
-                        font-size: 16px; cursor: pointer; font-weight: bold;
-                        min-height: 44px; min-width: 100px;
-                        touch-action: manipulation; user-select: none;
+                    <button id="movement-confirm-btn" style="
+                        background: #27ae60; 
+                        color: white; 
+                        border: none; 
+                        padding: 12px 24px; 
+                        border-radius: 6px; 
+                        margin: 5px;
+                        font-size: 16px; 
+                        cursor: pointer; 
+                        font-weight: bold;
+                        min-height: 50px; 
+                        min-width: 120px;
+                        touch-action: manipulation; 
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: auto;
                     ">Confirm & Start</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(popup);
+        
+        // Setup Pixel 9a compatible handlers after DOM insertion
+        setTimeout(() => {
+            this.setupMovementPopupHandlers();
+        }, 100);
     }
-// END SECTION FIVE
-// SECTION SIX
+
+    /**
+     * Setup movement popup handlers using Pixel 9a compatible pattern
+     */
+    setupMovementPopupHandlers() {
+        // Create unified handler factory
+        const createPixelHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log(`Pixel 9a movement action: ${action}`);
+                
+                // Visual feedback
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                // Haptic feedback for mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                // Execute action after feedback
+                setTimeout(() => {
+                    this.executeMovementAction(action);
+                    
+                    // Reset visual feedback
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                }, 100);
+            };
+        };
+        
+        // Setup close button
+        const closeBtn = document.getElementById('movement-close-btn');
+        if (closeBtn) {
+            const closeHandler = createPixelHandler('close');
+            closeBtn.addEventListener('click', closeHandler, { passive: false });
+            closeBtn.addEventListener('touchend', closeHandler, { passive: false });
+            
+            // Add touch start feedback
+            closeBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                closeBtn.style.transform = 'scale(0.95)';
+                closeBtn.style.opacity = '0.8';
+            }, { passive: false });
+        }
+        
+        // Setup confirm button
+        const confirmBtn = document.getElementById('movement-confirm-btn');
+        if (confirmBtn) {
+            const confirmHandler = createPixelHandler('confirm');
+            confirmBtn.addEventListener('click', confirmHandler, { passive: false });
+            confirmBtn.addEventListener('touchend', confirmHandler, { passive: false });
+            
+            // Add touch start feedback
+            confirmBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                confirmBtn.style.transform = 'scale(0.95)';
+                confirmBtn.style.opacity = '0.8';
+            }, { passive: false });
+        }
+    }
+
+    /**
+     * Execute movement popup actions
+     */
+    executeMovementAction(action) {
+        const popup = document.getElementById('movementPopup');
+        if (popup) {
+            popup.remove();
+        }
+        
+        if (action === 'confirm') {
+            // Trigger the confirm action
+            this.handleAction('2');
+        }
+        // 'close' action just closes the popup (already done above)
+    }
+// END SECTION FIVE// SECTION SIX
 /**
      * Generate movement table HTML with responsive design
      */
