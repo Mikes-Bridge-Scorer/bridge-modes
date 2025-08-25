@@ -1447,132 +1447,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Get help content specific to Duplicate Bridge - FIXED WITH SCROLLING
-     */
-    getHelpContent() {
-        return {
-            title: 'Duplicate Bridge Help',
-            content: `
-                <div id="help-scroll-container" style="
-                    max-height: 400px;
-                    overflow-y: scroll;
-                    overflow-x: hidden;
-                    -webkit-overflow-scrolling: touch;
-                    transform: translateZ(0);
-                    will-change: scroll-position;
-                    overscroll-behavior: contain;
-                    padding-right: 10px;
-                    margin-bottom: 15px;
-                ">
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">What is Duplicate Bridge?</h4>
-                        <p style="line-height: 1.5;"><strong>Duplicate Bridge</strong> is the tournament form of bridge where multiple pairs play the same deals, allowing direct comparison of results. This creates fair competition by eliminating the luck of the cards.</p>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Quick Start Guide</h4>
-                        <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4, 6, or 8)<br>
-                        • 4 pairs = 2 tables, 12 boards, ~2 hours<br>
-                        • 6 pairs = 3 tables, 10 boards, ~1.5 hours<br>
-                        • 8 pairs = 4 tables, 14 boards, ~2.5 hours</p>
-                        
-                        <p style="line-height: 1.5;"><strong>2. Movement:</strong> Review and confirm the movement schedule<br>
-                        <strong>3. Play:</strong> Select boards to enter traveler results<br>
-                        <strong>4. Results:</strong> View final standings when complete</p>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Traveler Entry</h4>
-                        <p style="line-height: 1.5;">Follow the button sequence to enter each contract:<br>
-                        <strong>Level → Suit → Declarer → Double (optional) → Result</strong></p>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>"Made" = contract exactly made</li>
-                            <li>"Plus" = overtricks (select number)</li>
-                            <li>"Down" = undertricks (select number)</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Scoring System</h4>
-                        <p style="line-height: 1.5;"><strong>Matchpoints:</strong> Compare your result to others on same board<br>
-                        • Beat another pair = 2 matchpoints<br>
-                        • Tie with another pair = 1 matchpoint each<br>
-                        • Lose to another pair = 0 matchpoints</p>
-                        <p style="line-height: 1.5;"><strong>Percentage:</strong> Your matchpoints ÷ maximum possible × 100</p>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Mobile Tips</h4>
-                        <p style="line-height: 1.5;"><strong>Scrolling Issues:</strong> Use "Fix Scroll" buttons if scrolling stops<br>
-                        <strong>Touch Optimized:</strong> All buttons sized for mobile devices<br>
-                        <strong>Visual Feedback:</strong> Buttons provide haptic and visual response</p>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Board Management</h4>
-                        <p style="line-height: 1.5;">• Green checkmarks show completed boards<br>
-                        • Vulnerability follows standard 16-board cycle<br>
-                        • Progress bar shows overall completion<br>
-                        • Enter results after each round for best experience</p>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 20px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Final Results</h4>
-                        <p style="line-height: 1.5;">• Ranked by percentage score<br>
-                        • Export standings and detailed results<br>
-                        • Medal indicators for top 3 positions<br>
-                        • Complete matchpoint calculations included</p>
-                    </div>
-                    
-                    <div class="help-section" style="margin-bottom: 30px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 10px;">Printable Templates</h4>
-                        <p style="line-height: 1.5;"><strong>For home games and tournaments!</strong></p>
-                        <div style="margin: 15px 0; text-align: center;">
-                            <button onclick="window.duplicateBridge.showTemplates('board')" style="
-                                background: #27ae60; color: white; border: none; 
-                                padding: 12px 16px; border-radius: 4px; margin: 5px;
-                                cursor: pointer; font-size: 13px; font-weight: bold;
-                                min-height: 50px; min-width: 140px;
-                                touch-action: manipulation; user-select: none;
-                                -webkit-tap-highlight-color: transparent;
-                            ">Board Templates</button>
-                            <button onclick="window.duplicateBridge.showTemplates('traveler')" style="
-                                background: #3498db; color: white; border: none; 
-                                padding: 12px 16px; border-radius: 4px; margin: 5px;
-                                cursor: pointer; font-size: 13px; font-weight: bold;
-                                min-height: 50px; min-width: 140px;
-                                touch-action: manipulation; user-select: none;
-                                -webkit-tap-highlight-color: transparent;
-                            ">Traveler Sheets</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 15px;">
-                    <button id="help-refresh-scroll-btn" style="
-                        background: #3498db; 
-                        color: white; 
-                        border: none; 
-                        padding: 10px 20px; 
-                        border-radius: 6px; 
-                        font-size: 12px; 
-                        cursor: pointer;
-                        font-weight: bold;
-                        min-height: 44px;
-                        touch-action: manipulation;
-                        user-select: none;
-                        -webkit-tap-highlight-color: transparent;
-                        margin-bottom: 10px;
-                    ">Fix Help Scroll</button>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-
-    /**
      * Show templates using external template generator
      */
     showTemplates(type) {
@@ -1589,34 +1463,268 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Show help
+     * Show help - COMPLETE PIXEL 9A FIX - PRIMARY VERSION
      */
     showHelp() {
         try {
-            const helpContent = this.getHelpContent();
-            if (this.bridgeApp && this.bridgeApp.showModal) {
-                this.bridgeApp.showModal(helpContent.title, helpContent.content);
-                
-                // Setup help scroll fixes after modal is shown
-                setTimeout(() => {
-                    this.setupHelpScrollHandlers();
-                }, 200);
-            }
+            // Create the help popup directly instead of using bridgeApp.showModal
+            const popup = document.createElement('div');
+            popup.id = 'duplicateHelpPopup';
+            popup.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 1000; 
+                display: flex; align-items: center; justify-content: center;
+                -webkit-overflow-scrolling: touch;
+            `;
+            
+            popup.innerHTML = `
+                <div style="
+                    background: white; 
+                    padding: 20px; 
+                    border-radius: 8px; 
+                    max-width: 90%; 
+                    max-height: 90%; 
+                    overflow: hidden; 
+                    color: #2c3e50;
+                    display: flex;
+                    flex-direction: column;
+                ">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #2c3e50;">Duplicate Bridge Help</h3>
+                    </div>
+                    
+                    <div id="help-scroll-container" style="
+                        height: 400px;
+                        overflow-y: scroll;
+                        overflow-x: hidden;
+                        -webkit-overflow-scrolling: touch;
+                        transform: translateZ(0);
+                        will-change: scroll-position;
+                        overscroll-behavior: contain;
+                        border: 1px solid #bdc3c7;
+                        border-radius: 6px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        background: rgba(255,255,255,0.98);
+                    ">
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">What is Duplicate Bridge?</h4>
+                            <p style="line-height: 1.5;"><strong>Duplicate Bridge</strong> is the tournament form of bridge where multiple pairs play the same deals, allowing direct comparison of results. This creates fair competition by eliminating the luck of the cards.</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Quick Start Guide</h4>
+                            <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4, 6, or 8)<br>
+                            • 4 pairs = 2 tables, 12 boards, ~2 hours<br>
+                            • 6 pairs = 3 tables, 10 boards, ~1.5 hours<br>
+                            • 8 pairs = 4 tables, 14 boards, ~2.5 hours</p>
+                            
+                            <p style="line-height: 1.5;"><strong>2. Movement:</strong> Review and confirm the movement schedule<br>
+                            <strong>3. Play:</strong> Select boards to enter traveler results<br>
+                            <strong>4. Results:</strong> View final standings when complete</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Traveler Entry</h4>
+                            <p style="line-height: 1.5;">Follow the button sequence to enter each contract:<br>
+                            <strong>Level → Suit → Declarer → Double (optional) → Result</strong></p>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>"Made" = contract exactly made</li>
+                                <li>"Plus" = overtricks (select number)</li>
+                                <li>"Down" = undertricks (select number)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Scoring System</h4>
+                            <p style="line-height: 1.5;"><strong>Matchpoints:</strong> Compare your result to others on same board<br>
+                            • Beat another pair = 2 matchpoints<br>
+                            • Tie with another pair = 1 matchpoint each<br>
+                            • Lose to another pair = 0 matchpoints</p>
+                            <p style="line-height: 1.5;"><strong>Percentage:</strong> Your matchpoints ÷ maximum possible × 100</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Mobile Tips</h4>
+                            <p style="line-height: 1.5;"><strong>Scrolling Issues:</strong> Use "Fix Scroll" buttons if scrolling stops<br>
+                            <strong>Touch Optimized:</strong> All buttons sized for mobile devices<br>
+                            <strong>Visual Feedback:</strong> Buttons provide haptic and visual response</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Board Management</h4>
+                            <p style="line-height: 1.5;">• Green checkmarks show completed boards<br>
+                            • Vulnerability follows standard 16-board cycle<br>
+                            • Progress bar shows overall completion<br>
+                            • Enter results after each round for best experience</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Final Results</h4>
+                            <p style="line-height: 1.5;">• Ranked by percentage score<br>
+                            • Export standings and detailed results<br>
+                            • Medal indicators for top 3 positions<br>
+                            • Complete matchpoint calculations included</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Tournament Tips</h4>
+                            <p style="line-height: 1.5;">• Review the movement before starting<br>
+                            • Enter results promptly after each round<br>
+                            • Use export features to save tournament records<br>
+                            • Check completion percentage regularly</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 30px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Printable Templates</h4>
+                            <p style="line-height: 1.5;"><strong>For home games and tournaments!</strong></p>
+                            <div style="margin: 15px 0; text-align: center;">
+                                <button id="help-board-templates-btn" style="
+                                    background: #27ae60; color: white; border: none; 
+                                    padding: 12px 16px; border-radius: 4px; margin: 5px;
+                                    cursor: pointer; font-size: 13px; font-weight: bold;
+                                    min-height: 50px; min-width: 140px;
+                                    touch-action: manipulation; user-select: none;
+                                    -webkit-tap-highlight-color: transparent;
+                                ">Board Templates</button>
+                                <button id="help-traveler-templates-btn" style="
+                                    background: #3498db; color: white; border: none; 
+                                    padding: 12px 16px; border-radius: 4px; margin: 5px;
+                                    cursor: pointer; font-size: 13px; font-weight: bold;
+                                    min-height: 50px; min-width: 140px;
+                                    touch-action: manipulation; user-select: none;
+                                    -webkit-tap-highlight-color: transparent;
+                                ">Traveler Sheets</button>
+                            </div>
+                        </div>
+                        
+                        <div style="
+                            text-align: center; 
+                            font-size: 11px; 
+                            color: #666; 
+                            margin-top: 20px;
+                            padding: 10px;
+                            background: rgba(52, 152, 219, 0.05);
+                            border-radius: 6px;
+                        ">
+                            Standard ACBL duplicate bridge scoring and movement patterns
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <button id="help-refresh-scroll-btn" style="
+                            background: #f39c12; 
+                            color: white; 
+                            border: none; 
+                            padding: 10px 20px; 
+                            border-radius: 6px; 
+                            font-size: 12px; 
+                            cursor: pointer;
+                            font-weight: bold;
+                            min-height: 44px;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            margin: 5px;
+                        ">Fix Help Scroll</button>
+                        
+                        <button id="help-close-btn" style="
+                            background: #95a5a6; 
+                            color: white; 
+                            border: none; 
+                            padding: 10px 20px; 
+                            border-radius: 6px; 
+                            font-size: 12px; 
+                            cursor: pointer;
+                            font-weight: bold;
+                            min-height: 44px;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                            margin: 5px;
+                        ">Close Help</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(popup);
+            
+            // Setup handlers after DOM insertion
+            setTimeout(() => {
+                this.setupHelpPopupHandlers();
+            }, 100);
+            
         } catch (error) {
             console.error('Error showing help:', error);
+            // Fallback to basic modal
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                this.bridgeApp.showModal('Help', '<p>Help system error. Please try again.</p>');
+            }
         }
     }
 
     /**
-     * Setup help scroll handlers for Pixel 9a
+     * Setup help popup handlers - COMPLETE PIXEL 9A VERSION
      */
-    setupHelpScrollHandlers() {
-        const container = document.getElementById('help-scroll-container');
-        const refreshBtn = document.getElementById('help-refresh-scroll-btn');
+    setupHelpPopupHandlers() {
+        // Create unified handler factory
+        const createHelpHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                    
+                    if (action === 'close') {
+                        this.closeHelpPopup();
+                    } else if (action === 'refresh-scroll') {
+                        this.refreshHelpScroll();
+                    } else if (action === 'board-templates') {
+                        this.showTemplates('board');
+                    } else if (action === 'traveler-templates') {
+                        this.showTemplates('traveler');
+                    }
+                }, 100);
+            };
+        };
         
+        // Setup all buttons
+        const buttons = [
+            { id: 'help-close-btn', action: 'close' },
+            { id: 'help-refresh-scroll-btn', action: 'refresh-scroll' },
+            { id: 'help-board-templates-btn', action: 'board-templates' },
+            { id: 'help-traveler-templates-btn', action: 'traveler-templates' }
+        ];
+        
+        buttons.forEach(({ id, action }) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                const handler = createHelpHandler(action);
+                btn.addEventListener('click', handler, { passive: false });
+                btn.addEventListener('touchend', handler, { passive: false });
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    btn.style.transform = 'scale(0.95)';
+                    btn.style.opacity = '0.8';
+                }, { passive: false });
+            }
+        });
+        
+        // Setup scroll container
+        const container = document.getElementById('help-scroll-container');
         if (container) {
-            // Force scroll properties
-            container.style.maxHeight = '400px';
+            container.style.height = '400px';
             container.style.overflowY = 'scroll';
             container.style.overflowX = 'hidden';
             container.style.webkitOverflowScrolling = 'touch';
@@ -1624,36 +1732,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             container.style.willChange = 'scroll-position';
             container.style.overscrollBehavior = 'contain';
             
-            // Force layout recalculation
-            container.offsetHeight;
+            container.offsetHeight; // Force layout
         }
-        
-        if (refreshBtn) {
-            const refreshHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-                refreshBtn.style.background = '#2980b9';
-                
-                setTimeout(() => {
-                    this.refreshHelpScroll();
-                    refreshBtn.style.transform = 'scale(1)';
-                    refreshBtn.style.opacity = '1';
-                    refreshBtn.style.background = '#3498db';
-                }, 100);
-            };
-            
-            refreshBtn.addEventListener('click', refreshHandler, { passive: false });
-            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
-            
-            refreshBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-                refreshBtn.style.background = '#2980b9';
-            }, { passive: false });
+    }
+
+    /**
+     * Close help popup
+     */
+    closeHelpPopup() {
+        const popup = document.getElementById('duplicateHelpPopup');
+        if (popup) {
+            popup.remove();
         }
     }
 
@@ -1677,7 +1766,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             }, 150);
             
             // Reapply all scroll properties
-            container.style.maxHeight = '400px';
+            container.style.height = '400px';
             container.style.overflowY = 'scroll';
             container.style.overflowX = 'hidden';
             container.style.webkitOverflowScrolling = 'touch';
@@ -1687,11 +1776,54 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             
             // Reset border after feedback
             setTimeout(() => {
-                container.style.border = 'none';
+                container.style.border = '1px solid #bdc3c7';
             }, 600);
         }
     }
-// END SECTION FIVE// SECTION SIX
+
+    /**
+     * Show quit options - REMOVED DUPLICATE (Section 6 version will handle this)
+     */
+    showQuit() {
+        // This method is handled in Section 6
+        try {
+            const content = `
+                <div class="help-section">
+                    <h4>Session Options</h4>
+                    <p>What would you like to do?</p>
+                </div>
+            `;
+            
+            const buttons = [
+                { text: 'Continue Session', action: () => {}, class: 'continue-btn' },
+                { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
+                { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
+            ];
+            
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                this.bridgeApp.showModal('Duplicate Bridge Options', content, buttons);
+            }
+        } catch (error) {
+            console.error('Error showing quit options:', error);
+        }
+    }
+
+    /**
+     * Return to main menu
+     */
+    returnToMainMenu() {
+        try {
+            if (this.bridgeApp && this.bridgeApp.showLicensedMode) {
+                this.bridgeApp.showLicensedMode({ 
+                    type: this.bridgeApp.licenseManager?.getLicenseData()?.type || 'FULL' 
+                });
+            }
+        } catch (error) {
+            console.error('Error returning to main menu:', error);
+        }
+    }
+//END SECTION FIVE
+// SECTION SIX
 /**
      * Generate movement table HTML with responsive design
      */
@@ -1808,109 +1940,187 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Get help content specific to Duplicate Bridge
-     */
-    getHelpContent() {
-        return {
-            title: 'Duplicate Bridge Help',
-            content: `
-                <div class="help-section">
-                    <h4>What is Duplicate Bridge?</h4>
-                    <p><strong>Duplicate Bridge</strong> is the tournament form of bridge where multiple pairs play the same deals, allowing direct comparison of results. This creates fair competition by eliminating the luck of the cards.</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>How to Use This Mode</h4>
-                    <p><strong>1. Setup:</strong> Select number of pairs (4, 6, or 8)<br>
-                    <strong>2. Movement:</strong> Review and confirm the movement schedule<br>
-                    <strong>3. Play:</strong> Select boards to enter traveler results<br>
-                    <strong>4. Results:</strong> View final standings when complete</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Traveler Entry</h4>
-                    <p>Follow the button sequence to enter each contract:<br>
-                    Level → Suit → Declarer → Double (optional) → Result</p>
-                </div>
-                
-                <div class="help-section">
-                    <h4>Printable Templates</h4>
-                    <p><strong>For home games and tournaments!</strong></p>
-                    <div style="margin: 10px 0;">
-                        <button onclick="window.duplicateBridge.showTemplates('board')" style="
-                            background: #27ae60; color: white; border: none; 
-                            padding: 10px 16px; border-radius: 4px; margin: 5px;
-                            cursor: pointer; font-size: 13px; font-weight: bold;
-                            min-height: 44px; touch-action: manipulation;
-                        ">Board Templates</button>
-                        <button onclick="window.duplicateBridge.showTemplates('traveler')" style="
-                            background: #3498db; color: white; border: none; 
-                            padding: 10px 16px; border-radius: 4px; margin: 5px;
-                            cursor: pointer; font-size: 13px; font-weight: bold;
-                            min-height: 44px; touch-action: manipulation;
-                        ">Traveler Sheets</button>
-                    </div>
-                </div>
-            `,
-            buttons: [
-                { text: 'Close Help', action: 'close', class: 'close-btn' }
-            ]
-        };
-    }
-
-    /**
-     * Show templates using external template generator
-     */
-    showTemplates(type) {
-        if (typeof window.DuplicateTemplates !== 'undefined') {
-            const templateGenerator = new DuplicateTemplates();
-            if (type === 'board') {
-                templateGenerator.showBoardTemplates();
-            } else if (type === 'traveler') {
-                templateGenerator.showTravelerTemplates();
-            }
-        } else {
-            this.bridgeApp.showMessage('Template generator not available. Please load duplicateTemplates.js', 'warning');
-        }
-    }
-
-    /**
-     * Show help
-     */
-    showHelp() {
-        try {
-            const helpContent = this.getHelpContent();
-            if (this.bridgeApp && this.bridgeApp.showModal) {
-                this.bridgeApp.showModal(helpContent.title, helpContent.content);
-            }
-        } catch (error) {
-            console.error('Error showing help:', error);
-        }
-    }
-
-    /**
-     * Show quit options
+     * Show quit options - COMPREHENSIVE VERSION (No duplicate in Section 5)
      */
     showQuit() {
         try {
-            const content = `
-                <div class="help-section">
-                    <h4>Session Options</h4>
-                    <p>What would you like to do?</p>
+            // Create quit popup directly for better control
+            const popup = document.createElement('div');
+            popup.id = 'duplicateQuitPopup';
+            popup.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 1000; 
+                display: flex; align-items: center; justify-content: center;
+                -webkit-overflow-scrolling: touch;
+            `;
+            
+            popup.innerHTML = `
+                <div style="
+                    background: white; 
+                    padding: 30px; 
+                    border-radius: 8px; 
+                    max-width: 90%; 
+                    color: #2c3e50;
+                    text-align: center;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                ">
+                    <h3 style="margin: 0 0 20px 0; color: #2c3e50;">Duplicate Bridge Options</h3>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <p style="line-height: 1.5; margin-bottom: 15px;">What would you like to do?</p>
+                    </div>
+                    
+                    <div style="
+                        display: flex; 
+                        flex-direction: column; 
+                        gap: 15px; 
+                        align-items: center;
+                    ">
+                        <button id="quit-continue-btn" style="
+                            background: #27ae60; 
+                            color: white; 
+                            border: none; 
+                            padding: 12px 24px; 
+                            border-radius: 6px; 
+                            font-size: 14px; 
+                            cursor: pointer;
+                            font-weight: bold;
+                            min-height: 50px;
+                            min-width: 200px;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">Continue Session</button>
+                        
+                        <button id="quit-help-btn" style="
+                            background: #3498db; 
+                            color: white; 
+                            border: none; 
+                            padding: 12px 24px; 
+                            border-radius: 6px; 
+                            font-size: 14px; 
+                            cursor: pointer;
+                            font-weight: bold;
+                            min-height: 50px;
+                            min-width: 200px;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">Show Help</button>
+                        
+                        <button id="quit-menu-btn" style="
+                            background: #e74c3c; 
+                            color: white; 
+                            border: none; 
+                            padding: 12px 24px; 
+                            border-radius: 6px; 
+                            font-size: 14px; 
+                            cursor: pointer;
+                            font-weight: bold;
+                            min-height: 50px;
+                            min-width: 200px;
+                            touch-action: manipulation;
+                            user-select: none;
+                            -webkit-tap-highlight-color: transparent;
+                        ">Return to Main Menu</button>
+                    </div>
                 </div>
             `;
             
-            const buttons = [
-                { text: 'Continue Session', action: () => {}, class: 'continue-btn' },
-                { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
-                { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
-            ];
+            document.body.appendChild(popup);
             
-            if (this.bridgeApp && this.bridgeApp.showModal) {
-                this.bridgeApp.showModal('Duplicate Bridge Options', content, buttons);
-            }
+            // Setup handlers after DOM insertion
+            setTimeout(() => {
+                this.setupQuitPopupHandlers();
+            }, 100);
+            
         } catch (error) {
             console.error('Error showing quit options:', error);
+            // Fallback
+            if (this.bridgeApp && this.bridgeApp.showModal) {
+                const content = `
+                    <div class="help-section">
+                        <h4>Session Options</h4>
+                        <p>What would you like to do?</p>
+                    </div>
+                `;
+                
+                const buttons = [
+                    { text: 'Continue Session', action: () => {}, class: 'continue-btn' },
+                    { text: 'Show Help', action: () => this.showHelp(), class: 'help-btn' },
+                    { text: 'Return to Main Menu', action: () => this.returnToMainMenu(), class: 'menu-btn' }
+                ];
+                
+                this.bridgeApp.showModal('Duplicate Bridge Options', content, buttons);
+            }
+        }
+    }
+
+    /**
+     * Setup quit popup handlers
+     */
+    setupQuitPopupHandlers() {
+        // Create unified handler factory
+        const createQuitHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                    
+                    if (action === 'continue') {
+                        this.closeQuitPopup();
+                    } else if (action === 'help') {
+                        this.closeQuitPopup();
+                        setTimeout(() => this.showHelp(), 100);
+                    } else if (action === 'menu') {
+                        this.closeQuitPopup();
+                        setTimeout(() => this.returnToMainMenu(), 100);
+                    }
+                }, 100);
+            };
+        };
+        
+        // Setup all buttons
+        const buttons = [
+            { id: 'quit-continue-btn', action: 'continue' },
+            { id: 'quit-help-btn', action: 'help' },
+            { id: 'quit-menu-btn', action: 'menu' }
+        ];
+        
+        buttons.forEach(({ id, action }) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                const handler = createQuitHandler(action);
+                btn.addEventListener('click', handler, { passive: false });
+                btn.addEventListener('touchend', handler, { passive: false });
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    btn.style.transform = 'scale(0.95)';
+                    btn.style.opacity = '0.8';
+                }, { passive: false });
+            }
+        });
+    }
+
+    /**
+     * Close quit popup
+     */
+    closeQuitPopup() {
+        const popup = document.getElementById('duplicateQuitPopup');
+        if (popup) {
+            popup.remove();
         }
     }
 
