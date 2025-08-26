@@ -2472,342 +2472,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        this.bridgeApp.showMessage('Standings exported successfully!', 'success');
-    }
-
-    /**
-     * Show detailed results with mobile scrolling fixes - COMPLETE PIXEL 9A FIX
-     */
-    showDetailedResults() {
-        if (!this.session.isSetup) {
-            this.bridgeApp.showModal('Results', '<p>No session data available.</p>');
-            return;
-        }
-        
-        const completionStatus = this.getCompletionStatus();
-        
-        if (completionStatus.completed === 0) {
-            this.bridgeApp.showModal('Results', '<p>No results have been entered yet.</p>');
-            return;
-        }
-
-        let resultsContent = `
-            <div class="results-summary" style="margin-bottom: 15px;">
-                <h4 style="margin: 0 0 10px 0;">Session Summary</h4>
-                <p style="margin: 5px 0;"><strong>Movement:</strong> ${this.session.movement.description}</p>
-                <p style="margin: 5px 0;"><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
-                ${completionStatus.percentage === 100 ? 
-                    '<p style="color: #27ae60; font-weight: bold; margin: 5px 0;">All boards complete!</p>' :
-                    '<p style="color: #f39c12; margin: 5px 0;">Session in progress...</p>'
-                }
-            </div>
-            
-            <div class="results-details">
-                <h4 style="margin: 0 0 10px 0;">Board Results</h4>
-                <div id="results-scroll-container" style="
-                    height: 300px; 
-                    overflow-y: scroll; 
-                    overflow-x: hidden;
-                    -webkit-overflow-scrolling: touch;
-                    font-size: 12px;
-                    border: 1px solid #bdc3c7;
-                    border-radius: 6px;
-                    background: rgba(255,255,255,0.98);
-                    margin: 10px 0 15px 0;
-                    position: relative;
-                    transform: translateZ(0);
-                    will-change: scroll-position;
-                    overscroll-behavior: contain;
-                    padding: 0;
-                ">
-        `;
-        
-        // Display results for each completed board
-        const completedBoards = Object.values(this.session.boards)
-            .filter(board => board.completed && board.results && board.results.length > 0)
-            .sort((a, b) => a.number - b.number);
-        
-        if (completedBoards.length === 0) {
-            resultsContent += `
-                <div style="padding: 20px; text-align: center; color: #7f8c8d;">
-                    <p>No completed boards with results yet.</p>
-                    <p>Enter traveler results to see detailed scoring.</p>
-                </div>
-            `;
-        } else {
-            completedBoards.forEach((board, boardIndex) => {
-                const vulnColor = this.getVulnerabilityColor(board.vulnerability);
-                const vulnDisplay = { 'None': 'None', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
-                
-                resultsContent += `
-                    <div style="
-                        background: rgba(52, 152, 219, 0.08);
-                        margin: 8px;
-                        padding: 12px;
-                        border-radius: 8px;
-                        border-left: 4px solid #3498db;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                    ">
-                        <div style="
-                            font-weight: bold; 
-                            color: #2c3e50; 
-                            margin-bottom: 8px; 
-                            font-size: 14px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                        ">
-                            <span>Board ${board.number}</span>
-                            <span style="
-                                color: ${vulnColor}; 
-                                font-size: 12px;
-                                background: rgba(255,255,255,0.8);
-                                padding: 2px 8px;
-                                border-radius: 12px;
-                                border: 1px solid ${vulnColor};
-                            ">
-                                ${vulnDisplay[board.vulnerability]} Vul
-                            </span>
-                        </div>
-                `;
-                
-                // Show results for this board
-                const resultsWithScores = board.results.filter(result => 
-                    result.nsScore !== null || result.ewScore !== null
-                );
-                
-                if (resultsWithScores.length === 0) {
-                    resultsContent += `
-                        <div style="color: #7f8c8d; font-style: italic; font-size: 11px;">
-                            No scored results yet
-                        </div>
-                    `;
-                } else {
-                    resultsWithScores.forEach((result, resultIndex) => {
-                        const contractStr = result.level && result.suit ? 
-                            `${result.level}${result.suit}${result.double || ''}` : 'No contract';
-                        const declarerStr = result.declarer || '?';
-                        
-                        const nsScore = result.nsScore || 0;
-                        const ewScore = result.ewScore || 0;
-                        const topScore = Math.max(nsScore, ewScore);
-                        
-                        resultsContent += `
-                            <div style="
-                                border-bottom: 1px solid #e8e8e8; 
-                                padding: 8px 4px; 
-                                background: ${resultIndex % 2 === 0 ? 'rgba(248,249,250,0.8)' : 'rgba(255,255,255,0.9)'};
-                                margin: 2px 0;
-                                border-radius: 4px;
-                                font-size: 11px;
-                            ">
-                                <div style="
-                                    display: flex; 
-                                    justify-content: space-between; 
-                                    align-items: center;
-                                    flex-wrap: wrap;
-                                    gap: 8px;
-                                ">
-                                    <div style="flex: 1; min-width: 120px;">
-                                        <div style="font-weight: bold; color: #2c3e50;">
-                                            Pairs ${result.nsPair} vs ${result.ewPair}
-                                        </div>
-                                        <div style="color: #555; font-size: 10px;">
-                                            ${contractStr} by ${declarerStr}
-                                        </div>
-                                    </div>
-                                    <div style="
-                                        text-align: right;
-                                        min-width: 80px;
-                                        font-size: 11px;
-                                    ">
-                                        <div style="
-                                            display: flex;
-                                            gap: 12px;
-                                            justify-content: flex-end;
-                                        ">
-                                            <div style="
-                                                color: ${nsScore > 0 ? '#27ae60' : '#95a5a6'};
-                                                font-weight: ${nsScore === topScore && nsScore > 0 ? 'bold' : 'normal'};
-                                            ">
-                                                NS: ${nsScore}
-                                            </div>
-                                            <div style="
-                                                color: ${ewScore > 0 ? '#e74c3c' : '#95a5a6'};
-                                                font-weight: ${ewScore === topScore && ewScore > 0 ? 'bold' : 'normal'};
-                                            ">
-                                                EW: ${ewScore}
-                                            </div>
-                                        </div>
-                                        ${result.matchpoints ? `
-                                            <div style="
-                                                font-size: 9px; 
-                                                color: #7f8c8d; 
-                                                margin-top: 2px;
-                                            ">
-                                                MP: ${result.matchpoints.ns}/${result.matchpoints.ew}
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                
-                resultsContent += `</div>`;
-            });
-        }
-        
-        resultsContent += `
-                </div>
-                
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <button id="results-refresh-scroll-btn" style="
-                        background: #e74c3c; 
-                        color: white; 
-                        border: none; 
-                        padding: 10px 20px; 
-                        border-radius: 6px; 
-                        font-size: 12px; 
-                        cursor: pointer;
-                        font-weight: bold;
-                        min-height: 44px;
-                        touch-action: manipulation;
-                        user-select: none;
-                        -webkit-tap-highlight-color: transparent;
-                    ">Fix Results Scroll</button>
-                </div>
-            </div>
-            
-            <div style="
-                text-align: center; 
-                font-size: 11px; 
-                color: #666; 
-                margin-top: 10px;
-                padding: 8px;
-                background: rgba(52, 152, 219, 0.05);
-                border-radius: 6px;
-            ">
-                Duplicate Bridge: Tournament scoring with board-by-board comparison
-            </div>
-        `;
-        
-        const buttons = [
-            { text: 'Back to Session', action: () => {}, class: 'continue-btn' },
-            { text: 'Export Results', action: () => this.exportResults(), class: 'export-btn' }
-        ];
-        
-        // Show modal and setup scroll fixes
-        this.bridgeApp.showModal('Duplicate Bridge Results', resultsContent, buttons);
-        
-        // Setup scroll fixes after modal is shown
-        setTimeout(() => {
-            this.setupDetailedResultsScrollHandlers();
-        }, 200);
-    }
-
-    /**
-     * Setup detailed results scroll handlers for Pixel 9a
-     */
-    setupDetailedResultsScrollHandlers() {
-        const container = document.getElementById('results-scroll-container');
-        const refreshBtn = document.getElementById('results-refresh-scroll-btn');
-        
-        if (container) {
-            // Force scroll properties
-            container.style.height = '300px';
-            container.style.overflowY = 'scroll';
-            container.style.overflowX = 'hidden';
-            container.style.webkitOverflowScrolling = 'touch';
-            container.style.transform = 'translateZ(0)';
-            container.style.willChange = 'scroll-position';
-            container.style.overscrollBehavior = 'contain';
-            
-            // Force layout recalculation
-            container.offsetHeight;
-        }
-        
-        if (refreshBtn) {
-            const refreshHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-                refreshBtn.style.background = '#c0392b';
-                
-                setTimeout(() => {
-                    this.refreshDetailedResultsScroll();
-                    refreshBtn.style.transform = 'scale(1)';
-                    refreshBtn.style.opacity = '1';
-                    refreshBtn.style.background = '#e74c3c';
-                }, 100);
-            };
-            
-            refreshBtn.addEventListener('click', refreshHandler, { passive: false });
-            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
-            
-            refreshBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-                refreshBtn.style.background = '#c0392b';
-            }, { passive: false });
-        }
-    }
-
-    /**
-     * Refresh detailed results scroll container
-     */
-    refreshDetailedResultsScroll() {
-        const container = document.getElementById('results-scroll-container');
-        if (container) {
-            // Visual feedback
-            container.style.border = '2px solid #27ae60';
-            container.style.transition = 'border-color 0.3s ease';
-            
-            // Force complete scroll reset
-            container.scrollTop = 0;
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 50);
-            setTimeout(() => {
-                container.scrollTop = 0;
-            }, 150);
-            
-            // Reapply all scroll properties
-            container.style.height = '300px';
-            container.style.overflowY = 'scroll';
-            container.style.overflowX = 'hidden';
-            container.style.webkitOverflowScrolling = 'touch';
-            container.style.transform = 'translateZ(0)';
-            container.style.willChange = 'scroll-position';
-            container.style.overscrollBehavior = 'contain';
-            
-            // Reset border after feedback
-            setTimeout(() => {
-                container.style.border = '1px solid #bdc3c7';
-            }, 600);
-        }
-    }
-
-    /**
-     * Export results in text format
-     */
-    exportResults() {
-        const results = this.generateResultsText();
-        
-        const blob = new Blob([results], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `duplicate-bridge-results-${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
         this.bridgeApp.showMessage('Results exported successfully!', 'success');
     }
 
@@ -2865,7 +2529,478 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         return text;
     }
-// END SECTION SEVEN// SECTION EIGHT
+// END SECTION SEVENrevokeObjectURL(url);
+        
+        this.bridgeApp.showMessage('Standings exported successfully!', 'success');
+    }
+
+    /**
+     * Show detailed results with direct popup - COMPLETE PIXEL 9A FIX
+     */
+    showDetailedResults() {
+        if (!this.session.isSetup) {
+            this.showDirectPopup('Results', '<p>No session data available.</p>');
+            return;
+        }
+        
+        const completionStatus = this.getCompletionStatus();
+        
+        if (completionStatus.completed === 0) {
+            this.showDirectPopup('Results', '<p>No results have been entered yet.</p>');
+            return;
+        }
+
+        // Create the popup directly for full control
+        const popup = document.createElement('div');
+        popup.id = 'duplicateResultsPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+            -webkit-overflow-scrolling: touch;
+        `;
+        
+        // Generate board results content
+        const boardResultsContent = this.generateBoardResultsHTML();
+        
+        popup.innerHTML = `
+            <div style="
+                background: white; 
+                padding: 20px; 
+                border-radius: 8px; 
+                max-width: 90%; 
+                max-height: 90%; 
+                overflow: hidden; 
+                color: #2c3e50;
+                display: flex;
+                flex-direction: column;
+            ">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: #2c3e50;">Duplicate Bridge Results</h3>
+                </div>
+                
+                <div class="results-summary" style="margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0;">Session Summary</h4>
+                    <p style="margin: 5px 0;"><strong>Movement:</strong> ${this.session.movement.description}</p>
+                    <p style="margin: 5px 0;"><strong>Progress:</strong> ${completionStatus.completed}/${completionStatus.total} boards (${completionStatus.percentage}%)</p>
+                    ${completionStatus.percentage === 100 ? 
+                        '<p style="color: #27ae60; font-weight: bold; margin: 5px 0;">All boards complete!</p>' :
+                        '<p style="color: #f39c12; margin: 5px 0;">Session in progress...</p>'
+                    }
+                </div>
+                
+                <div class="results-details">
+                    <h4 style="margin: 0 0 10px 0;">Board Results</h4>
+                    <div id="results-scroll-container" style="
+                        height: 300px; 
+                        overflow-y: scroll; 
+                        overflow-x: hidden;
+                        -webkit-overflow-scrolling: touch;
+                        font-size: 12px;
+                        border: 1px solid #bdc3c7;
+                        border-radius: 6px;
+                        background: rgba(255,255,255,0.98);
+                        margin: 10px 0 15px 0;
+                        position: relative;
+                        transform: translateZ(0);
+                        will-change: scroll-position;
+                        overscroll-behavior: contain;
+                        padding: 0;
+                    ">
+                        ${boardResultsContent}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <button id="results-refresh-scroll-btn" style="
+                        background: #e74c3c; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        font-size: 12px; 
+                        cursor: pointer;
+                        font-weight: bold;
+                        min-height: 44px;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        margin: 5px;
+                    ">Fix Results Scroll</button>
+                </div>
+                
+                <div style="
+                    display: flex; 
+                    justify-content: center; 
+                    gap: 15px; 
+                    flex-wrap: nowrap;
+                ">
+                    <button id="results-back-btn" style="
+                        background: #3498db; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        font-size: 12px; 
+                        cursor: pointer;
+                        font-weight: bold;
+                        min-height: 44px;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        min-width: 120px;
+                    ">Back to Session</button>
+                    
+                    <button id="results-export-btn" style="
+                        background: #27ae60; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        font-size: 12px; 
+                        cursor: pointer;
+                        font-weight: bold;
+                        min-height: 44px;
+                        touch-action: manipulation;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        min-width: 120px;
+                    ">Export Results</button>
+                </div>
+                
+                <div style="
+                    text-align: center; 
+                    font-size: 11px; 
+                    color: #666; 
+                    margin-top: 10px;
+                    padding: 8px;
+                    background: rgba(52, 152, 219, 0.05);
+                    border-radius: 6px;
+                ">
+                    Duplicate Bridge: Tournament scoring with board-by-board comparison
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        // Setup handlers after DOM insertion
+        setTimeout(() => {
+            this.setupResultsPopupHandlers();
+        }, 100);
+    }
+
+    /**
+     * Generate board results HTML content
+     */
+    generateBoardResultsHTML() {
+        // Display results for each completed board
+        const completedBoards = Object.values(this.session.boards)
+            .filter(board => board.completed && board.results && board.results.length > 0)
+            .sort((a, b) => a.number - b.number);
+        
+        if (completedBoards.length === 0) {
+            return `
+                <div style="padding: 20px; text-align: center; color: #7f8c8d;">
+                    <p>No completed boards with results yet.</p>
+                    <p>Enter traveler results to see detailed scoring.</p>
+                </div>
+            `;
+        }
+
+        let html = '';
+        
+        completedBoards.forEach((board, boardIndex) => {
+            const vulnColor = this.getVulnerabilityColor(board.vulnerability);
+            const vulnDisplay = { 'None': 'None', 'NS': 'NS', 'EW': 'EW', 'Both': 'All' };
+            
+            html += `
+                <div style="
+                    background: rgba(52, 152, 219, 0.08);
+                    margin: 8px;
+                    padding: 12px;
+                    border-radius: 8px;
+                    border-left: 4px solid #3498db;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                ">
+                    <div style="
+                        font-weight: bold; 
+                        color: #2c3e50; 
+                        margin-bottom: 8px; 
+                        font-size: 14px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <span>Board ${board.number}</span>
+                        <span style="
+                            color: ${vulnColor}; 
+                            font-size: 12px;
+                            background: rgba(255,255,255,0.8);
+                            padding: 2px 8px;
+                            border-radius: 12px;
+                            border: 1px solid ${vulnColor};
+                        ">
+                            ${vulnDisplay[board.vulnerability]} Vul
+                        </span>
+                    </div>
+            `;
+            
+            // Show results for this board
+            const resultsWithScores = board.results.filter(result => 
+                result.nsScore !== null || result.ewScore !== null
+            );
+            
+            if (resultsWithScores.length === 0) {
+                html += `
+                    <div style="color: #7f8c8d; font-style: italic; font-size: 11px;">
+                        No scored results yet
+                    </div>
+                `;
+            } else {
+                resultsWithScores.forEach((result, resultIndex) => {
+                    const contractStr = result.level && result.suit ? 
+                        `${result.level}${result.suit}${result.double || ''}` : 'No contract';
+                    const declarerStr = result.declarer || '?';
+                    
+                    const nsScore = result.nsScore || 0;
+                    const ewScore = result.ewScore || 0;
+                    const topScore = Math.max(nsScore, ewScore);
+                    
+                    html += `
+                        <div style="
+                            border-bottom: 1px solid #e8e8e8; 
+                            padding: 8px 4px; 
+                            background: ${resultIndex % 2 === 0 ? 'rgba(248,249,250,0.8)' : 'rgba(255,255,255,0.9)'};
+                            margin: 2px 0;
+                            border-radius: 4px;
+                            font-size: 11px;
+                        ">
+                            <div style="
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: center;
+                                flex-wrap: wrap;
+                                gap: 8px;
+                            ">
+                                <div style="flex: 1; min-width: 120px;">
+                                    <div style="font-weight: bold; color: #2c3e50;">
+                                        Pairs ${result.nsPair} vs ${result.ewPair}
+                                    </div>
+                                    <div style="color: #555; font-size: 10px;">
+                                        ${contractStr} by ${declarerStr}
+                                    </div>
+                                </div>
+                                <div style="
+                                    text-align: right;
+                                    min-width: 80px;
+                                    font-size: 11px;
+                                ">
+                                    <div style="
+                                        display: flex;
+                                        gap: 12px;
+                                        justify-content: flex-end;
+                                    ">
+                                        <div style="
+                                            color: ${nsScore > 0 ? '#27ae60' : '#95a5a6'};
+                                            font-weight: ${nsScore === topScore && nsScore > 0 ? 'bold' : 'normal'};
+                                        ">
+                                            NS: ${nsScore}
+                                        </div>
+                                        <div style="
+                                            color: ${ewScore > 0 ? '#e74c3c' : '#95a5a6'};
+                                            font-weight: ${ewScore === topScore && ewScore > 0 ? 'bold' : 'normal'};
+                                        ">
+                                            EW: ${ewScore}
+                                        </div>
+                                    </div>
+                                    ${result.matchpoints ? `
+                                        <div style="
+                                            font-size: 9px; 
+                                            color: #7f8c8d; 
+                                            margin-top: 2px;
+                                        ">
+                                            MP: ${result.matchpoints.ns}/${result.matchpoints.ew}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `</div>`;
+        });
+        
+        return html;
+    }
+
+    /**
+     * Setup results popup handlers - COMPLETE PIXEL 9A VERSION
+     */
+    setupResultsPopupHandlers() {
+        // Create unified handler factory
+        const createResultsHandler = (action) => {
+            return (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const btn = e.target;
+                btn.style.transform = 'scale(0.95)';
+                btn.style.opacity = '0.8';
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([30]);
+                }
+                
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                    btn.style.opacity = '1';
+                    
+                    if (action === 'back') {
+                        this.closeResultsPopup();
+                    } else if (action === 'export') {
+                        this.exportResults();
+                    } else if (action === 'refresh-scroll') {
+                        this.refreshResultsScroll();
+                    }
+                }, 100);
+            };
+        };
+        
+        // Setup all buttons
+        const buttons = [
+            { id: 'results-back-btn', action: 'back' },
+            { id: 'results-export-btn', action: 'export' },
+            { id: 'results-refresh-scroll-btn', action: 'refresh-scroll' }
+        ];
+        
+        buttons.forEach(({ id, action }) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                const handler = createResultsHandler(action);
+                btn.addEventListener('click', handler, { passive: false });
+                btn.addEventListener('touchend', handler, { passive: false });
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    btn.style.transform = 'scale(0.95)';
+                    btn.style.opacity = '0.8';
+                }, { passive: false });
+            }
+        });
+        
+        // Setup scroll container with forced properties
+        const container = document.getElementById('results-scroll-container');
+        if (container) {
+            container.style.height = '300px';
+            container.style.overflowY = 'scroll';
+            container.style.overflowX = 'hidden';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            container.style.overscrollBehavior = 'contain';
+            
+            container.offsetHeight; // Force layout
+        }
+    }
+
+    /**
+     * Close results popup
+     */
+    closeResultsPopup() {
+        const popup = document.getElementById('duplicateResultsPopup');
+        if (popup) {
+            popup.remove();
+        }
+    }
+
+    /**
+     * Refresh results scroll container - ENHANCED VERSION
+     */
+    refreshResultsScroll() {
+        const container = document.getElementById('results-scroll-container');
+        if (container) {
+            // Visual feedback
+            container.style.border = '2px solid #27ae60';
+            container.style.transition = 'border-color 0.3s ease';
+            
+            // Force complete scroll reset
+            container.scrollTop = 0;
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+            setTimeout(() => {
+                container.scrollTop = 0;
+            }, 150);
+            
+            // Reapply all scroll properties aggressively
+            container.style.height = '300px';
+            container.style.overflowY = 'scroll';
+            container.style.overflowX = 'hidden';
+            container.style.webkitOverflowScrolling = 'touch';
+            container.style.transform = 'translateZ(0)';
+            container.style.willChange = 'scroll-position';
+            container.style.overscrollBehavior = 'contain';
+            container.style.position = 'relative';
+            
+            // Force layout recalculation
+            container.offsetHeight;
+            
+            // Reset border after feedback
+            setTimeout(() => {
+                container.style.border = '1px solid #bdc3c7';
+            }, 600);
+        }
+    }
+
+    /**
+     * Simple popup for error messages
+     */
+    showDirectPopup(title, content) {
+        const popup = document.createElement('div');
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        popup.innerHTML = `
+            <div style="
+                background: white; padding: 20px; border-radius: 8px; 
+                max-width: 90%; color: #2c3e50; text-align: center;
+            ">
+                <h3>${title}</h3>
+                ${content}
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: #3498db; color: white; border: none; 
+                    padding: 10px 20px; border-radius: 6px; margin-top: 15px;
+                    cursor: pointer; min-height: 44px;
+                ">Close</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+    }
+
+    /**
+     * Export results in text format
+     */
+    exportResults() {
+        const results = this.generateResultsText();
+        
+        const blob = new Blob([results], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `duplicate-bridge-results-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.
+// END SECTION SEVEN
+// SECTION EIGHT
 /**
      * Handle back navigation with state management
      */
