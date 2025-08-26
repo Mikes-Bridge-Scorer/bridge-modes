@@ -2472,65 +2472,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        this.bridgeApp.showMessage('Results exported successfully!', 'success');
-    }
-
-    /**
-     * Generate results text for export
-     */
-    generateResultsText() {
-        const movement = this.session.movement;
-        const completionStatus = this.getCompletionStatus();
-        
-        let text = `DUPLICATE BRIDGE RESULTS\n`;
-        text += `Generated: ${new Date().toLocaleString()}\n`;
-        text += `========================================\n\n`;
-        
-        text += `SESSION DETAILS:\n`;
-        text += `Movement: ${movement.description}\n`;
-        text += `Pairs: ${movement.pairs}\n`;
-        text += `Tables: ${movement.tables}\n`;
-        text += `Total Boards: ${movement.totalBoards}\n`;
-        text += `Completed: ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)\n\n`;
-        
-        text += `BOARD RESULTS:\n\n`;
-        
-        const completedBoards = Object.values(this.session.boards)
-            .filter(board => board.completed && board.results)
-            .sort((a, b) => a.number - b.number);
-        
-        completedBoards.forEach(board => {
-            text += `Board ${board.number} (${board.vulnerability} Vulnerable):\n`;
-            text += `${'='.repeat(30)}\n`;
-            
-            const resultsWithScores = board.results.filter(result => 
-                result.nsScore !== null || result.ewScore !== null
-            );
-            
-            if (resultsWithScores.length === 0) {
-                text += `No results entered\n\n`;
-            } else {
-                resultsWithScores.forEach(result => {
-                    const contract = result.level && result.suit ? 
-                        `${result.level}${result.suit}${result.double || ''}` : 'No contract';
-                    const declarer = result.declarer || '?';
-                    
-                    text += `  Pairs ${result.nsPair} vs ${result.ewPair}: `;
-                    text += `${contract} by ${declarer}\n`;
-                    text += `    Scores: NS ${result.nsScore || 0}, EW ${result.ewScore || 0}\n`;
-                    
-                    if (result.matchpoints) {
-                        text += `    Matchpoints: NS ${result.matchpoints.ns}, EW ${result.matchpoints.ew}\n`;
-                    }
-                    text += `\n`;
-                });
-            }
-        });
-        
-        return text;
-    }
-// END SECTION SEVENrevokeObjectURL(url);
-        
         this.bridgeApp.showMessage('Standings exported successfully!', 'success');
     }
 
@@ -2998,7 +2939,65 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.
+        URL.revokeObjectURL(url);
+        
+        this.bridgeApp.showMessage('Results exported successfully!', 'success');
+    }
+
+    /**
+     * Generate results text for export
+     */
+    generateResultsText() {
+        const movement = this.session.movement;
+        const completionStatus = this.getCompletionStatus();
+        
+        let text = `DUPLICATE BRIDGE RESULTS\n`;
+        text += `Generated: ${new Date().toLocaleString()}\n`;
+        text += `========================================\n\n`;
+        
+        text += `SESSION DETAILS:\n`;
+        text += `Movement: ${movement.description}\n`;
+        text += `Pairs: ${movement.pairs}\n`;
+        text += `Tables: ${movement.tables}\n`;
+        text += `Total Boards: ${movement.totalBoards}\n`;
+        text += `Completed: ${completionStatus.completed}/${completionStatus.total} (${completionStatus.percentage}%)\n\n`;
+        
+        text += `BOARD RESULTS:\n\n`;
+        
+        const completedBoards = Object.values(this.session.boards)
+            .filter(board => board.completed && board.results)
+            .sort((a, b) => a.number - b.number);
+        
+        completedBoards.forEach(board => {
+            text += `Board ${board.number} (${board.vulnerability} Vulnerable):\n`;
+            text += `${'='.repeat(30)}\n`;
+            
+            const resultsWithScores = board.results.filter(result => 
+                result.nsScore !== null || result.ewScore !== null
+            );
+            
+            if (resultsWithScores.length === 0) {
+                text += `No results entered\n\n`;
+            } else {
+                resultsWithScores.forEach(result => {
+                    const contract = result.level && result.suit ? 
+                        `${result.level}${result.suit}${result.double || ''}` : 'No contract';
+                    const declarer = result.declarer || '?';
+                    
+                    text += `  Pairs ${result.nsPair} vs ${result.ewPair}: `;
+                    text += `${contract} by ${declarer}\n`;
+                    text += `    Scores: NS ${result.nsScore || 0}, EW ${result.ewScore || 0}\n`;
+                    
+                    if (result.matchpoints) {
+                        text += `    Matchpoints: NS ${result.matchpoints.ns}, EW ${result.matchpoints.ew}\n`;
+                    }
+                    text += `\n`;
+                });
+            }
+        });
+        
+        return text;
+    }
 // END SECTION SEVEN
 // SECTION EIGHT
 /**
