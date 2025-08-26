@@ -2778,98 +2778,62 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Setup results popup handlers - PIXEL 9A COMPATIBLE VERSION
+     * Setup results popup handlers - KITCHEN.JS PROVEN PATTERN
      */
     setupResultsPopupHandlers() {
-        // Setup scroll refresh button
-        const refreshBtn = document.getElementById('results-refresh-scroll-btn');
-        if (refreshBtn) {
-            const refreshHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-                refreshBtn.style.background = '#c0392b';
-                
-                setTimeout(() => {
-                    this.refreshResultsScroll();
-                    refreshBtn.style.transform = 'scale(1)';
-                    refreshBtn.style.opacity = '1';
-                    refreshBtn.style.background = '#e74c3c';
-                }, 100);
-            };
+        // Use the same timeout delay as kitchen.js
+        setTimeout(() => {
+            const modalBtns = document.querySelectorAll('#duplicateResultsPopup button');
             
-            refreshBtn.addEventListener('click', refreshHandler, { passive: false });
-            refreshBtn.addEventListener('touchend', refreshHandler, { passive: false });
-            
-            refreshBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                refreshBtn.style.transform = 'scale(0.95)';
-                refreshBtn.style.opacity = '0.8';
-                refreshBtn.style.background = '#c0392b';
-            }, { passive: false });
-        }
-        
-        // Setup back button
-        const backBtn = document.getElementById('results-back-btn');
-        if (backBtn) {
-            const backHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            modalBtns.forEach((btn) => {
+                const btnId = btn.id;
+                let action = '';
                 
-                backBtn.style.transform = 'scale(0.95)';
-                backBtn.style.opacity = '0.8';
-                backBtn.style.background = '#2980b9';
+                if (btnId === 'results-refresh-scroll-btn') action = 'refresh-scroll';
+                else if (btnId === 'results-back-btn') action = 'back';
+                else if (btnId === 'results-export-btn') action = 'export';
                 
-                setTimeout(() => {
-                    this.closeResultsPopup();
-                    backBtn.style.transform = 'scale(1)';
-                    backBtn.style.opacity = '1';
-                    backBtn.style.background = '#3498db';
-                }, 100);
-            };
-            
-            backBtn.addEventListener('click', backHandler, { passive: false });
-            backBtn.addEventListener('touchend', backHandler, { passive: false });
-            
-            backBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                backBtn.style.transform = 'scale(0.95)';
-                backBtn.style.opacity = '0.8';
-                backBtn.style.background = '#2980b9';
-            }, { passive: false });
-        }
-        
-        // Setup export button
-        const exportBtn = document.getElementById('results-export-btn');
-        if (exportBtn) {
-            const exportHandler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                exportBtn.style.transform = 'scale(0.95)';
-                exportBtn.style.opacity = '0.8';
-                exportBtn.style.background = '#229954';
-                
-                setTimeout(() => {
-                    this.exportResults();
-                    exportBtn.style.transform = 'scale(1)';
-                    exportBtn.style.opacity = '1';
-                    exportBtn.style.background = '#27ae60';
-                }, 100);
-            };
-            
-            exportBtn.addEventListener('click', exportHandler, { passive: false });
-            exportBtn.addEventListener('touchend', exportHandler, { passive: false });
-            
-            exportBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                exportBtn.style.transform = 'scale(0.95)';
-                exportBtn.style.opacity = '0.8';
-                exportBtn.style.background = '#229954';
-            }, { passive: false });
-        }
+                if (action) {
+                    // Handle action function
+                    const handleAction = (actionType) => {
+                        if (actionType === 'back') {
+                            this.closeResultsPopup();
+                        } else if (actionType === 'export') {
+                            this.exportResults();
+                        } else if (actionType === 'refresh-scroll') {
+                            this.refreshResultsScroll();
+                        }
+                    };
+                    
+                    // Kitchen.js pattern: both click and touchend with passive: false
+                    ['click', 'touchend'].forEach(eventType => {
+                        btn.addEventListener(eventType, (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAction(action);
+                        }, { passive: false });
+                    });
+                    
+                    // Visual feedback on touchstart
+                    btn.addEventListener('touchstart', (e) => {
+                        const originalBg = btn.style.background;
+                        if (btnId === 'results-refresh-scroll-btn') {
+                            btn.style.background = '#c0392b';
+                        } else if (btnId === 'results-back-btn') {
+                            btn.style.background = '#2980b9';
+                        } else if (btnId === 'results-export-btn') {
+                            btn.style.background = '#229954';
+                        }
+                        btn.style.transform = 'scale(0.95)';
+                        
+                        setTimeout(() => {
+                            btn.style.background = originalBg;
+                            btn.style.transform = 'scale(1)';
+                        }, 150);
+                    }, { passive: true });
+                }
+            });
+        }, 50); // Kitchen.js uses 50ms timeout
         
         // Setup scroll container with forced properties
         const container = document.getElementById('results-scroll-container');
@@ -3037,8 +3001,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         return text;
     }
-// END SECTION SEVEN
-// SECTION EIGHT
+// END SECTION SEVEN// SECTION EIGHT
 /**
      * Handle back navigation with state management
      */
