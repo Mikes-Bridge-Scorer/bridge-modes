@@ -1,78 +1,153 @@
-// Smart Service Worker with Version Control
-// This ensures users get updates while still benefiting from caching
+// Bridge Modes Calculator - COMPLETE Offline Service Worker
+// Version: 2025-02-12-FINAL - All files included for cruise use
+// This caches EVERYTHING needed for 100% offline operation
 
-const CACHE_VERSION = 'bridge-modes-v2025-01-31-002'; // Updated version
+const CACHE_VERSION = 'bridge-modes-v2025-02-12-complete';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
-// Files that should always be cached
+// COMPLETE LIST: Every file your app needs to work offline
 const STATIC_FILES = [
+    // Core app files
     './',
     './index.html',
+    './manifest.json',
     './styles.css',
+    './favicon.ico',
+    
+    // Main JavaScript files (root level)
     './app.js',
     './license.js',
-    './update-manager.js'
+    './update-manager.js',
+    './duplicateTemplates.js',
+    
+    // Bridge mode modules (in js/bridge-modes/ folder)
+    './js/bridge-modes/base-mode.js',
+    './js/bridge-modes/kitchen.js',
+    './js/bridge-modes/bonus.js',
+    './js/bridge-modes/chicago.js',
+    './js/bridge-modes/rubber.js',
+    './js/bridge-modes/duplicate.js',
+    './js/bridge-modes/scoring.js',
+    './js/bridge-modes/ui-controller.js',
+    './js/bridge-modes/game-state.js'
 ];
 
-// Files that should be checked for updates frequently
+// Optional files (won't fail if missing)
+const OPTIONAL_FILES = [
+    './assets/icon-192.png',
+    './assets/icon-512.png'
+];
+
+// Files that should check for updates when online
 const DYNAMIC_FILES = [
     './app.js',
     './license.js',
-    './update-manager.js'
+    './update-manager.js',
+    './duplicateTemplates.js',
+    './js/bridge-modes/base-mode.js',
+    './js/bridge-modes/kitchen.js',
+    './js/bridge-modes/bonus.js',
+    './js/bridge-modes/chicago.js',
+    './js/bridge-modes/rubber.js',
+    './js/bridge-modes/duplicate.js',
+    './js/bridge-modes/scoring.js',
+    './js/bridge-modes/ui-controller.js',
+    './js/bridge-modes/game-state.js'
 ];
 
+// Install event - cache all files for offline use
 self.addEventListener('install', event => {
-    console.log('🔧 Service Worker installing version:', CACHE_VERSION);
+    console.log('🔧 Service Worker installing:', CACHE_VERSION);
+    console.log('📦 Will cache', STATIC_FILES.length, 'required files');
     
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then(cache => {
-                console.log('📦 Caching static assets');
-                return cache.addAll(STATIC_FILES);
+                console.log('📦 Caching required files...');
+                
+                // Cache required files one by one to see which succeed/fail
+                return Promise.all(
+                    STATIC_FILES.map(file => 
+                        cache.add(file)
+                            .then(() => {
+                                console.log('  ✅', file);
+                                return true;
+                            })
+                            .catch(err => {
+                                console.error('  ❌ FAILED:', file, err.message);
+                                throw new Error(`Required file missing: ${file}`);
+                            })
+                    )
+                )
+                .then(() => {
+                    console.log('✅ All required files cached!');
+                    
+                    // Try optional files (don't fail if missing)
+                    console.log('📦 Caching optional files...');
+                    return Promise.allSettled(
+                        OPTIONAL_FILES.map(file =>
+                            cache.add(file)
+                                .then(() => console.log('  ✅ Optional:', file))
+                                .catch(() => console.log('  ⚠️  Optional file not found:', file))
+                        )
+                    );
+                });
             })
             .then(() => {
-                console.log('✅ Static assets cached');
-                // Force immediate activation of new service worker
+                console.log('🚀 Service Worker installation complete');
+                console.log('📡 App ready for offline use');
+                // Force immediate activation
                 return self.skipWaiting();
             })
             .catch(error => {
-                console.error('❌ Cache failed:', error);
+                console.error('❌ Installation FAILED:', error);
+                console.error('⚠️  App will NOT work offline!');
+                throw error;
             })
     );
 });
 
+// Activate event - clean up old caches
 self.addEventListener('activate', event => {
-    console.log('🔄 Service Worker activating version:', CACHE_VERSION);
+    console.log('🔄 Service Worker activating:', CACHE_VERSION);
     
     event.waitUntil(
         caches.keys()
             .then(cacheNames => {
-                return Promise.all(
-                    cacheNames.map(cacheName => {
-                        // Delete old caches when version changes
-                        if (cacheName.startsWith('bridge-modes-v') && 
-                            cacheName !== STATIC_CACHE && 
-                            cacheName !== DYNAMIC_CACHE) {
-                            console.log('🗑️ Deleting old cache:', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
+                // Delete old cache versions
+                const deletePromises = cacheNames
+                    .filter(cacheName => 
+                        cacheName.startsWith('bridge-modes-v') && 
+                        cacheName !== STATIC_CACHE && 
+                        cacheName !== DYNAMIC_CACHE
+                    )
+                    .map(cacheName => {
+                        console.log('🗑️  Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    });
+                
+                return Promise.all(deletePromises);
             })
             .then(() => {
-                console.log('✅ Service Worker activated');
-                // Take control of all pages immediately
+                console.log('✅ Old caches cleaned up');
+                console.log('🌐 Taking control of all pages...');
+                // Take control immediately
                 return self.clients.claim();
+            })
+            .then(() => {
+                console.log('✅ Service Worker active and in control');
+                console.log('🎉 App fully offline-capable!');
             })
     );
 });
 
+// Fetch event - serve from cache when offline
 self.addEventListener('fetch', event => {
     const request = event.request;
     const url = new URL(request.url);
     
-    // Only handle requests to your domain
+    // Only handle same-origin requests
     if (url.origin !== location.origin) {
         return;
     }
@@ -82,64 +157,157 @@ self.addEventListener('fetch', event => {
         return;
     }
     
-    // Check if this is a dynamic file that should be updated frequently
-    const isDynamicFile = DYNAMIC_FILES.some(file => url.pathname.endsWith(file.replace('./', '')));
+    // Clean up the pathname for matching
+    let pathname = url.pathname;
+    
+    // Check if this is a dynamic file (JavaScript that might update)
+    const isDynamicFile = DYNAMIC_FILES.some(file => {
+        const cleanFile = file.replace('./', '');
+        return pathname.endsWith(cleanFile) || pathname.includes(cleanFile);
+    });
     
     if (isDynamicFile) {
-        // For dynamic files: Network first, then cache
+        // NETWORK FIRST for JavaScript files
+        // Try to get fresh version, fall back to cache if offline
         event.respondWith(
             fetch(request)
                 .then(response => {
-                    // If network fetch succeeds, update cache and return response
-                    if (response.ok) {
+                    // Got fresh version
+                    if (response && response.ok) {
+                        console.log('🌐 Fresh from network:', pathname);
+                        // Update cache with new version
                         const responseClone = response.clone();
                         caches.open(DYNAMIC_CACHE)
                             .then(cache => cache.put(request, responseClone))
-                            .catch(error => console.log('Cache put failed:', error));
+                            .catch(err => console.log('Cache update failed:', err));
                     }
                     return response;
                 })
-                .catch(() => {
-                    // If network fails, try cache
-                    return caches.match(request);
+                .catch(error => {
+                    // Network failed (OFFLINE) - use cache
+                    console.log('📡 OFFLINE - serving from cache:', pathname);
+                    return caches.match(request)
+                        .then(response => {
+                            if (response) {
+                                console.log('💾 Cache hit:', pathname);
+                                return response;
+                            }
+                            
+                            // Try without query parameters
+                            const urlWithoutQuery = new URL(request.url);
+                            urlWithoutQuery.search = '';
+                            
+                            return caches.match(urlWithoutQuery.toString())
+                                .then(response => {
+                                    if (response) {
+                                        console.log('💾 Cache hit (no query):', pathname);
+                                        return response;
+                                    }
+                                    
+                                    console.error('❌ File not in cache:', pathname);
+                                    throw error;
+                                });
+                        });
                 })
         );
     } else {
-        // For static files: Cache first, then network
+        // CACHE FIRST for static files (HTML, CSS, images)
         event.respondWith(
             caches.match(request)
                 .then(response => {
                     if (response) {
+                        // Found in cache - instant!
+                        console.log('⚡ Cache hit:', pathname);
                         return response;
                     }
+                    
+                    // Not in cache - fetch from network
+                    console.log('🌐 Fetching from network:', pathname);
                     return fetch(request)
                         .then(response => {
-                            if (response.ok) {
+                            if (response && response.ok) {
+                                // Cache the new file
                                 const responseClone = response.clone();
                                 caches.open(STATIC_CACHE)
                                     .then(cache => cache.put(request, responseClone))
-                                    .catch(error => console.log('Cache put failed:', error));
+                                    .catch(err => console.log('Cache put failed:', err));
                             }
                             return response;
+                        })
+                        .catch(error => {
+                            console.error('❌ Fetch failed:', pathname, error.message);
+                            return new Response('Offline - file not cached', {
+                                status: 503,
+                                statusText: 'Service Unavailable',
+                                headers: { 'Content-Type': 'text/plain' }
+                            });
                         });
                 })
         );
     }
 });
 
-// Listen for messages from the main app
+// Handle messages from the app
 self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        console.log('🔄 Received skip waiting message');
+    const data = event.data;
+    
+    if (data && data.type === 'SKIP_WAITING') {
+        console.log('🔄 Skip waiting - activating new version now');
         self.skipWaiting();
     }
     
-    if (event.data && event.data.type === 'GET_VERSION') {
+    if (data && data.type === 'GET_VERSION') {
+        console.log('📋 Version info requested');
         event.ports[0].postMessage({
             type: 'VERSION_INFO',
-            version: CACHE_VERSION
+            version: CACHE_VERSION,
+            filesCached: STATIC_FILES.length
         });
+    }
+    
+    if (data && data.type === 'CHECK_CACHED_FILES') {
+        console.log('📋 Checking cached files...');
+        caches.open(STATIC_CACHE)
+            .then(cache => cache.keys())
+            .then(requests => {
+                const cachedUrls = requests.map(req => req.url);
+                console.log('📦 Cached files:', cachedUrls.length);
+                event.ports[0].postMessage({
+                    type: 'CACHED_FILES',
+                    files: cachedUrls,
+                    count: cachedUrls.length
+                });
+            })
+            .catch(error => {
+                console.error('Error checking cache:', error);
+            });
+    }
+    
+    if (data && data.type === 'CLEAR_CACHE') {
+        console.log('🗑️  Clearing all caches...');
+        event.waitUntil(
+            caches.keys()
+                .then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => {
+                            console.log('🗑️  Deleting:', cacheName);
+                            return caches.delete(cacheName);
+                        })
+                    );
+                })
+                .then(() => {
+                    console.log('✅ All caches cleared');
+                    if (event.ports && event.ports[0]) {
+                        event.ports[0].postMessage({ type: 'CACHE_CLEARED' });
+                    }
+                })
+        );
     }
 });
 
-console.log('🚀 Bridge Modes Service Worker loaded - Version:', CACHE_VERSION);
+// Service worker activated
+console.log('🚀 Bridge Modes Service Worker loaded');
+console.log('📦 Version:', CACHE_VERSION);
+console.log('📁 Will cache', STATIC_FILES.length, 'required files');
+console.log('📁 Plus', OPTIONAL_FILES.length, 'optional files');
+console.log('✅ Ready for cruise-ready offline operation!');
