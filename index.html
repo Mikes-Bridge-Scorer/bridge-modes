@@ -331,6 +331,38 @@
             }
             return data;
         };
+
+        // SERVICE WORKER REGISTRATION FOR OFFLINE SUPPORT
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                        mobileLog('✅ SW registered - offline support enabled');
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('🔄 Service Worker update found');
+                            mobileLog('🔄 App update available');
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('✨ New version ready');
+                                    mobileLog('✨ New version ready - reload to update');
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('❌ Service Worker registration failed:', error);
+                        mobileLog('⚠️ SW registration failed: ' + error.message);
+                    });
+            });
+        } else {
+            console.warn('⚠️ Service Workers not supported');
+            mobileLog('⚠️ Offline mode not supported on this device');
+        }
     </script>
 </body>
 </html>
