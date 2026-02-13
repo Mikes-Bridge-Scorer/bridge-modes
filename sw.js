@@ -1,8 +1,8 @@
 // Bridge Modes Calculator - COMPLETE Offline Service Worker
-// Version: 2025-02-12-FINAL - All files included for cruise use
+// Version: 2025-02-13-TABLE-CARDS - All files included for cruise use
 // This caches EVERYTHING needed for 100% offline operation
 
-const CACHE_VERSION = 'bridge-modes-v2025-02-12-complete';
+const CACHE_VERSION = 'bridge-modes-v2025-02-13-table-cards';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
@@ -30,7 +30,9 @@ const STATIC_FILES = [
     './js/bridge-modes/duplicate.js',
     './js/bridge-modes/scoring.js',
     './js/bridge-modes/ui-controller.js',
-    './js/bridge-modes/game-state.js'
+    './js/bridge-modes/game-state.js',
+    './js/bridge-modes/enhanced-movements.js',
+    './js/bridge-modes/table-card-generator.js'
 ];
 
 // Optional files (won't fail if missing)
@@ -53,7 +55,9 @@ const DYNAMIC_FILES = [
     './js/bridge-modes/duplicate.js',
     './js/bridge-modes/scoring.js',
     './js/bridge-modes/ui-controller.js',
-    './js/bridge-modes/game-state.js'
+    './js/bridge-modes/game-state.js',
+    './js/bridge-modes/enhanced-movements.js',
+    './js/bridge-modes/table-card-generator.js'
 ];
 
 // Install event - cache all files for offline use
