@@ -3114,9 +3114,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         switch (this.inputState) {
             case 'pairs_setup':
-                // Dynamically show all available movements
-                const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
-                return availablePairs;
+                // Return button values that map to pair counts
+                // 4-9 direct, 0=10, NT=12, X/XX=14
+                return ['4', '5', '6', '7', '8', '9', '0', 'NT', 'X/XX', 'BACK'];
                 
             case 'movement_confirm':
                 return ['1', '2', '3', 'BACK'];
@@ -3201,14 +3201,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         ${movementInfo}
                     </div>
                 </div>
-                <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
+                <div style="text-align: center; color: #2c3e50; font-size: 14px; margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 6px; border: 2px solid #ffc107;">
                     ⚠️ = Includes sit-out rounds<br>
-                    <strong>Button Guide:</strong> 4-9=Direct, 0=10 pairs, NT=12 pairs, X/XX=14 pairs<br>
+                    <strong style="font-size: 15px;">Button Guide:</strong><br>
+                    <span style="font-size: 14px;">4-9 (direct) • 0 = 10 pairs • NT = 12 pairs • X/XX = 14 pairs</span>
+                </div>
+                <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
                     Each pair plays all boards exactly once<br>
                     Results compared using matchpoint scoring
                 </div>
             </div>
-            <div class="current-state">Press: 4-9 or 0 (10 pairs), NT (12 pairs), X/XX (14 pairs)</div>
+            <div class="current-state" style="font-size: 15px; font-weight: 600;">Press: 4-9, 0 (10), NT (12), or X/XX (14)</div>
         `;
     }
 
