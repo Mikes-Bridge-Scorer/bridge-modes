@@ -1,6 +1,6 @@
 /**
- * Table Card Generator - FINAL VERSION
- * Purple gradient headers + Movement instructions + Bridge Modes styling
+ * Table Card Generator - 3 CARDS PER ROW + COLOR PRINTING
+ * Purple gradient headers + Movement instructions + Smaller size for A4 landscape
  */
 
 class TableCardGenerator {
@@ -15,7 +15,7 @@ class TableCardGenerator {
             gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         };
         
-        console.log('🎴 Table Card Generator FINAL loaded');
+        console.log('🎴 Table Card Generator (3 per row) loaded');
     }
     
     generateTableCards(movement) {
@@ -40,95 +40,104 @@ class TableCardGenerator {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
-            padding: 20px;
+            padding: 15px;
             background: #f5f5f5;
         }
         
         .no-print {
-            margin-bottom: 20px;
-            padding: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         
         .no-print h2 {
             color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 20px;
+            margin-bottom: 8px;
+            font-size: 18px;
         }
         
         .no-print p {
-            margin: 5px 0;
+            margin: 4px 0;
             color: #666;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .cards-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
+            gap: 12px;
+            justify-content: flex-start;
         }
         
         .table-card {
-            width: 340px;
+            width: 240px;
             background: white;
             border: 2px solid #2c3e50;
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
             page-break-inside: avoid;
-            page-break-after: always;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            /* Force color printing */
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
         }
         
         .card-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 16px;
             text-align: center;
+            /* Force color printing */
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
         
         .movement-title {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             opacity: 0.95;
             letter-spacing: 0.5px;
         }
         
         .table-number {
-            font-size: 48px;
+            font-size: 40px;
             font-weight: 800;
             letter-spacing: -1px;
-            margin: 5px 0;
+            margin: 4px 0;
         }
         
         .card-body {
-            padding: 20px;
+            padding: 14px;
         }
         
         .rounds-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .rounds-table th {
             background: #34495e;
             color: white;
-            padding: 10px 6px;
-            font-size: 12px;
+            padding: 8px 4px;
+            font-size: 11px;
             font-weight: 700;
             border: 1px solid #bdc3c7;
             text-align: center;
+            /* Force color printing */
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
         
         .rounds-table td {
-            padding: 10px 8px;
+            padding: 8px 6px;
             text-align: center;
             border: 1px solid #bdc3c7;
-            font-size: 13px;
+            font-size: 12px;
         }
         
         .rounds-table tr:nth-child(even) {
@@ -152,43 +161,71 @@ class TableCardGenerator {
         
         .movement-instructions {
             border-top: 2px solid #e0e0e0;
-            padding-top: 12px;
-            font-size: 10px;
-            line-height: 1.5;
+            padding-top: 10px;
+            font-size: 9px;
+            line-height: 1.4;
             color: #555;
         }
         
         .instructions-title {
             font-weight: 700;
-            margin-bottom: 6px;
-            font-size: 11px;
+            margin-bottom: 4px;
+            font-size: 10px;
             color: #2c3e50;
         }
         
         .card-footer {
             text-align: center;
-            padding: 12px;
+            padding: 10px;
             background: #f8f9fa;
             border-top: 1px solid #e0e0e0;
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
             font-weight: 600;
         }
         
         @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+            
             body { 
                 padding: 0;
                 background: white;
             }
-            .no-print { display: none; }
-            .cards-container { display: block; }
-            .table-card {
-                margin: 0 auto 20px;
-                box-shadow: none;
-                page-break-after: always;
+            
+            .no-print { 
+                display: none; 
             }
-            .table-card:last-child {
-                page-break-after: auto;
+            
+            .cards-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8mm;
+                justify-content: flex-start;
+            }
+            
+            .table-card {
+                width: 88mm;
+                margin: 0;
+                box-shadow: none;
+                page-break-inside: avoid;
+                /* Force color printing */
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .card-header {
+                /* Force color printing */
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .rounds-table th {
+                /* Force color printing */
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
         }
     </style>
@@ -196,8 +233,8 @@ class TableCardGenerator {
 <body>
     <div class="no-print">
         <h2>📋 Movement Cards - ${movement.description}</h2>
-        <p><strong>Print Instructions:</strong> Use Ctrl+P (Windows) or Cmd+P (Mac)</p>
-        <p><strong>Movement:</strong> ${movement.tables} tables × ${movement.rounds} rounds = ${movement.totalBoards} boards</p>
+        <p><strong>Print Instructions:</strong> Make sure "Colour" is selected in print dialog</p>
+        <p><strong>Layout:</strong> 3 cards per row on A4 landscape</p>
         <p><strong>Tip:</strong> Print one card per table and place at each table</p>
     </div>
     
@@ -233,7 +270,7 @@ class TableCardGenerator {
                 <table class="rounds-table">
                     <thead>
                         <tr>
-                            <th>Round</th>
+                            <th>Rd</th>
                             <th>N-S</th>
                             <th>E-W</th>
                             <th>Boards</th>
@@ -260,13 +297,13 @@ class TableCardGenerator {
                 </table>
                 
                 <div class="movement-instructions">
-                    <div class="instructions-title">Movement Information</div>
+                    <div class="instructions-title">Movement Info</div>
                     ${movementInstructions}
                 </div>
             </div>
             
             <div class="card-footer">
-                Place this card at Table ${tableNum}
+                Place at Table ${tableNum}
             </div>
         </div>
 `;
@@ -289,7 +326,7 @@ class TableCardGenerator {
     
     generateMovementInstructions(movement, tableNum) {
         if (movement.type === 'mitchell') {
-            return 'N/S pairs remain at this table. E/W pairs move up one table each round.';
+            return 'N/S stay. E/W move up one table.';
         }
         
         // Howell - detailed movement tracking
@@ -322,16 +359,16 @@ class TableCardGenerator {
                 const ewPos = ewNext.ns === currentRound.ew ? 'N/S' : 'E/W';
                 
                 movements.push(
-                    `Round ${currentRound.round}: ` +
-                    `N/S→Table ${nsNext.table} ${nsPos}, ` +
-                    `E/W→Table ${ewNext.table} ${ewPos}`
+                    `R${currentRound.round}: ` +
+                    `NS→T${nsNext.table}${nsPos}, ` +
+                    `EW→T${ewNext.table}${ewPos}`
                 );
             }
         }
         
         return movements.length > 0 ? 
             movements.join('<br>') : 
-            'See director for movement details';
+            'See director';
     }
     
     generateMitchellInstructions(movement) {
@@ -355,6 +392,8 @@ class TableCardGenerator {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-radius: 12px;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
         .mitchell-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
         .subtitle { font-size: 14px; opacity: 0.9; }
@@ -383,21 +422,12 @@ class TableCardGenerator {
             background: rgba(52, 152, 219, 0.05);
             border-radius: 6px;
         }
-        .boards-section, .summary-section {
-            border: 2px solid #bdc3c7;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .summary-table td {
-            padding: 8px;
-            border: 1px solid #bdc3c7;
-            font-size: 13px;
+        @media print {
+            @page { size: A4; margin: 15mm; }
+            .mitchell-header {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -412,22 +442,12 @@ class TableCardGenerator {
             <div class="instruction-box ns-box">
                 <h2>🔵 North-South (1-${movement.tables})</h2>
                 <p class="big-instruction">STAY AT YOUR TABLE</p>
-                <p>Do not move between rounds</p>
             </div>
             
             <div class="instruction-box ew-box">
                 <h2>🔴 East-West (${movement.tables + 1}-${movement.pairs})</h2>
                 <p class="big-instruction">MOVE UP ONE TABLE</p>
-                <p>Table ${movement.tables} → Table 1</p>
             </div>
-        </div>
-        
-        <div class="summary-section">
-            <h2>Tournament Summary</h2>
-            <table class="summary-table">
-                <tr><td><strong>Tables:</strong> ${movement.tables}</td><td><strong>Pairs:</strong> ${movement.pairs}</td></tr>
-                <tr><td><strong>Rounds:</strong> ${movement.rounds}</td><td><strong>Boards:</strong> ${movement.totalBoards}</td></tr>
-            </table>
         </div>
     </div>
 </body>
@@ -456,4 +476,4 @@ if (typeof window !== 'undefined') {
     window.tableCardGenerator = new TableCardGenerator();
 }
 
-console.log('✅ Table Card Generator FINAL loaded');
+console.log('✅ Table Card Generator (3 per row + color) loaded');
