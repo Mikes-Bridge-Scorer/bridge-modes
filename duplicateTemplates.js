@@ -4,7 +4,13 @@
  */
 class DuplicateTemplates {
     constructor() {
-        this.movements = {
+        // Use ENHANCED_MOVEMENTS if available, otherwise use basic movements
+        if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
+            this.movements = ENHANCED_MOVEMENTS;
+            console.log('✅ DuplicateTemplates using enhanced movements');
+        } else {
+            console.warn('⚠️  ENHANCED_MOVEMENTS not found, using basic movements');
+            this.movements = {
             4: {
                 pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
                 description: "2-table Howell, 12 boards, ~2 hours",
@@ -79,6 +85,7 @@ class DuplicateTemplates {
                 ]
             }
         };
+        }
     }
 
     /**
@@ -112,19 +119,38 @@ class DuplicateTemplates {
      */
     showTravelerTemplates() {
         const popup = this.createPopup('travelerTemplatesPopup', 'Traveler Sheets');
+        
+        // Get all available movements dynamically
+        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        // Generate buttons for each movement
+        let buttonHTML = '';
+        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c', '#f39c12', '#16a085', '#c0392b'];
+        
+        availablePairs.forEach((pairs, index) => {
+            const movement = this.movements[pairs];
+            const color = colors[index % colors.length];
+            const label = movement.hasSitOut ? `${pairs}-Pair Travelers ⚠️` : `${pairs}-Pair Travelers`;
+            buttonHTML += `<button class="template-btn" data-action="downloadTraveler${pairs}" style="background: ${color};">${label}</button>\n`;
+            
+            // Add line break after every 3 buttons
+            if ((index + 1) % 3 === 0) {
+                buttonHTML += '<br><br>';
+            }
+        });
+        
         popup.innerHTML = `
             <div class="popup-content">
                 <h3 style="text-align: center; margin: 0 0 15px 0;">Movement-Specific Traveler Sheets</h3>
                 <p style="text-align: center; margin-bottom: 20px; font-size: 13px; color: #7f8c8d;">
-                    Pre-filled with correct pair numbers for each movement
+                    Pre-filled with correct pair numbers for each movement<br>
+                    ⚠️ = Includes sit-out rounds
                 </p>
                 <div style="text-align: center; margin: 15px 0;">
-                    <button class="template-btn" data-action="downloadTraveler4" style="background: #27ae60;">4-Pair Travelers</button>
-                    <button class="template-btn" data-action="downloadTraveler6" style="background: #3498db;">6-Pair Travelers</button>
-                    <button class="template-btn" data-action="downloadTraveler8" style="background: #e67e22;">8-Pair Travelers</button>
+                    ${buttonHTML}
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <button class="template-btn" data-action="close" style="background: #e74c3c;">Close</button>
+                    <button class="template-btn" data-action="close" style="background: #95a5a6;">Close</button>
                 </div>
             </div>
         `;
@@ -611,15 +637,19 @@ class DuplicateTemplates {
      * Handle traveler template actions
      */
     handleTravelerTemplateAction(action) {
-        const actionMap = {
-            'downloadTraveler4': () => this.downloadMovementTravelers(4),
-            'downloadTraveler6': () => this.downloadMovementTravelers(6),
-            'downloadTraveler8': () => this.downloadMovementTravelers(8),
-            'close': () => this.closePopup('travelerTemplatesPopup')
-        };
-
-        if (actionMap[action]) {
-            actionMap[action]();
+        // Handle close action
+        if (action === 'close') {
+            this.closePopup('travelerTemplatesPopup');
+            return;
+        }
+        
+        // Handle downloadTravelerN actions dynamically
+        if (action.startsWith('downloadTraveler')) {
+            const pairs = parseInt(action.replace('downloadTraveler', ''));
+            if (this.movements[pairs]) {
+                this.downloadMovementTravelers(pairs);
+            }
+            return;
         }
     }
 
