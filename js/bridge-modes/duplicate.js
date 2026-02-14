@@ -43,9 +43,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
     /**
      * Initialize movements for different pair counts
+     * Now uses ENHANCED_MOVEMENTS if available (supports 4-14 pairs)
      */
     initializeMovements() {
-        this.movements = {
+        // Use enhanced movements if available, otherwise fallback to basic
+        if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
+            this.movements = ENHANCED_MOVEMENTS;
+            console.log('✅ Using enhanced movements with', Object.keys(this.movements).length, 'movement options');
+        } else {
+            // Fallback to original 3 movements
+            console.warn('⚠️ Enhanced movements not loaded, using basic 3 movements');
+            this.movements = {
             4: {
                 pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
                 description: "2-table Howell, 12 boards, ~2 hours",
@@ -120,6 +128,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 ]
             }
         };
+        }
     }
 
     /**
@@ -266,9 +275,40 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         if (value === '1') {
             this.showMovementPopup();
         } else if (value === '2') {
+            // Print table cards and start tournament
+            this.printTableCardsAndStart();
+        } else if (value === '3') {
+            // Start tournament without printing
             this.setupBoards();
             this.inputState = 'board_selection';
         }
+    }
+
+    /**
+     * Print table cards and start tournament
+     * NEW METHOD - Added for table card integration
+     */
+    printTableCardsAndStart() {
+        // Check if table card generator is available
+        if (typeof tableCardGenerator === 'undefined') {
+            this.bridgeApp.showMessage('⚠️ Table card generator not loaded. Starting tournament...', 'warning');
+            this.setupBoards();
+            this.inputState = 'board_selection';
+            return;
+        }
+        
+        // Generate and open table cards in new window
+        tableCardGenerator.generateTableCards(this.session.movement);
+        
+        // Show success message
+        this.bridgeApp.showMessage('✅ Table cards ready! Print them and set up your tables', 'success');
+        
+        // Auto-start tournament after brief pause
+        setTimeout(() => {
+            this.setupBoards();
+            this.inputState = 'board_selection';
+            this.updateDisplay();
+        }, 2000);
     }
 
     /**
@@ -3063,10 +3103,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         switch (this.inputState) {
             case 'pairs_setup':
-                return ['4', '6', '8'];
+                // Dynamically show all available movements
+                const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
+                return availablePairs;
                 
             case 'movement_confirm':
-                return ['1', '2', 'BACK'];
+                return ['1', '2', '3', 'BACK'];
                 
             case 'board_selection':
                 const buttons = ['BACK'];
@@ -3116,6 +3158,23 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Get pairs setup display content
      */
     getPairsSetupContent() {
+        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        // Build movement info dynamically
+        let movementInfo = '';
+        availablePairs.forEach(pairs => {
+            const movement = this.movements[pairs];
+            const sitOut = movement.hasSitOut ? ' ⚠️' : '';
+            const typeLabel = movement.type === 'mitchell' ? 'Mitchell' : 'Howell';
+            
+            movementInfo += `
+                <div style="margin-bottom: 10px;">
+                    <strong style="color: #2c3e50;">${pairs} pairs${sitOut}:</strong> 
+                    <span style="color: #7f8c8d;">${movement.tables} tables, ${movement.totalBoards} boards, ${typeLabel}</span>
+                </div>
+            `;
+        });
+        
         return `
             <div class="title-score-row">
                 <div class="mode-title">${this.displayName}</div>
@@ -3128,26 +3187,16 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 <div><strong>How many pairs are playing?</strong></div>
                 <div style="margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; border-left: 4px solid #3498db;">
                     <div style="font-size: 14px; line-height: 1.6;">
-                        <div style="margin-bottom: 10px;">
-                            <strong style="color: #2c3e50;">4 pairs:</strong> 
-                            <span style="color: #7f8c8d;">2 tables, 12 boards, ~2 hours</span>
-                        </div>
-                        <div style="margin-bottom: 10px;">
-                            <strong style="color: #2c3e50;">6 pairs:</strong> 
-                            <span style="color: #7f8c8d;">3 tables, 10 boards, ~1.5 hours</span>
-                        </div>
-                        <div>
-                            <strong style="color: #2c3e50;">8 pairs:</strong> 
-                            <span style="color: #7f8c8d;">4 tables, 14 boards, ~2.5 hours</span>
-                        </div>
+                        ${movementInfo}
                     </div>
                 </div>
                 <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
+                    ⚠️ = Includes sit-out rounds<br>
                     Each pair plays all boards exactly once<br>
                     Results compared using matchpoint scoring
                 </div>
             </div>
-            <div class="current-state">Select pairs: Press 4, 6, or 8</div>
+            <div class="current-state">Select number of pairs</div>
         `;
     }
 
@@ -3157,6 +3206,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     getMovementConfirmContent() {
         const movement = this.session.movement;
         const estimatedTime = movement.description.match(/~(.+)/)?.[1] || '2-3 hours';
+        const hasSitOut = movement.hasSitOut ? ' (1 sit-out per round)' : '';
         
         return `
             <div class="title-score-row">
@@ -3172,23 +3222,36 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         ${movement.description}
                     </div>
                     <div style="font-size: 13px; color: #2c3e50; line-height: 1.5;">
-                        <div><strong>Pairs:</strong> ${movement.pairs}</div>
+                        <div><strong>Pairs:</strong> ${movement.pairs}${hasSitOut}</div>
                         <div><strong>Tables:</strong> ${movement.tables}</div>
                         <div><strong>Rounds:</strong> ${movement.rounds}</div>
                         <div><strong>Total Boards:</strong> ${movement.totalBoards}</div>
                         <div><strong>Estimated Time:</strong> ${estimatedTime}</div>
                     </div>
                 </div>
+                <div style="background: rgba(52, 152, 219, 0.1); padding: 12px; border-radius: 8px; margin: 15px 0;">
+                    <div style="font-size: 13px; color: #2c3e50; line-height: 1.6;">
+                        <strong>📋 Before starting:</strong>
+                        <ol style="margin: 8px 0 0 20px; padding: 0;">
+                            <li>Print table movement cards</li>
+                            <li>Place boards on tables</li>
+                            <li>Set up traveler sheets</li>
+                        </ol>
+                    </div>
+                </div>
                 <div style="margin-top: 15px; font-size: 14px;">
-                    <div style="margin-bottom: 8px;">
-                        Press <strong style="color: #3498db;">1</strong> to view detailed movement
+                    <div style="margin-bottom: 6px;">
+                        <strong style="color: #3498db;">1</strong> = View detailed movement
+                    </div>
+                    <div style="margin-bottom: 6px;">
+                        <strong style="color: #27ae60;">2</strong> = 🖨️ Print cards & start
                     </div>
                     <div>
-                        Press <strong style="color: #27ae60;">2</strong> to confirm and start session
+                        <strong style="color: #95a5a6;">3</strong> = Start (no print)
                     </div>
                 </div>
             </div>
-            <div class="current-state">1=View Movement, 2=Confirm Setup, Back</div>
+            <div class="current-state">1=Details, 2=Print & Start, 3=Start, Back</div>
         `;
     }
 
