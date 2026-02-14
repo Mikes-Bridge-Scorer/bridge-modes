@@ -255,9 +255,20 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
     /**
      * Handle pairs setup selection
+     * Special mappings: 0=10 pairs, NT=12 pairs, X/XX=14 pairs
      */
     handlePairsSetup(value) {
-        const pairCount = value === '0' ? 10 : parseInt(value);
+        // Map special buttons to pair counts
+        let pairCount;
+        if (value === '0') {
+            pairCount = 10;
+        } else if (value === 'NT') {
+            pairCount = 12;
+        } else if (value === 'X/XX') {
+            pairCount = 14;
+        } else {
+            pairCount = parseInt(value);
+        }
         
         if (this.movements[pairCount]) {
             this.session.pairs = pairCount;
@@ -3192,11 +3203,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
                 <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
                     ⚠️ = Includes sit-out rounds<br>
+                    <strong>Button Guide:</strong> 4-9=Direct, 0=10 pairs, NT=12 pairs, X/XX=14 pairs<br>
                     Each pair plays all boards exactly once<br>
                     Results compared using matchpoint scoring
                 </div>
             </div>
-            <div class="current-state">Select number of pairs</div>
+            <div class="current-state">Press: 4-9 or 0 (10 pairs), NT (12 pairs), X/XX (14 pairs)</div>
         `;
     }
 
