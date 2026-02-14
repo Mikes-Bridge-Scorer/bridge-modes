@@ -33,6 +33,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             data: []
         };
         
+        // Number builder for multi-digit pair selection
+        this.numberBuilder = '';
+        this.numberBuildTimeout = null;
+        
         this.inputState = 'pairs_setup';
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
@@ -254,28 +258,68 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Handle pairs setup selection
-     * Special mappings: 0=10 pairs, NT=12 pairs, Deal=14 pairs
+     * Handle pairs setup selection with multi-digit entry
+     * User can type: 4, 10 (1+0), 12 (1+2), 14 (1+4), etc.
      */
     handlePairsSetup(value) {
-        // Map special buttons to pair counts
-        let pairCount;
-        if (value === '0') {
-            pairCount = 10;
-        } else if (value === 'NT') {
-            pairCount = 12;
-        } else if (value === 'Deal' || value === 'DEAL') {
-            pairCount = 14;
-        } else {
-            pairCount = parseInt(value);
+        // Handle BACK - clear number builder or go back
+        if (value === 'BACK') {
+            if (this.numberBuilder) {
+                // Clear the number being built
+                this.numberBuilder = '';
+                clearTimeout(this.numberBuildTimeout);
+                this.updateDisplay();
+            } else {
+                // Go back to mode selection
+                this.bridgeApp.showModeSelector();
+            }
+            return;
         }
         
+        // If it's a digit (0-9), build the number
+        if (/^\d$/.test(value)) {
+            this.buildNumber(value);
+        }
+    }
+    
+    /**
+     * Build a multi-digit number (e.g., 1+4 = 14)
+     */
+    buildNumber(digit) {
+        // Clear any existing timeout
+        clearTimeout(this.numberBuildTimeout);
+        
+        // Add digit to builder
+        this.numberBuilder += digit;
+        
+        // Update display immediately to show building state
+        this.updateDisplay();
+        
+        // Wait 500ms to see if more digits are coming
+        this.numberBuildTimeout = setTimeout(() => {
+            this.submitPairCount();
+        }, 500);
+    }
+    
+    /**
+     * Submit the built number as pair count
+     */
+    submitPairCount() {
+        const pairCount = parseInt(this.numberBuilder);
+        
+        // Clear the builder
+        this.numberBuilder = '';
+        
+        // Check if this movement exists
         if (this.movements[pairCount]) {
             this.session.pairs = pairCount;
             this.session.movement = this.movements[pairCount];
             this.inputState = 'movement_confirm';
+            this.updateDisplay();
         } else {
-            this.bridgeApp.showMessage(`Movement for ${pairCount} pairs not available yet`, 'warning');
+            // Show error for invalid pair count
+            this.bridgeApp.showMessage(`No movement available for ${pairCount} pairs`, 'warning');
+            this.updateDisplay();
         }
     }
 
@@ -3114,9 +3158,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         switch (this.inputState) {
             case 'pairs_setup':
-                // Return button values that map to pair counts
-                // 4-9 direct, 0=10, NT=12, Deal=14
-                return ['4', '5', '6', '7', '8', '9', '0', 'NT', 'Deal', 'BACK'];
+                // Show all digit buttons for multi-digit entry
+                return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK'];
                 
             case 'movement_confirm':
                 return ['1', '2', '3', 'BACK'];
@@ -3186,6 +3229,21 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             `;
         });
         
+        // Show number building state if active
+        let buildingDisplay = '';
+        if (this.numberBuilder) {
+            buildingDisplay = `
+                <div style="text-align: center; margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.2); border-radius: 8px; border: 2px solid #3498db;">
+                    <div style="font-size: 24px; font-weight: 800; color: #2c3e50;">
+                        Building: ${this.numberBuilder}
+                    </div>
+                    <div style="font-size: 13px; color: #7f8c8d; margin-top: 5px;">
+                        Keep typing or wait 0.5s to confirm
+                    </div>
+                </div>
+            `;
+        }
+        
         return `
             <div class="title-score-row">
                 <div class="mode-title">${this.displayName}</div>
@@ -3196,22 +3254,28 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     <h3 style="color: #2c3e50; margin: 0;">Tournament Setup</h3>
                 </div>
                 <div><strong>How many pairs are playing?</strong></div>
+                ${buildingDisplay}
                 <div style="margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; border-left: 4px solid #3498db;">
                     <div style="font-size: 14px; line-height: 1.6;">
                         ${movementInfo}
                     </div>
                 </div>
-                <div style="text-align: center; color: #2c3e50; font-size: 14px; margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 6px; border: 2px solid #ffc107;">
-                    ⚠️ = Includes sit-out rounds<br>
-                    <strong style="font-size: 15px;">Button Guide:</strong><br>
-                    <span style="font-size: 14px;">4-9 (direct) • 0 = 10 pairs • NT = 12 pairs • Deal = 14 pairs</span>
+                <div style="text-align: center; color: #2c3e50; font-size: 14px; margin-top: 15px; padding: 10px; background: #d4edda; border-radius: 6px; border: 2px solid #28a745;">
+                    <strong style="font-size: 16px;">💡 How to Select:</strong><br>
+                    <span style="font-size: 14px; line-height: 1.8;">
+                        Single digit: Press <strong>4</strong> for 4 pairs<br>
+                        Two digits: Press <strong>1</strong> then <strong>4</strong> for 14 pairs<br>
+                        ⚠️ = Movement includes sit-out rounds
+                    </span>
                 </div>
                 <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
                     Each pair plays all boards exactly once<br>
                     Results compared using matchpoint scoring
                 </div>
             </div>
-            <div class="current-state" style="font-size: 15px; font-weight: 600;">Press: 4-9, 0 (10), NT (12), or Deal (14)</div>
+            <div class="current-state" style="font-size: 16px; font-weight: 700; color: #2c3e50;">
+                ${this.numberBuilder ? `Building: ${this.numberBuilder}...` : 'Type number of pairs (e.g., 1+4 for 14)'}
+            </div>
         `;
     }
 
