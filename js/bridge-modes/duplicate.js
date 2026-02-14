@@ -255,7 +255,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
     /**
      * Handle pairs setup selection
-     * Special mappings: 0=10 pairs, NT=12 pairs, Made=14 pairs
+     * Special mappings: 0=10 pairs, NT=12 pairs, Deal=14 pairs
      */
     handlePairsSetup(value) {
         // Map special buttons to pair counts
@@ -264,7 +264,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             pairCount = 10;
         } else if (value === 'NT') {
             pairCount = 12;
-        } else if (value === 'Made' || value === 'MADE') {
+        } else if (value === 'Deal' || value === 'DEAL') {
             pairCount = 14;
         } else {
             pairCount = parseInt(value);
@@ -3115,8 +3115,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         switch (this.inputState) {
             case 'pairs_setup':
                 // Return button values that map to pair counts
-                // 4-9 direct, 0=10, NT=12, Made=14
-                return ['4', '5', '6', '7', '8', '9', '0', 'NT', 'Made', 'BACK'];
+                // 4-9 direct, 0=10, NT=12, Deal=14
+                return ['4', '5', '6', '7', '8', '9', '0', 'NT', 'Deal', 'BACK'];
                 
             case 'movement_confirm':
                 return ['1', '2', '3', 'BACK'];
@@ -3204,14 +3204,14 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 <div style="text-align: center; color: #2c3e50; font-size: 14px; margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 6px; border: 2px solid #ffc107;">
                     ⚠️ = Includes sit-out rounds<br>
                     <strong style="font-size: 15px;">Button Guide:</strong><br>
-                    <span style="font-size: 14px;">4-9 (direct) • 0 = 10 pairs • NT = 12 pairs • Made = 14 pairs</span>
+                    <span style="font-size: 14px;">4-9 (direct) • 0 = 10 pairs • NT = 12 pairs • Deal = 14 pairs</span>
                 </div>
                 <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
                     Each pair plays all boards exactly once<br>
                     Results compared using matchpoint scoring
                 </div>
             </div>
-            <div class="current-state" style="font-size: 15px; font-weight: 600;">Press: 4-9, 0 (10), NT (12), or Made (14)</div>
+            <div class="current-state" style="font-size: 15px; font-weight: 600;">Press: 4-9, 0 (10), NT (12), or Deal (14)</div>
         `;
     }
 
