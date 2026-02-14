@@ -1,12 +1,12 @@
 /**
- * Table Card Generator for Duplicate Bridge
- * Generates printable table movement cards (6 per A4 page)
- * Matches Bridge Modes Calculator style system
+ * Table Card Generator V2 for Duplicate Bridge
+ * Based on director.html template + Bridge Modes Calculator styling
+ * Generates professional table cards matching your existing design
  */
 
 class TableCardGenerator {
     constructor() {
-        // Use the same color scheme from styles.css
+        // Use Bridge Modes color scheme
         this.colors = {
             primary: '#2c3e50',
             secondary: '#34495e',
@@ -17,7 +17,7 @@ class TableCardGenerator {
             gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         };
         
-        console.log('🎴 Table Card Generator initialized');
+        console.log('🎴 Table Card Generator V2 initialized');
     }
     
     /**
@@ -36,24 +36,31 @@ class TableCardGenerator {
      * Build complete HTML for table cards
      */
     buildTableCardsHTML(movement) {
-        let html = `
-<!DOCTYPE html>
+        const physicalTables = Math.ceil(movement.tables);
+        
+        let html = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table Movement Cards - ${movement.pairs} Pairs</title>
+    <title>${movement.description} - Table Cards</title>
     <style>
         ${this.getTableCardCSS()}
     </style>
 </head>
 <body>
-    <div class="print-container">
+    <div class="no-print">
+        <h2>Movement Cards - ${movement.description}</h2>
+        <p><strong>Print Instructions:</strong> Use your browser's print function (Ctrl+P / Cmd+P)</p>
+        <p><strong>Movement:</strong> ${movement.tables} tables × ${movement.rounds} rounds = ${movement.totalBoards} boards (${movement.boardsPerRound || 2} per round)</p>
+        <p><strong>Tip:</strong> Print one card per table and place at each table for easy reference</p>
+    </div>
+    
+    <div class="cards-container">
 `;
         
         // Generate card for each table
-        for (let table = 1; table <= Math.floor(movement.tables); table++) {
-            html += this.generateSingleTableCard(movement, table);
+        for (let tableNum = 1; tableNum <= physicalTables; tableNum++) {
+            html += this.generateSingleTableCard(movement, tableNum);
         }
         
         html += `
@@ -65,7 +72,7 @@ class TableCardGenerator {
     }
     
     /**
-     * CSS for table cards - matches app style
+     * CSS for table cards - combines director.html layout with Bridge Modes colors
      */
     getTableCardCSS() {
         return `
@@ -77,120 +84,143 @@ class TableCardGenerator {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
-            background: white;
-            padding: 0;
-            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
         }
         
-        .print-container {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 10mm;
-            margin: 0 auto;
+        .no-print {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .no-print h2 {
+            color: ${this.colors.primary};
+            margin-bottom: 10px;
+        }
+        
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
         }
         
         .table-card {
-            width: 99mm;
-            height: 140mm;
-            display: inline-block;
-            margin: 2mm;
-            border: 2px solid ${this.colors.primary};
-            border-radius: 8px;
+            width: 280px;
             background: white;
+            border: 3px solid ${this.colors.primary};
+            border-radius: 10px;
+            padding: 20px;
             page-break-inside: avoid;
-            vertical-align: top;
-            overflow: hidden;
+            page-break-after: always;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
         .card-header {
-            background: ${this.colors.gradient};
-            color: white;
-            padding: 8px 10px;
             text-align: center;
-        }
-        
-        .movement-title {
-            font-size: 10px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            opacity: 0.95;
-            letter-spacing: -0.2px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid ${this.colors.primary};
         }
         
         .table-number {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
+            font-size: 72px;
+            font-weight: bold;
+            line-height: 1;
+            color: ${this.colors.primary};
+            margin-bottom: 10px;
+        }
+        
+        .movement-info {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
         }
         
         .rounds-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 8px 0;
-        }
-        
-        .rounds-table th,
-        .rounds-table td {
-            border: 1px solid ${this.colors.muted};
-            padding: 6px 4px;
-            text-align: center;
-            font-size: 11px;
         }
         
         .rounds-table th {
             background: ${this.colors.secondary};
             color: white;
-            font-weight: 700;
-            font-size: 10px;
+            padding: 8px 4px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid ${this.colors.muted};
+            text-align: center;
         }
         
-        .round-col {
-            width: 18%;
-            font-weight: 700;
+        .rounds-table td {
+            padding: 10px 6px;
+            text-align: center;
+            border: 1px solid ${this.colors.muted};
+            font-size: 14px;
         }
         
-        .ns-col {
-            width: 22%;
+        .rounds-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .round-number {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .ns-pair {
             color: ${this.colors.success};
             font-weight: 700;
         }
         
-        .ew-col {
-            width: 22%;
+        .ew-pair {
             color: ${this.colors.danger};
             font-weight: 700;
         }
         
-        .boards-col {
-            width: 38%;
-            font-weight: 600;
-            font-size: 10px;
+        .movement-instructions {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid ${this.colors.muted};
+            font-size: 11px;
+            line-height: 1.4;
         }
         
-        .card-footer {
-            text-align: center;
-            padding: 6px;
-            font-size: 10px;
+        .instructions-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 12px;
             color: ${this.colors.primary};
-            font-weight: 600;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 10px;
             border-top: 1px solid ${this.colors.muted};
-            background: rgba(236, 240, 241, 0.3);
+            font-size: 10px;
+            color: #999;
         }
         
         @media print {
-            body {
-                margin: 0;
+            body { 
                 padding: 0;
+                background: white;
             }
-            
-            .print-container {
-                width: 210mm;
-                padding: 10mm;
+            .no-print { display: none; }
+            .cards-container {
+                display: block;
             }
-            
-            @page {
-                size: A4;
-                margin: 0;
+            .table-card {
+                margin: 0 auto 20px;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .table-card:last-child {
+                page-break-after: auto;
             }
         }
         
@@ -198,11 +228,6 @@ class TableCardGenerator {
             body {
                 background: #f5f5f5;
                 padding: 20px;
-            }
-            
-            .print-container {
-                background: white;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
         }
         `;
@@ -212,65 +237,137 @@ class TableCardGenerator {
      * Generate a single table card
      */
     generateSingleTableCard(movement, tableNum) {
-        const tableRounds = this.getTableRounds(movement, tableNum);
+        const movementInstructions = this.generateMovementInstructions(movement, tableNum);
         
-        return `
+        let card = `
         <div class="table-card">
             <div class="card-header">
-                <div class="movement-title">${movement.description}</div>
-                <div class="table-number">TABLE ${tableNum}</div>
+                <div class="table-number">${tableNum}</div>
+                <div class="movement-info">
+                    ${movement.description}<br>
+                    Table ${tableNum}
+                </div>
             </div>
             
             <table class="rounds-table">
                 <thead>
                     <tr>
-                        <th class="round-col">Round</th>
-                        <th class="ns-col">N-S</th>
-                        <th class="ew-col">E-W</th>
-                        <th class="boards-col">Boards</th>
+                        <th>Round</th>
+                        <th>N/S</th>
+                        <th>E/W</th>
+                        <th>Boards</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${tableRounds.map(round => this.generateRoundRow(round)).join('')}
+`;
+        
+        // Get all rounds for this table
+        const tableRounds = movement.movement
+            .filter(entry => entry.table === tableNum)
+            .sort((a, b) => a.round - b.round);
+        
+        tableRounds.forEach(round => {
+            const boardsDisplay = this.formatBoardRange(round.boards);
+            const nsClass = round.ns === 'Sit out' ? '' : 'ns-pair';
+            const ewClass = round.ew === 'Sit out' ? '' : 'ew-pair';
+            
+            card += `
+                    <tr>
+                        <td class="round-number">${round.round}</td>
+                        <td class="${nsClass}">${round.ns}</td>
+                        <td class="${ewClass}">${round.ew}</td>
+                        <td>${boardsDisplay}</td>
+                    </tr>
+`;
+        });
+        
+        card += `
                 </tbody>
             </table>
             
-            <div class="card-footer">
-                Place this card at Table ${tableNum}
+            <div class="movement-instructions">
+                <div class="instructions-title">Movement Information</div>
+                ${movementInstructions}
             </div>
         </div>
-        `;
+`;
+        
+        return card;
     }
     
     /**
-     * Get all rounds for a specific table
+     * Format board range for display
      */
-    getTableRounds(movement, tableNum) {
-        return movement.movement
+    formatBoardRange(boards) {
+        if (!boards || boards.length === 0) {
+            return '—';
+        }
+        
+        if (boards.length === 1) {
+            return boards[0].toString();
+        }
+        
+        // Check if consecutive
+        const isConsecutive = boards.every((val, i, arr) => 
+            i === 0 || val === arr[i-1] + 1
+        );
+        
+        if (isConsecutive) {
+            return `${boards[0]}-${boards[boards.length-1]}`;
+        }
+        
+        return boards.join(', ');
+    }
+    
+    /**
+     * Generate movement instructions for Howell movements
+     */
+    generateMovementInstructions(movement, tableNum) {
+        if (movement.type === 'mitchell') {
+            return 'E/W move to next higher table. N/S remain stationary.';
+        }
+        
+        // For Howell, track pair movements from this table
+        const movements = [];
+        const tableRounds = movement.movement
             .filter(entry => entry.table === tableNum)
             .sort((a, b) => a.round - b.round);
-    }
-    
-    /**
-     * Generate a single round row
-     */
-    generateRoundRow(round) {
-        const boardRange = round.boards.length > 1 ? 
-            `${round.boards[0]}-${round.boards[round.boards.length-1]}` : 
-            round.boards[0];
         
-        return `
-        <tr>
-            <td class="round-col">${round.round}</td>
-            <td class="ns-col">${round.ns}</td>
-            <td class="ew-col">${round.ew}</td>
-            <td class="boards-col">${boardRange}</td>
-        </tr>
-        `;
+        for (let i = 0; i < tableRounds.length - 1; i++) {
+            const currentRound = tableRounds[i];
+            const nextRoundNum = currentRound.round + 1;
+            
+            // Find where NS pair goes next
+            const nsNext = movement.movement.find(entry => 
+                entry.round === nextRoundNum && 
+                (entry.ns === currentRound.ns || entry.ew === currentRound.ns)
+            );
+            
+            // Find where EW pair goes next
+            const ewNext = movement.movement.find(entry => 
+                entry.round === nextRoundNum && 
+                (entry.ns === currentRound.ew || entry.ew === currentRound.ew)
+            );
+            
+            if (nsNext && ewNext && currentRound.ns !== 'Sit out' && currentRound.ew !== 'Sit out') {
+                const nsDestination = nsNext.ns === currentRound.ns ? 
+                    `Table ${nsNext.table} N/S` : `Table ${nsNext.table} E/W`;
+                const ewDestination = ewNext.ns === currentRound.ew ? 
+                    `Table ${ewNext.table} N/S` : `Table ${ewNext.table} E/W`;
+                
+                movements.push(`Round ${currentRound.round}: N/S→${nsDestination}, E/W→${ewDestination}`);
+            }
+        }
+        
+        if (movements.length > 0) {
+            return movements.join('<br>');
+        }
+        
+        return 'See director for movement instructions';
     }
     
     /**
-     * Generate Mitchell movement instructions instead of table cards
+     * Generate Mitchell movement instructions
      */
     generateMitchellInstructions(movement) {
         const html = `
@@ -278,8 +375,7 @@ class TableCardGenerator {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitchell Movement Instructions</title>
+    <title>${movement.description} - Instructions</title>
     <style>
         ${this.getMitchellInstructionsCSS()}
     </style>
@@ -521,4 +617,4 @@ if (typeof window !== 'undefined') {
     window.tableCardGenerator = new TableCardGenerator();
 }
 
-console.log('✅ Table Card Generator loaded');
+console.log('✅ Table Card Generator V2 loaded');
