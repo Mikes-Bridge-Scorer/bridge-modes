@@ -375,6 +375,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             // Start tournament without printing
             this.setupBoards();
             this.inputState = 'board_selection';
+        } else if (value === '4') {
+            // Open print menu
+            this.showPrintMenu();
         }
     }
 
@@ -3307,7 +3310,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK'];
                 
             case 'movement_confirm':
-                return ['1', '2', '3', 'BACK'];
+                return ['1', '2', '3', '4', 'BACK'];
                 
             case 'board_selection':
                 const buttons = ['BACK'];
@@ -3489,12 +3492,15 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     <div style="margin-bottom: 6px;">
                         <strong style="color: #27ae60;">2</strong> = 🖨️ Print cards & start
                     </div>
-                    <div>
+                    <div style="margin-bottom: 6px;">
                         <strong style="color: #95a5a6;">3</strong> = Start (no print)
+                    </div>
+                    <div>
+                        <strong style="color: #e67e22;">4</strong> = 🖨️ Print Menu
                     </div>
                 </div>
             </div>
-            <div class="current-state">1=Details, 2=Print & Start, 3=Start, Back</div>
+            <div class="current-state">1=Details, 2=Print&Start, 3=Start, 4=PrintMenu, Back</div>
         `;
     }
 
