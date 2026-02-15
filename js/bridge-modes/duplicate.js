@@ -1986,18 +1986,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      */
     showPrintMenu() {
         console.log('🖨️ Opening Print Menu...');
-        const hasMovement = this.session.movement;
         
         const content = `
             <div class="help-section">
                 <h4 style="text-align: center; margin-bottom: 15px;">🖨️ Print Options</h4>
                 <p style="text-align: center; color: #7f8c8d; font-size: 13px;">
-                    ${hasMovement ? 'Select what you would like to print:' : 'Please select a movement first'}
+                    Select what you would like to print:
                 </p>
             </div>
         `;
         
-        const buttons = hasMovement ? [
+        const buttons = [
             { 
                 text: '📋 Table Movement Cards', 
                 action: () => this.printTableCards(), 
@@ -2015,14 +2014,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             },
             { 
                 text: '📑 Movement Sheet', 
-                action: () => this.showMovementPopup(), 
+                action: () => this.showMovementSelector(), 
                 class: 'help-btn' 
-            }
-        ] : [
-            { 
-                text: 'Close', 
-                action: () => {}, 
-                class: 'continue-btn' 
             }
         ];
         
@@ -2034,14 +2027,126 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Print table movement cards
+     * Show movement selector for viewing movement sheets
+     */
+    showMovementSelector() {
+        // Show movement selector popup (same style as table cards)
+        const popup = document.createElement('div');
+        popup.id = 'movementSelectorPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        let buttonHTML = '';
+        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c', '#f39c12', '#16a085', '#c0392b'];
+        
+        availablePairs.forEach((pairs, index) => {
+            const movement = this.movements[pairs];
+            const color = colors[index % colors.length];
+            const label = movement.hasSitOut ? `${pairs}-Pair Movement ⚠️` : `${pairs}-Pair Movement`;
+            buttonHTML += `<button class="movement-view-btn" data-pairs="${pairs}" style="background: ${color}; color: white; border: none; padding: 12px 20px; margin: 8px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 140px;">${label}</button>\n`;
+            
+            if ((index + 1) % 3 === 0) {
+                buttonHTML += '<br>';
+            }
+        });
+        
+        popup.innerHTML = `
+            <div style="background: white; padding: 25px; border-radius: 8px; max-width: 600px; text-align: center;">
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">Select Movement to View</h3>
+                <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">⚠️ = Includes sit-out rounds</p>
+                <div style="margin: 20px 0;">
+                    ${buttonHTML}
+                </div>
+                <button id="closeMovementSelector" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px;">Close</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        // Add event listeners
+        popup.querySelectorAll('.movement-view-btn').forEach(btn => {
+            btn.onclick = () => {
+                const pairs = btn.getAttribute('data-pairs');
+                const movement = this.movements[pairs];
+                // Temporarily set session movement to show it
+                const originalMovement = this.session.movement;
+                this.session.movement = movement;
+                this.showMovementPopup();
+                // Restore original
+                this.session.movement = originalMovement;
+                document.body.removeChild(popup);
+            };
+        });
+        
+        document.getElementById('closeMovementSelector').onclick = () => {
+            document.body.removeChild(popup);
+        };
+    }
+
+    /**
+     * Print table movement cards - show movement selector
      */
     printTableCards() {
-        if (typeof tableCardGenerator !== 'undefined') {
-            tableCardGenerator.generateTableCards(this.session.movement);
-        } else {
-            this.bridgeApp.showMessage('Table card generator not available', 'error');
-        }
+        // Show movement selector popup
+        const popup = document.createElement('div');
+        popup.id = 'tableCardSelectorPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        // Get available movements
+        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        // Build buttons for each movement
+        let buttonHTML = '';
+        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c', '#f39c12', '#16a085', '#c0392b'];
+        
+        availablePairs.forEach((pairs, index) => {
+            const movement = this.movements[pairs];
+            const color = colors[index % colors.length];
+            const label = movement.hasSitOut ? `${pairs}-Pair Cards ⚠️` : `${pairs}-Pair Cards`;
+            buttonHTML += `<button class="movement-select-btn" data-pairs="${pairs}" style="background: ${color}; color: white; border: none; padding: 12px 20px; margin: 8px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 140px;">${label}</button>\n`;
+            
+            if ((index + 1) % 3 === 0) {
+                buttonHTML += '<br>';
+            }
+        });
+        
+        popup.innerHTML = `
+            <div style="background: white; padding: 25px; border-radius: 8px; max-width: 600px; text-align: center;">
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">Select Movement for Table Cards</h3>
+                <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">⚠️ = Includes sit-out rounds</p>
+                <div style="margin: 20px 0;">
+                    ${buttonHTML}
+                </div>
+                <button id="closeTableCardSelector" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px;">Close</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        // Add event listeners
+        popup.querySelectorAll('.movement-select-btn').forEach(btn => {
+            btn.onclick = () => {
+                const pairs = btn.getAttribute('data-pairs');
+                const movement = this.movements[pairs];
+                if (typeof tableCardGenerator !== 'undefined') {
+                    tableCardGenerator.generateTableCards(movement);
+                }
+                document.body.removeChild(popup);
+            };
+        });
+        
+        document.getElementById('closeTableCardSelector').onclick = () => {
+            document.body.removeChild(popup);
+        };
     }
 
     /**
