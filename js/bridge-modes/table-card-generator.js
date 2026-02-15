@@ -469,6 +469,131 @@ class TableCardGenerator {
         
         setTimeout(() => printWindow.print(), 500);
     }
+    
+    /**
+     * Download table cards as HTML file
+     */
+    downloadTableCardsHTML(movement) {
+        if (movement.type === 'mitchell') {
+            // Build Mitchell instructions HTML
+            const html = this.buildMitchellInstructionsHTML(movement);
+            this.downloadHTML(html, `Mitchell-${movement.pairs}-Pairs-TableCards.html`);
+        } else {
+            // Build regular table cards HTML
+            const html = this.buildTableCardsHTML(movement);
+            this.downloadHTML(html, `Table-Cards-${movement.pairs}-Pairs.html`);
+        }
+    }
+    
+    /**
+     * Build Mitchell instructions HTML (same as generateMitchellInstructions but returns HTML)
+     */
+    buildMitchellInstructionsHTML(movement) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${movement.description} - Movement Instructions</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .instruction-box {
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .ns-box {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%);
+            border: 3px solid #3498db;
+        }
+        .ew-box {
+            background: linear-gradient(135deg, #fde8e8 0%, #fbd4d4 100%);
+            border: 3px solid #e74c3c;
+        }
+        .instruction-box h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .big-instruction {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 15px 0;
+        }
+        @media print {
+            body { padding: 20px; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>${movement.description}</h1>
+        <p class="subtitle">${movement.pairs} pairs • ${movement.tables} tables • ${movement.rounds} rounds</p>
+        
+        <div class="instructions-grid">
+            <div class="instruction-box ns-box">
+                <h2>🔵 North-South (1-${movement.tables})</h2>
+                <p class="big-instruction">STAY AT YOUR TABLE</p>
+            </div>
+            
+            <div class="instruction-box ew-box">
+                <h2>🔴 East-West (${movement.tables + 1}-${movement.pairs})</h2>
+                <p class="big-instruction">MOVE UP ONE TABLE</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+    }
+    
+    /**
+     * Download HTML string as file
+     */
+    downloadHTML(html, filename) {
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 }
 
 if (typeof window !== 'undefined') {
