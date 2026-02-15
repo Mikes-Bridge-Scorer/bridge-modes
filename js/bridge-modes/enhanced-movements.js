@@ -305,11 +305,11 @@ const ENHANCED_MOVEMENTS = {
         totalBoards: 18,
         boardsPerRound: 3,
         type: 'mitchell',
-        description: "6-table Mitchell, 18 boards, ~2 hours",
-        movement: generateMitchellMovement(6, 3)
+        description: "6-table Skip Mitchell, 18 boards, ~2 hours",
+        movement: generateMitchellMovement(6, 3, true) // Skip Mitchell
     },
     
-    // 7 tables - 14 pairs - Mitchell (NEW)
+    // 7 tables - 14 pairs - Standard Mitchell (odd tables don't need skip)
     14: {
         pairs: 14,
         tables: 7,
@@ -318,7 +318,7 @@ const ENHANCED_MOVEMENTS = {
         boardsPerRound: 3,
         type: 'mitchell',
         description: "7-table Mitchell, 21 boards, ~2.5 hours",
-        movement: generateMitchellMovement(7, 3)
+        movement: generateMitchellMovement(7, 3, false) // Standard Mitchell (odd tables)
     }
 };
 
@@ -326,22 +326,54 @@ const ENHANCED_MOVEMENTS = {
  * Generate Mitchell movement
  * NS pairs stay at their table, EW pairs move up one table
  */
-function generateMitchellMovement(tables, boardsPerRound) {
+/**
+ * Generate Mitchell Movement with proper Skip Mitchell for even tables
+ * @param {number} tables - Number of tables
+ * @param {number} boardsPerRound - Boards per round
+ * @param {boolean} useSkip - Whether to use Skip Mitchell (for even tables)
+ * @returns {array} Movement array
+ */
+function generateMitchellMovement(tables, boardsPerRound, useSkip = true) {
     const movement = [];
-    const boards = tables * boardsPerRound;
+    const totalBoards = tables * boardsPerRound;
+    const rounds = tables;
     
-    for (let round = 1; round <= tables; round++) {
+    // Determine skip round for even-table Mitchell
+    // Skip round formula: round = (tables / 2) + 1
+    const skipRound = useSkip && tables % 2 === 0 ? Math.floor(tables / 2) + 1 : null;
+    
+    for (let round = 1; round <= rounds; round++) {
         for (let table = 1; table <= tables; table++) {
+            // NS pairs: 1 to tables (stay at same table)
             const nsPair = table;
-            let ewPair = table + tables - round + 1;
-            if (ewPair > tables * 2) ewPair -= tables;
             
-            // Board calculation for Mitchell
-            const startBoard = ((table - 1 + round - 1) % tables) * boardsPerRound + 1;
+            // EW pairs: 1 to tables (move each round)
+            let ewPair;
+            
+            if (round === 1) {
+                // Round 1: EW pairs start at their table number
+                ewPair = table;
+            } else {
+                // Standard movement: EW moves down one table each round
+                let position = table - 1 + round - 1;
+                
+                // Apply skip if this is the skip round
+                if (skipRound && round >= skipRound) {
+                    position += 1; // Extra movement for skip
+                }
+                
+                ewPair = (position % tables) + 1;
+            }
+            
+            // Calculate boards for this table/round
+            // Boards relay down one table each round
+            const boardSetIndex = (table - 1 + round - 1) % tables;
+            const startBoard = boardSetIndex * boardsPerRound + 1;
             const boardList = [];
+            
             for (let b = 0; b < boardsPerRound; b++) {
                 let boardNum = startBoard + b;
-                if (boardNum > boards) boardNum -= boards;
+                if (boardNum > totalBoards) boardNum -= totalBoards;
                 boardList.push(boardNum);
             }
             
