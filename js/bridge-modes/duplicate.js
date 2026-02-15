@@ -1672,14 +1672,53 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         
                         <div class="help-section" style="margin-bottom: 20px;">
                             <h4 style="color: #2c3e50; margin-bottom: 10px;">Quick Start Guide</h4>
-                            <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4, 6, or 8)<br>
-                            • 4 pairs = 2 tables, 12 boards, ~2 hours<br>
-                            • 6 pairs = 3 tables, 10 boards, ~1.5 hours<br>
-                            • 8 pairs = 4 tables, 14 boards, ~2.5 hours</p>
+                            <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4-14)<br>
+                            • Use number buttons: Single digit (4-9) or two digits (1→0, 1→2, 1→4)<br>
+                            • Review movement details and confirm<br>
+                            • Supports Howell movements (2-5 tables) and Mitchell (6-7 tables)</p>
                             
-                            <p style="line-height: 1.5;"><strong>2. Movement:</strong> Review and confirm the movement schedule<br>
-                            <strong>3. Play:</strong> Select boards to enter traveler results<br>
-                            <strong>4. Results:</strong> View final standings when complete</p>
+                            <p style="line-height: 1.5;"><strong>2. Printing (Option 4):</strong> Access Print Menu for:<br>
+                            • 📋 Table Movement Cards (3 per page, color)<br>
+                            • 📊 Traveler Sheets (pre-filled)<br>
+                            • 🎴 Board Slips (printable)<br>
+                            • 📑 Movement Sheets (detailed grid)</p>
+                            
+                            <p style="line-height: 1.5;"><strong>3. Tournament Setup:</strong><br>
+                            • Print table cards and place at each table<br>
+                            • Set up boards with traveler sheets<br>
+                            • Players complete travelers after each round</p>
+                            
+                            <p style="line-height: 1.5;"><strong>4. Scoring:</strong><br>
+                            • Collect completed travelers<br>
+                            • Enter results for each board<br>
+                            • View final standings when complete</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Available Movements</h4>
+                            <p style="line-height: 1.5;"><strong>Howell Movements:</strong> All pairs play each other<br>
+                            • 4 pairs (2 tables) - 12 boards, 6 rounds<br>
+                            • 5 pairs (2.5 tables) - 15 boards, 5 rounds ⚠️<br>
+                            • 6 pairs (3 tables) - 15 boards, 5 rounds<br>
+                            • 7 pairs (3.5 tables) - 14 boards, 7 rounds ⚠️<br>
+                            • 8 pairs (4 tables) - 14 boards, 7 rounds<br>
+                            • 9 pairs (4.5 tables) - 18 boards, 9 rounds ⚠️<br>
+                            • 10 pairs (5 tables) - 18 boards, 9 rounds</p>
+                            
+                            <p style="line-height: 1.5;"><strong>Mitchell Movements:</strong> NS stay, EW move<br>
+                            • 12 pairs (6 tables) - 18 boards, 6 rounds - Skip Mitchell<br>
+                            • 14 pairs (7 tables) - 21 boards, 7 rounds - Standard Mitchell</p>
+                            
+                            <p style="line-height: 1.5;">⚠️ = Movement includes sit-out rounds</p>
+                        </div>
+                        
+                        <div class="help-section" style="margin-bottom: 20px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Skip Mitchell Movement</h4>
+                            <p style="line-height: 1.5;"><strong>For 6-table Mitchell (12 pairs):</strong><br>
+                            • Round 4 is the <strong>SKIP ROUND</strong><br>
+                            • EW pairs skip an extra table in Round 4<br>
+                            • This ensures all pairs play each other exactly once<br>
+                            • Watch for the yellow warning box when selecting 12 pairs!</p>
                         </div>
                         
                         <div class="help-section" style="margin-bottom: 20px;">
@@ -1700,6 +1739,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                             • Tie with another pair = 1 matchpoint each<br>
                             • Lose to another pair = 0 matchpoints</p>
                             <p style="line-height: 1.5;"><strong>Percentage:</strong> Your matchpoints ÷ maximum possible × 100</p>
+                            <p style="line-height: 1.5;"><strong>Mitchell Movements:</strong> Separate winners for NS and EW</p>
                         </div>
                         
                         <div class="help-section" style="margin-bottom: 20px;">
@@ -1710,50 +1750,21 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         </div>
                         
                         <div class="help-section" style="margin-bottom: 20px;">
-                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Board Management</h4>
-                            <p style="line-height: 1.5;">• Green checkmarks show completed boards<br>
-                            • Vulnerability follows standard 16-board cycle<br>
-                            • Progress bar shows overall completion<br>
-                            • Enter results after each round for best experience</p>
-                        </div>
-                        
-                        <div class="help-section" style="margin-bottom: 20px;">
-                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Final Results</h4>
-                            <p style="line-height: 1.5;">• Ranked by percentage score<br>
-                            • Export standings and detailed results<br>
-                            • Medal indicators for top 3 positions<br>
-                            • Complete matchpoint calculations included</p>
-                        </div>
-                        
-                        <div class="help-section" style="margin-bottom: 20px;">
-                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Tournament Tips</h4>
-                            <p style="line-height: 1.5;">• Review the movement before starting<br>
-                            • Enter results promptly after each round<br>
-                            • Use export features to save tournament records<br>
-                            • Check completion percentage regularly</p>
-                        </div>
-                        
-                        <div class="help-section" style="margin-bottom: 30px;">
-                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Printable Templates</h4>
-                            <p style="line-height: 1.5;"><strong>For home games and tournaments!</strong></p>
-                            <div style="margin: 15px 0; text-align: center;">
-                                <button id="help-board-templates-btn" style="
-                                    background: #27ae60; color: white; border: none; 
-                                    padding: 12px 16px; border-radius: 4px; margin: 5px;
-                                    cursor: pointer; font-size: 13px; font-weight: bold;
-                                    min-height: 50px; min-width: 140px;
-                                    touch-action: manipulation; user-select: none;
-                                    -webkit-tap-highlight-color: transparent;
-                                ">Board Templates</button>
-                                <button id="help-traveler-templates-btn" style="
-                                    background: #3498db; color: white; border: none; 
-                                    padding: 12px 16px; border-radius: 4px; margin: 5px;
-                                    cursor: pointer; font-size: 13px; font-weight: bold;
-                                    min-height: 50px; min-width: 140px;
-                                    touch-action: manipulation; user-select: none;
-                                    -webkit-tap-highlight-color: transparent;
-                                ">Traveler Sheets</button>
-                            </div>
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Tournament Workflow</h4>
+                            <p style="line-height: 1.5;"><strong>Before Tournament:</strong><br>
+                            • Select movement (press pair number)<br>
+                            • Press 4 for Print Menu<br>
+                            • Print table cards and traveler sheets<br>
+                            • Set up tables with boards</p>
+                            
+                            <p style="line-height: 1.5;"><strong>During Tournament:</strong><br>
+                            • Players complete traveler sheets after each round<br>
+                            • Collect completed travelers</p>
+                            
+                            <p style="line-height: 1.5;"><strong>After Tournament:</strong><br>
+                            • Enter all traveler results into app<br>
+                            • View final standings<br>
+                            • Export results if needed</p>
                         </div>
                         
                         <div style="
