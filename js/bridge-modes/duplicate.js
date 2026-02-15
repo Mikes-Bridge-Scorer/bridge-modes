@@ -283,22 +283,46 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
     
     /**
-     * Build a multi-digit number (e.g., 1+4 = 14)
+     * Build a multi-digit number with smart logic
+     * 1, 2, 3 → Wait for second digit (no timeout)
+     * 4-9 → Immediate selection
+     * 0 → Special case for 10 pairs
      */
     buildNumber(digit) {
         // Clear any existing timeout
         clearTimeout(this.numberBuildTimeout);
         
-        // Add digit to builder
-        this.numberBuilder += digit;
+        // Special case: 0 means 10 pairs (immediate)
+        if (digit === '0' && !this.numberBuilder) {
+            this.numberBuilder = '10';
+            this.updateDisplay();
+            this.submitPairCount();
+            return;
+        }
         
-        // Update display immediately to show building state
+        // If this is the first digit
+        if (!this.numberBuilder) {
+            this.numberBuilder = digit;
+            
+            // If first digit is 1, 2, or 3 → MUST be 2-digit, wait for second
+            if (digit === '1' || digit === '2' || digit === '3') {
+                // Just update display and wait
+                this.updateDisplay();
+                return;
+            }
+            
+            // If first digit is 4-9 → Single digit, submit immediately
+            this.updateDisplay();
+            this.submitPairCount();
+            return;
+        }
+        
+        // This is the second digit (we already have first)
+        this.numberBuilder += digit;
         this.updateDisplay();
         
-        // Wait 500ms to see if more digits are coming
-        this.numberBuildTimeout = setTimeout(() => {
-            this.submitPairCount();
-        }, 500);
+        // Submit immediately after second digit
+        this.submitPairCount();
     }
     
     /**
@@ -3263,8 +3287,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 <div style="text-align: center; color: #2c3e50; font-size: 14px; margin-top: 15px; padding: 10px; background: #d4edda; border-radius: 6px; border: 2px solid #28a745;">
                     <strong style="font-size: 16px;">💡 How to Select:</strong><br>
                     <span style="font-size: 14px; line-height: 1.8;">
-                        Single digit: Press <strong>4</strong> for 4 pairs<br>
-                        Two digits: Press <strong>1</strong> then <strong>4</strong> for 14 pairs<br>
+                        <strong>0</strong> = 10 pairs (immediate)<br>
+                        <strong>4-9</strong> = Single digit (immediate)<br>
+                        <strong>1,2,3</strong> = First digit (then press second digit)<br>
+                        Examples: <strong>1→4</strong> = 14 pairs, <strong>1→2</strong> = 12 pairs<br>
                         ⚠️ = Movement includes sit-out rounds
                     </span>
                 </div>
@@ -3274,7 +3300,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
             </div>
             <div class="current-state" style="font-size: 16px; font-weight: 700; color: #2c3e50;">
-                ${this.numberBuilder ? `Building: ${this.numberBuilder}...` : 'Type number of pairs (e.g., 1+4 for 14)'}
+                ${this.numberBuilder ? `Waiting for 2nd digit... (${this.numberBuilder}+?)` : 'Press: 0=10, 4-9=single, 1-3=start 2-digit'}
             </div>
         `;
     }
