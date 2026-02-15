@@ -172,6 +172,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             }
         }
         
+        // Handle Print menu (NV button in Duplicate mode)
+        if (value === 'NV') {
+            this.showPrintMenu();
+            return;
+        }
+        
         // Handle control buttons
         if (value === 'HELP') {
             this.showHelp();
@@ -1971,6 +1977,88 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             console.error('Error returning to main menu:', error);
         }
     }
+
+    /**
+     * Show Print Menu (replaces NV toggle in Duplicate mode)
+     */
+    showPrintMenu() {
+        const hasMovement = this.session.movement;
+        
+        const content = `
+            <div class="help-section">
+                <h4 style="text-align: center; margin-bottom: 15px;">🖨️ Print Options</h4>
+                <p style="text-align: center; color: #7f8c8d; font-size: 13px;">
+                    ${hasMovement ? 'Select what you would like to print:' : 'Please select a movement first'}
+                </p>
+            </div>
+        `;
+        
+        const buttons = hasMovement ? [
+            { 
+                text: '📋 Table Movement Cards', 
+                action: () => this.printTableCards(), 
+                class: 'help-btn' 
+            },
+            { 
+                text: '📊 Traveler Sheets', 
+                action: () => this.printTravelerSheets(), 
+                class: 'help-btn' 
+            },
+            { 
+                text: '🎴 Board Slips', 
+                action: () => this.printBoardSlips(), 
+                class: 'help-btn' 
+            },
+            { 
+                text: '📑 Movement Sheet', 
+                action: () => this.showMovementPopup(), 
+                class: 'help-btn' 
+            }
+        ] : [
+            { 
+                text: 'Close', 
+                action: () => {}, 
+                class: 'continue-btn' 
+            }
+        ];
+        
+        if (this.bridgeApp && this.bridgeApp.showModal) {
+            this.bridgeApp.showModal('Print Menu', content, buttons);
+        }
+    }
+
+    /**
+     * Print table movement cards
+     */
+    printTableCards() {
+        if (typeof tableCardGenerator !== 'undefined') {
+            tableCardGenerator.generateTableCards(this.session.movement);
+        } else {
+            this.bridgeApp.showMessage('Table card generator not available', 'error');
+        }
+    }
+
+    /**
+     * Print traveler sheets
+     */
+    printTravelerSheets() {
+        if (typeof duplicateTemplates !== 'undefined') {
+            duplicateTemplates.showTravelerTemplates();
+        } else {
+            this.bridgeApp.showMessage('Traveler templates not available', 'error');
+        }
+    }
+
+    /**
+     * Print board slips
+     */
+    printBoardSlips() {
+        if (typeof duplicateTemplates !== 'undefined') {
+            duplicateTemplates.showBoardTemplates();
+        } else {
+            this.bridgeApp.showMessage('Board templates not available', 'error');
+        }
+    }
 //END SECTION FIVE
 // SECTION SIX
 /**
@@ -3682,6 +3770,15 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         // Update button states
         const activeButtons = this.getActiveButtons();
         this.bridgeApp.updateButtonStates(activeButtons);
+        
+        // Change NV button to Print for Duplicate mode
+        setTimeout(() => {
+            const nvButton = document.querySelector('button[data-value="NV"]');
+            if (nvButton) {
+                nvButton.textContent = 'Print';
+                nvButton.style.fontSize = '13px';
+            }
+        }, 50);
         
         // Setup board selection button if in board_selection state
         if (this.inputState === 'board_selection') {
