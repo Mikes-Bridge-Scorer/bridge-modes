@@ -1982,6 +1982,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Show Print Menu (replaces NV toggle in Duplicate mode)
      */
     showPrintMenu() {
+        console.log('🖨️ Opening Print Menu...');
         const hasMovement = this.session.movement;
         
         const content = `
@@ -2024,6 +2025,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         if (this.bridgeApp && this.bridgeApp.showModal) {
             this.bridgeApp.showModal('Print Menu', content, buttons);
+        } else {
+            console.error('❌ bridgeApp.showModal not available');
         }
     }
 
@@ -3773,12 +3776,22 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         // Change NV button to Print for Duplicate mode
         setTimeout(() => {
-            const nvButton = document.querySelector('button[data-value="NV"]');
+            // Try multiple selectors to find the NV button
+            let nvButton = document.querySelector('button[data-value="NV"]');
+            if (!nvButton) {
+                // Try finding by text content
+                const buttons = document.querySelectorAll('button');
+                nvButton = Array.from(buttons).find(btn => btn.textContent.trim() === 'NV');
+            }
+            
             if (nvButton) {
                 nvButton.textContent = 'Print';
                 nvButton.style.fontSize = '13px';
+                console.log('✅ NV button changed to Print');
+            } else {
+                console.warn('⚠️ NV button not found');
             }
-        }, 50);
+        }, 100);
         
         // Setup board selection button if in board_selection state
         if (this.inputState === 'board_selection') {
