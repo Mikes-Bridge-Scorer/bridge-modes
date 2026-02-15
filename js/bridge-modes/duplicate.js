@@ -1444,6 +1444,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         `;
         
         popup.innerHTML = `
+            <style>
+                @media print {
+                    #movementPopup {
+                        background: white !important;
+                        position: relative !important;
+                    }
+                    #movement-close-btn, #movement-print-btn {
+                        display: none !important;
+                    }
+                }
+            </style>
             <div style="
                 background: white; 
                 padding: 20px; 
@@ -1478,7 +1489,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     flex-wrap: nowrap;
                 ">
                     <button id="movement-close-btn" style="
-                        background: #3498db; 
+                        background: #95a5a6; 
                         color: white; 
                         border: none; 
                         padding: 10px 16px; 
@@ -1495,8 +1506,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         align-items: center;
                         justify-content: center;
                     ">Close</button>
-                    <button id="movement-confirm-btn" style="
-                        background: #27ae60; 
+                    <button id="movement-print-btn" style="
+                        background: #3498db; 
                         color: white; 
                         border: none; 
                         padding: 10px 16px; 
@@ -1512,7 +1523,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                    ">Start</button>
+                    ">🖨️ Print</button>
                 </div>
             </div>
         `;
@@ -1572,18 +1583,18 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             }, { passive: false });
         }
         
-        // Setup confirm button
-        const confirmBtn = document.getElementById('movement-confirm-btn');
-        if (confirmBtn) {
-            const confirmHandler = createPixelHandler('confirm');
-            confirmBtn.addEventListener('click', confirmHandler, { passive: false });
-            confirmBtn.addEventListener('touchend', confirmHandler, { passive: false });
+        // Setup print button
+        const printBtn = document.getElementById('movement-print-btn');
+        if (printBtn) {
+            const printHandler = createPixelHandler('print');
+            printBtn.addEventListener('click', printHandler, { passive: false });
+            printBtn.addEventListener('touchend', printHandler, { passive: false });
             
             // Add touch start feedback
-            confirmBtn.addEventListener('touchstart', (e) => {
+            printBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                confirmBtn.style.transform = 'scale(0.95)';
-                confirmBtn.style.opacity = '0.8';
+                printBtn.style.transform = 'scale(0.95)';
+                printBtn.style.opacity = '0.8';
             }, { passive: false });
         }
     }
@@ -1592,16 +1603,18 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Execute movement popup actions
      */
     executeMovementAction(action) {
+        if (action === 'print') {
+            // Trigger browser print dialog for the popup
+            window.print();
+            return;
+        }
+        
         const popup = document.getElementById('movementPopup');
         if (popup) {
             popup.remove();
         }
         
-        if (action === 'confirm') {
-            // Trigger the confirm action
-            this.handleAction('2');
-        }
-        // 'close' action just closes the popup (already done above)
+        // 'close' action just closes the popup (done above)
     }
 
     /**
@@ -2041,7 +2054,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Show movement selector for viewing movement sheets
      */
     showMovementSelector() {
-        // Show movement selector popup (same style as table cards)
         const popup = document.createElement('div');
         popup.id = 'movementSelectorPopup';
         popup.style.cssText = `
@@ -2084,13 +2096,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             btn.onclick = () => {
                 const pairs = btn.getAttribute('data-pairs');
                 const movement = this.movements[pairs];
-                // Temporarily set session movement to show it
-                const originalMovement = this.session.movement;
-                this.session.movement = movement;
-                this.showMovementPopup();
-                // Restore original
-                this.session.movement = originalMovement;
                 document.body.removeChild(popup);
+                // Show print/download choice
+                this.showPrintDownloadChoice('Movement Sheet', movement, 'movementSheet');
             };
         });
         
@@ -2100,7 +2108,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Print table movement cards - show movement selector
+     * Print table movement cards - show movement selector then print/download choice
      */
     printTableCards() {
         // Show movement selector popup
@@ -2148,14 +2156,90 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             btn.onclick = () => {
                 const pairs = btn.getAttribute('data-pairs');
                 const movement = this.movements[pairs];
-                if (typeof tableCardGenerator !== 'undefined') {
-                    tableCardGenerator.generateTableCards(movement);
-                }
                 document.body.removeChild(popup);
+                // Show print/download choice
+                this.showPrintDownloadChoice('Table Movement Cards', movement, 'tableCards');
             };
         });
         
         document.getElementById('closeTableCardSelector').onclick = () => {
+            document.body.removeChild(popup);
+        };
+    }
+
+    /**
+     * Show print/download choice dialog
+     */
+    showPrintDownloadChoice(title, movement, type) {
+        const popup = document.createElement('div');
+        popup.id = 'printDownloadChoice';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1001;
+            display: flex; align-items: center; justify-content: center;
+        `;
+        
+        popup.innerHTML = `
+            <div style="background: white; padding: 30px; border-radius: 8px; max-width: 450px; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; color: #2c3e50;">${title}</h3>
+                <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 25px;">${movement.description}</p>
+                
+                <button id="printNowBtn" style="
+                    background: #27ae60; color: white; border: none;
+                    padding: 15px 30px; margin: 10px; border-radius: 6px;
+                    font-size: 15px; font-weight: 600; cursor: pointer;
+                    min-width: 200px; display: block; width: 100%;
+                ">🖨️ Print Now</button>
+                
+                <button id="downloadHtmlBtn" style="
+                    background: #3498db; color: white; border: none;
+                    padding: 15px 30px; margin: 10px; border-radius: 6px;
+                    font-size: 15px; font-weight: 600; cursor: pointer;
+                    min-width: 200px; display: block; width: 100%;
+                ">💾 Download HTML</button>
+                
+                <div style="background: #e8f4f8; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 12px; color: #2c3e50; text-align: left;">
+                    <strong>💡 Download HTML:</strong><br>
+                    • Save for later use<br>
+                    • Open in browser to print<br>
+                    • Save as PDF from browser<br>
+                    • Email to players
+                </div>
+                
+                <button id="closePrintChoice" style="
+                    background: #95a5a6; color: white; border: none;
+                    padding: 10px 20px; margin-top: 15px; border-radius: 6px;
+                    font-size: 14px; cursor: pointer;
+                ">Cancel</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        // Event handlers
+        document.getElementById('printNowBtn').onclick = () => {
+            document.body.removeChild(popup);
+            if (type === 'tableCards' && typeof tableCardGenerator !== 'undefined') {
+                tableCardGenerator.generateTableCards(movement);
+            } else if (type === 'movementSheet') {
+                // Temporarily set movement and show popup
+                const originalMovement = this.session.movement;
+                this.session.movement = movement;
+                this.showMovementPopup();
+                this.session.movement = originalMovement;
+            }
+        };
+        
+        document.getElementById('downloadHtmlBtn').onclick = () => {
+            document.body.removeChild(popup);
+            if (type === 'tableCards' && typeof tableCardGenerator !== 'undefined') {
+                tableCardGenerator.downloadTableCardsHTML(movement);
+            } else if (type === 'movementSheet' && typeof templateGenerator !== 'undefined') {
+                templateGenerator.downloadMovementSheet(movement);
+            }
+        };
+        
+        document.getElementById('closePrintChoice').onclick = () => {
             document.body.removeChild(popup);
         };
     }
