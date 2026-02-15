@@ -775,176 +775,31 @@ class DuplicateTemplates {
         });
         
         document.getElementById('closeTestBtn').addEventListener('click', () => {
-        document.getElementById('closeTestBtn').addEventListener('click', () => {
             container.remove();
         });
         
         console.log('Test buttons created. Click to test template generation.');
     }
-    
-    /**
-     * Download movement sheet as HTML
-     */
-    downloadMovementSheet(movement) {
-        const html = this.buildMovementSheetHTML(movement);
-        this.downloadHTML(html, `Movement-Sheet-${movement.pairs}-Pairs.html`);
-    }
-    /**
-     * Download movement sheet as HTML
-     * This is a placeholder - movement generation is done in duplicate.js
-     */
-    downloadMovementSheet(movement) {
-        const html = this.buildMovementSheetHTML(movement);
-        this.downloadHTML(html, `Movement-Sheet-${movement.pairs}-Pairs.html`);
-    }
-    
-    /**
-     * Build movement sheet HTML
-     */
-    buildMovementSheetHTML(movement) {
-        if (!movement || !movement.movement) {
-            return '<html><body><p>Movement data not available</p></body></html>';
-        }
-        
-        // Group by round
-        const rounds = {};
-        movement.movement.forEach(entry => {
-            if (!rounds[entry.round]) {
-                rounds[entry.round] = [];
-            }
-            rounds[entry.round].push(entry);
-        });
-        
-        // Get all table numbers
-        const tableNumbers = [...new Set(movement.movement.map(e => e.table))].sort((a, b) => a - b);
-        
-        // Build table HTML
-        let tableHTML = '<tr style="background: #34495e; color: white;"><th style="padding: 10px; border: 1px solid #ddd;">Round</th>';
-        tableNumbers.forEach(table => {
-            tableHTML += `<th style="padding: 10px; border: 1px solid #ddd;">Table ${table}</th>`;
-        });
-        tableHTML += '</tr>';
-        
-        // Add rows for each round
-        Object.keys(rounds).sort((a, b) => parseInt(a) - parseInt(b)).forEach(round => {
-            const roundEntries = rounds[round];
-            tableHTML += `<tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: center;">${round}</td>`;
-            
-            tableNumbers.forEach(table => {
-                const entry = roundEntries.find(e => e.table === table);
-                if (entry) {
-                    const boards = entry.boards.join(', ');
-                    tableHTML += `
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                            <div style="color: #27ae60; font-weight: 600;">NS: ${entry.ns}</div>
-                            <div style="color: #e74c3c; font-weight: 600;">EW: ${entry.ew}</div>
-                            <div style="color: #7f8c8d; font-size: 12px;">Boards: ${boards}</div>
-                        </td>
-                    `;
-                } else {
-                    tableHTML += '<td style="padding: 10px; border: 1px solid #ddd;"></td>';
-                }
-            });
-            tableHTML += '</tr>';
-        });
-        
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>${movement.description} - Movement Sheet</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
-            padding: 30px;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            margin-bottom: 30px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        @media print {
-            body { padding: 10px; background: white; }
-            .container { box-shadow: none; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>${movement.description}</h1>
-        <p class="subtitle">${movement.pairs} pairs • ${movement.tables} tables • ${movement.rounds} rounds</p>
-        
-        <table>
-            ${tableHTML}
-        </table>
-        
-        <div style="margin-top: 30px; padding: 15px; background: #e8f4f8; border-radius: 6px;">
-            <strong>Movement Summary:</strong>
-            <ul style="margin: 10px 0 0 20px;">
-                <li>Each pair plays ${movement.totalBoards} boards</li>
-                <li>${movement.rounds} rounds of ${movement.boardsPerRound} boards each</li>
-                <li>Estimated time: ${movement.description.match(/~(.+)/)?.[1] || '2 hours'}</li>
-            </ul>
-        </div>
-    </div>
-</body>
-</html>`;
-    }
-    
-    /**
-     * Download HTML string as file
-     */
-    downloadHTML(html, filename) {
-        const blob = new Blob([html], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
+    downloadMovementSheet(m){this.downloadHTML(this.buildMovementSheetHTML(m),`Movement-Sheet-${m.pairs}-Pairs.html`)}buildMovementSheetHTML(m){if(!m||!m.movement)return"<html><body>No data</body></html>";const r={};m.movement.forEach(e=>{if(!r[e.round])r[e.round]=[];r[e.round].push(e)});const t=[...new Set(m.movement.map(e=>e.table))].sort((a,b)=>a-b);let h="<tr><th>Round</th>";t.forEach(x=>h+=`<th>Table ${x}</th>`);h+="</tr>";Object.keys(r).sort((a,b)=>a-b).forEach(n=>{h+=`<tr><td>${n}</td>`;t.forEach(x=>{const e=r[n].find(y=>y.table===x);h+=e?`<td>NS:${e.ns}<br>EW:${e.ew}<br>${e.boards.join(",")}</td>`:"<td></td>"});h+="</tr>"});return`<html><head><title>${m.description}</title><style>table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}th{background:#34495e;color:white}</style></head><body><h2>${m.description}</h2><table>${h}</table></body></html>`}downloadHTML(h,f){const b=new Blob([h],{type:"text/html"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
 }
 
 // Auto-create instance for standalone testing
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
     window.DuplicateTemplates = DuplicateTemplates;
     
     // Create test instance when DOM is ready
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
             window.templateGenerator = new DuplicateTemplates();
-            console.log("DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.");
+            console.log('DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.');
         });
     } else {
         window.templateGenerator = new DuplicateTemplates();
-        console.log("DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.");
+        console.log('DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.');
     }
 }
 
 // Export for module usage
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
     module.exports = DuplicateTemplates;
 }
