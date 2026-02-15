@@ -775,9 +775,20 @@ class DuplicateTemplates {
         });
         
         document.getElementById('closeTestBtn').addEventListener('click', () => {
+        document.getElementById('closeTestBtn').addEventListener('click', () => {
             container.remove();
         });
         
+        console.log('Test buttons created. Click to test template generation.');
+    }
+    
+    /**
+     * Download movement sheet as HTML
+     */
+    downloadMovementSheet(movement) {
+        const html = this.buildMovementSheetHTML(movement);
+        this.downloadHTML(html, `Movement-Sheet-${movement.pairs}-Pairs.html`);
+    }
     /**
      * Download movement sheet as HTML
      * This is a placeholder - movement generation is done in duplicate.js
@@ -914,33 +925,26 @@ class DuplicateTemplates {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
-        });
-        
-        document.getElementById('closeTestBtn').addEventListener('click', () => {
-            container.remove();
-        });
-        
-        console.log('Test buttons created. Click to test template generation.');
-    }
+
 }
 
 // Auto-create instance for standalone testing
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
     window.DuplicateTemplates = DuplicateTemplates;
     
     // Create test instance when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
             window.templateGenerator = new DuplicateTemplates();
-            console.log('DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.');
+            console.log("DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.");
         });
     } else {
         window.templateGenerator = new DuplicateTemplates();
-        console.log('DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.');
+        console.log("DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.");
     }
 }
 
 // Export for module usage
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
     module.exports = DuplicateTemplates;
 }
