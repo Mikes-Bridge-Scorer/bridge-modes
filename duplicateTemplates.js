@@ -4,13 +4,7 @@
  */
 class DuplicateTemplates {
     constructor() {
-        // Use ENHANCED_MOVEMENTS if available, otherwise use basic movements
-        if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
-            this.movements = ENHANCED_MOVEMENTS;
-            console.log('✅ DuplicateTemplates using enhanced movements');
-        } else {
-            console.warn('⚠️  ENHANCED_MOVEMENTS not found, using basic movements');
-            this.movements = {
+        this.movements = {
             4: {
                 pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
                 description: "2-table Howell, 12 boards, ~2 hours",
@@ -85,7 +79,6 @@ class DuplicateTemplates {
                 ]
             }
         };
-        }
     }
 
     /**
@@ -119,38 +112,19 @@ class DuplicateTemplates {
      */
     showTravelerTemplates() {
         const popup = this.createPopup('travelerTemplatesPopup', 'Traveler Sheets');
-        
-        // Get all available movements dynamically
-        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
-        
-        // Generate buttons for each movement
-        let buttonHTML = '';
-        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c', '#f39c12', '#16a085', '#c0392b'];
-        
-        availablePairs.forEach((pairs, index) => {
-            const movement = this.movements[pairs];
-            const color = colors[index % colors.length];
-            const label = movement.hasSitOut ? `${pairs}-Pair Travelers ⚠️` : `${pairs}-Pair Travelers`;
-            buttonHTML += `<button class="template-btn" data-action="downloadTraveler${pairs}" style="background: ${color};">${label}</button>\n`;
-            
-            // Add line break after every 3 buttons
-            if ((index + 1) % 3 === 0) {
-                buttonHTML += '<br><br>';
-            }
-        });
-        
         popup.innerHTML = `
             <div class="popup-content">
                 <h3 style="text-align: center; margin: 0 0 15px 0;">Movement-Specific Traveler Sheets</h3>
                 <p style="text-align: center; margin-bottom: 20px; font-size: 13px; color: #7f8c8d;">
-                    Pre-filled with correct pair numbers for each movement<br>
-                    ⚠️ = Includes sit-out rounds
+                    Pre-filled with correct pair numbers for each movement
                 </p>
                 <div style="text-align: center; margin: 15px 0;">
-                    ${buttonHTML}
+                    <button class="template-btn" data-action="downloadTraveler4" style="background: #27ae60;">4-Pair Travelers</button>
+                    <button class="template-btn" data-action="downloadTraveler6" style="background: #3498db;">6-Pair Travelers</button>
+                    <button class="template-btn" data-action="downloadTraveler8" style="background: #e67e22;">8-Pair Travelers</button>
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <button class="template-btn" data-action="close" style="background: #95a5a6;">Close</button>
+                    <button class="template-btn" data-action="close" style="background: #e74c3c;">Close</button>
                 </div>
             </div>
         `;
@@ -637,19 +611,15 @@ class DuplicateTemplates {
      * Handle traveler template actions
      */
     handleTravelerTemplateAction(action) {
-        // Handle close action
-        if (action === 'close') {
-            this.closePopup('travelerTemplatesPopup');
-            return;
-        }
-        
-        // Handle downloadTravelerN actions dynamically
-        if (action.startsWith('downloadTraveler')) {
-            const pairs = parseInt(action.replace('downloadTraveler', ''));
-            if (this.movements[pairs]) {
-                this.downloadMovementTravelers(pairs);
-            }
-            return;
+        const actionMap = {
+            'downloadTraveler4': () => this.downloadMovementTravelers(4),
+            'downloadTraveler6': () => this.downloadMovementTravelers(6),
+            'downloadTraveler8': () => this.downloadMovementTravelers(8),
+            'close': () => this.closePopup('travelerTemplatesPopup')
+        };
+
+        if (actionMap[action]) {
+            actionMap[action]();
         }
     }
 
@@ -802,6 +772,148 @@ class DuplicateTemplates {
         
         document.getElementById('testTravelerBtn').addEventListener('click', () => {
             this.showTravelerTemplates();
+        });
+        
+        document.getElementById('closeTestBtn').addEventListener('click', () => {
+            container.remove();
+        });
+        
+    /**
+     * Download movement sheet as HTML
+     * This is a placeholder - movement generation is done in duplicate.js
+     */
+    downloadMovementSheet(movement) {
+        const html = this.buildMovementSheetHTML(movement);
+        this.downloadHTML(html, `Movement-Sheet-${movement.pairs}-Pairs.html`);
+    }
+    
+    /**
+     * Build movement sheet HTML
+     */
+    buildMovementSheetHTML(movement) {
+        if (!movement || !movement.movement) {
+            return '<html><body><p>Movement data not available</p></body></html>';
+        }
+        
+        // Group by round
+        const rounds = {};
+        movement.movement.forEach(entry => {
+            if (!rounds[entry.round]) {
+                rounds[entry.round] = [];
+            }
+            rounds[entry.round].push(entry);
+        });
+        
+        // Get all table numbers
+        const tableNumbers = [...new Set(movement.movement.map(e => e.table))].sort((a, b) => a - b);
+        
+        // Build table HTML
+        let tableHTML = '<tr style="background: #34495e; color: white;"><th style="padding: 10px; border: 1px solid #ddd;">Round</th>';
+        tableNumbers.forEach(table => {
+            tableHTML += `<th style="padding: 10px; border: 1px solid #ddd;">Table ${table}</th>`;
+        });
+        tableHTML += '</tr>';
+        
+        // Add rows for each round
+        Object.keys(rounds).sort((a, b) => parseInt(a) - parseInt(b)).forEach(round => {
+            const roundEntries = rounds[round];
+            tableHTML += `<tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: center;">${round}</td>`;
+            
+            tableNumbers.forEach(table => {
+                const entry = roundEntries.find(e => e.table === table);
+                if (entry) {
+                    const boards = entry.boards.join(', ');
+                    tableHTML += `
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                            <div style="color: #27ae60; font-weight: 600;">NS: ${entry.ns}</div>
+                            <div style="color: #e74c3c; font-weight: 600;">EW: ${entry.ew}</div>
+                            <div style="color: #7f8c8d; font-size: 12px;">Boards: ${boards}</div>
+                        </td>
+                    `;
+                } else {
+                    tableHTML += '<td style="padding: 10px; border: 1px solid #ddd;"></td>';
+                }
+            });
+            tableHTML += '</tr>';
+        });
+        
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${movement.description} - Movement Sheet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
+            padding: 30px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        @media print {
+            body { padding: 10px; background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>${movement.description}</h1>
+        <p class="subtitle">${movement.pairs} pairs • ${movement.tables} tables • ${movement.rounds} rounds</p>
+        
+        <table>
+            ${tableHTML}
+        </table>
+        
+        <div style="margin-top: 30px; padding: 15px; background: #e8f4f8; border-radius: 6px;">
+            <strong>Movement Summary:</strong>
+            <ul style="margin: 10px 0 0 20px;">
+                <li>Each pair plays ${movement.totalBoards} boards</li>
+                <li>${movement.rounds} rounds of ${movement.boardsPerRound} boards each</li>
+                <li>Estimated time: ${movement.description.match(/~(.+)/)?.[1] || '2 hours'}</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>`;
+    }
+    
+    /**
+     * Download HTML string as file
+     */
+    downloadHTML(html, filename) {
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
         });
         
         document.getElementById('closeTestBtn').addEventListener('click', () => {
