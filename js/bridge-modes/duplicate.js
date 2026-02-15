@@ -2048,8 +2048,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Print traveler sheets
      */
     printTravelerSheets() {
-        if (typeof duplicateTemplates !== 'undefined') {
-            duplicateTemplates.showTravelerTemplates();
+        if (typeof templateGenerator !== 'undefined') {
+            templateGenerator.showTravelerTemplates();
         } else {
             this.bridgeApp.showMessage('Traveler templates not available', 'error');
         }
@@ -2059,8 +2059,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Print board slips
      */
     printBoardSlips() {
-        if (typeof duplicateTemplates !== 'undefined') {
-            duplicateTemplates.showBoardTemplates();
+        if (typeof templateGenerator !== 'undefined') {
+            templateGenerator.showBoardTemplates();
         } else {
             this.bridgeApp.showMessage('Board templates not available', 'error');
         }
