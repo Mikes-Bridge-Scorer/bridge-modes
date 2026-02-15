@@ -284,28 +284,37 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     
     /**
      * Build a multi-digit number with smart logic
-     * 1, 2, 3 → Wait for second digit (no timeout)
+     * 1 → Wait for second digit (10, 12, 14 valid)
+     * 2, 3 → Show error (no movements starting with 2 or 3)
      * 4-9 → Immediate selection
-     * 0 → Special case for 10 pairs
+     * 0 → Show error (use 1→0 for 10 pairs)
      */
     buildNumber(digit) {
         // Clear any existing timeout
         clearTimeout(this.numberBuildTimeout);
         
-        // Special case: 0 means 10 pairs (immediate)
-        if (digit === '0' && !this.numberBuilder) {
-            this.numberBuilder = '10';
-            this.updateDisplay();
-            this.submitPairCount();
-            return;
-        }
-        
         // If this is the first digit
         if (!this.numberBuilder) {
             this.numberBuilder = digit;
             
-            // If first digit is 1, 2, or 3 → MUST be 2-digit, wait for second
-            if (digit === '1' || digit === '2' || digit === '3') {
+            // If first digit is 0 → Invalid, show error
+            if (digit === '0') {
+                this.bridgeApp.showMessage('For 10 pairs, press 1 then 0', 'warning');
+                this.numberBuilder = '';
+                this.updateDisplay();
+                return;
+            }
+            
+            // If first digit is 2 or 3 → No valid movements, show error
+            if (digit === '2' || digit === '3') {
+                this.bridgeApp.showMessage('No movements starting with ' + digit + '. Try 1, or 4-9.', 'warning');
+                this.numberBuilder = '';
+                this.updateDisplay();
+                return;
+            }
+            
+            // If first digit is 1 → MUST be 2-digit, wait for second
+            if (digit === '1') {
                 // Just update display and wait
                 this.updateDisplay();
                 return;
@@ -3284,14 +3293,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         ${movementInfo}
                     </div>
                 </div>
-                <div style="text-align: center; color: #2c3e50; font-size: 14px; margin-top: 15px; padding: 10px; background: #d4edda; border-radius: 6px; border: 2px solid #28a745;">
-                    <strong style="font-size: 16px;">💡 How to Select:</strong><br>
-                    <span style="font-size: 14px; line-height: 1.8;">
-                        <strong>0</strong> = 10 pairs (immediate)<br>
-                        <strong>4-9</strong> = Single digit (immediate)<br>
-                        <strong>1,2,3</strong> = First digit (then press second digit)<br>
-                        Examples: <strong>1→4</strong> = 14 pairs, <strong>1→2</strong> = 12 pairs<br>
-                        ⚠️ = Movement includes sit-out rounds
+                <div style="text-align: center; color: #2c3e50; font-size: 13px; margin-top: 12px; padding: 8px 10px; background: #d4edda; border-radius: 6px; border: 2px solid #28a745;">
+                    <strong style="font-size: 14px;">💡 Quick Guide:</strong>
+                    <span style="font-size: 13px; line-height: 1.6; display: block; margin-top: 4px;">
+                        Single: <strong>4-9</strong> • Two-digit: <strong>1→0</strong>, <strong>1→2</strong>, <strong>1→4</strong> • ⚠️ = sit-out rounds
                     </span>
                 </div>
                 <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
@@ -3299,8 +3304,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     Results compared using matchpoint scoring
                 </div>
             </div>
-            <div class="current-state" style="font-size: 16px; font-weight: 700; color: #2c3e50;">
-                ${this.numberBuilder ? `Waiting for 2nd digit... (${this.numberBuilder}+?)` : 'Press: 0=10, 4-9=single, 1-3=start 2-digit'}
+            <div class="current-state" style="font-size: 15px; font-weight: 700; color: #2c3e50;">
+                ${this.numberBuilder ? `Waiting for 2nd digit... (${this.numberBuilder}+?)` : 'Select number of pairs'}
             </div>
         `;
     }
