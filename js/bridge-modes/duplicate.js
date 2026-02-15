@@ -1406,6 +1406,25 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     showMovementPopup() {
         const movement = this.session.movement;
         
+        // Check if Skip Mitchell
+        const isSkipMitchell = movement.type === 'mitchell' && movement.tables % 2 === 0;
+        const skipRound = isSkipMitchell ? Math.floor(movement.tables / 2) + 1 : null;
+        
+        // Build skip warning
+        let skipWarning = '';
+        if (isSkipMitchell) {
+            skipWarning = `
+                <div style="background: #fff3cd; padding: 12px; border-radius: 6px; border: 2px solid #ffc107; margin: 15px 0;">
+                    <div style="text-align: center; font-size: 16px; font-weight: 800; color: #856404; margin-bottom: 8px;">
+                        ⚠️ SKIP MITCHELL - ROUND ${skipRound} ⚠️
+                    </div>
+                    <div style="font-size: 13px; color: #856404; text-align: center;">
+                        EW pairs skip an extra table in Round ${skipRound}
+                    </div>
+                </div>
+            `;
+        }
+        
         const popup = document.createElement('div');
         popup.id = 'movementPopup';
         popup.style.cssText = `
@@ -1432,6 +1451,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         ${movement.pairs} pairs • ${movement.tables} tables • ${movement.rounds} rounds
                     </div>
                 </div>
+                
+                ${skipWarning}
                 
                 ${this.getMovementTableHTML()}
                 
@@ -3318,6 +3339,26 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         const estimatedTime = movement.description.match(/~(.+)/)?.[1] || '2-3 hours';
         const hasSitOut = movement.hasSitOut ? ' (1 sit-out per round)' : '';
         
+        // Check if this is a Skip Mitchell (even tables)
+        const isSkipMitchell = movement.type === 'mitchell' && movement.tables % 2 === 0;
+        const skipRound = isSkipMitchell ? Math.floor(movement.tables / 2) + 1 : null;
+        
+        // Build skip warning if needed
+        let skipWarning = '';
+        if (isSkipMitchell) {
+            skipWarning = `
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 3px solid #ffc107; margin: 15px 0;">
+                    <div style="text-align: center; font-size: 18px; font-weight: 800; color: #856404; margin-bottom: 10px;">
+                        ⚠️ SKIP MITCHELL MOVEMENT ⚠️
+                    </div>
+                    <div style="font-size: 14px; color: #856404; line-height: 1.6; text-align: center;">
+                        <strong>ROUND ${skipRound}: EW pairs skip an extra table!</strong><br>
+                        <span style="font-size: 13px;">This ensures all pairs play each other exactly once.</span>
+                    </div>
+                </div>
+            `;
+        }
+        
         return `
             <div class="title-score-row">
                 <div class="mode-title">${this.displayName}</div>
@@ -3339,6 +3380,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         <div><strong>Estimated Time:</strong> ${estimatedTime}</div>
                     </div>
                 </div>
+                ${skipWarning}
                 <div style="background: rgba(52, 152, 219, 0.1); padding: 12px; border-radius: 8px; margin: 15px 0;">
                     <div style="font-size: 13px; color: #2c3e50; line-height: 1.6;">
                         <strong>📋 Before starting:</strong>
