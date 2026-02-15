@@ -2014,9 +2014,13 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         const content = `
             <div class="help-section">
                 <h4 style="text-align: center; margin-bottom: 15px;">🖨️ Print Options</h4>
-                <p style="text-align: center; color: #7f8c8d; font-size: 13px;">
+                <p style="text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 10px;">
                     Select what you would like to print:
                 </p>
+                <div style="background: #e8f4f8; padding: 10px; border-radius: 6px; font-size: 12px; color: #2c3e50; margin-bottom: 15px;">
+                    <strong>💡 Tip:</strong> Table Cards & Movement Sheets offer print/download choice.<br>
+                    Travelers & Board Slips download as HTML files - open in browser to print/distribute to players.
+                </div>
             </div>
         `;
         
@@ -2027,12 +2031,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 class: 'help-btn' 
             },
             { 
-                text: '📊 Traveler Sheets', 
+                text: '📊 Traveler Sheets (HTML)', 
                 action: () => this.printTravelerSheets(), 
                 class: 'help-btn' 
             },
             { 
-                text: '🎴 Board Slips', 
+                text: '🎴 Board Slips (HTML)', 
                 action: () => this.printBoardSlips(), 
                 class: 'help-btn' 
             },
