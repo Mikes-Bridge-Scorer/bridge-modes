@@ -37,6 +37,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         this.numberBuilder = '';
         this.numberBuildTimeout = null;
         
+        // NEW: Movement selection state
+        this.availableMovements = [];
+        
         this.inputState = 'pairs_setup';
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
@@ -249,6 +252,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             case 'pairs_setup':
                 this.handlePairsSetup(value);
                 break;
+            case 'movement_selection':
+                this.handleMovementSelection(value);
+                break;
             case 'movement_confirm':
                 this.handleMovementConfirm(value);
                 break;
@@ -349,15 +355,35 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         // Clear the builder
         this.numberBuilder = '';
         
+        // Find ALL movements for this pair count
+        this.availableMovements = Object.entries(this.movements)
+            .filter(([key, mov]) => mov.pairs === pairCount)
+            .map(([key, mov]) => ({
+                key: key,
+                ...mov
+            }));
+        
         // Check if this movement exists
-        if (this.movements[pairCount]) {
-            this.session.pairs = pairCount;
-            this.session.movement = this.movements[pairCount];
-            this.inputState = 'movement_confirm';
-            this.updateDisplay();
-        } else {
+        if (this.availableMovements.length === 0) {
             // Show error for invalid pair count
             this.bridgeApp.showMessage(`No movement available for ${pairCount} pairs`, 'warning');
+            this.updateDisplay();
+        } else {
+            this.session.pairs = pairCount;
+            this.inputState = 'movement_selection';
+            this.updateDisplay();
+        }
+    }
+
+    /**
+     * Handle movement selection - NEW METHOD
+     */
+    handleMovementSelection(value) {
+        const index = parseInt(value);
+        
+        if (index >= 1 && index <= this.availableMovements.length) {
+            this.session.movement = this.availableMovements[index - 1];
+            this.inputState = 'movement_confirm';
             this.updateDisplay();
         }
     }
@@ -3469,9 +3495,14 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         // Navigate between states
         switch (this.inputState) {
-            case 'movement_confirm':
+            case 'movement_selection':
                 this.inputState = 'pairs_setup';
                 this.session.pairs = 0;
+                this.availableMovements = [];
+                break;
+                
+            case 'movement_confirm':
+                this.inputState = 'movement_selection';
                 this.session.movement = null;
                 break;
                 
@@ -3513,19 +3544,26 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 // Show all digit buttons for multi-digit entry
                 return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK'];
                 
+            case 'movement_selection':
+                const buttons = ['BACK'];
+                for (let i = 1; i <= this.availableMovements.length; i++) {
+                    buttons.push(i.toString());
+                }
+                return buttons;
+                
             case 'movement_confirm':
                 return ['1', '2', '3', '4', 'BACK'];
                 
             case 'board_selection':
-                const buttons = ['BACK'];
+                const boardButtons = ['BACK'];
                 
                 const completionStatus = this.getCompletionStatus();
                 
                 if (completionStatus.percentage === 100) {
-                    buttons.push('DEAL');
+                    boardButtons.push('DEAL');
                 }
                 
-                return buttons;
+                return boardButtons;
                 
             case 'results':
                 return ['BACK'];
@@ -3542,6 +3580,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         switch (this.inputState) {
             case 'pairs_setup':
                 return this.getPairsSetupContent();
+                
+            case 'movement_selection':
+                return this.getMovementSelectionContent();
                 
             case 'movement_confirm':
                 return this.getMovementConfirmContent();
@@ -3564,33 +3605,16 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Get pairs setup display content
      */
     getPairsSetupContent() {
-        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
-        
-        // Build movement info dynamically
-        let movementInfo = '';
-        availablePairs.forEach(pairs => {
-            const movement = this.movements[pairs];
-            const sitOut = movement.hasSitOut ? ' ⚠️' : '';
-            const typeLabel = movement.type === 'mitchell' ? 'Mitchell' : 'Howell';
-            
-            movementInfo += `
-                <div style="margin-bottom: 10px;">
-                    <strong style="color: #2c3e50;">${pairs} pairs${sitOut}:</strong> 
-                    <span style="color: #7f8c8d;">${movement.tables} tables, ${movement.totalBoards} boards, ${typeLabel}</span>
-                </div>
-            `;
-        });
-        
         // Show number building state if active
         let buildingDisplay = '';
         if (this.numberBuilder) {
             buildingDisplay = `
-                <div style="text-align: center; margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.2); border-radius: 8px; border: 2px solid #3498db;">
-                    <div style="font-size: 24px; font-weight: 800; color: #2c3e50;">
-                        Building: ${this.numberBuilder}
+                <div style="text-align: center; margin: 20px 0; padding: 20px; background: #e3f2fd; border-radius: 8px; border: 2px solid #2196f3;">
+                    <div style="font-size: 48px; font-weight: bold; color: #1976d2;">
+                        ${this.numberBuilder}_
                     </div>
-                    <div style="font-size: 13px; color: #7f8c8d; margin-top: 5px;">
-                        Keep typing or wait 0.5s to confirm
+                    <div style="font-size: 14px; color: #666; margin-top: 8px;">
+                        ${this.numberBuilder === '1' ? 'Enter second digit (0, 2, or 4)' : 'Confirming...'}
                     </div>
                 </div>
             `;
@@ -3602,30 +3626,67 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 <div class="score-display">Setup</div>
             </div>
             <div class="game-content">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="color: #2c3e50; margin: 0;">Tournament Setup</h3>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #2c3e50; margin: 0 0 10px 0;">Tournament Setup</h3>
+                    <p style="font-size: 16px; color: #34495e; margin: 0;">How many pairs playing?</p>
                 </div>
-                <div><strong>How many pairs are playing?</strong></div>
+                
                 ${buildingDisplay}
-                <div style="margin: 15px 0; padding: 15px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; border-left: 4px solid #3498db;">
-                    <div style="font-size: 14px; line-height: 1.6;">
-                        ${movementInfo}
+                
+                <div style="text-align: center; color: #7f8c8d; font-size: 14px; margin-top: 20px;">
+                    Valid range: 4-14 pairs<br>
+                    (2-7 tables)
+                </div>
+            </div>
+            <div class="current-state">
+                ${this.numberBuilder ? 'Building: ' + this.numberBuilder : 'Enter number of pairs (4-14)'}
+            </div>
+        `;
+    }
+
+    /**
+     * Get movement selection display content - NEW SCREEN
+     */
+    getMovementSelectionContent() {
+        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c'];
+        
+        const movementButtons = this.availableMovements.map((mov, index) => {
+            const num = index + 1;
+            const color = colors[index] || '#95a5a6';
+            const sitOutBadge = mov.hasSitOut ? ' ⚠️' : '';
+            
+            return `
+                <div style="background: ${color}; color: white; padding: 15px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
+                        ${num}. ${mov.description}${sitOutBadge}
+                    </div>
+                    <div style="font-size: 13px; opacity: 0.95;">
+                        ${mov.tables} tables • ${mov.rounds} rounds • ${mov.totalBoards} boards
                     </div>
                 </div>
-                <div style="text-align: center; color: #2c3e50; font-size: 13px; margin-top: 12px; padding: 8px 10px; background: #d4edda; border-radius: 6px; border: 2px solid #28a745;">
-                    <strong style="font-size: 14px;">💡 Quick Guide:</strong>
-                    <span style="font-size: 13px; line-height: 1.6; display: block; margin-top: 4px;">
-                        Single: <strong>4-9</strong> • Two-digit: <strong>1→0</strong>, <strong>1→2</strong>, <strong>1→4</strong> • ⚠️ = sit-out rounds
-                    </span>
-                </div>
-                <div style="text-align: center; color: #95a5a6; font-size: 12px; margin-top: 10px;">
-                    Each pair plays all boards exactly once<br>
-                    Results compared using matchpoint scoring
-                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="title-score-row">
+                <div class="mode-title">${this.session.pairs} Pairs</div>
+                <div class="score-display">Select</div>
             </div>
-            <div class="current-state" style="font-size: 15px; font-weight: 700; color: #2c3e50;">
-                ${this.numberBuilder ? `Waiting for 2nd digit... (${this.numberBuilder}+?)` : 'Select number of pairs'}
+            <div class="game-content">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3 style="color: #2c3e50; margin: 0 0 5px 0;">Choose Movement</h3>
+                    <p style="color: #7f8c8d; font-size: 13px; margin: 0;">Select your tournament style</p>
+                </div>
+                
+                ${movementButtons}
+                
+                ${this.availableMovements.some(m => m.hasSitOut) ? `
+                    <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 12px; color: #856404;">
+                        <strong>⚠️ Sit-out:</strong> One pair rests each round
+                    </div>
+                ` : ''}
             </div>
+            <div class="current-state">Press 1-${this.availableMovements.length} to select movement</div>
         `;
     }
 
@@ -3635,23 +3696,21 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     getMovementConfirmContent() {
         const movement = this.session.movement;
         const estimatedTime = movement.description.match(/~(.+)/)?.[1] || '2-3 hours';
-        const hasSitOut = movement.hasSitOut ? ' (1 sit-out per round)' : '';
         
         // Check if this is a Skip Mitchell (even tables)
         const isSkipMitchell = movement.type === 'mitchell' && movement.tables % 2 === 0;
-        const skipRound = isSkipMitchell ? Math.floor(movement.tables / 2) + 1 : null;
         
         // Build skip warning if needed
         let skipWarning = '';
         if (isSkipMitchell) {
+            const skipRound = Math.floor(movement.tables / 2) + 1;
             skipWarning = `
-                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 3px solid #ffc107; margin: 15px 0;">
-                    <div style="text-align: center; font-size: 18px; font-weight: 800; color: #856404; margin-bottom: 10px;">
-                        ⚠️ SKIP MITCHELL MOVEMENT ⚠️
+                <div style="background: #fff3cd; padding: 12px; border-radius: 6px; border: 2px solid #ffc107; margin: 12px 0;">
+                    <div style="text-align: center; font-size: 15px; font-weight: bold; color: #856404;">
+                        ⚠️ Skip Round ${skipRound}
                     </div>
-                    <div style="font-size: 14px; color: #856404; line-height: 1.6; text-align: center;">
-                        <strong>ROUND ${skipRound}: EW pairs skip an extra table!</strong><br>
-                        <span style="font-size: 13px;">This ensures all pairs play each other exactly once.</span>
+                    <div style="font-size: 12px; color: #856404; text-align: center; margin-top: 4px;">
+                        EW pairs skip extra table
                     </div>
                 </div>
             `;
@@ -3659,52 +3718,33 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         return `
             <div class="title-score-row">
-                <div class="mode-title">${this.displayName}</div>
-                <div class="score-display">${this.session.pairs} Pairs</div>
+                <div class="mode-title">${this.session.pairs} Pairs</div>
+                <div class="score-display">Confirm</div>
             </div>
             <div class="game-content">
                 <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="color: #2c3e50; margin: 0;">Movement Selected</h3>
+                    <h3 style="color: #2c3e50; margin: 0 0 5px 0;">${movement.description}</h3>
                 </div>
-                <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin: 10px 0;">
-                    <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">
-                        ${movement.description}
-                    </div>
-                    <div style="font-size: 13px; color: #2c3e50; line-height: 1.5;">
-                        <div><strong>Pairs:</strong> ${movement.pairs}${hasSitOut}</div>
+                
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; border-left: 4px solid #4caf50;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
                         <div><strong>Tables:</strong> ${movement.tables}</div>
                         <div><strong>Rounds:</strong> ${movement.rounds}</div>
-                        <div><strong>Total Boards:</strong> ${movement.totalBoards}</div>
-                        <div><strong>Estimated Time:</strong> ${estimatedTime}</div>
+                        <div><strong>Boards:</strong> ${movement.totalBoards}</div>
+                        <div><strong>Time:</strong> ${estimatedTime}</div>
                     </div>
                 </div>
+                
                 ${skipWarning}
-                <div style="background: rgba(52, 152, 219, 0.1); padding: 12px; border-radius: 8px; margin: 15px 0;">
-                    <div style="font-size: 13px; color: #2c3e50; line-height: 1.6;">
-                        <strong>📋 Before starting:</strong>
-                        <ol style="margin: 8px 0 0 20px; padding: 0;">
-                            <li>Print table movement cards</li>
-                            <li>Place boards on tables</li>
-                            <li>Set up traveler sheets</li>
-                        </ol>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; font-size: 14px;">
-                    <div style="margin-bottom: 6px;">
-                        <strong style="color: #3498db;">1</strong> = View detailed movement
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong style="color: #27ae60;">2</strong> = 🖨️ Print cards & start
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong style="color: #95a5a6;">3</strong> = Start (no print)
-                    </div>
-                    <div>
-                        <strong style="color: #e67e22;">4</strong> = 🖨️ Print Menu
-                    </div>
+                
+                <div style="margin: 15px 0; font-size: 14px; line-height: 1.8;">
+                    <div><strong>1</strong> = Details</div>
+                    <div><strong>2</strong> = 🖨️ Print & Start</div>
+                    <div><strong>3</strong> = Start</div>
+                    <div><strong>4</strong> = 🖨️ Print Menu</div>
                 </div>
             </div>
-            <div class="current-state">1=Details, 2=Print&Start, 3=Start, 4=PrintMenu, Back</div>
+            <div class="current-state">1=Details 2=Print&Go 3=Start 4=Print Back</div>
         `;
     }
 
