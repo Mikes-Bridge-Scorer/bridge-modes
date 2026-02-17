@@ -723,6 +723,12 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof window !== 'undefined') {
     window.ENHANCED_MOVEMENTS = ENHANCED_MOVEMENTS;
+
+    // If duplicate bridge is already running, reload its movements now
+    if (window.duplicateBridge && window.duplicateBridge.initializeMovements) {
+        window.duplicateBridge.initializeMovements();
+        console.log('✅ Notified duplicate bridge to reload movements');
+    }
 }
 
 console.log('✅ Enhanced Movements Module loaded with', Object.keys(ENHANCED_MOVEMENTS).length, 'movements');

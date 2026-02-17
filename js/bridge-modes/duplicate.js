@@ -53,14 +53,18 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Now uses ENHANCED_MOVEMENTS if available (supports 4-20 pairs)
      */
     initializeMovements() {
-        // Use enhanced movements if available, otherwise fallback to basic
+        // Use enhanced movements if available, otherwise retry after scripts load
         if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
             this.movements = ENHANCED_MOVEMENTS;
             console.log('✅ Using enhanced movements with', Object.keys(this.movements).length, 'movement options');
-        } else {
-            // Fallback to original 3 movements
-            console.warn('⚠️ Enhanced movements not loaded, using basic 3 movements');
-            this.movements = {
+            return;
+        }
+
+        // Enhanced movements not loaded yet - set up fallback and retry
+        console.warn('⚠️ Enhanced movements not yet loaded, will retry...');
+        
+        // Fallback to original 3 movements so app starts
+        this.movements = {
             4: {
                 pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
                 description: "2-table Howell, 12 boards, ~2 hours",
@@ -135,7 +139,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 ]
             }
         };
-        }
+
+        // Retry after a short delay to allow scripts to finish loading
+        setTimeout(() => {
+            if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
+                this.movements = ENHANCED_MOVEMENTS;
+                console.log('✅ Enhanced movements loaded on retry:', Object.keys(this.movements).length, 'movements');
+                this.updateDisplay();
+            } else {
+                console.error('❌ Enhanced movements still not available - check script loading order in HTML');
+            }
+        }, 500);
     }
 
     /**
