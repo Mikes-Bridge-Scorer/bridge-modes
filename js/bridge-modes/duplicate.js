@@ -50,7 +50,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
     /**
      * Initialize movements for different pair counts
-     * Now uses ENHANCED_MOVEMENTS if available (supports 4-14 pairs)
+     * Now uses ENHANCED_MOVEMENTS if available (supports 4-20 pairs)
      */
     initializeMovements() {
         // Use enhanced movements if available, otherwise fallback to basic
@@ -296,53 +296,49 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     
     /**
      * Build a multi-digit number with smart logic
-     * 1 → Wait for second digit (10, 12, 14 valid)
-     * 2, 3 → Show error (no movements starting with 2 or 3)
+     * 1 → Wait for second digit (10-19 valid: 10,12,14,16,18)
+     * 2 → Wait for second digit (20 valid)
+     * 3 → Show error (no movements starting with 3)
      * 4-9 → Immediate selection
-     * 0 → Show error (use 1→0 for 10 pairs)
+     * 0 → Show error
      */
     buildNumber(digit) {
-        // Clear any existing timeout
         clearTimeout(this.numberBuildTimeout);
         
-        // If this is the first digit
         if (!this.numberBuilder) {
             this.numberBuilder = digit;
             
-            // If first digit is 0 → Invalid, show error
+            // First digit 0 → Invalid
             if (digit === '0') {
-                this.bridgeApp.showMessage('For 10 pairs, press 1 then 0', 'warning');
+                this.bridgeApp.showMessage('Enter pairs: 4-9, or two digits for 10-20', 'warning');
                 this.numberBuilder = '';
                 this.updateDisplay();
                 return;
             }
             
-            // If first digit is 2 or 3 → No valid movements, show error
-            if (digit === '2' || digit === '3') {
-                this.bridgeApp.showMessage('No movements starting with ' + digit + '. Try 1, or 4-9.', 'warning');
+            // First digit 3 → No valid movements
+            if (digit === '3') {
+                this.bridgeApp.showMessage('No movements for 3x pairs. Try 1, 2, or 4-9.', 'warning');
                 this.numberBuilder = '';
                 this.updateDisplay();
                 return;
             }
             
-            // If first digit is 1 → MUST be 2-digit, wait for second
-            if (digit === '1') {
-                // Just update display and wait
+            // First digit 1 or 2 → MUST be 2-digit, wait for second
+            if (digit === '1' || digit === '2') {
                 this.updateDisplay();
                 return;
             }
             
-            // If first digit is 4-9 → Single digit, submit immediately
+            // First digit 4-9 → Single digit, submit immediately
             this.updateDisplay();
             this.submitPairCount();
             return;
         }
         
-        // This is the second digit (we already have first)
+        // Second digit - build and submit
         this.numberBuilder += digit;
         this.updateDisplay();
-        
-        // Submit immediately after second digit
         this.submitPairCount();
     }
     
@@ -1711,7 +1707,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         
                         <div class="help-section" style="margin-bottom: 20px;">
                             <h4 style="color: #2c3e50; margin-bottom: 10px;">Quick Start Guide</h4>
-                            <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4-14)<br>
+                            <p style="line-height: 1.5;"><strong>1. Setup:</strong> Select number of pairs (4-20)<br>
                             • Use number buttons: Single digit (4-9) or two digits (1→0, 1→2, 1→4)<br>
                             • Review movement details and confirm<br>
                             • Supports Howell movements (2-5 tables) and Mitchell (6-7 tables)</p>
@@ -3614,7 +3610,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         ${this.numberBuilder}_
                     </div>
                     <div style="font-size: 14px; color: #666; margin-top: 8px;">
-                        ${this.numberBuilder === '1' ? 'Enter second digit (0, 2, or 4)' : 'Confirming...'}
+                        ${this.numberBuilder === '1' ? 'Enter second digit (0-9 for 10-19)' : 
+                          this.numberBuilder === '2' ? 'Enter 0 for 20 pairs' : 'Confirming...'}
                     </div>
                 </div>
             `;
@@ -3634,12 +3631,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 ${buildingDisplay}
                 
                 <div style="text-align: center; color: #7f8c8d; font-size: 14px; margin-top: 20px;">
-                    Valid range: 4-14 pairs<br>
-                    (2-7 tables)
+                    Valid range: 4-20 pairs<br>
+                    (2-10 tables)
                 </div>
             </div>
             <div class="current-state">
-                ${this.numberBuilder ? 'Building: ' + this.numberBuilder : 'Enter number of pairs (4-14)'}
+                ${this.numberBuilder ? 'Building: ' + this.numberBuilder : 'Enter number of pairs (4-20)'}
             </div>
         `;
     }
