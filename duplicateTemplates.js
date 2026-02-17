@@ -4,132 +4,144 @@
  */
 class DuplicateTemplates {
     constructor() {
-        this.movements = {
-            4: {
-                pairs: 4, tables: 2, rounds: 6, totalBoards: 12,
-                description: "2-table Howell, 12 boards, ~2 hours",
-                movement: [
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] },
-                    { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] },
-                    { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] },
-                    { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] },
-                    { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] },
-                    { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] },
-                    { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] },
-                    { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] },
-                    { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] },
-                    { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] }
-                ]
-            },
-            6: {
-                pairs: 6, tables: 3, rounds: 5, totalBoards: 10,
-                description: "3-table Howell, 10 boards, ~1.5 hours",
-                movement: [
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-                    { round: 2, table: 1, ns: 1, ew: 3, boards: [7,8] },
-                    { round: 2, table: 2, ns: 5, ew: 2, boards: [9,10] },
-                    { round: 2, table: 3, ns: 4, ew: 6, boards: [1,2] },
-                    { round: 3, table: 1, ns: 1, ew: 4, boards: [3,4] },
-                    { round: 3, table: 2, ns: 6, ew: 3, boards: [5,6] },
-                    { round: 3, table: 3, ns: 2, ew: 5, boards: [7,8] },
-                    { round: 4, table: 1, ns: 1, ew: 5, boards: [9,10] },
-                    { round: 4, table: 2, ns: 2, ew: 4, boards: [1,2] },
-                    { round: 4, table: 3, ns: 3, ew: 6, boards: [3,4] },
-                    { round: 5, table: 1, ns: 1, ew: 6, boards: [5,6] },
-                    { round: 5, table: 2, ns: 3, ew: 5, boards: [7,8] },
-                    { round: 5, table: 3, ns: 4, ew: 2, boards: [9,10] }
-                ]
-            },
-            8: {
-                pairs: 8, tables: 4, rounds: 7, totalBoards: 14,
-                description: "4-table Howell, 14 boards, ~2.5 hours",
-                movement: [
-                    { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-                    { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-                    { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-                    { round: 1, table: 4, ns: 7, ew: 8, boards: [7,8] },
-                    { round: 2, table: 1, ns: 1, ew: 6, boards: [9,10] },
-                    { round: 2, table: 2, ns: 7, ew: 3, boards: [11,12] },
-                    { round: 2, table: 3, ns: 4, ew: 8, boards: [13,14] },
-                    { round: 2, table: 4, ns: 2, ew: 5, boards: [1,2] },
-                    { round: 3, table: 1, ns: 1, ew: 8, boards: [3,4] },
-                    { round: 3, table: 2, ns: 2, ew: 6, boards: [5,6] },
-                    { round: 3, table: 3, ns: 3, ew: 5, boards: [7,8] },
-                    { round: 3, table: 4, ns: 4, ew: 7, boards: [9,10] },
-                    { round: 4, table: 1, ns: 1, ew: 5, boards: [11,12] },
-                    { round: 4, table: 2, ns: 8, ew: 4, boards: [13,14] },
-                    { round: 4, table: 3, ns: 6, ew: 7, boards: [1,2] },
-                    { round: 4, table: 4, ns: 2, ew: 3, boards: [3,4] },
-                    { round: 5, table: 1, ns: 1, ew: 7, boards: [5,6] },
-                    { round: 5, table: 2, ns: 3, ew: 8, boards: [7,8] },
-                    { round: 5, table: 3, ns: 5, ew: 4, boards: [9,10] },
-                    { round: 5, table: 4, ns: 6, ew: 2, boards: [11,12] },
-                    { round: 6, table: 1, ns: 1, ew: 4, boards: [13,14] },
-                    { round: 6, table: 2, ns: 5, ew: 8, boards: [1,2] },
-                    { round: 6, table: 3, ns: 7, ew: 2, boards: [3,4] },
-                    { round: 6, table: 4, ns: 3, ew: 6, boards: [5,6] },
-                    { round: 7, table: 1, ns: 1, ew: 3, boards: [7,8] },
-                    { round: 7, table: 2, ns: 4, ew: 6, boards: [9,10] },
-                    { round: 7, table: 3, ns: 8, ew: 5, boards: [11,12] },
-                    { round: 7, table: 4, ns: 2, ew: 7, boards: [13,14] }
-                ]
-            }
-        };
+        this.initializeMovements();
+    }
+
+    initializeMovements() {
+        if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
+            this.movements = ENHANCED_MOVEMENTS;
+            console.log('✅ DuplicateTemplates: using enhanced movements -', Object.keys(this.movements).length, 'movements');
+        } else {
+            console.warn('⚠️ DuplicateTemplates: enhanced movements not yet loaded, using fallback');
+            this.movements = {
+                '4_howell_12': { pairs: 4, tables: 2, rounds: 6, totalBoards: 12, boardsPerRound: 2, type: 'howell', description: "2-table Howell, 12 boards, ~1.5 hrs", movement: [ { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] }, { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] }, { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] }, { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] }, { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] }, { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] }, { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] }, { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] }, { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] }, { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] }, { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] }, { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] } ] },
+                '6_howell_15': { pairs: 6, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3, type: 'howell', description: "3-table Howell, 15 boards, ~2 hrs", movement: [ { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] }, { round: 1, table: 2, ns: 3, ew: 4, boards: [10,11,12] }, { round: 1, table: 3, ns: 5, ew: 6, boards: [4,5,6] }, { round: 2, table: 1, ns: 1, ew: 4, boards: [4,5,6] }, { round: 2, table: 2, ns: 2, ew: 6, boards: [10,11,12] }, { round: 2, table: 3, ns: 3, ew: 5, boards: [7,8,9] }, { round: 3, table: 1, ns: 1, ew: 6, boards: [7,8,9] }, { round: 3, table: 2, ns: 4, ew: 5, boards: [1,2,3] }, { round: 3, table: 3, ns: 2, ew: 3, boards: [4,5,6] }, { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] }, { round: 4, table: 2, ns: 6, ew: 3, boards: [1,2,3] }, { round: 4, table: 3, ns: 4, ew: 2, boards: [7,8,9] }, { round: 5, table: 1, ns: 1, ew: 3, boards: [13,14,15] }, { round: 5, table: 2, ns: 5, ew: 2, boards: [13,14,15] }, { round: 5, table: 3, ns: 6, ew: 4, boards: [13,14,15] } ] },
+                '8_howell_14': { pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2, type: 'howell', description: "4-table Howell, 14 boards, ~2 hrs", movement: [ { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] }, { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] }, { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] }, { round: 1, table: 4, ns: 7, ew: 8, boards: [9,10] }, { round: 2, table: 1, ns: 1, ew: 6, boards: [3,4] }, { round: 2, table: 2, ns: 7, ew: 3, boards: [5,6] }, { round: 2, table: 3, ns: 4, ew: 8, boards: [7,8] }, { round: 2, table: 4, ns: 2, ew: 5, boards: [11,12] }, { round: 3, table: 1, ns: 1, ew: 8, boards: [5,6] }, { round: 3, table: 2, ns: 2, ew: 7, boards: [7,8] }, { round: 3, table: 3, ns: 3, ew: 5, boards: [9,10] }, { round: 3, table: 4, ns: 6, ew: 4, boards: [13,14] }, { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] }, { round: 4, table: 2, ns: 6, ew: 2, boards: [9,10] }, { round: 4, table: 3, ns: 7, ew: 4, boards: [11,12] }, { round: 4, table: 4, ns: 8, ew: 3, boards: [1,2] }, { round: 5, table: 1, ns: 1, ew: 4, boards: [9,10] }, { round: 5, table: 2, ns: 8, ew: 6, boards: [11,12] }, { round: 5, table: 3, ns: 2, ew: 3, boards: [13,14] }, { round: 5, table: 4, ns: 5, ew: 7, boards: [3,4] }, { round: 6, table: 1, ns: 1, ew: 3, boards: [11,12] }, { round: 6, table: 2, ns: 5, ew: 8, boards: [13,14] }, { round: 6, table: 3, ns: 7, ew: 2, boards: [1,2] }, { round: 6, table: 4, ns: 4, ew: 6, boards: [5,6] }, { round: 7, table: 1, ns: 1, ew: 7, boards: [13,14] }, { round: 7, table: 2, ns: 4, ew: 5, boards: [1,2] }, { round: 7, table: 3, ns: 8, ew: 2, boards: [3,4] }, { round: 7, table: 4, ns: 3, ew: 6, boards: [7,8] } ] }
+            };
+            // Retry after scripts finish loading
+            setTimeout(() => {
+                if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
+                    this.movements = ENHANCED_MOVEMENTS;
+                    console.log('✅ DuplicateTemplates: movements reloaded on retry -', Object.keys(this.movements).length);
+                }
+            }, 500);
+        }
     }
 
     /**
-     * Show board templates popup
+     * Show board templates popup - mobile friendly, uses all movements
      */
     showBoardTemplates() {
-        const popup = this.createPopup('boardTemplatesPopup', 'Board Templates');
-        popup.innerHTML = `
-            <div class="popup-content">
-                <h3 style="text-align: center; margin: 0 0 15px 0;">Board Templates</h3>
-                <div style="text-align: center; margin: 15px 0;">
-                    <button class="template-btn" data-action="download12Boards" style="background: #27ae60;">12 Boards (4 pairs)</button>
-                    <button class="template-btn" data-action="download10Boards" style="background: #3498db;">10 Boards (6 pairs)</button>
-                    <button class="template-btn" data-action="download14Boards" style="background: #e67e22;">14 Boards (8 pairs)</button>
-                    <br><br>
-                    <button class="template-btn" data-action="downloadMovement4" style="background: #9b59b6;">Movement (4 pairs)</button>
-                    <button class="template-btn" data-action="downloadMovement6" style="background: #9b59b6;">Movement (6 pairs)</button>
-                    <button class="template-btn" data-action="downloadMovement8" style="background: #9b59b6;">Movement (8 pairs)</button>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="template-btn" data-action="close" style="background: #e74c3c;">Close</button>
-                </div>
-            </div>
-        `;
-        
-        this.setupEventDelegation(popup, this.handleBoardTemplateAction.bind(this));
+        this._showMovementPickerPopup(
+            'boardTemplatesPopup',
+            '🎴 Board Slips',
+            'Select movement to generate slips:',
+            (key, movement) => {
+                this.downloadBoardTemplate(movement.totalBoards);
+            }
+        );
     }
 
     /**
-     * Show traveler templates popup
+     * Show traveler templates popup - mobile friendly, uses all movements
      */
     showTravelerTemplates() {
-        const popup = this.createPopup('travelerTemplatesPopup', 'Traveler Sheets');
+        this._showMovementPickerPopup(
+            'travelerTemplatesPopup',
+            '📊 Traveler Sheets',
+            'Select movement to generate travelers:',
+            (key, movement) => {
+                this.downloadMovementTravelers(key, movement);
+            }
+        );
+    }
+
+    /**
+     * Shared mobile-friendly movement picker popup
+     */
+    _showMovementPickerPopup(popupId, title, subtitle, onSelect) {
+        const existing = document.getElementById(popupId);
+        if (existing) existing.remove();
+
+        const popup = document.createElement('div');
+        popup.id = popupId;
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: flex; align-items: flex-start; justify-content: center;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            padding: 20px 0;
+        `;
+
+        // Sort by pair count then board count
+        const sortedEntries = Object.entries(this.movements).sort((a, b) => {
+            if (a[1].pairs !== b[1].pairs) return a[1].pairs - b[1].pairs;
+            return a[1].totalBoards - b[1].totalBoards;
+        });
+
+        // Group by pair count
+        const groups = {};
+        sortedEntries.forEach(([key, mov]) => {
+            if (!groups[mov.pairs]) groups[mov.pairs] = [];
+            groups[mov.pairs].push({ key, mov });
+        });
+
+        const colors = ['#27ae60','#3498db','#e67e22','#9b59b6','#1abc9c',
+                        '#e74c3c','#f39c12','#16a085','#8e44ad','#2980b9'];
+        let colorIdx = 0;
+        let groupHTML = '';
+
+        Object.keys(groups).sort((a,b) => a-b).forEach(pairs => {
+            groupHTML += `
+                <div style="margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: #95a5a6; text-transform: uppercase;
+                        letter-spacing: 1px; margin-bottom: 4px; padding-left: 2px;">
+                        ${pairs} Pairs
+                    </div>`;
+            groups[pairs].forEach(({ key, mov }) => {
+                const color = colors[colorIdx++ % colors.length];
+                const sitOut = mov.hasSitOut ? ' ⚠️' : '';
+                groupHTML += `
+                    <button class="tmpl-pick-btn" data-key="${key}"
+                        style="display:block; width:100%; padding:11px 14px;
+                            margin-bottom:6px; border:none; border-radius:7px;
+                            background:${color}; color:white;
+                            font-size:14px; font-weight:600; cursor:pointer;
+                            text-align:left; line-height:1.3;">
+                        ${mov.description}${sitOut}
+                    </button>`;
+            });
+            groupHTML += `</div>`;
+        });
+
         popup.innerHTML = `
-            <div class="popup-content">
-                <h3 style="text-align: center; margin: 0 0 15px 0;">Movement-Specific Traveler Sheets</h3>
-                <p style="text-align: center; margin-bottom: 20px; font-size: 13px; color: #7f8c8d;">
-                    Pre-filled with correct pair numbers for each movement
-                </p>
-                <div style="text-align: center; margin: 15px 0;">
-                    <button class="template-btn" data-action="downloadTraveler4" style="background: #27ae60;">4-Pair Travelers</button>
-                    <button class="template-btn" data-action="downloadTraveler6" style="background: #3498db;">6-Pair Travelers</button>
-                    <button class="template-btn" data-action="downloadTraveler8" style="background: #e67e22;">8-Pair Travelers</button>
+            <div style="background:white; border-radius:10px; width:88%; max-width:340px;
+                padding:18px; color:#2c3e50; box-shadow:0 4px 20px rgba(0,0,0,0.4); margin:auto;">
+                <div style="text-align:center; margin-bottom:14px;">
+                    <h3 style="margin:0 0 3px 0; color:#2c3e50; font-size:16px;">${title}</h3>
+                    <p style="margin:0; font-size:12px; color:#7f8c8d;">${subtitle}</p>
                 </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="template-btn" data-action="close" style="background: #e74c3c;">Close</button>
-                </div>
+                ${groupHTML}
+                <button id="${popupId}_close" style="display:block; width:100%; padding:11px;
+                    margin-top:8px; border:2px solid #bdc3c7; border-radius:7px;
+                    background:white; color:#7f8c8d; font-size:14px; font-weight:600; cursor:pointer;">
+                    ✕ Close
+                </button>
             </div>
         `;
-        
-        this.setupEventDelegation(popup, this.handleTravelerTemplateAction.bind(this));
+
+        document.body.appendChild(popup);
+
+        popup.querySelectorAll('.tmpl-pick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-key');
+                popup.remove();
+                onSelect(key, this.movements[key]);
+            });
+        });
+
+        document.getElementById(`${popupId}_close`).addEventListener('click', () => popup.remove());
+        popup.addEventListener('click', e => { if (e.target === popup) popup.remove(); });
     }
 
     /**
@@ -273,48 +285,50 @@ class DuplicateTemplates {
     /**
      * Generate movement-specific traveler sheets
      */
-    downloadMovementTravelers(pairCount) {
-        const movement = this.movements[pairCount];
+    downloadMovementTravelers(key, movement) {
         if (!movement) {
-            alert(`Movement for ${pairCount} pairs not available`);
+            // Legacy call with just pairCount number - try to find first matching movement
+            movement = Object.values(this.movements).find(m => m.pairs === parseInt(key));
+        }
+        if (!movement) {
+            alert(`Movement not available`);
             return;
         }
 
-        let htmlContent = this.getHTMLHeader('Movement-Specific Traveler Sheets');
+        let htmlContent = this.getHTMLHeader('Traveler Sheets - ' + movement.description);
         htmlContent += this.getTravelerStyles();
         
-        // Group boards by which pairs play them
         const boardPairMap = this.getBoardPairMapping(movement);
         
         Object.keys(boardPairMap).sort((a,b) => parseInt(a) - parseInt(b)).forEach(boardNum => {
             const pairs = boardPairMap[boardNum];
-            htmlContent += this.generateTravelerSheet(boardNum, pairs);
+            htmlContent += this.generateTravelerSheet(boardNum, pairs, movement.totalBoards);
         });
         
         htmlContent += '</body></html>';
-        this.downloadFile(htmlContent, `bridge-travelers-${pairCount}pairs.html`);
-        this.closePopup('travelerTemplatesPopup');
+        const safeName = (movement.description || key).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+        this.downloadFile(htmlContent, `bridge-travelers-${safeName}.html`);
     }
 
     /**
      * Generate a single traveler sheet with pre-filled pairs - Clean table format
      */
-    generateTravelerSheet(boardNumber, pairInstances) {
+    generateTravelerSheet(boardNumber, pairInstances, totalBoards) {
         const vulnerability = this.getBoardVulnerability(boardNumber);
         const vulnDisplay = {
             'None': 'None Vulnerable',
-            'NS': 'N S Vulnerable', 
-            'EW': 'E W Vulnerable',
+            'NS': 'N-S Vulnerable', 
+            'EW': 'E-W Vulnerable',
             'Both': 'Both Vulnerable'
         };
         
-        // Calculate total pairs for this movement to determine table count
         const maxPair = Math.max(...pairInstances.flatMap(p => [p.ns, p.ew]));
         const tables = Math.ceil(maxPair / 2);
+        const boardsTotal = totalBoards || this.getTotalBoardsForMovement(maxPair);
         
         let html = `
             <div class="traveler-sheet">
-                <div class="header-title">${tables} table Bridge Board number ${boardNumber} of ${this.getTotalBoardsForMovement(maxPair)} (${vulnDisplay[vulnerability]})</div>
+                <div class="header-title">${tables} table Bridge &bull; Board ${boardNumber} of ${boardsTotal} &bull; ${vulnDisplay[vulnerability]}</div>
                 <table class="traveler-table">
                     <thead>
                         <tr>
@@ -579,13 +593,14 @@ class DuplicateTemplates {
     }
 
     /**
-     * Get total boards for a movement based on pair count
+     * Get total boards for a movement - uses actual movement data when available
      */
     getTotalBoardsForMovement(maxPair) {
-        if (maxPair <= 4) return 12;
-        if (maxPair <= 6) return 10;
-        if (maxPair <= 8) return 14;
-        return 16; // Default fallback
+        // Try to find a matching movement
+        const match = Object.values(this.movements).find(m => m.pairs === maxPair);
+        if (match) return match.totalBoards;
+        // Basic fallback
+        return maxPair * 2;
     }
 
     /**
@@ -787,16 +802,29 @@ class DuplicateTemplates {
 if (typeof window !== 'undefined') {
     window.DuplicateTemplates = DuplicateTemplates;
     
-    // Create test instance when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             window.templateGenerator = new DuplicateTemplates();
-            console.log('DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.');
+            console.log('DuplicateTemplates ready.');
         });
     } else {
         window.templateGenerator = new DuplicateTemplates();
-        console.log('DuplicateTemplates ready. Use templateGenerator.createTestButtons() to test.');
+        console.log('DuplicateTemplates ready.');
     }
+
+    // If enhanced-movements loads after us, reload our movements
+    const _origEM = Object.getOwnPropertyDescriptor(window, 'ENHANCED_MOVEMENTS');
+    Object.defineProperty(window, 'ENHANCED_MOVEMENTS', {
+        set(value) {
+            Object.defineProperty(window, 'ENHANCED_MOVEMENTS', { value, writable: true, configurable: true });
+            if (window.templateGenerator) {
+                window.templateGenerator.movements = value;
+                console.log('✅ DuplicateTemplates: movements updated via setter');
+            }
+        },
+        get() { return _origEM ? _origEM.value : undefined; },
+        configurable: true
+    });
 }
 
 // Export for module usage
