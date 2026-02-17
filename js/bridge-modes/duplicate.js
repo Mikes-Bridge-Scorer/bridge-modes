@@ -2154,117 +2154,134 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Show movement selector for viewing movement sheets
      */
     showMovementSelector() {
+        this._showMovementPickerPopup(
+            'movementSelectorPopup',
+            '📑 Movement Sheet',
+            'Select movement to view:',
+            (key, movement) => {
+                this.showPrintDownloadChoice('Movement Sheet', movement, 'movementSheet');
+            }
+        );
+    }
+
+    /**
+     * Shared helper - builds a clean mobile-friendly movement picker popup
+     */
+    _showMovementPickerPopup(popupId, title, subtitle, onSelect) {
+        const existing = document.getElementById(popupId);
+        if (existing) existing.remove();
+
         const popup = document.createElement('div');
-        popup.id = 'movementSelectorPopup';
+        popup.id = popupId;
         popup.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: flex-start; justify-content: center;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            padding: 20px 0;
         `;
-        
-        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
-        
-        let buttonHTML = '';
-        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c', '#f39c12', '#16a085', '#c0392b'];
-        
-        availablePairs.forEach((pairs, index) => {
-            const movement = this.movements[pairs];
-            const color = colors[index % colors.length];
-            const label = movement.hasSitOut ? `${pairs}-Pair Movement ⚠️` : `${pairs}-Pair Movement`;
-            buttonHTML += `<button class="movement-view-btn" data-pairs="${pairs}" style="background: ${color}; color: white; border: none; padding: 12px 20px; margin: 8px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 140px;">${label}</button>\n`;
-            
-            if ((index + 1) % 3 === 0) {
-                buttonHTML += '<br>';
-            }
+
+        // Sort movements by pair count then board count
+        const sortedEntries = Object.entries(this.movements).sort((a, b) => {
+            if (a[1].pairs !== b[1].pairs) return a[1].pairs - b[1].pairs;
+            return a[1].totalBoards - b[1].totalBoards;
         });
-        
+
+        // Group by pair count
+        const groups = {};
+        sortedEntries.forEach(([key, mov]) => {
+            if (!groups[mov.pairs]) groups[mov.pairs] = [];
+            groups[mov.pairs].push({ key, mov });
+        });
+
+        let groupHTML = '';
+        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c',
+                        '#e74c3c', '#f39c12', '#16a085', '#8e44ad', '#2980b9'];
+        let colorIdx = 0;
+
+        Object.keys(groups).sort((a,b) => a-b).forEach(pairs => {
+            const entries = groups[pairs];
+            const pairLabel = `${pairs} Pairs`;
+
+            groupHTML += `<div style="margin-bottom: 8px;">
+                <div style="font-size: 11px; color: #95a5a6; text-transform: uppercase;
+                    letter-spacing: 1px; margin-bottom: 4px; padding-left: 2px;">
+                    ${pairLabel}
+                </div>`;
+
+            entries.forEach(({ key, mov }) => {
+                const color = colors[colorIdx % colors.length];
+                colorIdx++;
+                const sitOut = mov.hasSitOut ? ' ⚠️' : '';
+                const desc = mov.description || key;
+                groupHTML += `
+                    <button class="mov-pick-btn" data-key="${key}"
+                        style="display: block; width: 100%; padding: 11px 14px;
+                            margin-bottom: 6px; border: none; border-radius: 7px;
+                            background: ${color}; color: white;
+                            font-size: 14px; font-weight: 600; cursor: pointer;
+                            text-align: left; line-height: 1.3;">
+                        ${desc}${sitOut}
+                    </button>`;
+            });
+
+            groupHTML += `</div>`;
+        });
+
         popup.innerHTML = `
-            <div style="background: white; padding: 25px; border-radius: 8px; max-width: 600px; text-align: center;">
-                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">Select Movement to View</h3>
-                <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">⚠️ = Includes sit-out rounds</p>
-                <div style="margin: 20px 0;">
-                    ${buttonHTML}
+            <div style="
+                background: white; border-radius: 10px;
+                width: 88%; max-width: 340px;
+                padding: 18px; color: #2c3e50;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+                margin: auto;
+            ">
+                <div style="text-align: center; margin-bottom: 14px;">
+                    <h3 style="margin: 0 0 3px 0; color: #2c3e50; font-size: 16px;">${title}</h3>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">${subtitle}</p>
                 </div>
-                <button id="closeMovementSelector" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px;">Close</button>
+                ${groupHTML}
+                <button id="${popupId}_close" style="
+                    display: block; width: 100%; padding: 11px;
+                    margin-top: 8px; border: 2px solid #bdc3c7; border-radius: 7px;
+                    background: white; color: #7f8c8d;
+                    font-size: 14px; font-weight: 600; cursor: pointer;
+                ">✕ Close</button>
             </div>
         `;
-        
+
         document.body.appendChild(popup);
-        
-        // Add event listeners
-        popup.querySelectorAll('.movement-view-btn').forEach(btn => {
-            btn.onclick = () => {
-                const pairs = btn.getAttribute('data-pairs');
-                const movement = this.movements[pairs];
-                document.body.removeChild(popup);
-                // Show print/download choice
-                this.showPrintDownloadChoice('Movement Sheet', movement, 'movementSheet');
-            };
+
+        popup.querySelectorAll('.mov-pick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-key');
+                const movement = this.movements[key];
+                popup.remove();
+                onSelect(key, movement);
+            });
         });
-        
-        document.getElementById('closeMovementSelector').onclick = () => {
-            document.body.removeChild(popup);
-        };
+
+        document.getElementById(`${popupId}_close`).addEventListener('click', () => {
+            popup.remove();
+        });
+
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup) popup.remove();
+        });
     }
 
     /**
      * Print table movement cards - show movement selector then print/download choice
      */
     printTableCards() {
-        // Show movement selector popup
-        const popup = document.createElement('div');
-        popup.id = 'tableCardSelectorPopup';
-        popup.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
-        `;
-        
-        // Get available movements
-        const availablePairs = Object.keys(this.movements).sort((a, b) => parseInt(a) - parseInt(b));
-        
-        // Build buttons for each movement
-        let buttonHTML = '';
-        const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c', '#f39c12', '#16a085', '#c0392b'];
-        
-        availablePairs.forEach((pairs, index) => {
-            const movement = this.movements[pairs];
-            const color = colors[index % colors.length];
-            const label = movement.hasSitOut ? `${pairs}-Pair Cards ⚠️` : `${pairs}-Pair Cards`;
-            buttonHTML += `<button class="movement-select-btn" data-pairs="${pairs}" style="background: ${color}; color: white; border: none; padding: 12px 20px; margin: 8px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 140px;">${label}</button>\n`;
-            
-            if ((index + 1) % 3 === 0) {
-                buttonHTML += '<br>';
-            }
-        });
-        
-        popup.innerHTML = `
-            <div style="background: white; padding: 25px; border-radius: 8px; max-width: 600px; text-align: center;">
-                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">Select Movement for Table Cards</h3>
-                <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">⚠️ = Includes sit-out rounds</p>
-                <div style="margin: 20px 0;">
-                    ${buttonHTML}
-                </div>
-                <button id="closeTableCardSelector" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px;">Close</button>
-            </div>
-        `;
-        
-        document.body.appendChild(popup);
-        
-        // Add event listeners
-        popup.querySelectorAll('.movement-select-btn').forEach(btn => {
-            btn.onclick = () => {
-                const pairs = btn.getAttribute('data-pairs');
-                const movement = this.movements[pairs];
-                document.body.removeChild(popup);
-                // Show print/download choice
+        this._showMovementPickerPopup(
+            'tableCardSelectorPopup',
+            '📋 Table Movement Cards',
+            'Select movement to print:',
+            (key, movement) => {
                 this.showPrintDownloadChoice('Table Movement Cards', movement, 'tableCards');
-            };
-        });
-        
-        document.getElementById('closeTableCardSelector').onclick = () => {
-            document.body.removeChild(popup);
-        };
+            }
+        );
     }
 
     /**
