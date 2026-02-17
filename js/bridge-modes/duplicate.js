@@ -2046,48 +2046,108 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      */
     showPrintMenu() {
         console.log('🖨️ Opening Print Menu...');
-        
-        const content = `
-            <div class="help-section">
-                <h4 style="text-align: center; margin-bottom: 15px;">🖨️ Print Options</h4>
-                <p style="text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 10px;">
-                    Select what you would like to print:
-                </p>
-                <div style="background: #e8f4f8; padding: 10px; border-radius: 6px; font-size: 12px; color: #2c3e50; margin-bottom: 15px;">
-                    <strong>💡 Tip:</strong> Table Cards & Movement Sheets offer print/download choice.<br>
-                    Travelers & Board Slips download as HTML files - open in browser to print/distribute to players.
+
+        // Remove any existing print menu popup
+        const existing = document.getElementById('printMenuPopup');
+        if (existing) existing.remove();
+
+        const popup = document.createElement('div');
+        popup.id = 'printMenuPopup';
+        popup.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-overflow-scrolling: touch;
+        `;
+
+        popup.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 10px;
+                width: 88%;
+                max-width: 340px;
+                padding: 20px;
+                color: #2c3e50;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            ">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 4px 0; color: #2c3e50;">🖨️ Print Menu</h3>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Select what to print</p>
                 </div>
+
+                <div style="background: #e8f4f8; padding: 10px; border-radius: 6px; font-size: 12px; color: #2c3e50; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 Tip:</strong> Table Cards &amp; Movement Sheets offer print/download.<br>
+                    Travelers &amp; Board Slips open in browser.
+                </div>
+
+                <button id="pmBtn1" style="
+                    display: block; width: 100%; padding: 13px;
+                    margin-bottom: 10px; border: none; border-radius: 7px;
+                    background: #27ae60; color: white;
+                    font-size: 15px; font-weight: 600; cursor: pointer;
+                    text-align: left;
+                ">📋 Table Movement Cards</button>
+
+                <button id="pmBtn2" style="
+                    display: block; width: 100%; padding: 13px;
+                    margin-bottom: 10px; border: none; border-radius: 7px;
+                    background: #3498db; color: white;
+                    font-size: 15px; font-weight: 600; cursor: pointer;
+                    text-align: left;
+                ">📊 Traveler Sheets (HTML)</button>
+
+                <button id="pmBtn3" style="
+                    display: block; width: 100%; padding: 13px;
+                    margin-bottom: 10px; border: none; border-radius: 7px;
+                    background: #e67e22; color: white;
+                    font-size: 15px; font-weight: 600; cursor: pointer;
+                    text-align: left;
+                ">🎴 Board Slips (HTML)</button>
+
+                <button id="pmBtn4" style="
+                    display: block; width: 100%; padding: 13px;
+                    margin-bottom: 15px; border: none; border-radius: 7px;
+                    background: #9b59b6; color: white;
+                    font-size: 15px; font-weight: 600; cursor: pointer;
+                    text-align: left;
+                ">📑 Movement Sheet</button>
+
+                <button id="pmClose" style="
+                    display: block; width: 100%; padding: 11px;
+                    border: 2px solid #bdc3c7; border-radius: 7px;
+                    background: white; color: #7f8c8d;
+                    font-size: 14px; font-weight: 600; cursor: pointer;
+                ">✕ Close</button>
             </div>
         `;
-        
-        const buttons = [
-            { 
-                text: '📋 Table Movement Cards', 
-                action: () => this.printTableCards(), 
-                class: 'help-btn' 
-            },
-            { 
-                text: '📊 Traveler Sheets (HTML)', 
-                action: () => this.printTravelerSheets(), 
-                class: 'help-btn' 
-            },
-            { 
-                text: '🎴 Board Slips (HTML)', 
-                action: () => this.printBoardSlips(), 
-                class: 'help-btn' 
-            },
-            { 
-                text: '📑 Movement Sheet', 
-                action: () => this.showMovementSelector(), 
-                class: 'help-btn' 
-            }
-        ];
-        
-        if (this.bridgeApp && this.bridgeApp.showModal) {
-            this.bridgeApp.showModal('Print Menu', content, buttons);
-        } else {
-            console.error('❌ bridgeApp.showModal not available');
-        }
+
+        document.body.appendChild(popup);
+
+        // Wire up buttons
+        document.getElementById('pmBtn1').addEventListener('click', () => {
+            popup.remove();
+            this.printTableCards();
+        });
+        document.getElementById('pmBtn2').addEventListener('click', () => {
+            popup.remove();
+            this.printTravelerSheets();
+        });
+        document.getElementById('pmBtn3').addEventListener('click', () => {
+            popup.remove();
+            this.printBoardSlips();
+        });
+        document.getElementById('pmBtn4').addEventListener('click', () => {
+            popup.remove();
+            this.showMovementSelector();
+        });
+        document.getElementById('pmClose').addEventListener('click', () => {
+            popup.remove();
+        });
+
+        // Close on backdrop click
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup) popup.remove();
+        });
     }
 
     /**
