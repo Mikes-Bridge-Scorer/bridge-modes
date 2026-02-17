@@ -3653,12 +3653,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             const sitOutBadge = mov.hasSitOut ? ' ⚠️' : '';
             
             return `
-                <div style="background: ${color}; color: white; padding: 15px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
+                <div style="background: ${color}; color: white; padding: 14px 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <div style="font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                         ${num}. ${mov.description}${sitOutBadge}
                     </div>
-                    <div style="font-size: 13px; opacity: 0.95;">
-                        ${mov.tables} tables • ${mov.rounds} rounds • ${mov.totalBoards} boards
+                    <div style="font-size: 14px; opacity: 0.95; margin-top: 4px;">
+                        ${mov.tables} tables &bull; ${mov.rounds} rounds &bull; ${mov.totalBoards} boards
                     </div>
                 </div>
             `;
@@ -3670,15 +3670,15 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 <div class="score-display">Select</div>
             </div>
             <div class="game-content">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="color: #2c3e50; margin: 0 0 5px 0;">Choose Movement</h3>
-                    <p style="color: #7f8c8d; font-size: 13px; margin: 0;">Select your tournament style</p>
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <h3 style="color: #2c3e50; margin: 0 0 4px 0;">Choose Movement</h3>
+                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Select your tournament style</p>
                 </div>
                 
                 ${movementButtons}
                 
                 ${this.availableMovements.some(m => m.hasSitOut) ? `
-                    <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 12px; color: #856404;">
+                    <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-top: 12px; font-size: 13px; color: #856404;">
                         <strong>⚠️ Sit-out:</strong> One pair rests each round
                     </div>
                 ` : ''}

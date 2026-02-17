@@ -61,7 +61,7 @@ const ENHANCED_MOVEMENTS = {
     "4_howell_12": {
         pairs: 4, tables: 2, rounds: 6, totalBoards: 12, boardsPerRound: 2,
         type: 'howell',
-        description: "2-table Howell, 12 boards, ~1.5 hours",
+        description: "2-table Howell, 12 boards, ~1.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
             { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
@@ -78,13 +78,33 @@ const ENHANCED_MOVEMENTS = {
         ]
     },
 
+    "4_howell_24": {
+        pairs: 4, tables: 2, rounds: 6, totalBoards: 24, boardsPerRound: 4,
+        type: 'howell',
+        description: "2-table Howell, 24 boards, ~3 hrs (ACBL)",
+        movement: [
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
+            { round: 1, table: 2, ns: 3, ew: 4, boards: [5,6,7,8] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [9,10,11,12] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [13,14,15,16] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [17,18,19,20] },
+            { round: 3, table: 2, ns: 2, ew: 3, boards: [21,22,23,24] },
+            { round: 4, table: 1, ns: 1, ew: 2, boards: [5,6,7,8] },
+            { round: 4, table: 2, ns: 3, ew: 4, boards: [1,2,3,4] },
+            { round: 5, table: 1, ns: 1, ew: 3, boards: [13,14,15,16] },
+            { round: 5, table: 2, ns: 4, ew: 2, boards: [9,10,11,12] },
+            { round: 6, table: 1, ns: 1, ew: 4, boards: [21,22,23,24] },
+            { round: 6, table: 2, ns: 2, ew: 3, boards: [17,18,19,20] }
+        ]
+    },
+
     // ─────────────────────────────────────────────
     // 5 PAIRS - 2.5 tables
     // ─────────────────────────────────────────────
     "5_howell_15": {
         pairs: 5, tables: 2.5, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'howell', hasSitOut: true,
-        description: "2.5-table Howell, 15 boards, ~2 hours (1 sit-out)",
+        description: "2.5-table Howell, 15 boards, ~2 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
             { round: 1, table: 2, ns: 3, ew: 4, boards: [10,11,12] },
@@ -102,7 +122,7 @@ const ENHANCED_MOVEMENTS = {
     "5_howell_25": {
         pairs: 5, tables: 2.5, rounds: 5, totalBoards: 25, boardsPerRound: 5,
         type: 'howell', hasSitOut: true,
-        description: "2.5-table Howell, 25 boards, ~3 hours (1 sit-out)",
+        description: "2.5-table Howell, 25 boards, ~3 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5] },
             { round: 1, table: 3, ns: 5, ew: 4, boards: [6,7,8,9,10] },
@@ -123,7 +143,7 @@ const ENHANCED_MOVEMENTS = {
     "6_howell_15": {
         pairs: 6, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'howell',
-        description: "3-table Howell, 15 boards, ~2 hours",
+        description: "3-table Howell, 15 boards, ~2 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
             { round: 1, table: 2, ns: 3, ew: 4, boards: [10,11,12] },
@@ -146,7 +166,7 @@ const ENHANCED_MOVEMENTS = {
     "6_howell_25": {
         pairs: 6, tables: 3, rounds: 5, totalBoards: 25, boardsPerRound: 5,
         type: 'howell',
-        description: "3-table Howell, 25 boards, ~3 hours",
+        description: "3-table Howell, 25 boards, ~3 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5] },
             { round: 1, table: 2, ns: 6, ew: 3, boards: [16,17,18,19,20] },
@@ -172,7 +192,7 @@ const ENHANCED_MOVEMENTS = {
     "7_howell_14": {
         pairs: 7, tables: 3.5, rounds: 7, totalBoards: 14, boardsPerRound: 2,
         type: 'howell', hasSitOut: true,
-        description: "3.5-table Howell, 14 boards, ~2 hours (1 sit-out)",
+        description: "3.5-table Howell, 14 boards, ~2 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
             { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
@@ -201,7 +221,7 @@ const ENHANCED_MOVEMENTS = {
     "7_howell_28": {
         pairs: 7, tables: 3.5, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'howell', hasSitOut: true,
-        description: "3.5-table Howell, 28 boards, ~3.5 hours (1 sit-out)",
+        description: "3.5-table Howell, 28 boards, ~3.5 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 5, boards: [1,2,3,4] },
             { round: 1, table: 2, ns: 2, ew: 6, boards: [5,6,7,8] },
@@ -233,7 +253,7 @@ const ENHANCED_MOVEMENTS = {
     "8_howell_14": {
         pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
         type: 'howell',
-        description: "4-table Howell, 14 boards, ~2 hours",
+        description: "4-table Howell, 14 boards, ~2 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
             { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
@@ -269,7 +289,7 @@ const ENHANCED_MOVEMENTS = {
     "8_howell_28": {
         pairs: 8, tables: 4, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'howell',
-        description: "4-table Howell, 28 boards, ~3.5 hours",
+        description: "4-table Howell, 28 boards, ~3.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 5, boards: [1,2,3,4] },
             { round: 1, table: 2, ns: 2, ew: 6, boards: [5,6,7,8] },
@@ -305,14 +325,14 @@ const ENHANCED_MOVEMENTS = {
     "8_mitchell_16": {
         pairs: 8, tables: 4, rounds: 4, totalBoards: 16, boardsPerRound: 4,
         type: 'mitchell',
-        description: "4-table Skip Mitchell, 16 boards, ~2 hours",
+        description: "4-table Skip Mitchell, 16 boards, ~2 hrs",
         movement: generateMitchellMovement(4, 4, true)
     },
 
     "8_mitchell_24": {
         pairs: 8, tables: 4, rounds: 4, totalBoards: 24, boardsPerRound: 6,
         type: 'mitchell',
-        description: "4-table Skip Mitchell, 24 boards, ~3 hours",
+        description: "4-table Skip Mitchell, 24 boards, ~3 hrs",
         movement: generateMitchellMovement(4, 6, true)
     },
 
@@ -322,7 +342,7 @@ const ENHANCED_MOVEMENTS = {
     "9_howell_18": {
         pairs: 9, tables: 4.5, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'howell', hasSitOut: true,
-        description: "4.5-table Howell, 18 boards, ~2.5 hours (1 sit-out)",
+        description: "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2] },
             { round: 1, table: 2, ns: 2, ew: 7, boards: [3,4] },
@@ -366,7 +386,7 @@ const ENHANCED_MOVEMENTS = {
     "9_howell_27": {
         pairs: 9, tables: 4.5, rounds: 9, totalBoards: 27, boardsPerRound: 3,
         type: 'howell', hasSitOut: true,
-        description: "4.5-table Howell, 27 boards, ~3.5 hours (1 sit-out)",
+        description: "4.5-table Howell, 27 boards, ~3.5 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2,3] },
             { round: 1, table: 2, ns: 2, ew: 7, boards: [4,5,6] },
@@ -413,7 +433,7 @@ const ENHANCED_MOVEMENTS = {
     "10_howell_18": {
         pairs: 10, tables: 5, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'howell',
-        description: "5-table Howell, 18 boards, ~2.5 hours",
+        description: "5-table Howell, 18 boards, ~2.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2] },
             { round: 1, table: 2, ns: 2, ew: 7, boards: [3,4] },
@@ -466,7 +486,7 @@ const ENHANCED_MOVEMENTS = {
     "10_howell_27": {
         pairs: 10, tables: 5, rounds: 9, totalBoards: 27, boardsPerRound: 3,
         type: 'howell',
-        description: "5-table Howell, 27 boards, ~3.5 hours",
+        description: "5-table Howell, 27 boards, ~3.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2,3] },
             { round: 1, table: 2, ns: 2, ew: 7, boards: [4,5,6] },
@@ -526,14 +546,14 @@ const ENHANCED_MOVEMENTS = {
     "10_mitchell_15": {
         pairs: 10, tables: 5, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'mitchell',
-        description: "5-table Mitchell, 15 boards, ~2 hours",
+        description: "5-table Mitchell, 15 boards, ~2 hrs",
         movement: generateMitchellMovement(5, 3, false)
     },
 
     "10_mitchell_25": {
         pairs: 10, tables: 5, rounds: 5, totalBoards: 25, boardsPerRound: 5,
         type: 'mitchell',
-        description: "5-table Mitchell, 25 boards, ~3 hours",
+        description: "5-table Mitchell, 25 boards, ~3 hrs",
         movement: generateMitchellMovement(5, 5, false)
     },
 
@@ -541,14 +561,14 @@ const ENHANCED_MOVEMENTS = {
     "12_mitchell_18": {
         pairs: 12, tables: 6, rounds: 6, totalBoards: 18, boardsPerRound: 3,
         type: 'mitchell',
-        description: "6-table Skip Mitchell, 18 boards, ~2 hours",
+        description: "6-table Skip Mitchell, 18 boards, ~2 hrs",
         movement: generateMitchellMovement(6, 3, true)
     },
 
     "12_mitchell_24": {
         pairs: 12, tables: 6, rounds: 6, totalBoards: 24, boardsPerRound: 4,
         type: 'mitchell',
-        description: "6-table Skip Mitchell, 24 boards, ~3 hours",
+        description: "6-table Skip Mitchell, 24 boards, ~3 hrs",
         movement: generateMitchellMovement(6, 4, true)
     },
 
@@ -556,61 +576,143 @@ const ENHANCED_MOVEMENTS = {
     "14_mitchell_21": {
         pairs: 14, tables: 7, rounds: 7, totalBoards: 21, boardsPerRound: 3,
         type: 'mitchell',
-        description: "7-table Mitchell, 21 boards, ~2.5 hours",
+        description: "7-table Mitchell, 21 boards, ~2.5 hrs",
         movement: generateMitchellMovement(7, 3, false)
     },
 
     "14_mitchell_28": {
         pairs: 14, tables: 7, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'mitchell',
-        description: "7-table Mitchell, 28 boards, ~3.5 hours",
+        description: "7-table Mitchell, 28 boards, ~3.5 hrs",
         movement: generateMitchellMovement(7, 4, false)
     },
 
     // 8 tables - 16 pairs (EVEN - skip needed)
+    "16_mitchell_16": {
+        pairs: 16, tables: 8, rounds: 8, totalBoards: 16, boardsPerRound: 2,
+        type: 'mitchell',
+        description: "8-table Skip Mitchell, 16 boards, ~2 hrs",
+        movement: generateMitchellMovement(8, 2, true)
+    },
+
     "16_mitchell_24": {
         pairs: 16, tables: 8, rounds: 8, totalBoards: 24, boardsPerRound: 3,
         type: 'mitchell',
-        description: "8-table Skip Mitchell, 24 boards, ~3 hours",
+        description: "8-table Skip Mitchell, 24 boards, ~3 hrs",
         movement: generateMitchellMovement(8, 3, true)
     },
 
-    "16_mitchell_32": {
-        pairs: 16, tables: 8, rounds: 8, totalBoards: 32, boardsPerRound: 4,
+    // 9 tables - 18 pairs (ODD - no skip)
+    "18_mitchell_18": {
+        pairs: 18, tables: 9, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'mitchell',
-        description: "8-table Skip Mitchell, 32 boards, ~4 hours",
-        movement: generateMitchellMovement(8, 4, true)
+        description: "9-table Mitchell, 18 boards, ~2 hrs",
+        movement: generateMitchellMovement(9, 2, false)
     },
 
-    // 9 tables - 18 pairs (ODD - no skip)
     "18_mitchell_27": {
         pairs: 18, tables: 9, rounds: 9, totalBoards: 27, boardsPerRound: 3,
         type: 'mitchell',
-        description: "9-table Mitchell, 27 boards, ~3 hours",
+        description: "9-table Mitchell, 27 boards, ~3 hrs",
         movement: generateMitchellMovement(9, 3, false)
     },
 
-    "18_mitchell_36": {
-        pairs: 18, tables: 9, rounds: 9, totalBoards: 36, boardsPerRound: 4,
+    // 10 tables - 20 pairs (EVEN - skip needed)
+    "20_mitchell_20": {
+        pairs: 20, tables: 10, rounds: 10, totalBoards: 20, boardsPerRound: 2,
         type: 'mitchell',
-        description: "9-table Mitchell, 36 boards, ~4 hours",
-        movement: generateMitchellMovement(9, 4, false)
+        description: "10-table Skip Mitchell, 20 boards, ~2 hrs",
+        movement: generateMitchellMovement(10, 2, true)
     },
 
-    // 10 tables - 20 pairs (EVEN - skip needed)
     "20_mitchell_30": {
         pairs: 20, tables: 10, rounds: 10, totalBoards: 30, boardsPerRound: 3,
         type: 'mitchell',
-        description: "10-table Skip Mitchell, 30 boards, ~3.5 hours",
+        description: "10-table Skip Mitchell, 30 boards, ~3 hrs",
         movement: generateMitchellMovement(10, 3, true)
     },
 
-    "20_mitchell_40": {
-        pairs: 20, tables: 10, rounds: 10, totalBoards: 40, boardsPerRound: 4,
-        type: 'mitchell',
-        description: "10-table Skip Mitchell, 40 boards, ~4.5 hours",
-        movement: generateMitchellMovement(10, 4, true)
+    // ─────────────────────────────────────────────
+    // ODD PAIR COUNTS - Mitchell with sit-out
+    // Uses lower table count + 1 pair sits out each round
+    // ─────────────────────────────────────────────
+
+    // 11 pairs: 5 tables + 1 sit-out (ODD tables - no skip)
+    "11_mitchell_15": {
+        pairs: 11, tables: 5, rounds: 5, totalBoards: 15, boardsPerRound: 3,
+        type: 'mitchell', hasSitOut: true,
+        description: "5-table Mitchell, 15 boards, ~2 hrs (1 sit-out)",
+        movement: generateMitchellMovement(5, 3, false)
+    },
+
+    "11_mitchell_25": {
+        pairs: 11, tables: 5, rounds: 5, totalBoards: 25, boardsPerRound: 5,
+        type: 'mitchell', hasSitOut: true,
+        description: "5-table Mitchell, 25 boards, ~3 hrs (1 sit-out)",
+        movement: generateMitchellMovement(5, 5, false)
+    },
+
+    // 13 pairs: 6 tables + 1 sit-out (EVEN - skip needed)
+    "13_mitchell_18": {
+        pairs: 13, tables: 6, rounds: 6, totalBoards: 18, boardsPerRound: 3,
+        type: 'mitchell', hasSitOut: true,
+        description: "6-table Skip Mitchell, 18 boards, ~2 hrs (1 sit-out)",
+        movement: generateMitchellMovement(6, 3, true)
+    },
+
+    "13_mitchell_24": {
+        pairs: 13, tables: 6, rounds: 6, totalBoards: 24, boardsPerRound: 4,
+        type: 'mitchell', hasSitOut: true,
+        description: "6-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        movement: generateMitchellMovement(6, 4, true)
+    },
+
+    // 15 pairs: 7 tables + 1 sit-out (ODD - no skip)
+    "15_mitchell_21": {
+        pairs: 15, tables: 7, rounds: 7, totalBoards: 21, boardsPerRound: 3,
+        type: 'mitchell', hasSitOut: true,
+        description: "7-table Mitchell, 21 boards, ~2.5 hrs (1 sit-out)",
+        movement: generateMitchellMovement(7, 3, false)
+    },
+
+    "15_mitchell_28": {
+        pairs: 15, tables: 7, rounds: 7, totalBoards: 28, boardsPerRound: 4,
+        type: 'mitchell', hasSitOut: true,
+        description: "7-table Mitchell, 28 boards, ~3.5 hrs (1 sit-out)",
+        movement: generateMitchellMovement(7, 4, false)
+    },
+
+    // 17 pairs: 8 tables + 1 sit-out (EVEN - skip needed)
+    "17_mitchell_16": {
+        pairs: 17, tables: 8, rounds: 8, totalBoards: 16, boardsPerRound: 2,
+        type: 'mitchell', hasSitOut: true,
+        description: "8-table Skip Mitchell, 16 boards, ~2 hrs (1 sit-out)",
+        movement: generateMitchellMovement(8, 2, true)
+    },
+
+    "17_mitchell_24": {
+        pairs: 17, tables: 8, rounds: 8, totalBoards: 24, boardsPerRound: 3,
+        type: 'mitchell', hasSitOut: true,
+        description: "8-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        movement: generateMitchellMovement(8, 3, true)
+    },
+
+    // 19 pairs: 9 tables + 1 sit-out (ODD - no skip)
+    "19_mitchell_18": {
+        pairs: 19, tables: 9, rounds: 9, totalBoards: 18, boardsPerRound: 2,
+        type: 'mitchell', hasSitOut: true,
+        description: "9-table Mitchell, 18 boards, ~2 hrs (1 sit-out)",
+        movement: generateMitchellMovement(9, 2, false)
+    },
+
+    "19_mitchell_27": {
+        pairs: 19, tables: 9, rounds: 9, totalBoards: 27, boardsPerRound: 3,
+        type: 'mitchell', hasSitOut: true,
+        description: "9-table Mitchell, 27 boards, ~3 hrs (1 sit-out)",
+        movement: generateMitchellMovement(9, 3, false)
     }
+
+};
 
 };
 
