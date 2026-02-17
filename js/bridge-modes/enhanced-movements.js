@@ -714,8 +714,6 @@ const ENHANCED_MOVEMENTS = {
 
 };
 
-};
-
 // Export for use in duplicate.js and duplicateTemplates.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ENHANCED_MOVEMENTS;
