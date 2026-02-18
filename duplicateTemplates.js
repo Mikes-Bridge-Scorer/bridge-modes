@@ -396,6 +396,9 @@ class DuplicateTemplates {
         const mapping = {};
         
         movement.movement.forEach(entry => {
+            // Skip sit-out entries (ns=0 or no boards)
+            if (entry.ns === 0 || !entry.boards || entry.boards.length === 0) return;
+            
             entry.boards.forEach(boardNum => {
                 if (!mapping[boardNum]) mapping[boardNum] = [];
                 mapping[boardNum].push({ ns: entry.ns, ew: entry.ew });
@@ -796,7 +799,86 @@ class DuplicateTemplates {
         
         console.log('Test buttons created. Click to test template generation.');
     }
-    downloadMovementSheet(m){this.downloadHTML(this.buildMovementSheetHTML(m),`Movement-Sheet-${m.pairs}-Pairs.html`)}buildMovementSheetHTML(m){if(!m||!m.movement)return"<html><body>No data</body></html>";const r={};m.movement.forEach(e=>{if(!r[e.round])r[e.round]=[];r[e.round].push(e)});const t=[...new Set(m.movement.map(e=>e.table))].sort((a,b)=>a-b);let h="<tr><th>Round</th>";t.forEach(x=>h+=`<th>Table ${x}</th>`);h+="</tr>";Object.keys(r).sort((a,b)=>a-b).forEach(n=>{h+=`<tr><td>${n}</td>`;t.forEach(x=>{const e=r[n].find(y=>y.table===x);h+=e?`<td>NS:${e.ns}<br>EW:${e.ew}<br>${e.boards.join(",")}</td>`:"<td></td>"});h+="</tr>"});return`<html><head><title>${m.description}</title><style>table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}th{background:#34495e;color:white}</style></head><body><h2>${m.description}</h2><table>${h}</table></body></html>`}downloadHTML(h,f){const b=new Blob([h],{type:"text/html"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+    downloadMovementSheet(movement) {
+        this.downloadHTML(this.buildMovementSheetHTML(movement), `Movement-Sheet-${movement.pairs}-Pairs.html`);
+    }
+
+    buildMovementSheetHTML(movement) {
+        if (!movement || !movement.movement) {
+            return "<html><body>No data</body></html>";
+        }
+
+        // Group by round
+        const rounds = {};
+        movement.movement.forEach(entry => {
+            if (!rounds[entry.round]) rounds[entry.round] = [];
+            rounds[entry.round].push(entry);
+        });
+
+        // Get unique tables
+        const tables = [...new Set(movement.movement.map(e => e.table))].sort((a, b) => a - b);
+
+        // Build header
+        let html = "<tr><th>Round</th>";
+        tables.forEach(tableNum => {
+            html += `<th>Table ${tableNum}</th>`;
+        });
+        html += "</tr>";
+
+        // Build rows
+        Object.keys(rounds).sort((a, b) => a - b).forEach(roundNum => {
+            html += `<tr><td><strong>Round ${roundNum}</strong></td>`;
+            tables.forEach(tableNum => {
+                const entry = rounds[roundNum].find(e => e.table === tableNum);
+                if (entry) {
+                    // Check if sit-out table (no NS pair, no boards)
+                    if (!entry.ns || entry.ns === '') {
+                        html += `<td style="background:#fff3cd;"><strong>SIT OUT</strong><br>EW: ${entry.ew}</td>`;
+                    } else {
+                        const boardsText = entry.boards && entry.boards.length > 0 
+                            ? entry.boards.join(",") 
+                            : "—";
+                        html += `<td>NS: ${entry.ns}<br>EW: ${entry.ew}<br>Boards: ${boardsText}</td>`;
+                    }
+                } else {
+                    html += "<td></td>";
+                }
+            });
+            html += "</tr>";
+        });
+
+        return `<html>
+<head>
+    <title>${movement.description}</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        td, th { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #34495e; color: white; font-weight: bold; }
+        td { font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h2>${movement.description}</h2>
+    <p><strong>${movement.pairs} pairs</strong> • ${movement.tables} tables • ${movement.rounds} rounds</p>
+    <table>${html}</table>
+</body>
+</html>`;
+    }
+
+    /**
+     * Download HTML string as file
+     */
+    downloadHTML(htmlContent, filename) {
+        const blob = new Blob([htmlContent], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 }
 
 // Auto-create instance for standalone testing
