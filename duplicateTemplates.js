@@ -187,7 +187,6 @@ class DuplicateTemplates {
         
         htmlContent += '</body></html>';
         this.downloadFile(htmlContent, `bridge-board-slips-${numBoards}boards.html`);
-        this.closePopup('boardTemplatesPopup');
     }
 
     /**
@@ -279,7 +278,6 @@ class DuplicateTemplates {
         
         htmlContent += '</body></html>';
         this.downloadFile(htmlContent, `bridge-movement-sheets-${pairCount}pairs.html`);
-        this.closePopup('boardTemplatesPopup');
     }
 
     /**
@@ -302,7 +300,7 @@ class DuplicateTemplates {
         
         Object.keys(boardPairMap).sort((a,b) => parseInt(a) - parseInt(b)).forEach(boardNum => {
             const pairs = boardPairMap[boardNum];
-            htmlContent += this.generateTravelerSheet(boardNum, pairs, movement.totalBoards);
+            htmlContent += this.generateTravelerSheet(boardNum, pairs, movement.totalBoards, movement.tables);
         });
         
         htmlContent += '</body></html>';
@@ -313,7 +311,7 @@ class DuplicateTemplates {
     /**
      * Generate a single traveler sheet with pre-filled pairs - Clean table format
      */
-    generateTravelerSheet(boardNumber, pairInstances, totalBoards) {
+    generateTravelerSheet(boardNumber, pairInstances, totalBoards, tables) {
         const vulnerability = this.getBoardVulnerability(boardNumber);
         const vulnDisplay = {
             'None': 'None Vulnerable',
@@ -322,9 +320,12 @@ class DuplicateTemplates {
             'Both': 'Both Vulnerable'
         };
         
-        const maxPair = Math.max(...pairInstances.flatMap(p => [p.ns, p.ew]));
-        const tables = Math.ceil(maxPair / 2);
-        const boardsTotal = totalBoards || this.getTotalBoardsForMovement(maxPair);
+        // Use provided tables value, or calculate from pairs as fallback
+        if (!tables) {
+            const maxPair = Math.max(...pairInstances.flatMap(p => [p.ns, p.ew]));
+            tables = Math.ceil(maxPair / 2);
+        }
+        const boardsTotal = totalBoards || this.getTotalBoardsForMovement(tables * 2);
         
         let html = `
             <div class="traveler-sheet">
