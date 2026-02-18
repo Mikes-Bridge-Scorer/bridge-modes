@@ -682,78 +682,78 @@ const ENHANCED_MOVEMENTS = {
     // Uses lower table count + 1 pair sits out each round
     // ─────────────────────────────────────────────
 
-    // 11 pairs: 5 tables + 1 sit-out (ODD tables - no skip)
+    // 11 pairs: 5.5 tables (5 physical + 1 sit-out)
     "11_mitchell_15": {
         pairs: 11, tables: 5, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
-        description: "5-table Mitchell, 15 boards, ~2 hrs (1 sit-out)",
+        description: "5.5-table Mitchell, 15 boards, ~2 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(5, 3, false)
     },
 
     "11_mitchell_25": {
         pairs: 11, tables: 5, rounds: 5, totalBoards: 25, boardsPerRound: 5,
         type: 'mitchell', hasSitOut: true,
-        description: "5-table Mitchell, 25 boards, ~3 hrs (1 sit-out)",
+        description: "5.5-table Mitchell, 25 boards, ~3 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(5, 5, false)
     },
 
-    // 13 pairs: 6 tables + 1 sit-out (EVEN - skip needed)
+    // 13 pairs: 6.5 tables (6 physical + 1 sit-out)
     "13_mitchell_18": {
         pairs: 13, tables: 6, rounds: 6, totalBoards: 18, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
-        description: "6-table Skip Mitchell, 18 boards, ~2 hrs (1 sit-out)",
+        description: "6.5-table Skip Mitchell, 18 boards, ~2 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(6, 3, true)
     },
 
     "13_mitchell_24": {
         pairs: 13, tables: 6, rounds: 6, totalBoards: 24, boardsPerRound: 4,
         type: 'mitchell', hasSitOut: true,
-        description: "6-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        description: "6.5-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(6, 4, true)
     },
 
-    // 15 pairs: 7 tables + 1 sit-out (ODD - no skip)
+    // 15 pairs: 7.5 tables (7 physical + 1 sit-out)
     "15_mitchell_21": {
         pairs: 15, tables: 7, rounds: 7, totalBoards: 21, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
-        description: "7-table Mitchell, 21 boards, ~2.5 hrs (1 sit-out)",
+        description: "7.5-table Mitchell, 21 boards, ~2.5 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(7, 3, false)
     },
 
     "15_mitchell_28": {
         pairs: 15, tables: 7, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'mitchell', hasSitOut: true,
-        description: "7-table Mitchell, 28 boards, ~3.5 hrs (1 sit-out)",
+        description: "7.5-table Mitchell, 28 boards, ~3.5 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(7, 4, false)
     },
 
-    // 17 pairs: 8 tables + 1 sit-out (EVEN - skip needed)
+    // 17 pairs: 8.5 tables (8 physical + 1 sit-out)
     "17_mitchell_16": {
         pairs: 17, tables: 8, rounds: 8, totalBoards: 16, boardsPerRound: 2,
         type: 'mitchell', hasSitOut: true,
-        description: "8-table Skip Mitchell, 16 boards, ~2 hrs (1 sit-out)",
+        description: "8.5-table Skip Mitchell, 16 boards, ~2 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(8, 2, true)
     },
 
     "17_mitchell_24": {
         pairs: 17, tables: 8, rounds: 8, totalBoards: 24, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
-        description: "8-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        description: "8.5-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(8, 3, true)
     },
 
-    // 19 pairs: 9 tables + 1 sit-out (ODD - no skip)
+    // 19 pairs: 9.5 tables (9 physical + 1 sit-out)
     "19_mitchell_18": {
         pairs: 19, tables: 9, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'mitchell', hasSitOut: true,
-        description: "9-table Mitchell, 18 boards, ~2 hrs (1 sit-out)",
+        description: "9.5-table Mitchell, 18 boards, ~2 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(9, 2, false)
     },
 
     "19_mitchell_27": {
         pairs: 19, tables: 9, rounds: 9, totalBoards: 27, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
-        description: "9-table Mitchell, 27 boards, ~3 hrs (1 sit-out)",
+        description: "9.5-table Mitchell, 27 boards, ~3 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(9, 3, false)
     }
 
