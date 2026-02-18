@@ -297,10 +297,27 @@ class DuplicateTemplates {
         htmlContent += this.getTravelerStyles();
         
         const boardPairMap = this.getBoardPairMapping(movement);
+        const boardNumbers = Object.keys(boardPairMap).sort((a,b) => parseInt(a) - parseInt(b));
         
-        Object.keys(boardPairMap).sort((a,b) => parseInt(a) - parseInt(b)).forEach(boardNum => {
+        let travelerCount = 0;
+        boardNumbers.forEach((boardNum, index) => {
             const pairs = boardPairMap[boardNum];
+            
+            // Start new grid container every 4 travelers
+            if (travelerCount % 4 === 0) {
+                if (travelerCount > 0) {
+                    htmlContent += '</div>'; // Close previous grid
+                }
+                htmlContent += '<div class="travelers-grid">';
+            }
+            
             htmlContent += this.generateTravelerSheet(boardNum, pairs, movement.totalBoards, movement.tables);
+            travelerCount++;
+            
+            // Close last grid if this is the last traveler
+            if (index === boardNumbers.length - 1) {
+                htmlContent += '</div>';
+            }
         });
         
         htmlContent += '</body></html>';
@@ -513,24 +530,32 @@ class DuplicateTemplates {
     }
 
     /**
-     * Get traveler-specific styles - Clean table format
+     * Get traveler-specific styles - 4 per page on A4 landscape
      */
     getTravelerStyles() {
         return `
             <style>
+                body {
+                    margin: 0;
+                    padding: 10mm;
+                }
+                .travelers-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8mm;
+                    page-break-after: always;
+                }
                 .traveler-sheet { 
                     border: 2px solid black; 
-                    margin: 20px 0; 
-                    page-break-after: always;
-                    width: 100%;
                     box-sizing: border-box;
+                    page-break-inside: avoid;
                 }
                 .header-title { 
-                    border: 1px solid black;
-                    padding: 10px; 
+                    border-bottom: 1px solid black;
+                    padding: 4px; 
                     text-align: center; 
                     font-weight: bold; 
-                    font-size: 14pt;
+                    font-size: 9pt;
                     background: white;
                     margin: 0;
                 }
@@ -541,55 +566,50 @@ class DuplicateTemplates {
                 }
                 .traveler-table th, .traveler-table td { 
                     border: 1px solid black; 
-                    padding: 8px 4px; 
+                    padding: 2px 1px; 
                     text-align: center; 
                     vertical-align: middle;
-                    font-size: 11pt;
-                    height: 25px;
+                    font-size: 7pt;
                 }
                 .traveler-table th { 
                     background: white; 
                     color: black; 
-                    font-size: 10pt; 
+                    font-size: 7pt; 
                     font-weight: bold;
-                    line-height: 1.2;
+                    line-height: 1.1;
                 }
                 .pair-cell {
                     font-weight: bold;
                     background: white;
-                    width: 40px;
                 }
                 .input-cell {
                     background: white;
-                    width: 60px;
-                    min-height: 25px;
                 }
-                .plus-cell {
+                .plus-cell, .minus-cell {
                     background: white;
-                    width: 30px;
-                    font-weight: bold;
-                }
-                .minus-cell {
-                    background: white;
-                    width: 30px;
                     font-weight: bold;
                 }
                 .score-cell {
-                    width: 50px;
                     background: white;
-                    min-height: 25px;
                 }
                 @media print {
-                    .traveler-sheet { 
-                        margin: 10px 0; 
-                        page-break-after: always;
+                    @page {
+                        size: A4 landscape;
+                        margin: 10mm;
+                    }
+                    body {
+                        padding: 0;
+                    }
+                    .travelers-grid {
+                        gap: 6mm;
                     }
                     .header-title {
-                        font-size: 12pt;
+                        font-size: 8pt;
+                        padding: 3px;
                     }
                     .traveler-table th, .traveler-table td {
-                        font-size: 10pt;
-                        padding: 6px 3px;
+                        font-size: 6pt;
+                        padding: 2px 1px;
                     }
                 }
             </style>
