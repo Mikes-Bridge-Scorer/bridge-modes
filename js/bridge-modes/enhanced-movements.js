@@ -114,7 +114,7 @@ function generateMitchellWithSitOut(tables, boardsPerRound, useSkip) {
         movement.push({
             round,
             table: sitOutTable,
-            ns: 'Sit out',
+            ns: '',
             ew: sitOutEwPair,
             boards: []
         });
