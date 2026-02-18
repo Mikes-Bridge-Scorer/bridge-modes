@@ -445,7 +445,7 @@ class TableCardGenerator {
             </div>
             
             <div class="instruction-box ew-box">
-                <h2>🔴 East-West (${movement.tables + 1}-${movement.pairs})</h2>
+                <h2>🔴 East-West (1-${movement.tables})</h2>
                 <p class="big-instruction">MOVE UP ONE TABLE</p>
             </div>
         </div>
@@ -571,7 +571,7 @@ class TableCardGenerator {
             </div>
             
             <div class="instruction-box ew-box">
-                <h2>🔴 East-West (${movement.tables + 1}-${movement.pairs})</h2>
+                <h2>🔴 East-West (1-${movement.tables})</h2>
                 <p class="big-instruction">MOVE UP ONE TABLE</p>
             </div>
         </div>
