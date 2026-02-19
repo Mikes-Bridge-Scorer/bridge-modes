@@ -1899,6 +1899,11 @@ class ChicagoBridgeMode extends BaseBridgeMode {
         const cycleInfo = this.getCycleInfo();
         const dealInfo = this.getDealInfo();
         
+        // Progress indicator (from progress-indicator.js)
+        const progressHTML = (typeof ProgressIndicator !== 'undefined')
+            ? ProgressIndicator.generateChicagoProgress(this)
+            : '';
+        
         switch (this.inputState) {
             case 'level_selection':
                 return `
@@ -1910,6 +1915,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        ${progressHTML}
                         <div><strong>${dealInfo}</strong></div>
                         <div style="color: #3498db; font-size: 12px; margin-top: 4px;">
                             Cycle ${cycleInfo.cycleNumber} (${cycleInfo.cyclePosition}/4) • Auto vulnerability cycle
@@ -1928,6 +1934,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        ${progressHTML}
                         <div><strong>${dealInfo}</strong></div>
                         <div><strong>Level: ${this.currentContract.level}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
@@ -1950,6 +1957,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        ${progressHTML}
                         <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
@@ -1974,6 +1982,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        ${progressHTML}
                         <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">
@@ -1995,6 +2004,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                         </div>
                     </div>
                     <div class="game-content">
+                        ${progressHTML}
                         <div><strong>${dealInfo}</strong></div>
                         <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                         <div style="color: #3498db; font-size: 12px;">

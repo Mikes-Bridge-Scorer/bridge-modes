@@ -3461,6 +3461,11 @@ getBonusHelpContent() {
 getDisplayContent() {
     const scores = this.gameState.scores;
     
+    // Progress indicator (from progress-indicator.js)
+    const progressHTML = (typeof ProgressIndicator !== 'undefined')
+        ? ProgressIndicator.generateBonusProgress(this)
+        : '';
+    
     switch (this.inputState) {
         case 'level_selection':
             return `
@@ -3472,6 +3477,7 @@ getDisplayContent() {
                     </div>
                 </div>
                 <div class="game-content">
+                    ${progressHTML}
                     <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                         HCP-based enhanced scoring • Auto vulnerability cycle
@@ -3490,6 +3496,7 @@ getDisplayContent() {
                     </div>
                 </div>
                 <div class="game-content">
+                    ${progressHTML}
                     <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Level: ${this.currentContract.level}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
@@ -3512,6 +3519,7 @@ getDisplayContent() {
                     </div>
                 </div>
                 <div class="game-content">
+                    ${progressHTML}
                     <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
@@ -3536,6 +3544,7 @@ getDisplayContent() {
                     </div>
                 </div>
                 <div class="game-content">
+                    ${progressHTML}
                     <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
@@ -3557,6 +3566,7 @@ getDisplayContent() {
                     </div>
                 </div>
                 <div class="game-content">
+                    ${progressHTML}
                     <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
@@ -3577,6 +3587,7 @@ getDisplayContent() {
                     </div>
                 </div>
                 <div class="game-content">
+                    ${progressHTML}
                     <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>${analysisContract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong></div>
                     <div style="color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px; background: rgba(52,152,219,0.3); padding: 6px; border-radius: 4px;">
