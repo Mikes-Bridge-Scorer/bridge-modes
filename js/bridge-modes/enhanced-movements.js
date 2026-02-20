@@ -25,18 +25,13 @@ function generateMitchellMovement(tables, boardsPerRound, useSkip) {
     for (let round = 1; round <= rounds; round++) {
         for (let table = 1; table <= tables; table++) {
             const nsPair = table;
-            let ewPair;
 
-            if (round === 1) {
-                ewPair = table;
-            } else {
-                let position = table - 1 + round - 1;
-                if (skipRound && round >= skipRound) {
-                    position += 1;
-                }
-                ewPair = (position % tables) + 1;
-            }
+            // Cumulative offset: EW moves up 1 table per round, plus 1 extra at skip round
+            let offset = round - 1;
+            if (skipRound && round >= skipRound) offset += 1;
+            const ewPair = ((table - 1 - offset) % tables + tables) % tables + 1;
 
+            // Boards relay independently of EW movement - always move down one set per round
             const boardSetIndex = (table - 1 + round - 1) % tables;
             const startBoard = boardSetIndex * boardsPerRound + 1;
             const boardList = [];
@@ -64,60 +59,35 @@ function generateMitchellWithSitOut(tables, boardsPerRound, useSkip) {
     const movement = [];
     const totalBoards = tables * boardsPerRound;
     const rounds = tables;
-    const ewPairs = tables + 1; // One extra EW pair
+    const ewPairs = tables + 1; // One extra EW pair (the sit-out pair)
     const physicalTables = tables + 1; // Show the sit-out table
     const skipRound = useSkip && tables % 2 === 0 ? Math.floor(tables / 2) + 1 : null;
 
     for (let round = 1; round <= rounds; round++) {
-        // Regular playing tables (1 to tables)
-        for (let table = 1; table <= tables; table++) {
-            const nsPair = table;
-            
-            // Calculate which EW pair is at this table
-            let ewPair;
-            if (round === 1) {
-                ewPair = table;
+        // All physical tables including the sit-out table
+        for (let table = 1; table <= physicalTables; table++) {
+            // Cumulative offset using ewPairs modulus (includes the extra sit-out pair)
+            let offset = round - 1;
+            if (skipRound && round >= skipRound) offset += 1;
+            const ewPair = ((table - 1 - offset) % ewPairs + ewPairs) % ewPairs + 1;
+
+            if (table === physicalTables) {
+                // Sit-out table: no NS pair, no boards
+                movement.push({ round, table, ns: '', ew: ewPair, boards: [] });
             } else {
-                let position = table - 1 + round - 1;
-                if (skipRound && round >= skipRound) {
-                    position += 1;
+                // Playing table
+                const nsPair = table;
+                const boardSetIndex = (table - 1 + round - 1) % tables;
+                const startBoard = boardSetIndex * boardsPerRound + 1;
+                const boardList = [];
+                for (let b = 0; b < boardsPerRound; b++) {
+                    let boardNum = startBoard + b;
+                    if (boardNum > totalBoards) boardNum -= totalBoards;
+                    boardList.push(boardNum);
                 }
-                ewPair = (position % ewPairs) + 1;
+                movement.push({ round, table, ns: nsPair, ew: ewPair, boards: boardList });
             }
-
-            const boardSetIndex = (table - 1 + round - 1) % tables;
-            const startBoard = boardSetIndex * boardsPerRound + 1;
-            const boardList = [];
-
-            for (let b = 0; b < boardsPerRound; b++) {
-                let boardNum = startBoard + b;
-                if (boardNum > totalBoards) boardNum -= totalBoards;
-                boardList.push(boardNum);
-            }
-
-            movement.push({ round, table, ns: nsPair, ew: ewPair, boards: boardList });
         }
-
-        // Sit-out table (table N+1) - only EW pair, no NS pair
-        const sitOutTable = physicalTables;
-        let sitOutEwPair;
-        if (round === 1) {
-            sitOutEwPair = sitOutTable;
-        } else {
-            let position = sitOutTable - 1 + round - 1;
-            if (skipRound && round >= skipRound) {
-                position += 1;
-            }
-            sitOutEwPair = (position % ewPairs) + 1;
-        }
-
-        movement.push({
-            round,
-            table: sitOutTable,
-            ns: '',
-            ew: sitOutEwPair,
-            boards: []
-        });
     }
     return movement;
 }
@@ -127,23 +97,53 @@ const ENHANCED_MOVEMENTS = {
     // ─────────────────────────────────────────────
     // 4 PAIRS - 2 tables
     // ─────────────────────────────────────────────
+    "4_howell_6": {
+        pairs: 4, tables: 2, rounds: 3, totalBoards: 6, boardsPerRound: 2,
+        type: 'howell',
+        description: "2-table Howell, 6 boards, ~45 min (short game)",
+        movement: [
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 2, ns: 3, ew: 4, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 2, ew: 3, boards: [5,6] }
+        ]
+    },
+
     "4_howell_12": {
         pairs: 4, tables: 2, rounds: 6, totalBoards: 12, boardsPerRound: 2,
         type: 'howell',
         description: "2-table Howell, 12 boards, ~1.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-            { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-            { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] },
-            { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] },
-            { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] },
-            { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] },
-            { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] },
-            { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] },
-            { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] },
-            { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] },
-            { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] },
-            { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] }
+            { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2] },
+            { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2] },
+            { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 3, ns: 5, ew: 8, boards: [3,4] },
+            { round: 2, table: 4, ns: 6, ew: 7, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 3, table: 4, ns: 7, ew: 8, boards: [5,6] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [7,8] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [9,10] },
+            { round: 5, table: 4, ns: 2, ew: 3, boards: [9,10] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [11,12] },
+            { round: 6, table: 3, ns: 2, ew: 5, boards: [11,12] },
+            { round: 6, table: 4, ns: 3, ew: 4, boards: [11,12] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [13,14] },
+            { round: 7, table: 2, ns: 2, ew: 7, boards: [13,14] },
+            { round: 7, table: 3, ns: 3, ew: 6, boards: [13,14] },
+            { round: 7, table: 4, ns: 4, ew: 5, boards: [13,14] }
         ]
     },
 
@@ -176,15 +176,15 @@ const ENHANCED_MOVEMENTS = {
         description: "2.5-table Howell, 15 boards, ~2 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
-            { round: 1, table: 2, ns: 3, ew: 4, boards: [10,11,12] },
-            { round: 2, table: 1, ns: 1, ew: 4, boards: [4,5,6] },
-            { round: 2, table: 3, ns: 3, ew: 5, boards: [7,8,9] },
-            { round: 3, table: 2, ns: 4, ew: 5, boards: [1,2,3] },
-            { round: 3, table: 3, ns: 2, ew: 3, boards: [4,5,6] },
+            { round: 1, table: 3, ns: 4, ew: 5, boards: [1,2,3] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [4,5,6] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [4,5,6] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [7,8,9] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] },
-            { round: 4, table: 3, ns: 4, ew: 2, boards: [7,8,9] },
-            { round: 5, table: 1, ns: 1, ew: 3, boards: [13,14,15] },
-            { round: 5, table: 2, ns: 5, ew: 2, boards: [13,14,15] }
+            { round: 4, table: 3, ns: 2, ew: 3, boards: [10,11,12] },
+            { round: 5, table: 2, ns: 2, ew: 5, boards: [13,14,15] },
+            { round: 5, table: 3, ns: 3, ew: 4, boards: [13,14,15] }
         ]
     },
 
@@ -194,21 +194,44 @@ const ENHANCED_MOVEMENTS = {
         description: "2.5-table Howell, 25 boards, ~3 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5] },
-            { round: 1, table: 3, ns: 5, ew: 4, boards: [6,7,8,9,10] },
+            { round: 1, table: 3, ns: 4, ew: 5, boards: [1,2,3,4,5] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [6,7,8,9,10] },
-            { round: 2, table: 2, ns: 2, ew: 4, boards: [16,17,18,19,20] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [6,7,8,9,10] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [11,12,13,14,15] },
-            { round: 3, table: 2, ns: 3, ew: 5, boards: [1,2,3,4,5] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [11,12,13,14,15] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [16,17,18,19,20] },
-            { round: 4, table: 3, ns: 3, ew: 2, boards: [11,12,13,14,15] },
-            { round: 5, table: 2, ns: 5, ew: 2, boards: [23,24,25,21,22] },
-            { round: 5, table: 3, ns: 4, ew: 3, boards: [25,21,22,23,24] }
+            { round: 4, table: 3, ns: 2, ew: 3, boards: [16,17,18,19,20] },
+            { round: 5, table: 2, ns: 2, ew: 5, boards: [21,22,23,24,25] },
+            { round: 5, table: 3, ns: 3, ew: 4, boards: [21,22,23,24,25] }
         ]
     },
 
     // ─────────────────────────────────────────────
     // 6 PAIRS - 3 tables
     // ─────────────────────────────────────────────
+    "6_howell_10": {
+        pairs: 6, tables: 3, rounds: 5, totalBoards: 10, boardsPerRound: 2,
+        type: 'howell',
+        description: "3-table Howell, 10 boards, ~1.5 hrs (short game)",
+        movement: [
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2] },
+            { round: 1, table: 3, ns: 4, ew: 5, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 3, ns: 5, ew: 6, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
+            { round: 4, table: 3, ns: 2, ew: 3, boards: [7,8] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
+            { round: 5, table: 2, ns: 2, ew: 5, boards: [9,10] },
+            { round: 5, table: 3, ns: 3, ew: 4, boards: [9,10] }
+        ]
+    },
+
     "6_howell_15": {
         pairs: 6, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'howell',
@@ -264,26 +287,26 @@ const ENHANCED_MOVEMENTS = {
         description: "3.5-table Howell, 14 boards, ~2 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-            { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-            { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-            { round: 2, table: 1, ns: 1, ew: 6, boards: [3,4] },
-            { round: 2, table: 2, ns: 7, ew: 3, boards: [5,6] },
-            { round: 2, table: 4, ns: 2, ew: 5, boards: [11,12] },
-            { round: 3, table: 2, ns: 2, ew: 7, boards: [7,8] },
-            { round: 3, table: 3, ns: 3, ew: 5, boards: [9,10] },
-            { round: 3, table: 4, ns: 6, ew: 4, boards: [13,14] },
+            { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2] },
+            { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 4, ns: 6, ew: 7, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
-            { round: 4, table: 2, ns: 6, ew: 2, boards: [9,10] },
-            { round: 4, table: 3, ns: 7, ew: 4, boards: [11,12] },
-            { round: 5, table: 1, ns: 1, ew: 4, boards: [9,10] },
-            { round: 5, table: 3, ns: 2, ew: 3, boards: [13,14] },
-            { round: 5, table: 4, ns: 5, ew: 7, boards: [3,4] },
-            { round: 6, table: 1, ns: 1, ew: 3, boards: [11,12] },
-            { round: 6, table: 3, ns: 6, ew: 7, boards: [1,2] },
-            { round: 6, table: 4, ns: 4, ew: 2, boards: [5,6] },
-            { round: 7, table: 1, ns: 1, ew: 7, boards: [13,14] },
-            { round: 7, table: 2, ns: 4, ew: 5, boards: [1,2] },
-            { round: 7, table: 4, ns: 3, ew: 6, boards: [7,8] }
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
+            { round: 5, table: 4, ns: 2, ew: 3, boards: [9,10] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
+            { round: 6, table: 3, ns: 2, ew: 5, boards: [11,12] },
+            { round: 6, table: 4, ns: 3, ew: 4, boards: [11,12] },
+            { round: 7, table: 2, ns: 2, ew: 7, boards: [13,14] },
+            { round: 7, table: 3, ns: 3, ew: 6, boards: [13,14] },
+            { round: 7, table: 4, ns: 4, ew: 5, boards: [13,14] }
         ]
     },
 
@@ -292,103 +315,76 @@ const ENHANCED_MOVEMENTS = {
         type: 'howell', hasSitOut: true,
         description: "3.5-table Howell, 28 boards, ~3.5 hrs (1 sit-out)",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 5, boards: [1,2,3,4] },
-            { round: 1, table: 2, ns: 2, ew: 6, boards: [5,6,7,8] },
-            { round: 1, table: 3, ns: 3, ew: 7, boards: [9,10,11,12] },
-            { round: 2, table: 1, ns: 3, ew: 7, boards: [17,18,19,20] },
-            { round: 2, table: 3, ns: 5, ew: 1, boards: [25,26,27,28] },
-            { round: 2, table: 4, ns: 6, ew: 2, boards: [1,2,3,4] },
-            { round: 3, table: 1, ns: 5, ew: 1, boards: [5,6,7,8] },
-            { round: 3, table: 2, ns: 6, ew: 2, boards: [9,10,11,12] },
-            { round: 3, table: 3, ns: 7, ew: 3, boards: [13,14,15,16] },
-            { round: 4, table: 1, ns: 7, ew: 3, boards: [21,22,23,24] },
-            { round: 4, table: 3, ns: 1, ew: 5, boards: [1,2,3,4] },
-            { round: 4, table: 4, ns: 2, ew: 6, boards: [5,6,7,8] },
-            { round: 5, table: 1, ns: 1, ew: 5, boards: [9,10,11,12] },
-            { round: 5, table: 2, ns: 2, ew: 6, boards: [13,14,15,16] },
-            { round: 5, table: 3, ns: 3, ew: 7, boards: [17,18,19,20] },
-            { round: 6, table: 1, ns: 3, ew: 7, boards: [25,26,27,28] },
-            { round: 6, table: 3, ns: 5, ew: 1, boards: [5,6,7,8] },
-            { round: 6, table: 4, ns: 6, ew: 2, boards: [9,10,11,12] },
-            { round: 7, table: 1, ns: 5, ew: 1, boards: [13,14,15,16] },
-            { round: 7, table: 2, ns: 6, ew: 2, boards: [17,18,19,20] },
-            { round: 7, table: 3, ns: 7, ew: 3, boards: [21,22,23,24] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
+            { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2,3,4] },
+            { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2,3,4] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [5,6,7,8] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [5,6,7,8] },
+            { round: 2, table: 4, ns: 6, ew: 7, boards: [5,6,7,8] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10,11,12] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [9,10,11,12] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [9,10,11,12] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [13,14,15,16] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [13,14,15,16] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [13,14,15,16] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [17,18,19,20] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [17,18,19,20] },
+            { round: 5, table: 4, ns: 2, ew: 3, boards: [17,18,19,20] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [21,22,23,24] },
+            { round: 6, table: 3, ns: 2, ew: 5, boards: [21,22,23,24] },
+            { round: 6, table: 4, ns: 3, ew: 4, boards: [21,22,23,24] },
+            { round: 7, table: 2, ns: 2, ew: 7, boards: [25,26,27,28] },
+            { round: 7, table: 3, ns: 3, ew: 6, boards: [25,26,27,28] },
+            { round: 7, table: 4, ns: 4, ew: 5, boards: [25,26,27,28] }
         ]
     },
 
     // ─────────────────────────────────────────────
     // 8 PAIRS - 4 tables
     // ─────────────────────────────────────────────
-    "8_howell_14": {
-        pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
-        type: 'howell',
-        description: "4-table Howell, 14 boards, ~2 hrs",
-        movement: [
-            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-            { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] },
-            { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] },
-            { round: 1, table: 4, ns: 7, ew: 8, boards: [9,10] },
-            { round: 2, table: 1, ns: 1, ew: 6, boards: [3,4] },
-            { round: 2, table: 2, ns: 7, ew: 3, boards: [5,6] },
-            { round: 2, table: 3, ns: 4, ew: 8, boards: [7,8] },
-            { round: 2, table: 4, ns: 2, ew: 5, boards: [11,12] },
-            { round: 3, table: 1, ns: 1, ew: 8, boards: [5,6] },
-            { round: 3, table: 2, ns: 2, ew: 7, boards: [7,8] },
-            { round: 3, table: 3, ns: 3, ew: 5, boards: [9,10] },
-            { round: 3, table: 4, ns: 6, ew: 4, boards: [13,14] },
-            { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
-            { round: 4, table: 2, ns: 6, ew: 2, boards: [9,10] },
-            { round: 4, table: 3, ns: 7, ew: 4, boards: [11,12] },
-            { round: 4, table: 4, ns: 8, ew: 3, boards: [1,2] },
-            { round: 5, table: 1, ns: 1, ew: 4, boards: [9,10] },
-            { round: 5, table: 2, ns: 8, ew: 6, boards: [11,12] },
-            { round: 5, table: 3, ns: 2, ew: 3, boards: [13,14] },
-            { round: 5, table: 4, ns: 5, ew: 7, boards: [3,4] },
-            { round: 6, table: 1, ns: 1, ew: 3, boards: [11,12] },
-            { round: 6, table: 2, ns: 5, ew: 8, boards: [13,14] },
-            { round: 6, table: 3, ns: 7, ew: 2, boards: [1,2] },
-            { round: 6, table: 4, ns: 4, ew: 6, boards: [5,6] },
-            { round: 7, table: 1, ns: 1, ew: 7, boards: [13,14] },
-            { round: 7, table: 2, ns: 4, ew: 5, boards: [1,2] },
-            { round: 7, table: 3, ns: 8, ew: 2, boards: [3,4] },
-            { round: 7, table: 4, ns: 3, ew: 6, boards: [7,8] }
-        ]
-    },
+    
 
     "8_howell_28": {
         pairs: 8, tables: 4, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'howell',
         description: "4-table Howell, 28 boards, ~3.5 hrs",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 5, boards: [1,2,3,4] },
-            { round: 1, table: 2, ns: 2, ew: 6, boards: [5,6,7,8] },
-            { round: 1, table: 3, ns: 3, ew: 7, boards: [9,10,11,12] },
-            { round: 1, table: 4, ns: 4, ew: 8, boards: [13,14,15,16] },
-            { round: 2, table: 1, ns: 3, ew: 7, boards: [17,18,19,20] },
-            { round: 2, table: 2, ns: 4, ew: 8, boards: [21,22,23,24] },
-            { round: 2, table: 3, ns: 5, ew: 1, boards: [25,26,27,28] },
-            { round: 2, table: 4, ns: 6, ew: 2, boards: [1,2,3,4] },
-            { round: 3, table: 1, ns: 5, ew: 1, boards: [5,6,7,8] },
-            { round: 3, table: 2, ns: 6, ew: 2, boards: [9,10,11,12] },
-            { round: 3, table: 3, ns: 7, ew: 3, boards: [13,14,15,16] },
-            { round: 3, table: 4, ns: 8, ew: 4, boards: [17,18,19,20] },
-            { round: 4, table: 1, ns: 7, ew: 3, boards: [21,22,23,24] },
-            { round: 4, table: 2, ns: 8, ew: 4, boards: [25,26,27,28] },
-            { round: 4, table: 3, ns: 1, ew: 5, boards: [1,2,3,4] },
-            { round: 4, table: 4, ns: 2, ew: 6, boards: [5,6,7,8] },
-            { round: 5, table: 1, ns: 1, ew: 5, boards: [9,10,11,12] },
-            { round: 5, table: 2, ns: 2, ew: 6, boards: [13,14,15,16] },
-            { round: 5, table: 3, ns: 3, ew: 7, boards: [17,18,19,20] },
-            { round: 5, table: 4, ns: 4, ew: 8, boards: [21,22,23,24] },
-            { round: 6, table: 1, ns: 3, ew: 7, boards: [25,26,27,28] },
-            { round: 6, table: 2, ns: 4, ew: 8, boards: [1,2,3,4] },
-            { round: 6, table: 3, ns: 5, ew: 1, boards: [5,6,7,8] },
-            { round: 6, table: 4, ns: 6, ew: 2, boards: [9,10,11,12] },
-            { round: 7, table: 1, ns: 5, ew: 1, boards: [13,14,15,16] },
-            { round: 7, table: 2, ns: 6, ew: 2, boards: [17,18,19,20] },
-            { round: 7, table: 3, ns: 7, ew: 3, boards: [21,22,23,24] },
-            { round: 7, table: 4, ns: 8, ew: 4, boards: [25,26,27,28] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
+            { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2,3,4] },
+            { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2,3,4] },
+            { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2,3,4] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [5,6,7,8] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [5,6,7,8] },
+            { round: 2, table: 3, ns: 5, ew: 8, boards: [5,6,7,8] },
+            { round: 2, table: 4, ns: 6, ew: 7, boards: [5,6,7,8] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10,11,12] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [9,10,11,12] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [9,10,11,12] },
+            { round: 3, table: 4, ns: 7, ew: 8, boards: [9,10,11,12] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [13,14,15,16] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [13,14,15,16] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [13,14,15,16] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [13,14,15,16] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [17,18,19,20] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [17,18,19,20] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [17,18,19,20] },
+            { round: 5, table: 4, ns: 2, ew: 3, boards: [17,18,19,20] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [21,22,23,24] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [21,22,23,24] },
+            { round: 6, table: 3, ns: 2, ew: 5, boards: [21,22,23,24] },
+            { round: 6, table: 4, ns: 3, ew: 4, boards: [21,22,23,24] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [25,26,27,28] },
+            { round: 7, table: 2, ns: 2, ew: 7, boards: [25,26,27,28] },
+            { round: 7, table: 3, ns: 3, ew: 6, boards: [25,26,27,28] },
+            { round: 7, table: 4, ns: 4, ew: 5, boards: [25,26,27,28] }
         ]
+    },
+
+    "8_mitchell_12": {
+        pairs: 8, tables: 4, rounds: 4, totalBoards: 12, boardsPerRound: 3,
+        type: 'mitchell',
+        description: "4-table Skip Mitchell, 12 boards, ~1.5 hrs",
+        movement: generateMitchellMovement(4, 3, true)
     },
 
     "8_mitchell_16": {
@@ -396,14 +392,7 @@ const ENHANCED_MOVEMENTS = {
         type: 'mitchell',
         description: "4-table Skip Mitchell, 16 boards, ~2 hrs",
         movement: generateMitchellMovement(4, 4, true)
-    },
-
-    "8_mitchell_24": {
-        pairs: 8, tables: 4, rounds: 4, totalBoards: 24, boardsPerRound: 6,
-        type: 'mitchell',
-        description: "4-table Skip Mitchell, 24 boards, ~3 hrs",
-        movement: generateMitchellMovement(4, 6, true)
-    },
+    }
 
     // ─────────────────────────────────────────────
     // 9 PAIRS - 4.5 tables
@@ -413,42 +402,42 @@ const ENHANCED_MOVEMENTS = {
         type: 'howell', hasSitOut: true,
         description: "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2] },
-            { round: 1, table: 2, ns: 2, ew: 7, boards: [3,4] },
-            { round: 1, table: 3, ns: 3, ew: 8, boards: [5,6] },
-            { round: 1, table: 4, ns: 4, ew: 9, boards: [7,8] },
-            { round: 2, table: 1, ns: 1, ew: 7, boards: [3,4] },
-            { round: 2, table: 3, ns: 9, ew: 4, boards: [7,8] },
-            { round: 2, table: 4, ns: 8, ew: 5, boards: [9,10] },
-            { round: 2, table: 5, ns: 6, ew: 2, boards: [11,12] },
-            { round: 3, table: 1, ns: 1, ew: 8, boards: [5,6] },
-            { round: 3, table: 3, ns: 3, ew: 9, boards: [9,10] },
-            { round: 3, table: 4, ns: 4, ew: 6, boards: [11,12] },
-            { round: 3, table: 5, ns: 7, ew: 5, boards: [13,14] },
-            { round: 4, table: 1, ns: 1, ew: 9, boards: [7,8] },
-            { round: 4, table: 2, ns: 5, ew: 2, boards: [9,10] },
-            { round: 4, table: 4, ns: 3, ew: 7, boards: [13,14] },
-            { round: 4, table: 5, ns: 8, ew: 6, boards: [15,16] },
-            { round: 5, table: 2, ns: 6, ew: 5, boards: [11,12] },
-            { round: 5, table: 3, ns: 2, ew: 4, boards: [13,14] },
-            { round: 5, table: 4, ns: 9, ew: 8, boards: [15,16] },
-            { round: 5, table: 5, ns: 3, ew: 7, boards: [17,18] },
-            { round: 6, table: 1, ns: 1, ew: 4, boards: [11,12] },
-            { round: 6, table: 2, ns: 7, ew: 6, boards: [13,14] },
-            { round: 6, table: 3, ns: 5, ew: 3, boards: [15,16] },
-            { round: 6, table: 5, ns: 2, ew: 8, boards: [1,2] },
-            { round: 7, table: 1, ns: 1, ew: 3, boards: [13,14] },
-            { round: 7, table: 2, ns: 8, ew: 7, boards: [15,16] },
-            { round: 7, table: 3, ns: 6, ew: 2, boards: [17,18] },
-            { round: 7, table: 5, ns: 5, ew: 9, boards: [3,4] },
-            { round: 8, table: 1, ns: 1, ew: 2, boards: [15,16] },
-            { round: 8, table: 2, ns: 9, ew: 8, boards: [17,18] },
-            { round: 8, table: 3, ns: 7, ew: 6, boards: [1,2] },
-            { round: 8, table: 4, ns: 3, ew: 4, boards: [3,4] },
-            { round: 9, table: 1, ns: 1, ew: 5, boards: [17,18] },
-            { round: 9, table: 3, ns: 8, ew: 7, boards: [3,4] },
-            { round: 9, table: 4, ns: 2, ew: 3, boards: [5,6] },
-            { round: 9, table: 5, ns: 4, ew: 6, boards: [7,8] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 3, ns: 4, ew: 9, boards: [1,2] },
+            { round: 1, table: 4, ns: 5, ew: 8, boards: [1,2] },
+            { round: 1, table: 5, ns: 6, ew: 7, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 4, ns: 6, ew: 9, boards: [3,4] },
+            { round: 2, table: 5, ns: 7, ew: 8, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 3, table: 5, ns: 8, ew: 9, boards: [5,6] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [7,8] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [9,10] },
+            { round: 5, table: 4, ns: 9, ew: 3, boards: [9,10] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [11,12] },
+            { round: 6, table: 3, ns: 9, ew: 5, boards: [11,12] },
+            { round: 6, table: 5, ns: 2, ew: 3, boards: [11,12] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [13,14] },
+            { round: 7, table: 2, ns: 9, ew: 7, boards: [13,14] },
+            { round: 7, table: 4, ns: 2, ew: 5, boards: [13,14] },
+            { round: 7, table: 5, ns: 3, ew: 4, boards: [13,14] },
+            { round: 8, table: 1, ns: 1, ew: 9, boards: [15,16] },
+            { round: 8, table: 3, ns: 2, ew: 7, boards: [15,16] },
+            { round: 8, table: 4, ns: 3, ew: 6, boards: [15,16] },
+            { round: 8, table: 5, ns: 4, ew: 5, boards: [15,16] },
+            { round: 9, table: 2, ns: 2, ew: 9, boards: [17,18] },
+            { round: 9, table: 3, ns: 3, ew: 8, boards: [17,18] },
+            { round: 9, table: 4, ns: 4, ew: 7, boards: [17,18] },
+            { round: 9, table: 5, ns: 5, ew: 6, boards: [17,18] }
         ]
     },
 
@@ -457,43 +446,57 @@ const ENHANCED_MOVEMENTS = {
         type: 'howell', hasSitOut: true,
         description: "4.5-table Howell, 27 boards, ~3.5 hrs (1 sit-out)",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2,3] },
-            { round: 1, table: 2, ns: 2, ew: 7, boards: [4,5,6] },
-            { round: 1, table: 3, ns: 3, ew: 8, boards: [7,8,9] },
-            { round: 1, table: 4, ns: 4, ew: 9, boards: [10,11,12] },
-            { round: 2, table: 1, ns: 1, ew: 7, boards: [4,5,6] },
-            { round: 2, table: 3, ns: 9, ew: 4, boards: [10,11,12] },
-            { round: 2, table: 4, ns: 8, ew: 5, boards: [13,14,15] },
-            { round: 2, table: 5, ns: 6, ew: 2, boards: [16,17,18] },
-            { round: 3, table: 1, ns: 1, ew: 8, boards: [7,8,9] },
-            { round: 3, table: 3, ns: 3, ew: 9, boards: [13,14,15] },
-            { round: 3, table: 4, ns: 4, ew: 6, boards: [16,17,18] },
-            { round: 3, table: 5, ns: 7, ew: 5, boards: [19,20,21] },
-            { round: 4, table: 1, ns: 1, ew: 9, boards: [10,11,12] },
-            { round: 4, table: 2, ns: 5, ew: 2, boards: [13,14,15] },
-            { round: 4, table: 4, ns: 3, ew: 7, boards: [19,20,21] },
-            { round: 4, table: 5, ns: 8, ew: 6, boards: [22,23,24] },
-            { round: 5, table: 2, ns: 6, ew: 5, boards: [16,17,18] },
-            { round: 5, table: 3, ns: 2, ew: 4, boards: [19,20,21] },
-            { round: 5, table: 4, ns: 9, ew: 8, boards: [22,23,24] },
-            { round: 5, table: 5, ns: 3, ew: 7, boards: [25,26,27] },
-            { round: 6, table: 1, ns: 1, ew: 4, boards: [16,17,18] },
-            { round: 6, table: 2, ns: 7, ew: 6, boards: [19,20,21] },
-            { round: 6, table: 3, ns: 5, ew: 3, boards: [22,23,24] },
-            { round: 6, table: 5, ns: 2, ew: 8, boards: [1,2,3] },
-            { round: 7, table: 1, ns: 1, ew: 3, boards: [19,20,21] },
-            { round: 7, table: 2, ns: 8, ew: 7, boards: [22,23,24] },
-            { round: 7, table: 3, ns: 6, ew: 2, boards: [25,26,27] },
-            { round: 7, table: 5, ns: 5, ew: 9, boards: [4,5,6] },
-            { round: 8, table: 1, ns: 1, ew: 2, boards: [22,23,24] },
-            { round: 8, table: 2, ns: 9, ew: 8, boards: [25,26,27] },
-            { round: 8, table: 3, ns: 7, ew: 6, boards: [1,2,3] },
-            { round: 8, table: 4, ns: 3, ew: 4, boards: [4,5,6] },
-            { round: 9, table: 1, ns: 1, ew: 5, boards: [25,26,27] },
-            { round: 9, table: 3, ns: 8, ew: 7, boards: [4,5,6] },
-            { round: 9, table: 4, ns: 2, ew: 3, boards: [7,8,9] },
-            { round: 9, table: 5, ns: 4, ew: 6, boards: [10,11,12] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+            { round: 1, table: 3, ns: 4, ew: 9, boards: [1,2,3] },
+            { round: 1, table: 4, ns: 5, ew: 8, boards: [1,2,3] },
+            { round: 1, table: 5, ns: 6, ew: 7, boards: [1,2,3] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [4,5,6] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [4,5,6] },
+            { round: 2, table: 4, ns: 6, ew: 9, boards: [4,5,6] },
+            { round: 2, table: 5, ns: 7, ew: 8, boards: [4,5,6] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [7,8,9] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [7,8,9] },
+            { round: 3, table: 5, ns: 8, ew: 9, boards: [7,8,9] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [10,11,12] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [10,11,12] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [10,11,12] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [13,14,15] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [13,14,15] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [13,14,15] },
+            { round: 5, table: 4, ns: 9, ew: 3, boards: [13,14,15] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [16,17,18] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [16,17,18] },
+            { round: 6, table: 3, ns: 9, ew: 5, boards: [16,17,18] },
+            { round: 6, table: 5, ns: 2, ew: 3, boards: [16,17,18] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [19,20,21] },
+            { round: 7, table: 2, ns: 9, ew: 7, boards: [19,20,21] },
+            { round: 7, table: 4, ns: 2, ew: 5, boards: [19,20,21] },
+            { round: 7, table: 5, ns: 3, ew: 4, boards: [19,20,21] },
+            { round: 8, table: 1, ns: 1, ew: 9, boards: [22,23,24] },
+            { round: 8, table: 3, ns: 2, ew: 7, boards: [22,23,24] },
+            { round: 8, table: 4, ns: 3, ew: 6, boards: [22,23,24] },
+            { round: 8, table: 5, ns: 4, ew: 5, boards: [22,23,24] },
+            { round: 9, table: 2, ns: 2, ew: 9, boards: [25,26,27] },
+            { round: 9, table: 3, ns: 3, ew: 8, boards: [25,26,27] },
+            { round: 9, table: 4, ns: 4, ew: 7, boards: [25,26,27] },
+            { round: 9, table: 5, ns: 5, ew: 6, boards: [25,26,27] }
         ]
+    },
+
+    "9_mitchell_16": {
+        pairs: 9, tables: 5, rounds: 4, totalBoards: 16, boardsPerRound: 4,
+        type: 'mitchell', hasSitOut: true,
+        description: "4.5-table Mitchell, 16 boards, ~2 hrs (1 sit-out)",
+        movement: generateMitchellWithSitOut(4, 4, false)
+    },
+
+    "9_mitchell_24": {
+        pairs: 9, tables: 5, rounds: 4, totalBoards: 24, boardsPerRound: 6,
+        type: 'mitchell', hasSitOut: true,
+        description: "4.5-table Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        movement: generateMitchellWithSitOut(4, 6, false)
     },
 
     // ─────────────────────────────────────────────
@@ -504,51 +507,51 @@ const ENHANCED_MOVEMENTS = {
         type: 'howell',
         description: "5-table Howell, 18 boards, ~2.5 hrs",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2] },
-            { round: 1, table: 2, ns: 2, ew: 7, boards: [3,4] },
-            { round: 1, table: 3, ns: 3, ew: 8, boards: [5,6] },
-            { round: 1, table: 4, ns: 4, ew: 9, boards: [7,8] },
-            { round: 1, table: 5, ns: 5, ew: 10, boards: [9,10] },
-            { round: 2, table: 1, ns: 1, ew: 7, boards: [3,4] },
-            { round: 2, table: 2, ns: 10, ew: 3, boards: [5,6] },
-            { round: 2, table: 3, ns: 9, ew: 4, boards: [7,8] },
-            { round: 2, table: 4, ns: 8, ew: 5, boards: [9,10] },
-            { round: 2, table: 5, ns: 6, ew: 2, boards: [11,12] },
-            { round: 3, table: 1, ns: 1, ew: 8, boards: [5,6] },
-            { round: 3, table: 2, ns: 2, ew: 10, boards: [7,8] },
-            { round: 3, table: 3, ns: 3, ew: 9, boards: [9,10] },
-            { round: 3, table: 4, ns: 4, ew: 6, boards: [11,12] },
-            { round: 3, table: 5, ns: 7, ew: 5, boards: [13,14] },
-            { round: 4, table: 1, ns: 1, ew: 9, boards: [7,8] },
-            { round: 4, table: 2, ns: 5, ew: 2, boards: [9,10] },
-            { round: 4, table: 3, ns: 10, ew: 4, boards: [11,12] },
-            { round: 4, table: 4, ns: 3, ew: 7, boards: [13,14] },
-            { round: 4, table: 5, ns: 8, ew: 6, boards: [15,16] },
-            { round: 5, table: 1, ns: 1, ew: 10, boards: [9,10] },
-            { round: 5, table: 2, ns: 6, ew: 5, boards: [11,12] },
-            { round: 5, table: 3, ns: 2, ew: 4, boards: [13,14] },
-            { round: 5, table: 4, ns: 9, ew: 8, boards: [15,16] },
-            { round: 5, table: 5, ns: 3, ew: 7, boards: [17,18] },
-            { round: 6, table: 1, ns: 1, ew: 4, boards: [11,12] },
-            { round: 6, table: 2, ns: 7, ew: 6, boards: [13,14] },
-            { round: 6, table: 3, ns: 5, ew: 3, boards: [15,16] },
-            { round: 6, table: 4, ns: 10, ew: 9, boards: [17,18] },
-            { round: 6, table: 5, ns: 2, ew: 8, boards: [1,2] },
-            { round: 7, table: 1, ns: 1, ew: 3, boards: [13,14] },
-            { round: 7, table: 2, ns: 8, ew: 7, boards: [15,16] },
-            { round: 7, table: 3, ns: 6, ew: 2, boards: [17,18] },
-            { round: 7, table: 4, ns: 4, ew: 10, boards: [1,2] },
-            { round: 7, table: 5, ns: 5, ew: 9, boards: [3,4] },
-            { round: 8, table: 1, ns: 1, ew: 2, boards: [15,16] },
-            { round: 8, table: 2, ns: 9, ew: 8, boards: [17,18] },
-            { round: 8, table: 3, ns: 7, ew: 6, boards: [1,2] },
-            { round: 8, table: 4, ns: 3, ew: 4, boards: [3,4] },
-            { round: 8, table: 5, ns: 10, ew: 5, boards: [5,6] },
-            { round: 9, table: 1, ns: 1, ew: 5, boards: [17,18] },
-            { round: 9, table: 2, ns: 10, ew: 9, boards: [1,2] },
-            { round: 9, table: 3, ns: 8, ew: 7, boards: [3,4] },
-            { round: 9, table: 4, ns: 2, ew: 3, boards: [5,6] },
-            { round: 9, table: 5, ns: 4, ew: 6, boards: [7,8] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 2, ns: 3, ew: 10, boards: [1,2] },
+            { round: 1, table: 3, ns: 4, ew: 9, boards: [1,2] },
+            { round: 1, table: 4, ns: 5, ew: 8, boards: [1,2] },
+            { round: 1, table: 5, ns: 6, ew: 7, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 3, ns: 5, ew: 10, boards: [3,4] },
+            { round: 2, table: 4, ns: 6, ew: 9, boards: [3,4] },
+            { round: 2, table: 5, ns: 7, ew: 8, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 3, table: 4, ns: 7, ew: 10, boards: [5,6] },
+            { round: 3, table: 5, ns: 8, ew: 9, boards: [5,6] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [7,8] },
+            { round: 4, table: 5, ns: 9, ew: 10, boards: [7,8] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [9,10] },
+            { round: 5, table: 4, ns: 9, ew: 3, boards: [9,10] },
+            { round: 5, table: 5, ns: 10, ew: 2, boards: [9,10] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [11,12] },
+            { round: 6, table: 3, ns: 9, ew: 5, boards: [11,12] },
+            { round: 6, table: 4, ns: 10, ew: 4, boards: [11,12] },
+            { round: 6, table: 5, ns: 2, ew: 3, boards: [11,12] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [13,14] },
+            { round: 7, table: 2, ns: 9, ew: 7, boards: [13,14] },
+            { round: 7, table: 3, ns: 10, ew: 6, boards: [13,14] },
+            { round: 7, table: 4, ns: 2, ew: 5, boards: [13,14] },
+            { round: 7, table: 5, ns: 3, ew: 4, boards: [13,14] },
+            { round: 8, table: 1, ns: 1, ew: 9, boards: [15,16] },
+            { round: 8, table: 2, ns: 10, ew: 8, boards: [15,16] },
+            { round: 8, table: 3, ns: 2, ew: 7, boards: [15,16] },
+            { round: 8, table: 4, ns: 3, ew: 6, boards: [15,16] },
+            { round: 8, table: 5, ns: 4, ew: 5, boards: [15,16] },
+            { round: 9, table: 1, ns: 1, ew: 10, boards: [17,18] },
+            { round: 9, table: 2, ns: 2, ew: 9, boards: [17,18] },
+            { round: 9, table: 3, ns: 3, ew: 8, boards: [17,18] },
+            { round: 9, table: 4, ns: 4, ew: 7, boards: [17,18] },
+            { round: 9, table: 5, ns: 5, ew: 6, boards: [17,18] }
         ]
     },
 
@@ -557,51 +560,51 @@ const ENHANCED_MOVEMENTS = {
         type: 'howell',
         description: "5-table Howell, 27 boards, ~3.5 hrs",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 6, boards: [1,2,3] },
-            { round: 1, table: 2, ns: 2, ew: 7, boards: [4,5,6] },
-            { round: 1, table: 3, ns: 3, ew: 8, boards: [7,8,9] },
-            { round: 1, table: 4, ns: 4, ew: 9, boards: [10,11,12] },
-            { round: 1, table: 5, ns: 5, ew: 10, boards: [13,14,15] },
-            { round: 2, table: 1, ns: 1, ew: 7, boards: [4,5,6] },
-            { round: 2, table: 2, ns: 10, ew: 3, boards: [7,8,9] },
-            { round: 2, table: 3, ns: 9, ew: 4, boards: [10,11,12] },
-            { round: 2, table: 4, ns: 8, ew: 5, boards: [13,14,15] },
-            { round: 2, table: 5, ns: 6, ew: 2, boards: [16,17,18] },
-            { round: 3, table: 1, ns: 1, ew: 8, boards: [7,8,9] },
-            { round: 3, table: 2, ns: 2, ew: 10, boards: [10,11,12] },
-            { round: 3, table: 3, ns: 3, ew: 9, boards: [13,14,15] },
-            { round: 3, table: 4, ns: 4, ew: 6, boards: [16,17,18] },
-            { round: 3, table: 5, ns: 7, ew: 5, boards: [19,20,21] },
-            { round: 4, table: 1, ns: 1, ew: 9, boards: [10,11,12] },
-            { round: 4, table: 2, ns: 5, ew: 2, boards: [13,14,15] },
-            { round: 4, table: 3, ns: 10, ew: 4, boards: [16,17,18] },
-            { round: 4, table: 4, ns: 3, ew: 7, boards: [19,20,21] },
-            { round: 4, table: 5, ns: 8, ew: 6, boards: [22,23,24] },
-            { round: 5, table: 1, ns: 1, ew: 10, boards: [13,14,15] },
-            { round: 5, table: 2, ns: 6, ew: 5, boards: [16,17,18] },
-            { round: 5, table: 3, ns: 2, ew: 4, boards: [19,20,21] },
-            { round: 5, table: 4, ns: 9, ew: 8, boards: [22,23,24] },
-            { round: 5, table: 5, ns: 3, ew: 7, boards: [25,26,27] },
-            { round: 6, table: 1, ns: 1, ew: 4, boards: [16,17,18] },
-            { round: 6, table: 2, ns: 7, ew: 6, boards: [19,20,21] },
-            { round: 6, table: 3, ns: 5, ew: 3, boards: [22,23,24] },
-            { round: 6, table: 4, ns: 10, ew: 9, boards: [25,26,27] },
-            { round: 6, table: 5, ns: 2, ew: 8, boards: [1,2,3] },
-            { round: 7, table: 1, ns: 1, ew: 3, boards: [19,20,21] },
-            { round: 7, table: 2, ns: 8, ew: 7, boards: [22,23,24] },
-            { round: 7, table: 3, ns: 6, ew: 2, boards: [25,26,27] },
-            { round: 7, table: 4, ns: 4, ew: 10, boards: [1,2,3] },
-            { round: 7, table: 5, ns: 5, ew: 9, boards: [4,5,6] },
-            { round: 8, table: 1, ns: 1, ew: 2, boards: [22,23,24] },
-            { round: 8, table: 2, ns: 9, ew: 8, boards: [25,26,27] },
-            { round: 8, table: 3, ns: 7, ew: 6, boards: [1,2,3] },
-            { round: 8, table: 4, ns: 3, ew: 4, boards: [4,5,6] },
-            { round: 8, table: 5, ns: 10, ew: 5, boards: [7,8,9] },
-            { round: 9, table: 1, ns: 1, ew: 5, boards: [25,26,27] },
-            { round: 9, table: 2, ns: 10, ew: 9, boards: [1,2,3] },
-            { round: 9, table: 3, ns: 8, ew: 7, boards: [4,5,6] },
-            { round: 9, table: 4, ns: 2, ew: 3, boards: [7,8,9] },
-            { round: 9, table: 5, ns: 4, ew: 6, boards: [10,11,12] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+            { round: 1, table: 2, ns: 3, ew: 10, boards: [1,2,3] },
+            { round: 1, table: 3, ns: 4, ew: 9, boards: [1,2,3] },
+            { round: 1, table: 4, ns: 5, ew: 8, boards: [1,2,3] },
+            { round: 1, table: 5, ns: 6, ew: 7, boards: [1,2,3] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [4,5,6] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [4,5,6] },
+            { round: 2, table: 3, ns: 5, ew: 10, boards: [4,5,6] },
+            { round: 2, table: 4, ns: 6, ew: 9, boards: [4,5,6] },
+            { round: 2, table: 5, ns: 7, ew: 8, boards: [4,5,6] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [7,8,9] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [7,8,9] },
+            { round: 3, table: 4, ns: 7, ew: 10, boards: [7,8,9] },
+            { round: 3, table: 5, ns: 8, ew: 9, boards: [7,8,9] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [10,11,12] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [10,11,12] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [10,11,12] },
+            { round: 4, table: 5, ns: 9, ew: 10, boards: [10,11,12] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [13,14,15] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [13,14,15] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [13,14,15] },
+            { round: 5, table: 4, ns: 9, ew: 3, boards: [13,14,15] },
+            { round: 5, table: 5, ns: 10, ew: 2, boards: [13,14,15] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [16,17,18] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [16,17,18] },
+            { round: 6, table: 3, ns: 9, ew: 5, boards: [16,17,18] },
+            { round: 6, table: 4, ns: 10, ew: 4, boards: [16,17,18] },
+            { round: 6, table: 5, ns: 2, ew: 3, boards: [16,17,18] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [19,20,21] },
+            { round: 7, table: 2, ns: 9, ew: 7, boards: [19,20,21] },
+            { round: 7, table: 3, ns: 10, ew: 6, boards: [19,20,21] },
+            { round: 7, table: 4, ns: 2, ew: 5, boards: [19,20,21] },
+            { round: 7, table: 5, ns: 3, ew: 4, boards: [19,20,21] },
+            { round: 8, table: 1, ns: 1, ew: 9, boards: [22,23,24] },
+            { round: 8, table: 2, ns: 10, ew: 8, boards: [22,23,24] },
+            { round: 8, table: 3, ns: 2, ew: 7, boards: [22,23,24] },
+            { round: 8, table: 4, ns: 3, ew: 6, boards: [22,23,24] },
+            { round: 8, table: 5, ns: 4, ew: 5, boards: [22,23,24] },
+            { round: 9, table: 1, ns: 1, ew: 10, boards: [25,26,27] },
+            { round: 9, table: 2, ns: 2, ew: 9, boards: [25,26,27] },
+            { round: 9, table: 3, ns: 3, ew: 8, boards: [25,26,27] },
+            { round: 9, table: 4, ns: 4, ew: 7, boards: [25,26,27] },
+            { round: 9, table: 5, ns: 5, ew: 6, boards: [25,26,27] }
         ]
     },
 
