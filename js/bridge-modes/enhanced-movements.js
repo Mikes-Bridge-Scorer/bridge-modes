@@ -392,7 +392,7 @@ const ENHANCED_MOVEMENTS = {
         type: 'mitchell',
         description: "4-table Skip Mitchell, 16 boards, ~2 hrs",
         movement: generateMitchellMovement(4, 4, true)
-    }
+    },
 
     // ─────────────────────────────────────────────
     // 9 PAIRS - 4.5 tables
