@@ -32,8 +32,8 @@ const ProgressIndicator = {
         let nextAction = '';
         
         if (!hasLevel) {
-            currentStep = 'Waiting for contract level';
-            nextAction = 'Enter 1-7 for contract level';
+            currentStep = 'Waiting for Bid level';
+            nextAction = 'Enter 1-7 for bid level';
         } else if (!hasSuit) {
             currentStep = 'Level ' + contract.level + ' entered';
             nextAction = 'Choose suit: C, D, H, S, or N for No Trump';
@@ -61,8 +61,8 @@ const ProgressIndicator = {
                 <!-- Deal Progress Bar -->
                 <div style="margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <span style="font-size: 13px; font-weight: 600; opacity: 0.9;">Deal ${deal} of ${totalDeals}</span>
-                        <span style="font-size: 11px; opacity: 0.8;">${Math.round((deal / totalDeals) * 100)}% Complete</span>
+                        <span style="font-size: 15px; font-weight: 800; color: #003366;">Deal ${deal} of ${totalDeals}</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #003366;">${Math.round((deal / totalDeals) * 100)}%</span>
                     </div>
                     <div style="background: rgba(255,255,255,0.3); height: 8px; border-radius: 4px; overflow: hidden;">
                         <div style="
@@ -84,8 +84,8 @@ const ProgressIndicator = {
                         flex: 1;
                         text-align: center;
                     ">
-                        <div style="opacity: 0.8; font-size: 10px;">Dealer</div>
-                        <div style="font-weight: 700; font-size: 14px;">${mode.getDealerName ? mode.getDealerName() : 'North'}</div>
+                        <div style="font-size: 12px; font-weight: 800; color: #003366;">Dealer</div>
+                        <div style="font-weight: 800; font-size: 16px; color: #003366;">${mode.getDealerName ? mode.getDealerName() : 'North'}</div>
                     </div>
                     <div style="
                         background: rgba(255,255,255,0.2);
@@ -94,8 +94,8 @@ const ProgressIndicator = {
                         flex: 1;
                         text-align: center;
                     ">
-                        <div style="opacity: 0.8; font-size: 10px;">Vulnerability</div>
-                        <div style="font-weight: 700; font-size: 14px;">${mode.vulnerability || 'None'}</div>
+                        <div style="font-size: 12px; font-weight: 800; color: #003366;">Vul</div>
+                        <div style="font-weight: 800; font-size: 16px; color: #003366;">${mode.vulnerability || 'None'}</div>
                     </div>
                 </div>
                 
@@ -120,13 +120,13 @@ const ProgressIndicator = {
                             font-weight: 700;
                             font-size: 12px;
                         ">📍</div>
-                        <div style="font-weight: 700; font-size: 13px;">Current: ${currentStep}</div>
+                        <div style="font-weight: 800; font-size: 15px;">${currentStep}</div>
                     </div>
                     <div style="
                         padding-left: 32px;
-                        font-size: 12px;
-                        color: #7f8c8d;
-                        font-style: italic;
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: #2c3e50;
                     ">👉 ${nextAction}</div>
                 </div>
                 
@@ -165,8 +165,8 @@ const ProgressIndicator = {
         let nextAction = '';
         
         if (!hasLevel) {
-            currentStep = 'Waiting for contract level';
-            nextAction = 'Enter 1-7 for contract level';
+            currentStep = 'Waiting for Bid level';
+            nextAction = 'Enter 1-7 for bid level';
         } else if (!hasSuit) {
             currentStep = 'Level ' + contract.level + ' entered';
             nextAction = 'Choose suit: C, D, H, S, or N';
@@ -197,7 +197,7 @@ const ProgressIndicator = {
                 <div style="margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 14px; font-weight: 700;">⭐ Hand #${deal}</span>
-                        <span style="font-size: 11px; opacity: 0.9;">Bonus Bridge</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #003366;">Bonus Bridge</span>
                     </div>
                 </div>
                 
@@ -210,8 +210,8 @@ const ProgressIndicator = {
                         flex: 1;
                         text-align: center;
                     ">
-                        <div style="opacity: 0.8; font-size: 10px;">Dealer</div>
-                        <div style="font-weight: 700; font-size: 14px;">${mode.getDealerName ? mode.getDealerName() : 'North'}</div>
+                        <div style="font-size: 12px; font-weight: 800; color: #003366;">Dealer</div>
+                        <div style="font-weight: 800; font-size: 16px; color: #003366;">${mode.getDealerName ? mode.getDealerName() : 'North'}</div>
                     </div>
                     <div style="
                         background: rgba(255,255,255,0.2);
@@ -220,8 +220,8 @@ const ProgressIndicator = {
                         flex: 1;
                         text-align: center;
                     ">
-                        <div style="opacity: 0.8; font-size: 10px;">Vulnerability</div>
-                        <div style="font-weight: 700; font-size: 14px;">${mode.vulnerability || 'None'}</div>
+                        <div style="font-size: 12px; font-weight: 800; color: #003366;">Vul</div>
+                        <div style="font-weight: 800; font-size: 16px; color: #003366;">${mode.vulnerability || 'None'}</div>
                     </div>
                 </div>
                 
@@ -246,7 +246,7 @@ const ProgressIndicator = {
                             font-weight: 700;
                             font-size: 12px;
                         ">📍</div>
-                        <div style="font-weight: 700; font-size: 13px;">Current: ${currentStep}</div>
+                        <div style="font-weight: 800; font-size: 15px;">${currentStep}</div>
                     </div>
                     <div style="
                         padding-left: 32px;
@@ -287,8 +287,8 @@ const ProgressIndicator = {
                 flex: 1;
                 transition: all 0.3s ease;
             ">
-                <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">${icon}</div>
-                <div style="font-size: 9px; opacity: 0.9;">${label}</div>
+                <div style="font-weight: 800; font-size: 16px; margin-bottom: 2px;">${icon}</div>
+                <div style="font-size: 11px; font-weight: 700; opacity: 0.95;">${label}</div>
             </div>
         `;
     },

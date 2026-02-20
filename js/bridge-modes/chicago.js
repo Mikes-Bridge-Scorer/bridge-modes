@@ -1485,7 +1485,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      */
     getDealInfo() {
         const dealerName = this.getDealerName();
-        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability}`;
+        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability} Vul`;
     }
     
     /**
@@ -1798,7 +1798,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      */
     getDealInfo() {
         const dealerName = this.getDealerName();
-        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability}`;
+        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability} Vul`;
     }
     
     /**
