@@ -2,7 +2,7 @@
 // Version: 2025-02-13-TABLE-CARDS - All files included for cruise use
 // This caches EVERYTHING needed for 100% offline operation
 
-const CACHE_VERSION = 'bridge-modes-v2026-02-19-progress';
+const CACHE_VERSION = 'bridge-modes-v2026-02-20-movements-fixed';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
