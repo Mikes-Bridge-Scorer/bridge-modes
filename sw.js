@@ -2,7 +2,7 @@
 // Version: 2025-02-13-TABLE-CARDS - All files included for cruise use
 // This caches EVERYTHING needed for 100% offline operation
 
-const CACHE_VERSION = 'bridge-modes-v2025-02-13-table-cards';
+const CACHE_VERSION = 'bridge-modes-v2026-02-19-progress';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
@@ -32,7 +32,9 @@ const STATIC_FILES = [
     './js/bridge-modes/ui-controller.js',
     './js/bridge-modes/game-state.js',
     './js/bridge-modes/enhanced-movements.js',
-    './js/bridge-modes/table-card-generator.js'
+    './js/bridge-modes/table-card-generator.js',
+    './js/bridge-modes/session-recovery.js',
+    './js/bridge-modes/progress-indicator.js'
 ];
 
 // Optional files (won't fail if missing)
@@ -57,7 +59,9 @@ const DYNAMIC_FILES = [
     './js/bridge-modes/ui-controller.js',
     './js/bridge-modes/game-state.js',
     './js/bridge-modes/enhanced-movements.js',
-    './js/bridge-modes/table-card-generator.js'
+    './js/bridge-modes/table-card-generator.js',
+    './js/bridge-modes/session-recovery.js',
+    './js/bridge-modes/progress-indicator.js'
 ];
 
 // Install event - cache all files for offline use
