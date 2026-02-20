@@ -41,8 +41,12 @@ class LicenseManager {
         this.usedCodesKey = 'bridgeAppUsedCodes';
         this.trialDays = 14;
         this.trialDeals = 50;
-        this.checksumTarget = 37;
+        this.checksumAnnual = 37;     // 12-month licence
+        this.checksumLifetime = 47;   // Lifetime licence
         this.trialPrefixes = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
+        this.annualDays = 365;        // 12-month licence duration
+        this.expiryWarningDays = 30;  // Warn this many days before expiry
+        this.contactEmail = 'mike.calpe@gmail.com';
         
         console.log('🔐 License Manager initialized');
     }
@@ -73,22 +77,35 @@ class LicenseManager {
             };
         }
 
-        if (license.type === 'FULL') {
+        if (license.type === 'LIFETIME') {
             return { 
-                status: 'full', 
+                status: 'lifetime', 
                 needsCode: false,
-                message: 'Full version activated'
+                message: 'Lifetime licence active'
             };
+        }
+
+        if (license.type === 'ANNUAL') {
+            return this.checkAnnualExpiry(license);
         }
 
         if (license.type === 'TRIAL') {
             return this.checkTrialExpiry(license);
         }
 
+        // Legacy: old 'FULL' licences treated as LIFETIME
+        if (license.type === 'FULL') {
+            return { 
+                status: 'lifetime', 
+                needsCode: false,
+                message: 'Lifetime licence active'
+            };
+        }
+
         return { 
             status: 'invalid', 
             needsCode: true,
-            message: 'Invalid license detected. Please re-enter code.'
+            message: 'Invalid licence detected. Please re-enter code.'
         };
     }
 
@@ -112,7 +129,10 @@ class LicenseManager {
 
         // Validate code format and checksum
         const validation = this.validateCodeSync(license.code);
-        if (!validation.valid || validation.type !== license.type) {
+        // Allow legacy FULL type to map to LIFETIME
+        const typeMatch = validation.type === license.type ||
+                          (license.type === 'FULL' && validation.type === 'LIFETIME');
+        if (!validation.valid || !typeMatch) {
             console.warn('🚨 License code validation failed');
             return false;
         }
@@ -137,10 +157,13 @@ class LicenseManager {
             return { valid: true, type: 'TRIAL' };
         }
 
-        // Check if it's a full license code (checksum = 37)
+        // Check digit sum for annual (37) or lifetime (47) licence
         const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-        if (digitSum === this.checksumTarget) {
-            return { valid: true, type: 'FULL' };
+        if (digitSum === this.checksumAnnual) {
+            return { valid: true, type: 'ANNUAL' };
+        }
+        if (digitSum === this.checksumLifetime) {
+            return { valid: true, type: 'LIFETIME' };
         }
 
         return { valid: false };
@@ -224,7 +247,7 @@ class LicenseManager {
             return this.validateTrialCode(code);
         }
 
-        // Check full license codes
+        // Check annual (sum=37) or lifetime (sum=47) codes
         return this.validateFullCode(code);
     }
 
@@ -265,32 +288,101 @@ class LicenseManager {
     }
 
     /**
-     * Validate a full license code
-     * @param {string} code Full license code to validate
+     * Validate an annual (sum=37) or lifetime (sum=47) licence code
+     * @param {string} code Licence code to validate
      * @returns {Object} Validation result
      */
     validateFullCode(code) {
         const digitSum = code.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-        if (digitSum !== this.checksumTarget) {
+        
+        if (digitSum === this.checksumLifetime) {
+            // Lifetime licence - always valid, can reuse (replaces expired annual)
             return { 
-                valid: false, 
-                message: 'Invalid license code. Please check and try again.' 
+                valid: true, 
+                type: 'LIFETIME', 
+                message: '🎉 Lifetime licence activated! Unlimited bridge scoring forever.',
+                markAsUsed: true
             };
         }
 
-        // Check if already used
-        if (this.isCodeUsed(code)) {
+        if (digitSum === this.checksumAnnual) {
+            // Annual licence - check if current licence is still active annual
+            // (don't allow a new annual if one is still valid - must use lifetime to upgrade)
+            const existing = this.getLicenseData();
+            if (existing && existing.type === 'ANNUAL') {
+                const now = Date.now();
+                const expiryDate = existing.activatedAt + (this.annualDays * 24 * 60 * 60 * 1000);
+                if (now < expiryDate) {
+                    return {
+                        valid: false,
+                        message: 'Annual licence still active. Use a lifetime code (sum=47) to upgrade.'
+                    };
+                }
+                // Annual has expired - allow new annual code
+            }
+
+            // Check if this specific code was already used (prevent sharing)
+            if (this.isCodeUsed(code)) {
+                return { 
+                    valid: false, 
+                    message: 'This licence code has already been used on another device.' 
+                };
+            }
+
             return { 
-                valid: false, 
-                message: 'License code already used on another device' 
+                valid: true, 
+                type: 'ANNUAL', 
+                message: '🎉 12-month licence activated! Enjoy a full year of bridge scoring.',
+                markAsUsed: true
             };
         }
 
         return { 
-            valid: true, 
-            type: 'FULL', 
-            message: '🎉 Full version activated! Unlimited bridge scoring.',
-            markAsUsed: true
+            valid: false, 
+            message: 'Invalid licence code. Please check and try again.' 
+        };
+    }
+
+    /**
+     * Check annual licence expiry and return status with warning if approaching
+     * @param {Object} license Annual licence data
+     * @returns {Object} Licence status
+     */
+    checkAnnualExpiry(license) {
+        const now = Date.now();
+        const expiryDate = license.activatedAt + (this.annualDays * 24 * 60 * 60 * 1000);
+        const msLeft = expiryDate - now;
+        const daysLeft = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24)));
+        
+        if (daysLeft <= 0) {
+            return {
+                status: 'expired',
+                needsCode: true,
+                message: 'Your 12-month licence has expired. Please enter a new licence code.',
+                daysLeft: 0
+            };
+        }
+
+        if (daysLeft <= this.expiryWarningDays) {
+            return {
+                status: 'annual',
+                needsCode: false,
+                daysLeft,
+                warning: true,
+                message: `⚠️ Licence expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. ` +
+                         `Contact ${this.contactEmail} to renew.`
+            };
+        }
+
+        const expiryDateStr = new Date(expiryDate).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+        return {
+            status: 'annual',
+            needsCode: false,
+            daysLeft,
+            warning: false,
+            message: `Annual licence active. Expires ${expiryDateStr}.`
         };
     }
 
@@ -353,27 +445,30 @@ class LicenseManager {
      * @returns {Object} Conflict check result
      */
     checkLicenseConflicts(existingLicense, validation) {
-        // If trying to activate trial but already have full license
-        if (validation.type === 'TRIAL' && existingLicense.type === 'FULL') {
-            return { 
-                success: false, 
-                message: 'Full license already active. Trial codes cannot be used.' 
-            };
-        }
-        
-        // If trying to use same type of license again
-        if (validation.type === existingLicense.type) {
-            if (validation.type === 'TRIAL') {
-                return { 
-                    success: false, 
-                    message: 'Trial already used on this device' 
-                };
-            } else {
-                return { 
-                    success: false, 
-                    message: 'Full license already active' 
-                };
+        const existingType = existingLicense.type;
+        const newType = validation.type;
+
+        // Cannot downgrade from lifetime to anything lesser
+        if (existingType === 'LIFETIME' || existingType === 'FULL') {
+            if (newType === 'TRIAL') {
+                return { success: false, message: 'Lifetime licence already active. Trial codes cannot be used.' };
             }
+            if (newType === 'ANNUAL') {
+                return { success: false, message: 'Lifetime licence already active. Annual codes cannot be used.' };
+            }
+            if (newType === 'LIFETIME') {
+                return { success: false, message: 'Lifetime licence already active.' };
+            }
+        }
+
+        // Cannot activate trial if annual licence is active
+        if (existingType === 'ANNUAL' && newType === 'TRIAL') {
+            return { success: false, message: 'Annual licence already active. Trial codes cannot be used.' };
+        }
+
+        // Cannot activate duplicate trial
+        if (existingType === 'TRIAL' && newType === 'TRIAL') {
+            return { success: false, message: 'Trial already used on this device.' };
         }
 
         return { success: true };
@@ -480,7 +575,7 @@ class LicenseManager {
             return { dealsPlayed: 0, dealsRemaining: 0, unlimited: false };
         }
 
-        if (licenseData.type === 'FULL') {
+        if (licenseData.type === 'FULL' || licenseData.type === 'LIFETIME' || licenseData.type === 'ANNUAL') {
             return { dealsPlayed, dealsRemaining: Infinity, unlimited: true };
         }
 
@@ -505,17 +600,29 @@ class LicenseManager {
      * Generate a valid full license code (checksum = 37)
      * @returns {string} Valid full license code
      */
-    static generateFullCode() {
-        // Generate a valid full license code that sums to 37
+    static generateAnnualCode() {
+        // Generate a valid annual licence code (digits sum to 37)
         const baseDigits = [7, 3, 0, 9, 9, 9]; // Sum = 37
-        
-        // Shuffle for randomness
         for (let i = baseDigits.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [baseDigits[i], baseDigits[j]] = [baseDigits[j], baseDigits[i]];
         }
-        
         return baseDigits.join('');
+    }
+
+    static generateLifetimeCode() {
+        // Generate a valid lifetime licence code (digits sum to 47)
+        const baseDigits = [9, 9, 9, 9, 9, 2]; // Sum = 47
+        for (let i = baseDigits.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [baseDigits[i], baseDigits[j]] = [baseDigits[j], baseDigits[i]];
+        }
+        return baseDigits.join('');
+    }
+
+    // Keep for backwards compatibility
+    static generateFullCode() {
+        return LicenseManager.generateAnnualCode();
     }
 
     /**
@@ -551,6 +658,8 @@ if (typeof window !== 'undefined' && (
     // Development helper functions
     window.LicenseDevTools = {
         generateTrialCode: LicenseManager.generateTrialCode,
+        generateAnnualCode: LicenseManager.generateAnnualCode,
+        generateLifetimeCode: LicenseManager.generateLifetimeCode,
         generateFullCode: LicenseManager.generateFullCode,
         checksumCode: LicenseManager.checksumCode,
         validateCodes: LicenseManager.validateMultipleCodes,
@@ -581,10 +690,15 @@ if (typeof window !== 'undefined' && (
                 console.log(`${code} (sum: ${sum}) - TRIAL`);
             });
             
-            console.log('\nFull license codes (sum = 37):');
-            ['730999', '775558', '109999', '469999', '289999'].forEach(code => {
+            console.log('\nAnnual licence codes (sum = 37):');
+            ['730999', '109999', '469981', '289972', '379981'].forEach(code => {
                 const sum = LicenseManager.checksumCode(code);
-                console.log(`${code} (sum: ${sum}) - FULL`);
+                console.log(`${code} (sum: ${sum}) - ANNUAL 12 months`);
+            });
+            console.log('\nLifetime licence codes (sum = 47):');
+            ['999992', '989981', '997991', '998981', '979991'].forEach(code => {
+                const sum = LicenseManager.checksumCode(code);
+                console.log(`${code} (sum: ${sum}) - LIFETIME`);
             });
         }
     };
