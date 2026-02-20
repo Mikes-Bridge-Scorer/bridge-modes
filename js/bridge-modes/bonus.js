@@ -3478,7 +3478,7 @@ getDisplayContent() {
                 </div>
                 <div class="game-content">
                     ${progressHTML}
-                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability} Vul</strong></div>
+                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                         HCP-based enhanced scoring • Auto vulnerability cycle
                     </div>
@@ -3497,7 +3497,7 @@ getDisplayContent() {
                 </div>
                 <div class="game-content">
                     ${progressHTML}
-                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability} Vul</strong></div>
+                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Level: ${this.currentContract.level}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                         Raw score calculated after result, then HCP analysis
@@ -3520,7 +3520,7 @@ getDisplayContent() {
                 </div>
                 <div class="game-content">
                     ${progressHTML}
-                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability} Vul</strong></div>
+                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                         Enter result to see raw score before HCP analysis
@@ -3545,7 +3545,7 @@ getDisplayContent() {
                 </div>
                 <div class="game-content">
                     ${progressHTML}
-                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability} Vul</strong></div>
+                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Contract: ${contract} by ${this.currentContract.declarer}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                         Raw score calculated, then HCP analysis popup appears
@@ -3567,7 +3567,7 @@ getDisplayContent() {
                 </div>
                 <div class="game-content">
                     ${progressHTML}
-                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability} Vul</strong></div>
+                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>Contract: ${fullContract} by ${this.currentContract.declarer}</strong></div>
                     <div style="color: #e67e22; font-size: 12px; margin-top: 4px;">
                         After number entry: raw score + HCP analysis popup
@@ -3588,7 +3588,7 @@ getDisplayContent() {
                 </div>
                 <div class="game-content">
                     ${progressHTML}
-                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability} Vul</strong></div>
+                    <div><strong>Deal ${this.currentDeal} - Dealer ${this.getDealerName()} - ${this.vulnerability}</strong></div>
                     <div><strong>${analysisContract} by ${this.currentContract.declarer} = ${this.currentContract.result}</strong></div>
                     <div style="color: #ffffff; font-weight: bold; font-size: 14px; margin-top: 8px; background: rgba(52,152,219,0.3); padding: 6px; border-radius: 4px;">
                         Raw Score: ${this.currentContract.rawScore} points
@@ -3632,7 +3632,7 @@ getDisplayContent() {
                             </span>
                         </div>
                     </div>
-                    <div class="current-state">Press Deal for next hand</div>
+                    <div class="current-state"><strong>Press DEAL for NEXT hand &nbsp;|&nbsp; Press QUIT for SCORES</strong></div>
                 `;
             }
             break;

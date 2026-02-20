@@ -1485,7 +1485,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      */
     getDealInfo() {
         const dealerName = this.getDealerName();
-        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability} Vul`;
+        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability}`;
     }
     
     /**
@@ -1798,7 +1798,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
      */
     getDealInfo() {
         const dealerName = this.getDealerName();
-        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability} Vul`;
+        return `Deal ${this.currentDeal} - Dealer ${dealerName} - ${this.vulnerability}`;
     }
     
     /**
@@ -2052,7 +2052,7 @@ class ChicagoBridgeMode extends BaseBridgeMode {
                                 '<div style="color: #95a5a6; font-size: 11px; margin-top: 4px;">Next: ' + nextCycleInfo + '</div>'
                             }
                         </div>
-                        <div class="current-state">Press Deal for next hand</div>
+                        <div class="current-state"><strong>Press DEAL for NEXT hand &nbsp;|&nbsp; Press QUIT for SCORES</strong></div>
                     `;
                 }
                 break;
