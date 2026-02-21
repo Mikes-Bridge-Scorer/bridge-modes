@@ -328,6 +328,42 @@ const ENHANCED_MOVEMENTS = {
     // ─────────────────────────────────────────────
     
 
+    "8_howell_14": {
+        pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
+        type: 'howell',
+        description: "4-table Howell, 14 boards, ~2 hrs",
+        movement: [
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2] },
+            { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2] },
+            { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 3, ns: 5, ew: 8, boards: [3,4] },
+            { round: 2, table: 4, ns: 6, ew: 7, boards: [3,4] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
+            { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 3, table: 4, ns: 7, ew: 8, boards: [5,6] },
+            { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
+            { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [7,8] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
+            { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [9,10] },
+            { round: 5, table: 4, ns: 2, ew: 3, boards: [9,10] },
+            { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [11,12] },
+            { round: 6, table: 3, ns: 2, ew: 5, boards: [11,12] },
+            { round: 6, table: 4, ns: 3, ew: 4, boards: [11,12] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [13,14] },
+            { round: 7, table: 2, ns: 2, ew: 7, boards: [13,14] },
+            { round: 7, table: 3, ns: 3, ew: 6, boards: [13,14] },
+            { round: 7, table: 4, ns: 4, ew: 5, boards: [13,14] }
+        ]
+    },
+
     "8_howell_28": {
         pairs: 8, tables: 4, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'howell',
@@ -376,6 +412,13 @@ const ENHANCED_MOVEMENTS = {
         type: 'mitchell',
         description: "4-table Skip Mitchell, 16 boards, ~2 hrs",
         movement: generateMitchellMovement(4, 4, true)
+    },
+
+    "8_mitchell_24": {
+        pairs: 8, tables: 4, rounds: 4, totalBoards: 24, boardsPerRound: 6,
+        type: 'mitchell',
+        description: "4-table Skip Mitchell, 24 boards, ~3 hrs",
+        movement: generateMitchellMovement(4, 6, true)
     },
 
     // ─────────────────────────────────────────────

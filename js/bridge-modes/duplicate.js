@@ -2095,7 +2095,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     showPrintMenu() {
         console.log('🖨️ Opening Print Menu...');
 
-        // Remove any existing print menu popup
         const existing = document.getElementById('printMenuPopup');
         if (existing) existing.remove();
 
@@ -2108,94 +2107,100 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             -webkit-overflow-scrolling: touch;
         `;
 
-        popup.innerHTML = `
-            <div style="
-                background: white;
-                border-radius: 10px;
-                width: 88%;
-                max-width: 340px;
-                padding: 20px;
-                color: #2c3e50;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            ">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0 0 4px 0; color: #2c3e50;">🖨️ Print Menu</h3>
-                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Select what to print</p>
+        // Mobile: show a friendly "use PC" message instead of broken print options
+        if (this.isMobile) {
+            popup.innerHTML = `
+                <div style="
+                    background: white; border-radius: 10px;
+                    width: 88%; max-width: 340px; padding: 24px;
+                    color: #2c3e50; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+                    text-align: center;
+                ">
+                    <div style="font-size: 40px; margin-bottom: 12px;">🖨️</div>
+                    <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 18px;">Print on PC</h3>
+                    <p style="font-size: 14px; color: #34495e; line-height: 1.6; margin: 0 0 16px 0;">
+                        Printing works best from a PC or laptop.<br><br>
+                        Open the app on your computer to print:<br>
+                        <strong>Table cards, Travellers, Movement sheets</strong>
+                        <br>before your tournament.
+                    </p>
+                    <div style="background: #e8f4f8; padding: 10px; border-radius: 6px; font-size: 13px; color: #2c3e50; margin-bottom: 16px;">
+                        💡 You can prepare all print materials days before the tournament.
+                    </div>
+                    <button id="pmClose" style="
+                        display: block; width: 100%; padding: 13px;
+                        border: 2px solid #bdc3c7; border-radius: 7px;
+                        background: white; color: #7f8c8d;
+                        font-size: 15px; font-weight: 600; cursor: pointer;
+                    ">✕ Close</button>
                 </div>
+            `;
+        } else {
+            // Desktop: full print menu
+            popup.innerHTML = `
+                <div style="
+                    background: white; border-radius: 10px;
+                    width: 88%; max-width: 340px; padding: 20px;
+                    color: #2c3e50; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+                ">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0 0 4px 0; color: #2c3e50;">🖨️ Print Menu</h3>
+                        <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Select what to print</p>
+                    </div>
 
-                <div style="background: #e8f4f8; padding: 10px; border-radius: 6px; font-size: 12px; color: #2c3e50; margin-bottom: 15px; line-height: 1.5;">
-                    <strong>💡 Tip:</strong> Table Cards &amp; Movement Sheets offer print/download.<br>
-                    Travelers &amp; Board Slips open in browser.
+                    <button id="pmBtn1" style="
+                        display: block; width: 100%; padding: 13px;
+                        margin-bottom: 10px; border: none; border-radius: 7px;
+                        background: #27ae60; color: white;
+                        font-size: 15px; font-weight: 600; cursor: pointer;
+                        text-align: left;
+                    ">📋 Table Movement Cards</button>
+
+                    <button id="pmBtn2" style="
+                        display: block; width: 100%; padding: 13px;
+                        margin-bottom: 10px; border: none; border-radius: 7px;
+                        background: #3498db; color: white;
+                        font-size: 15px; font-weight: 600; cursor: pointer;
+                        text-align: left;
+                    ">📊 Traveler Sheets (HTML)</button>
+
+                    <button id="pmBtn3" style="
+                        display: block; width: 100%; padding: 13px;
+                        margin-bottom: 10px; border: none; border-radius: 7px;
+                        background: #e67e22; color: white;
+                        font-size: 15px; font-weight: 600; cursor: pointer;
+                        text-align: left;
+                    ">🎴 Board Slips (HTML)</button>
+
+                    <button id="pmBtn4" style="
+                        display: block; width: 100%; padding: 13px;
+                        margin-bottom: 15px; border: none; border-radius: 7px;
+                        background: #9b59b6; color: white;
+                        font-size: 15px; font-weight: 600; cursor: pointer;
+                        text-align: left;
+                    ">📑 Movement Sheet</button>
+
+                    <button id="pmClose" style="
+                        display: block; width: 100%; padding: 11px;
+                        border: 2px solid #bdc3c7; border-radius: 7px;
+                        background: white; color: #7f8c8d;
+                        font-size: 14px; font-weight: 600; cursor: pointer;
+                    ">✕ Close</button>
                 </div>
-
-                <button id="pmBtn1" style="
-                    display: block; width: 100%; padding: 13px;
-                    margin-bottom: 10px; border: none; border-radius: 7px;
-                    background: #27ae60; color: white;
-                    font-size: 15px; font-weight: 600; cursor: pointer;
-                    text-align: left;
-                ">📋 Table Movement Cards</button>
-
-                <button id="pmBtn2" style="
-                    display: block; width: 100%; padding: 13px;
-                    margin-bottom: 10px; border: none; border-radius: 7px;
-                    background: #3498db; color: white;
-                    font-size: 15px; font-weight: 600; cursor: pointer;
-                    text-align: left;
-                ">📊 Traveler Sheets (HTML)</button>
-
-                <button id="pmBtn3" style="
-                    display: block; width: 100%; padding: 13px;
-                    margin-bottom: 10px; border: none; border-radius: 7px;
-                    background: #e67e22; color: white;
-                    font-size: 15px; font-weight: 600; cursor: pointer;
-                    text-align: left;
-                ">🎴 Board Slips (HTML)</button>
-
-                <button id="pmBtn4" style="
-                    display: block; width: 100%; padding: 13px;
-                    margin-bottom: 15px; border: none; border-radius: 7px;
-                    background: #9b59b6; color: white;
-                    font-size: 15px; font-weight: 600; cursor: pointer;
-                    text-align: left;
-                ">📑 Movement Sheet</button>
-
-                <button id="pmClose" style="
-                    display: block; width: 100%; padding: 11px;
-                    border: 2px solid #bdc3c7; border-radius: 7px;
-                    background: white; color: #7f8c8d;
-                    font-size: 14px; font-weight: 600; cursor: pointer;
-                ">✕ Close</button>
-            </div>
-        `;
+            `;
+        }
 
         document.body.appendChild(popup);
 
-        // Wire up buttons
-        document.getElementById('pmBtn1').addEventListener('click', () => {
-            popup.remove();
-            this.printTableCards();
-        });
-        document.getElementById('pmBtn2').addEventListener('click', () => {
-            popup.remove();
-            this.printTravelerSheets();
-        });
-        document.getElementById('pmBtn3').addEventListener('click', () => {
-            popup.remove();
-            this.printBoardSlips();
-        });
-        document.getElementById('pmBtn4').addEventListener('click', () => {
-            popup.remove();
-            this.showMovementSelector();
-        });
-        document.getElementById('pmClose').addEventListener('click', () => {
-            popup.remove();
-        });
-
-        // Close on backdrop click
-        popup.addEventListener('click', (e) => {
-            if (e.target === popup) popup.remove();
-        });
+        // Wire up buttons (desktop only)
+        if (!this.isMobile) {
+            document.getElementById('pmBtn1').addEventListener('click', () => { popup.remove(); this.printTableCards(); });
+            document.getElementById('pmBtn2').addEventListener('click', () => { popup.remove(); this.printTravelerSheets(); });
+            document.getElementById('pmBtn3').addEventListener('click', () => { popup.remove(); this.printBoardSlips(); });
+            document.getElementById('pmBtn4').addEventListener('click', () => { popup.remove(); this.showMovementSelector(); });
+        }
+        document.getElementById('pmClose').addEventListener('click', () => { popup.remove(); });
+        popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
     }
 
     /**
@@ -3895,10 +3900,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     getBoardSelectionContent() {
         const completionStatus = this.getCompletionStatus();
         const isComplete = completionStatus.percentage === 100;
-
-        const progressHTML = (typeof ProgressIndicator !== 'undefined')
-            ? ProgressIndicator.generateDuplicateBoardProgress(this)
-            : '';
         
         return `
             <div class="title-score-row">
@@ -3909,7 +3910,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
             </div>
             <div class="game-content">
-                ${progressHTML}
                 <div style="text-align: center; margin-bottom: 8px;">
                     <h3 style="color: #2c3e50; margin: 0; font-size: 18px; font-weight: 800;">
                         ${isComplete ? '🎉 Tournament Complete!' : 'Board Entry'}
