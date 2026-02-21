@@ -40,7 +40,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         // NEW: Movement selection state
         this.availableMovements = [];
         
-        this.inputState = 'pairs_setup';
+        this.inputState = 'welcome';
         this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // Initialize movements and start
@@ -156,7 +156,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      * Initialize Duplicate Bridge mode
      */
     initialize() {
-        this.inputState = 'pairs_setup';
+        this.inputState = 'welcome';
         this.session.isSetup = false;
         this.traveler.isActive = false;
         
@@ -263,6 +263,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      */
     handleAction(value) {
         switch (this.inputState) {
+            case 'welcome':
+                this.handleWelcome(value);
+                break;
             case 'pairs_setup':
                 this.handlePairsSetup(value);
                 break;
@@ -284,7 +287,61 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     /**
-     * Handle pairs setup selection with multi-digit entry
+     * Handle welcome page input
+     */
+    handleWelcome(value) {
+        if (value === '1') {
+            // Open print menu - works without a tournament being set up
+            this.showPrintMenu();
+        } else if (value === '2') {
+            // Proceed to tournament setup
+            this.inputState = 'pairs_setup';
+            this.updateDisplay();
+        }
+    }
+
+    /**
+     * Get welcome page display content
+     */
+    getWelcomeContent() {
+        const movementCount = this.movements ? Object.keys(this.movements).length : 0;
+        return `
+            <div class="title-score-row">
+                <div class="mode-title">Duplicate Bridge</div>
+                <div class="score-display">Welcome</div>
+            </div>
+            <div class="game-content">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="font-size: 28px; margin-bottom: 6px;">🂠</div>
+                    <p style="font-size: 14px; color: #34495e; margin: 0; line-height: 1.5;">
+                        Tournament scoring for 4–20 pairs<br>
+                        Mitchell &amp; Howell movements
+                    </p>
+                </div>
+
+                <div style="background: #27ae60; color: white; padding: 14px 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <div style="font-size: 16px; font-weight: bold;">1 = 🖨️ Print Menu</div>
+                    <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">
+                        Table cards &bull; Traveller sheets &bull; Movement sheets &bull; Board slips
+                    </div>
+                </div>
+
+                <div style="background: #3498db; color: white; padding: 14px 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <div style="font-size: 16px; font-weight: bold;">2 = ▶ Start Tournament Setup</div>
+                    <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">
+                        ${movementCount} movements available &bull; 4–20 pairs
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 10px 12px; border-radius: 6px; border-left: 3px solid #bdc3c7; margin-top: 10px; font-size: 12px; color: #7f8c8d; line-height: 1.5;">
+                    💡 Print your table cards and traveller sheets <em>before</em> the tournament — no setup needed first.
+                </div>
+            </div>
+            <div class="current-state">1 = Print Menu &nbsp;|&nbsp; 2 = Start Setup</div>
+        `;
+    }
+
+    /**
      * User can type: 4, 10 (1+0), 12 (1+2), 14 (1+4), etc.
      */
     handlePairsSetup(value) {
@@ -411,9 +468,6 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             // Start tournament without printing
             this.setupBoards();
             this.inputState = 'board_selection';
-        } else if (value === '4') {
-            // Open print menu
-            this.showPrintMenu();
         }
     }
 
@@ -3665,6 +3719,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
      */
     getDisplayContent() {
         switch (this.inputState) {
+            case 'welcome':
+                return this.getWelcomeContent();
+                
             case 'pairs_setup':
                 return this.getPairsSetupContent();
                 
@@ -3827,12 +3884,11 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 
                 <div style="margin: 15px 0; font-size: 14px; line-height: 1.8;">
                     <div><strong>1</strong> = Details</div>
-                    <div><strong>2</strong> = 🖨️ Print & Start</div>
-                    <div><strong>3</strong> = Start</div>
-                    <div><strong>4</strong> = 🖨️ Print Menu</div>
+                    <div><strong>2</strong> = 🖨️ Print &amp; Start</div>
+                    <div><strong>3</strong> = ▶ Start Now</div>
                 </div>
             </div>
-            <div class="current-state">1=Details 2=Print&Go 3=Start 4=Print Back</div>
+            <div class="current-state">1=Details 2=Print&amp;Start 3=Start</div>
         `;
     }
 
