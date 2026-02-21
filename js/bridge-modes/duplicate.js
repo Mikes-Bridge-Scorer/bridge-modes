@@ -3895,6 +3895,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     getBoardSelectionContent() {
         const completionStatus = this.getCompletionStatus();
         const isComplete = completionStatus.percentage === 100;
+
+        const progressHTML = (typeof ProgressIndicator !== 'undefined')
+            ? ProgressIndicator.generateDuplicateBoardProgress(this)
+            : '';
         
         return `
             <div class="title-score-row">
@@ -3905,6 +3909,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
             </div>
             <div class="game-content">
+                ${progressHTML}
                 <div style="text-align: center; margin-bottom: 10px;">
                     <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
                         ${isComplete ? 'Tournament Complete!' : 'Board Entry'}
@@ -3995,6 +4000,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         
         const currentResult = this.traveler.data[this.currentResultIndex];
         const contractDisplay = this.getTravelerContractDisplay(currentResult);
+
+        const progressHTML = (typeof ProgressIndicator !== 'undefined')
+            ? ProgressIndicator.generateDuplicateTravelerProgress(this)
+            : '';
         
         let statePrompt = '';
         switch (this.travelerInputState) {
@@ -4035,14 +4044,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
             </div>
             <div class="game-content">
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">
-                        ${vulnerability}
-                    </div>
-                    <div style="color: #3498db; font-size: 12px; margin-top: 2px;">
-                        Pairs ${progress.nsPair} (NS) vs ${progress.ewPair} (EW)  
-                    </div>
-                </div>
+                ${progressHTML}
                 
                 <div style="margin: 10px 0; padding: 8px; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
                     <div style="font-size: 12px; color: #2c3e50;">

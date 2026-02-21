@@ -325,7 +325,127 @@ const ProgressIndicator = {
                 <span style="opacity: 0.9;">${pct}%</span>
             </div>
         `;
+    },
+
+    /**
+     * Generate progress HTML for Duplicate Bridge - Board Selection view
+     * Shows overall tournament progress and board completion grid
+     * @param {Object} mode - The DuplicateBridgeMode instance
+     * @returns {string} HTML for progress indicator
+     */
+    generateDuplicateBoardProgress(mode) {
+        const status = mode.getCompletionStatus();
+        const movement = mode.session.movement;
+        if (!movement) return '';
+
+        const pct = status.percentage;
+        const boards = mode.getBoardStatus();
+
+        // Build mini board grid - coloured dots per board
+        const dots = boards.map(b => {
+            const color = b.completed ? '#2ecc71' : (b.hasResults ? '#f39c12' : 'rgba(255,255,255,0.3)');
+            const title = `Board ${b.number}`;
+            return `<div title="${title}" style="
+                width: 20px; height: 20px; border-radius: 4px;
+                background: ${color};
+                display: inline-flex; align-items: center; justify-content: center;
+                font-size: 9px; font-weight: 700; color: white;
+            ">${b.number}</div>`;
+        }).join('');
+
+        return `
+            <div style="
+                background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+                color: white; padding: 12px; border-radius: 10px;
+                margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            ">
+                <!-- Tournament progress bar -->
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 13px; font-weight: 700;">
+                            ${movement.pairs} pairs &bull; ${movement.tables} tables &bull; ${movement.rounds} rounds
+                        </span>
+                        <span style="font-size: 13px; font-weight: 700;">${status.completed}/${status.total} boards</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.25); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div style="
+                            background: #2ecc71; height: 100%;
+                            width: ${pct}%; border-radius: 4px;
+                            transition: width 0.3s ease;
+                        "></div>
+                    </div>
+                </div>
+
+                <!-- Board completion grid -->
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    ${dots}
+                </div>
+                <div style="margin-top: 6px; font-size: 11px; font-weight: 600; opacity: 0.85;">
+                    🟢 Done &nbsp; 🟠 In progress &nbsp; ⬜ Not started
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Generate progress HTML for Duplicate Bridge - Traveller entry view
+     * Shows board, vulnerability, pair, and contract entry steps
+     * @param {Object} mode - The DuplicateBridgeMode instance
+     * @returns {string} HTML for progress indicator
+     */
+    generateDuplicateTravelerProgress(mode) {
+        if (!mode.traveler || !mode.traveler.isActive) return '';
+
+        const boardNum   = mode.traveler.boardNumber;
+        const vuln       = mode.getBoardVulnerability(boardNum);
+        const progress   = mode.getCurrentTravelerProgress ? mode.getCurrentTravelerProgress() : { current: 1, total: 1, nsPair: '?', ewPair: '?' };
+        const totalBoards = mode.session.movement ? mode.session.movement.totalBoards : '?';
+        const state      = mode.travelerInputState || '';
+
+        const hasLevel    = state !== 'level_selection';
+        const hasSuit     = !['level_selection', 'suit_selection'].includes(state);
+        const hasDeclarer = !['level_selection', 'suit_selection', 'declarer_selection', 'double_selection'].includes(state);
+        const hasResult   = ['result_complete'].includes(state);
+
+        // Vulnerability colour
+        const vulnColors = { 'None': '#27ae60', 'NS': '#e74c3c', 'EW': '#e74c3c', 'Both': '#c0392b' };
+        const vulnColor  = vulnColors[vuln] || '#7f8c8d';
+
+        return `
+            <div style="
+                background: linear-gradient(135deg, #1a252f 0%, #2980b9 100%);
+                color: white; padding: 12px; border-radius: 10px;
+                margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            ">
+                <!-- Board & pair info row -->
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <div style="background: rgba(255,255,255,0.15); padding: 8px 10px; border-radius: 6px; flex: 1; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8;">BOARD</div>
+                        <div style="font-size: 20px; font-weight: 800;">${boardNum}</div>
+                        <div style="font-size: 10px; opacity: 0.75;">of ${totalBoards}</div>
+                    </div>
+                    <div style="background: ${vulnColor}; padding: 8px 10px; border-radius: 6px; flex: 1; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; opacity: 0.9;">VUL</div>
+                        <div style="font-size: 16px; font-weight: 800;">${vuln}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.15); padding: 8px 10px; border-radius: 6px; flex: 1; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8;">PAIR</div>
+                        <div style="font-size: 16px; font-weight: 800;">${progress.current}/${progress.total}</div>
+                        <div style="font-size: 10px; opacity: 0.75;">${progress.nsPair}v${progress.ewPair}</div>
+                    </div>
+                </div>
+
+                <!-- Contract entry steps -->
+                <div style="display: flex; gap: 4px;">
+                    ${this._generateStep('1', 'Level',   hasLevel)}
+                    ${this._generateStep('2', 'Suit',    hasSuit)}
+                    ${this._generateStep('3', 'Decl',    hasDeclarer)}
+                    ${this._generateStep('4', 'Result',  hasResult)}
+                </div>
+            </div>
+        `;
     }
+
 };
 
 // Export for use in modules
