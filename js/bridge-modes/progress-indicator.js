@@ -420,18 +420,18 @@ const ProgressIndicator = {
                 <!-- Board & pair info row -->
                 <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                     <div style="background: rgba(255,255,255,0.15); padding: 8px 10px; border-radius: 6px; flex: 1; text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8;">BOARD</div>
-                        <div style="font-size: 20px; font-weight: 800;">${boardNum}</div>
-                        <div style="font-size: 10px; opacity: 0.75;">of ${totalBoards}</div>
+                        <div style="font-size: 12px; font-weight: 800; opacity: 0.8;">BOARD</div>
+                        <div style="font-size: 22px; font-weight: 800;">${boardNum}</div>
+                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8;">of ${totalBoards}</div>
                     </div>
                     <div style="background: ${vulnColor}; padding: 8px 10px; border-radius: 6px; flex: 1; text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; opacity: 0.9;">VUL</div>
-                        <div style="font-size: 16px; font-weight: 800;">${vuln}</div>
+                        <div style="font-size: 12px; font-weight: 800; opacity: 0.9;">VUL</div>
+                        <div style="font-size: 18px; font-weight: 800;">${vuln}</div>
                     </div>
                     <div style="background: rgba(255,255,255,0.15); padding: 8px 10px; border-radius: 6px; flex: 1; text-align: center;">
-                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8;">PAIR</div>
-                        <div style="font-size: 16px; font-weight: 800;">${progress.current}/${progress.total}</div>
-                        <div style="font-size: 10px; opacity: 0.75;">${progress.nsPair}v${progress.ewPair}</div>
+                        <div style="font-size: 12px; font-weight: 800; opacity: 0.8;">PAIR</div>
+                        <div style="font-size: 18px; font-weight: 800;">${progress.current}/${progress.total}</div>
+                        <div style="font-size: 11px; font-weight: 700; opacity: 0.8;">${progress.nsPair}v${progress.ewPair}</div>
                     </div>
                 </div>
 

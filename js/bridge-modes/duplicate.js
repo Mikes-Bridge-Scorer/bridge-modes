@@ -3910,15 +3910,15 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             </div>
             <div class="game-content">
                 ${progressHTML}
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <h3 style="color: #2c3e50; margin: 0; font-size: 16px;">
-                        ${isComplete ? 'Tournament Complete!' : 'Board Entry'}
+                <div style="text-align: center; margin-bottom: 8px;">
+                    <h3 style="color: #2c3e50; margin: 0; font-size: 18px; font-weight: 800;">
+                        ${isComplete ? '🎉 Tournament Complete!' : 'Board Entry'}
                     </h3>
                 </div>
                 
                 ${this.getCompactBoardProgressDisplay()}
                 
-                <div style="text-align: center; margin: 15px 0;">
+                <div style="text-align: center; margin: 12px 0;">
                     <button id="selectBoardBtn" style="
                         background: linear-gradient(135deg, #3498db, #2980b9); 
                         color: white; 
@@ -3926,8 +3926,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                         padding: 12px 20px; 
                         border-radius: 6px; 
                         cursor: pointer;
-                        font-size: 14px;
-                        font-weight: bold;
+                        font-size: 16px;
+                        font-weight: 800;
                         box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
                         min-height: 44px;
                         min-width: 160px;
@@ -3937,51 +3937,28 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 </div>
                 
                 ${isComplete ? `
-                    <div style="
-                        background: rgba(39, 174, 96, 0.1); 
-                        padding: 15px; 
-                        border-radius: 6px; 
-                        border-left: 3px solid #27ae60;
-                        text-align: center;
-                        margin: 15px 0;
-                    ">
-                        <div style="color: #27ae60; font-weight: bold; font-size: 14px; margin-bottom: 10px;">
-                            All boards completed!
-                        </div>
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border-left: 3px solid #27ae60; text-align: center;">
+                        <div style="color: #27ae60; font-weight: 800; font-size: 15px; margin-bottom: 10px;">All boards completed!</div>
                         <button id="viewResultsBtn" style="
                             background: linear-gradient(135deg, #27ae60, #229954);
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            font-weight: bold;
+                            color: white; border: none; padding: 12px 24px;
+                            border-radius: 6px; cursor: pointer;
+                            font-size: 15px; font-weight: 800;
                             box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);
-                            min-height: 44px;
-                            min-width: 160px;
-                            touch-action: manipulation;
-                            user-select: none;
-                        ">
-                            View Final Results
-                        </button>
+                            min-height: 44px; min-width: 160px;
+                            touch-action: manipulation; user-select: none;
+                        ">View Final Results</button>
                     </div>
                 ` : `
-                    <div style="
-                        background: rgba(241, 196, 15, 0.1); 
-                        padding: 8px; 
-                        border-radius: 4px; 
-                        border-left: 3px solid #f1c40f;
-                        margin-top: 10px;
-                    ">
-                        <div style="color: #2c3e50; font-size: 11px; text-align: center;">
-                            <strong>Tip:</strong> Enter results after each round
+                    <div style="background: rgba(241, 196, 15, 0.1); padding: 8px; border-radius: 4px; border-left: 3px solid #f1c40f;">
+                        <div style="color: #2c3e50; font-size: 14px; font-weight: 700; text-align: center;">
+                            💡 Enter results after each round
                         </div>
                     </div>
                 `}
             </div>
             <div class="current-state">
-                ${isComplete ? 'Tournament complete - Press "View Final Results" or DEAL button' : 'Select board to enter results'}
+                ${isComplete ? 'Tournament complete — View Final Results or press DEAL' : 'Select board to enter results'}
             </div>
         `;
     }
@@ -4046,21 +4023,15 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             <div class="game-content">
                 ${progressHTML}
                 
-                <div style="margin: 10px 0; padding: 8px; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
-                    <div style="font-size: 12px; color: #2c3e50;">
-                        <strong>Contract:</strong> ${contractDisplay}
+                <div style="margin: 10px 0; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 6px;">
+                    <div style="font-size: 15px; font-weight: 800; color: #2c3e50;">
+                        Contract: ${contractDisplay}
                     </div>
                 </div>
                 
                 ${currentResult.nsScore !== null || currentResult.ewScore !== null ? `
-                    <div style="
-                        background: rgba(39, 174, 96, 0.1); 
-                        padding: 8px; 
-                        border-radius: 4px; 
-                        margin: 8px 0;
-                        text-align: center;
-                    ">
-                        <div style="color: #27ae60; font-weight: bold; font-size: 12px;">
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 10px; border-radius: 6px; margin: 8px 0; text-align: center;">
+                        <div style="color: #27ae60; font-weight: 800; font-size: 15px;">
                             Score: NS ${currentResult.nsScore || 0} • EW ${currentResult.ewScore || 0}
                         </div>
                     </div>
@@ -4092,7 +4063,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                     margin-bottom: 10px;
                     text-align: center;
                 ">
-                    <div style="color: #2c3e50; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
+                    <div style="color: #2c3e50; font-weight: 800; font-size: 15px; margin-bottom: 5px;">
                         ${completedBoards.length}/${totalBoards} Complete
                     </div>
                     <div style="
@@ -4128,17 +4099,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                                 background: ${board.completed ? 'rgba(39, 174, 96, 0.1)' : 'rgba(149, 165, 166, 0.1)'};
                                 border: 1px solid ${board.completed ? '#27ae60' : '#bdc3c7'};
                                 border-radius: 4px;
-                                padding: 4px;
+                                padding: 5px 4px;
                                 text-align: center;
-                                font-size: 9px;
+                                font-size: 12px;
                             ">
-                                <div style="font-weight: bold; margin-bottom: 2px;">
-                                    B${board.number} ${statusIcon}
+                                <div style="font-weight: 800; margin-bottom: 2px;">
+                                    B${board.number} ${board.completed ? '✅' : '⭕'}
                                 </div>
                                 <div style="
                                     color: ${vulnColor}; 
-                                    font-size: 8px; 
-                                    font-weight: bold;
+                                    font-size: 11px; 
+                                    font-weight: 800;
                                     background: rgba(255,255,255,0.8);
                                     padding: 1px 2px;
                                     border-radius: 4px;
