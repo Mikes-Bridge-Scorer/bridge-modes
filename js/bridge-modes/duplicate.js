@@ -311,30 +311,24 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 <div class="score-display">Welcome</div>
             </div>
             <div class="game-content">
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <div style="font-size: 28px; margin-bottom: 6px;">🂠</div>
-                    <p style="font-size: 14px; color: #34495e; margin: 0; line-height: 1.5;">
-                        Tournament scoring for 4–20 pairs<br>
-                        Mitchell &amp; Howell movements
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <p style="font-size: 15px; font-weight: 600; color: #2c3e50; margin: 0;">
+                        Tournament scoring &bull; 4–20 pairs &bull; ${movementCount} movements
                     </p>
                 </div>
 
                 <div style="background: #27ae60; color: white; padding: 14px 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                     <div style="font-size: 16px; font-weight: bold;">1 = 🖨️ Print Menu</div>
-                    <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">
-                        Table cards &bull; Traveller sheets &bull; Movement sheets &bull; Board slips
+                    <div style="font-size: 13px; font-weight: 600; opacity: 0.95; margin-top: 4px;">
+                        Table cards &bull; Travellers &bull; Movement sheets
                     </div>
                 </div>
 
                 <div style="background: #3498db; color: white; padding: 14px 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                     <div style="font-size: 16px; font-weight: bold;">2 = ▶ Start Tournament Setup</div>
-                    <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">
-                        ${movementCount} movements available &bull; 4–20 pairs
+                    <div style="font-size: 13px; font-weight: 600; opacity: 0.95; margin-top: 4px;">
+                        Enter pairs, choose movement, begin scoring
                     </div>
-                </div>
-
-                <div style="background: #f8f9fa; padding: 10px 12px; border-radius: 6px; border-left: 3px solid #bdc3c7; margin-top: 10px; font-size: 12px; color: #7f8c8d; line-height: 1.5;">
-                    💡 Print your table cards and traveller sheets <em>before</em> the tournament — no setup needed first.
                 </div>
             </div>
             <div class="current-state">1 = Print Menu &nbsp;|&nbsp; 2 = Start Setup</div>
@@ -3681,6 +3675,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         }
         
         switch (this.inputState) {
+            case 'welcome':
+                return ['1', '2'];
+                
             case 'pairs_setup':
                 // Show all digit buttons for multi-digit entry
                 return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK'];
@@ -3693,7 +3690,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 return buttons;
                 
             case 'movement_confirm':
-                return ['1', '2', '3', '4', 'BACK'];
+                return ['1', '2', '3', 'BACK'];
                 
             case 'board_selection':
                 const boardButtons = ['BACK'];
