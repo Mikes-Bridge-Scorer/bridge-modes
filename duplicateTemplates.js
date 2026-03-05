@@ -8,29 +8,21 @@ class DuplicateTemplates {
     }
 
     initializeMovements() {
-        // ALWAYS use ENHANCED_MOVEMENTS as the single source of truth.
-        // No local fallback - having a different fallback here caused traveler
-        // sheets to show wrong pair assignments vs what duplicate.js used.
         if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
             this.movements = ENHANCED_MOVEMENTS;
             console.log('✅ DuplicateTemplates: using enhanced movements -', Object.keys(this.movements).length, 'movements');
         } else {
-            // Not loaded yet - set empty and retry. Do NOT define a local fallback
-            // with different board assignments as that caused the traveler mismatch bug.
-            this.movements = {};
-            console.warn('⚠️ DuplicateTemplates: ENHANCED_MOVEMENTS not yet available - waiting...');
-
-            // Retry up to 10 times (5 seconds total) to allow script loading to complete
-            let retries = 0;
-            const retryInterval = setInterval(() => {
-                retries++;
+            console.warn('⚠️ DuplicateTemplates: enhanced movements not yet loaded, using fallback');
+            this.movements = {
+                '4_howell_12': { pairs: 4, tables: 2, rounds: 6, totalBoards: 12, boardsPerRound: 2, type: 'howell', description: "2-table Howell, 12 boards, ~1.5 hrs", movement: [ { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] }, { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] }, { round: 2, table: 1, ns: 2, ew: 4, boards: [5,6] }, { round: 2, table: 2, ns: 3, ew: 1, boards: [7,8] }, { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10] }, { round: 3, table: 2, ns: 2, ew: 3, boards: [11,12] }, { round: 4, table: 1, ns: 4, ew: 3, boards: [1,2] }, { round: 4, table: 2, ns: 2, ew: 1, boards: [3,4] }, { round: 5, table: 1, ns: 1, ew: 3, boards: [5,6] }, { round: 5, table: 2, ns: 4, ew: 2, boards: [7,8] }, { round: 6, table: 1, ns: 3, ew: 2, boards: [9,10] }, { round: 6, table: 2, ns: 4, ew: 1, boards: [11,12] } ] },
+                '6_howell_15': { pairs: 6, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3, type: 'howell', description: "3-table Howell, 15 boards, ~2 hrs", movement: [ { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] }, { round: 1, table: 2, ns: 3, ew: 4, boards: [10,11,12] }, { round: 1, table: 3, ns: 5, ew: 6, boards: [4,5,6] }, { round: 2, table: 1, ns: 1, ew: 4, boards: [4,5,6] }, { round: 2, table: 2, ns: 2, ew: 6, boards: [10,11,12] }, { round: 2, table: 3, ns: 3, ew: 5, boards: [7,8,9] }, { round: 3, table: 1, ns: 1, ew: 6, boards: [7,8,9] }, { round: 3, table: 2, ns: 4, ew: 5, boards: [1,2,3] }, { round: 3, table: 3, ns: 2, ew: 3, boards: [4,5,6] }, { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] }, { round: 4, table: 2, ns: 6, ew: 3, boards: [1,2,3] }, { round: 4, table: 3, ns: 4, ew: 2, boards: [7,8,9] }, { round: 5, table: 1, ns: 1, ew: 3, boards: [13,14,15] }, { round: 5, table: 2, ns: 5, ew: 2, boards: [13,14,15] }, { round: 5, table: 3, ns: 6, ew: 4, boards: [13,14,15] } ] },
+                '8_howell_14': { pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2, type: 'howell', description: "4-table Howell, 14 boards, ~2 hrs", movement: [ { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] }, { round: 1, table: 2, ns: 3, ew: 4, boards: [3,4] }, { round: 1, table: 3, ns: 5, ew: 6, boards: [5,6] }, { round: 1, table: 4, ns: 7, ew: 8, boards: [9,10] }, { round: 2, table: 1, ns: 1, ew: 6, boards: [3,4] }, { round: 2, table: 2, ns: 7, ew: 3, boards: [5,6] }, { round: 2, table: 3, ns: 4, ew: 8, boards: [7,8] }, { round: 2, table: 4, ns: 2, ew: 5, boards: [11,12] }, { round: 3, table: 1, ns: 1, ew: 8, boards: [5,6] }, { round: 3, table: 2, ns: 2, ew: 7, boards: [7,8] }, { round: 3, table: 3, ns: 3, ew: 5, boards: [9,10] }, { round: 3, table: 4, ns: 6, ew: 4, boards: [13,14] }, { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] }, { round: 4, table: 2, ns: 6, ew: 2, boards: [9,10] }, { round: 4, table: 3, ns: 7, ew: 4, boards: [11,12] }, { round: 4, table: 4, ns: 8, ew: 3, boards: [1,2] }, { round: 5, table: 1, ns: 1, ew: 4, boards: [9,10] }, { round: 5, table: 2, ns: 8, ew: 6, boards: [11,12] }, { round: 5, table: 3, ns: 2, ew: 3, boards: [13,14] }, { round: 5, table: 4, ns: 5, ew: 7, boards: [3,4] }, { round: 6, table: 1, ns: 1, ew: 3, boards: [11,12] }, { round: 6, table: 2, ns: 5, ew: 8, boards: [13,14] }, { round: 6, table: 3, ns: 7, ew: 2, boards: [1,2] }, { round: 6, table: 4, ns: 4, ew: 6, boards: [5,6] }, { round: 7, table: 1, ns: 1, ew: 7, boards: [13,14] }, { round: 7, table: 2, ns: 4, ew: 5, boards: [1,2] }, { round: 7, table: 3, ns: 8, ew: 2, boards: [3,4] }, { round: 7, table: 4, ns: 3, ew: 6, boards: [7,8] } ] }
+            };
+            // Retry after scripts finish loading
+            setTimeout(() => {
                 if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
                     this.movements = ENHANCED_MOVEMENTS;
-                    console.log('✅ DuplicateTemplates: movements loaded on retry', retries, '-', Object.keys(this.movements).length, 'movements');
-                    clearInterval(retryInterval);
-                } else if (retries >= 10) {
-                    console.error('❌ DuplicateTemplates: ENHANCED_MOVEMENTS still not available after 5s. Check script load order in HTML.');
-                    clearInterval(retryInterval);
+                    console.log('✅ DuplicateTemplates: movements reloaded on retry -', Object.keys(this.movements).length);
                 }
             }, 500);
         }
@@ -311,8 +303,8 @@ class DuplicateTemplates {
         boardNumbers.forEach((boardNum, index) => {
             const pairs = boardPairMap[boardNum];
             
-            // Start new grid container every 4 travelers
-            if (travelerCount % 4 === 0) {
+            // Start new grid container every 6 travelers
+            if (travelerCount % 6 === 0) {
                 if (travelerCount > 0) {
                     htmlContent += '</div>'; // Close previous grid
                 }
@@ -354,7 +346,10 @@ class DuplicateTemplates {
         
         let html = `
             <div class="traveler-sheet">
-                <div class="header-title">${tables} table Bridge &bull; Board ${boardNumber} of ${boardsTotal} &bull; ${vulnDisplay[vulnerability]}</div>
+                <div class="header-title">
+                    ${tables} table Bridge &bull; Board ${boardNumber} of ${boardsTotal} &bull; ${vulnDisplay[vulnerability]}
+                    <span class="header-brand">Bridge at Sea &bull; bridgescorer.com</span>
+                </div>
                 <table class="traveler-table">
                     <thead>
                         <tr>
@@ -533,7 +528,7 @@ class DuplicateTemplates {
             </head>
             <body>
                 <h1>Bridge-Modes ${title}</h1>
-                <p class="no-print">© 2025 Bridge-Modes App | <strong>Right-click → Print → Save as PDF</strong></p>
+                <p class="no-print">© 2025 Bridge at Sea | bridgescorer.com | <strong>Right-click → Print → Save as PDF</strong></p>
         `;
     }
 
@@ -545,12 +540,13 @@ class DuplicateTemplates {
             <style>
                 body {
                     margin: 0;
-                    padding: 10mm;
+                    padding: 8mm;
+                    font-family: Arial, sans-serif;
                 }
                 .travelers-grid {
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 8mm;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: 5mm;
                     page-break-after: always;
                 }
                 .traveler-sheet { 
@@ -560,12 +556,20 @@ class DuplicateTemplates {
                 }
                 .header-title { 
                     border-bottom: 1px solid black;
-                    padding: 4px; 
+                    padding: 2px 3px; 
                     text-align: center; 
                     font-weight: bold; 
-                    font-size: 9pt;
-                    background: white;
+                    font-size: 7pt;
+                    background: #0d3b6e;
+                    color: white;
                     margin: 0;
+                    line-height: 1.3;
+                }
+                .header-brand {
+                    font-size: 6pt;
+                    font-weight: normal;
+                    opacity: 0.85;
+                    display: block;
                 }
                 .traveler-table { 
                     width: 100%; 
@@ -574,15 +578,15 @@ class DuplicateTemplates {
                 }
                 .traveler-table th, .traveler-table td { 
                     border: 1px solid black; 
-                    padding: 2px 1px; 
+                    padding: 1px; 
                     text-align: center; 
                     vertical-align: middle;
-                    font-size: 7pt;
+                    font-size: 6pt;
                 }
                 .traveler-table th { 
-                    background: white; 
+                    background: #e8edf2; 
                     color: black; 
-                    font-size: 7pt; 
+                    font-size: 6pt; 
                     font-weight: bold;
                     line-height: 1.1;
                 }
@@ -590,34 +594,24 @@ class DuplicateTemplates {
                     font-weight: bold;
                     background: white;
                 }
-                .input-cell {
-                    background: white;
-                }
+                .input-cell { background: white; }
                 .plus-cell, .minus-cell {
                     background: white;
                     font-weight: bold;
                 }
-                .score-cell {
-                    background: white;
-                }
+                .score-cell { background: white; }
                 @media print {
                     @page {
-                        size: A4 landscape;
-                        margin: 10mm;
+                        size: A4 portrait;
+                        margin: 8mm;
                     }
-                    body {
-                        padding: 0;
-                    }
-                    .travelers-grid {
-                        gap: 6mm;
-                    }
-                    .header-title {
-                        font-size: 8pt;
-                        padding: 3px;
-                    }
+                    body { padding: 0; }
+                    .travelers-grid { gap: 4mm; }
+                    .header-title { font-size: 6.5pt; padding: 2px; }
+                    .header-brand { font-size: 5.5pt; }
                     .traveler-table th, .traveler-table td {
-                        font-size: 6pt;
-                        padding: 2px 1px;
+                        font-size: 5.5pt;
+                        padding: 1px;
                     }
                 }
             </style>
@@ -923,24 +917,19 @@ if (typeof window !== 'undefined') {
         console.log('DuplicateTemplates ready.');
     }
 
-    // If ENHANCED_MOVEMENTS loads after us, sync our movements immediately
-    try {
-        const _origEM = Object.getOwnPropertyDescriptor(window, 'ENHANCED_MOVEMENTS');
-        Object.defineProperty(window, 'ENHANCED_MOVEMENTS', {
-            set(value) {
-                Object.defineProperty(window, 'ENHANCED_MOVEMENTS', { value, writable: true, configurable: true });
-                if (window.templateGenerator) {
-                    window.templateGenerator.movements = value;
-                    console.log('✅ DuplicateTemplates: movements synced via ENHANCED_MOVEMENTS setter -', Object.keys(value).length, 'movements');
-                }
-            },
-            get() { return _origEM ? _origEM.value : undefined; },
-            configurable: true
-        });
-    } catch(e) {
-        // defineProperty can fail if already non-configurable; safe to ignore
-        console.warn('DuplicateTemplates: could not intercept ENHANCED_MOVEMENTS setter:', e.message);
-    }
+    // If enhanced-movements loads after us, reload our movements
+    const _origEM = Object.getOwnPropertyDescriptor(window, 'ENHANCED_MOVEMENTS');
+    Object.defineProperty(window, 'ENHANCED_MOVEMENTS', {
+        set(value) {
+            Object.defineProperty(window, 'ENHANCED_MOVEMENTS', { value, writable: true, configurable: true });
+            if (window.templateGenerator) {
+                window.templateGenerator.movements = value;
+                console.log('✅ DuplicateTemplates: movements updated via setter');
+            }
+        },
+        get() { return _origEM ? _origEM.value : undefined; },
+        configurable: true
+    });
 }
 
 // Export for module usage
