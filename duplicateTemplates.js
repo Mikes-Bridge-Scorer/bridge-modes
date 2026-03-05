@@ -303,8 +303,8 @@ class DuplicateTemplates {
         boardNumbers.forEach((boardNum, index) => {
             const pairs = boardPairMap[boardNum];
             
-            // Start new grid container every 6 travelers
-            if (travelerCount % 6 === 0) {
+            // Start new grid container every 8 travelers
+            if (travelerCount % 8 === 0) {
                 if (travelerCount > 0) {
                     htmlContent += '</div>'; // Close previous grid
                 }
@@ -545,7 +545,7 @@ class DuplicateTemplates {
                 }
                 .travelers-grid {
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr;
+                    grid-template-columns: 1fr 1fr;
                     gap: 5mm;
                     page-break-after: always;
                 }
@@ -555,20 +555,20 @@ class DuplicateTemplates {
                     page-break-inside: avoid;
                 }
                 .header-title { 
-                    border-bottom: 1px solid black;
-                    padding: 2px 3px; 
+                    border-bottom: 2px solid black;
+                    padding: 3px 4px; 
                     text-align: center; 
                     font-weight: bold; 
-                    font-size: 7pt;
-                    background: #0d3b6e;
-                    color: white;
+                    font-size: 7.5pt;
+                    background: white;
+                    color: black;
                     margin: 0;
                     line-height: 1.3;
                 }
                 .header-brand {
                     font-size: 6pt;
                     font-weight: normal;
-                    opacity: 0.85;
+                    color: #444;
                     display: block;
                 }
                 .traveler-table { 
@@ -578,27 +578,21 @@ class DuplicateTemplates {
                 }
                 .traveler-table th, .traveler-table td { 
                     border: 1px solid black; 
-                    padding: 1px; 
+                    padding: 2px 1px; 
                     text-align: center; 
                     vertical-align: middle;
-                    font-size: 6pt;
+                    font-size: 7pt;
                 }
                 .traveler-table th { 
-                    background: #e8edf2; 
+                    background: white; 
                     color: black; 
-                    font-size: 6pt; 
+                    font-size: 6.5pt; 
                     font-weight: bold;
                     line-height: 1.1;
                 }
-                .pair-cell {
-                    font-weight: bold;
-                    background: white;
-                }
+                .pair-cell { font-weight: bold; background: white; }
                 .input-cell { background: white; }
-                .plus-cell, .minus-cell {
-                    background: white;
-                    font-weight: bold;
-                }
+                .plus-cell, .minus-cell { background: white; font-weight: bold; }
                 .score-cell { background: white; }
                 @media print {
                     @page {
@@ -607,10 +601,10 @@ class DuplicateTemplates {
                     }
                     body { padding: 0; }
                     .travelers-grid { gap: 4mm; }
-                    .header-title { font-size: 6.5pt; padding: 2px; }
+                    .header-title { font-size: 7pt; padding: 2px 3px; }
                     .header-brand { font-size: 5.5pt; }
                     .traveler-table th, .traveler-table td {
-                        font-size: 5.5pt;
+                        font-size: 6.5pt;
                         padding: 1px;
                     }
                 }
