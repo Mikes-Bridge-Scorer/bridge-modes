@@ -540,33 +540,37 @@ class DuplicateTemplates {
             <style>
                 body {
                     margin: 0;
-                    padding: 8mm;
+                    padding: 6mm;
                     font-family: Arial, sans-serif;
                 }
                 .travelers-grid {
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 5mm;
+                    grid-template-columns: 9cm 9cm;
+                    gap: 4mm;
                     page-break-after: always;
+                    page-break-inside: avoid;
                 }
                 .traveler-sheet { 
                     border: 2px solid black; 
                     box-sizing: border-box;
+                    width: 9cm;
+                    height: 5cm;
+                    overflow: hidden;
                     page-break-inside: avoid;
                 }
                 .header-title { 
                     border-bottom: 2px solid black;
-                    padding: 3px 4px; 
+                    padding: 2px 3px; 
                     text-align: center; 
                     font-weight: bold; 
-                    font-size: 7.5pt;
+                    font-size: 6.5pt;
                     background: white;
                     color: black;
                     margin: 0;
-                    line-height: 1.3;
+                    line-height: 1.2;
                 }
                 .header-brand {
-                    font-size: 6pt;
+                    font-size: 5.5pt;
                     font-weight: normal;
                     color: #444;
                     display: block;
@@ -575,20 +579,24 @@ class DuplicateTemplates {
                     width: 100%; 
                     border-collapse: collapse; 
                     margin: 0;
+                    table-layout: fixed;
                 }
                 .traveler-table th, .traveler-table td { 
                     border: 1px solid black; 
-                    padding: 2px 1px; 
+                    padding: 0;
                     text-align: center; 
                     vertical-align: middle;
-                    font-size: 7pt;
+                    font-size: 6pt;
+                    height: 0.48cm;
                 }
                 .traveler-table th { 
                     background: white; 
                     color: black; 
-                    font-size: 6.5pt; 
+                    font-size: 5.5pt; 
                     font-weight: bold;
                     line-height: 1.1;
+                    height: auto;
+                    padding: 1px 0;
                 }
                 .pair-cell { font-weight: bold; background: white; }
                 .input-cell { background: white; }
@@ -597,15 +605,25 @@ class DuplicateTemplates {
                 @media print {
                     @page {
                         size: A4 portrait;
-                        margin: 8mm;
+                        margin: 6mm;
                     }
                     body { padding: 0; }
-                    .travelers-grid { gap: 4mm; }
-                    .header-title { font-size: 7pt; padding: 2px 3px; }
-                    .header-brand { font-size: 5.5pt; }
-                    .traveler-table th, .traveler-table td {
-                        font-size: 6.5pt;
-                        padding: 1px;
+                    .travelers-grid { 
+                        gap: 3mm;
+                        page-break-after: always;
+                        page-break-inside: avoid;
+                    }
+                    .traveler-sheet {
+                        width: 9cm;
+                        height: 5cm;
+                        overflow: hidden;
+                    }
+                    .header-title { font-size: 6pt; padding: 1px 2px; }
+                    .header-brand { font-size: 5pt; }
+                    .traveler-table th { font-size: 5pt; }
+                    .traveler-table td {
+                        font-size: 6pt;
+                        height: 0.48cm;
                     }
                 }
             </style>
