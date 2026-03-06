@@ -546,10 +546,11 @@ class DuplicateTemplates {
                 .travelers-grid {
                     display: grid;
                     grid-template-columns: 9cm 9cm;
-                    gap: 4mm;
+                    gap: 6mm;
                     page-break-after: always;
                     page-break-inside: avoid;
-                    margin: 6mm 6mm 6mm 20mm;
+                    margin: 8mm auto;
+                    width: fit-content;
                 }
                 .traveler-sheet { 
                     border: 2px solid black; 
@@ -610,8 +611,9 @@ class DuplicateTemplates {
                     }
                     body { padding: 0; }
                     .travelers-grid { 
-                        gap: 3mm;
-                        margin: 6mm 6mm 6mm 20mm;
+                        gap: 6mm;
+                        margin: 8mm auto;
+                        width: fit-content;
                         page-break-after: always;
                         page-break-inside: avoid;
                     }
