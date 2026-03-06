@@ -540,7 +540,7 @@ class DuplicateTemplates {
             <style>
                 body {
                     margin: 0;
-                    padding: 6mm 6mm 6mm 32mm;
+                    padding: 0;
                     font-family: Arial, sans-serif;
                 }
                 .travelers-grid {
@@ -549,6 +549,7 @@ class DuplicateTemplates {
                     gap: 4mm;
                     page-break-after: always;
                     page-break-inside: avoid;
+                    margin: 6mm 6mm 6mm 40mm;
                 }
                 .traveler-sheet { 
                     border: 2px solid black; 
@@ -605,11 +606,12 @@ class DuplicateTemplates {
                 @media print {
                     @page {
                         size: A4 portrait;
-                        margin: 6mm 6mm 6mm 32mm;
+                        margin: 10mm;
                     }
                     body { padding: 0; }
                     .travelers-grid { 
                         gap: 3mm;
+                        margin: 6mm 6mm 6mm 40mm;
                         page-break-after: always;
                         page-break-inside: avoid;
                     }
