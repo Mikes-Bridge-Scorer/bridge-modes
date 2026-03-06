@@ -549,7 +549,7 @@ class DuplicateTemplates {
                     gap: 4mm;
                     page-break-after: always;
                     page-break-inside: avoid;
-                    margin: 6mm 6mm 6mm 40mm;
+                    margin: 6mm 6mm 6mm 20mm;
                 }
                 .traveler-sheet { 
                     border: 2px solid black; 
@@ -611,7 +611,7 @@ class DuplicateTemplates {
                     body { padding: 0; }
                     .travelers-grid { 
                         gap: 3mm;
-                        margin: 6mm 6mm 6mm 40mm;
+                        margin: 6mm 6mm 6mm 20mm;
                         page-break-after: always;
                         page-break-inside: avoid;
                     }
