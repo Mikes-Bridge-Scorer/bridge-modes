@@ -2161,12 +2161,29 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
         document.body.appendChild(popup);
 
-        document.getElementById('pmBtn1').addEventListener('click', () => { popup.remove(); this.printTableCards(); });
-        document.getElementById('pmBtn2').addEventListener('click', () => { popup.remove(); this.printTravelerSheets(); });
-        document.getElementById('pmBtn3').addEventListener('click', () => { popup.remove(); this.printBoardSlips(); });
-        document.getElementById('pmBtn4').addEventListener('click', () => { popup.remove(); this.showMovementSelector(); });
-        document.getElementById('pmClose').addEventListener('click', () => { popup.remove(); });
-        popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
+        const addPixelHandler = (id, action) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const handler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        popup.remove();
+        action();
+    };
+    btn.addEventListener('click', handler, { passive: false });
+    btn.addEventListener('touchend', handler, { passive: false });
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        btn.style.opacity = '0.7';
+    }, { passive: false });
+};
+
+addPixelHandler('pmBtn1', () => this.printTableCards());
+addPixelHandler('pmBtn2', () => this.printTravelerSheets());
+addPixelHandler('pmBtn3', () => this.printBoardSlips());
+addPixelHandler('pmBtn4', () => this.showMovementSelector());
+addPixelHandler('pmClose', () => {});
+popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
     }
 
     /**
