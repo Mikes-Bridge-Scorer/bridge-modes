@@ -2367,34 +2367,47 @@ popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove();
             </div>
         `;
         
-        document.body.appendChild(popup);
-        
-        // Event handlers
-        document.getElementById('printNowBtn').onclick = () => {
-            document.body.removeChild(popup);
+       document.body.appendChild(popup);
+
+        const addPixelHandler = (id, action) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const handler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                popup.remove();
+                action();
+            };
+            btn.addEventListener('click', handler, { passive: false });
+            btn.addEventListener('touchend', handler, { passive: false });
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btn.style.opacity = '0.7';
+            }, { passive: false });
+        };
+
+        addPixelHandler('printNowBtn', () => {
             if (type === 'tableCards' && typeof tableCardGenerator !== 'undefined') {
                 tableCardGenerator.generateTableCards(movement);
             } else if (type === 'movementSheet') {
-                // Temporarily set movement and show popup
                 const originalMovement = this.session.movement;
                 this.session.movement = movement;
                 this.showMovementPopup();
                 this.session.movement = originalMovement;
             }
-        };
-        
-        document.getElementById('downloadHtmlBtn').onclick = () => {
-            document.body.removeChild(popup);
+        });
+
+        addPixelHandler('downloadHtmlBtn', () => {
             if (type === 'tableCards' && typeof tableCardGenerator !== 'undefined') {
                 tableCardGenerator.downloadTableCardsHTML(movement);
             } else if (type === 'movementSheet' && typeof templateGenerator !== 'undefined') {
                 templateGenerator.downloadMovementSheet(movement);
             }
-        };
-        
-        document.getElementById('closePrintChoice').onclick = () => {
-            document.body.removeChild(popup);
-        };
+        });
+
+        addPixelHandler('closePrintChoice', () => {});
+
+        popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
     }
 
     /**
