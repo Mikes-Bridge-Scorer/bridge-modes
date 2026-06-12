@@ -26,12 +26,10 @@ function generateMitchellMovement(tables, boardsPerRound, useSkip) {
         for (let table = 1; table <= tables; table++) {
             const nsPair = table;
 
-            // Cumulative offset: EW moves up 1 table per round, plus 1 extra at skip round
             let offset = round - 1;
             if (skipRound && round >= skipRound) offset += 1;
             const ewPair = ((table - 1 - offset) % tables + tables) % tables + 1;
 
-            // Boards relay independently of EW movement - always move down one set per round
             const boardSetIndex = (table - 1 + round - 1) % tables;
             const startBoard = boardSetIndex * boardsPerRound + 1;
             const boardList = [];
@@ -50,32 +48,24 @@ function generateMitchellMovement(tables, boardsPerRound, useSkip) {
 
 /**
  * Generate Mitchell with Sit-Out for odd pair counts
- * E.g., 13 pairs (6.5 tables) = 6 playing tables + 1 sit-out table
- * Creates 7 physical tables total where table 7 is the sit-out position
- * NS pairs 1-6 at tables 1-6 (no NS at table 7)
- * EW pairs 1-7 rotate through all 7 tables
  */
 function generateMitchellWithSitOut(tables, boardsPerRound, useSkip) {
     const movement = [];
     const totalBoards = tables * boardsPerRound;
     const rounds = tables;
-    const ewPairs = tables + 1; // One extra EW pair (the sit-out pair)
-    const physicalTables = tables + 1; // Show the sit-out table
+    const ewPairs = tables + 1;
+    const physicalTables = tables + 1;
     const skipRound = useSkip && tables % 2 === 0 ? Math.floor(tables / 2) + 1 : null;
 
     for (let round = 1; round <= rounds; round++) {
-        // All physical tables including the sit-out table
         for (let table = 1; table <= physicalTables; table++) {
-            // Cumulative offset using ewPairs modulus (includes the extra sit-out pair)
             let offset = round - 1;
             if (skipRound && round >= skipRound) offset += 1;
             const ewPair = ((table - 1 - offset) % ewPairs + ewPairs) % ewPairs + 1;
 
             if (table === physicalTables) {
-                // Sit-out table: no NS pair, no boards
                 movement.push({ round, table, ns: '', ew: ewPair, boards: [] });
             } else {
-                // Playing table
                 const nsPair = table;
                 const boardSetIndex = (table - 1 + round - 1) % tables;
                 const startBoard = boardSetIndex * boardsPerRound + 1;
@@ -153,38 +143,50 @@ const ENHANCED_MOVEMENTS = {
 
     // ─────────────────────────────────────────────
     // 5 PAIRS - 2.5 tables
+    // Uses 3-table Howell with pair 6 as sit-out position.
+    // table-card-generator displays pair 6 as "Sit Out".
     // ─────────────────────────────────────────────
     "5_howell_15": {
-        pairs: 5, tables: 2.5, rounds: 5, totalBoards: 15, boardsPerRound: 3,
+        pairs: 5, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'howell', hasSitOut: true,
         description: "2.5-table Howell, 15 boards, ~2 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+            { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2,3] },
             { round: 1, table: 3, ns: 4, ew: 5, boards: [1,2,3] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [4,5,6] },
             { round: 2, table: 2, ns: 4, ew: 2, boards: [4,5,6] },
+            { round: 2, table: 3, ns: 5, ew: 6, boards: [4,5,6] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9] },
             { round: 3, table: 2, ns: 5, ew: 3, boards: [7,8,9] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [7,8,9] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [10,11,12] },
             { round: 4, table: 3, ns: 2, ew: 3, boards: [10,11,12] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [13,14,15] },
             { round: 5, table: 2, ns: 2, ew: 5, boards: [13,14,15] },
             { round: 5, table: 3, ns: 3, ew: 4, boards: [13,14,15] }
         ]
     },
 
     "5_howell_25": {
-        pairs: 5, tables: 2.5, rounds: 5, totalBoards: 25, boardsPerRound: 5,
+        pairs: 5, tables: 3, rounds: 5, totalBoards: 25, boardsPerRound: 5,
         type: 'howell', hasSitOut: true,
         description: "2.5-table Howell, 25 boards, ~3 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5] },
+            { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2,3,4,5] },
             { round: 1, table: 3, ns: 4, ew: 5, boards: [1,2,3,4,5] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [6,7,8,9,10] },
             { round: 2, table: 2, ns: 4, ew: 2, boards: [6,7,8,9,10] },
+            { round: 2, table: 3, ns: 5, ew: 6, boards: [6,7,8,9,10] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [11,12,13,14,15] },
             { round: 3, table: 2, ns: 5, ew: 3, boards: [11,12,13,14,15] },
+            { round: 3, table: 3, ns: 6, ew: 2, boards: [11,12,13,14,15] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [16,17,18,19,20] },
+            { round: 4, table: 2, ns: 6, ew: 4, boards: [16,17,18,19,20] },
             { round: 4, table: 3, ns: 2, ew: 3, boards: [16,17,18,19,20] },
+            { round: 5, table: 1, ns: 1, ew: 6, boards: [21,22,23,24,25] },
             { round: 5, table: 2, ns: 2, ew: 5, boards: [21,22,23,24,25] },
             { round: 5, table: 3, ns: 3, ew: 4, boards: [21,22,23,24,25] }
         ]
@@ -264,30 +266,39 @@ const ENHANCED_MOVEMENTS = {
 
     // ─────────────────────────────────────────────
     // 7 PAIRS - 3.5 tables
+    // Uses 4-table Howell with pair 8 as sit-out position.
+    // table-card-generator displays pair 8 as "Sit Out".
     // ─────────────────────────────────────────────
     "7_howell_14": {
-        pairs: 7, tables: 3.5, rounds: 7, totalBoards: 14, boardsPerRound: 2,
+        pairs: 7, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
         type: 'howell', hasSitOut: true,
         description: "3.5-table Howell, 14 boards, ~2 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2] },
             { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2] },
             { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
             { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 3, ns: 5, ew: 8, boards: [3,4] },
             { round: 2, table: 4, ns: 6, ew: 7, boards: [3,4] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
             { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
             { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 3, table: 4, ns: 7, ew: 8, boards: [5,6] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
             { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
             { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [7,8] },
             { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
             { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [9,10] },
             { round: 5, table: 4, ns: 2, ew: 3, boards: [9,10] },
             { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [11,12] },
             { round: 6, table: 3, ns: 2, ew: 5, boards: [11,12] },
             { round: 6, table: 4, ns: 3, ew: 4, boards: [11,12] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [13,14] },
             { round: 7, table: 2, ns: 2, ew: 7, boards: [13,14] },
             { round: 7, table: 3, ns: 3, ew: 6, boards: [13,14] },
             { round: 7, table: 4, ns: 4, ew: 5, boards: [13,14] }
@@ -295,28 +306,35 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "7_howell_28": {
-        pairs: 7, tables: 3.5, rounds: 7, totalBoards: 28, boardsPerRound: 4,
+        pairs: 7, tables: 4, rounds: 7, totalBoards: 28, boardsPerRound: 4,
         type: 'howell', hasSitOut: true,
         description: "3.5-table Howell, 28 boards, ~3.5 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
+            { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2,3,4] },
             { round: 1, table: 3, ns: 4, ew: 7, boards: [1,2,3,4] },
             { round: 1, table: 4, ns: 5, ew: 6, boards: [1,2,3,4] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [5,6,7,8] },
             { round: 2, table: 2, ns: 4, ew: 2, boards: [5,6,7,8] },
+            { round: 2, table: 3, ns: 5, ew: 8, boards: [5,6,7,8] },
             { round: 2, table: 4, ns: 6, ew: 7, boards: [5,6,7,8] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10,11,12] },
             { round: 3, table: 2, ns: 5, ew: 3, boards: [9,10,11,12] },
             { round: 3, table: 3, ns: 6, ew: 2, boards: [9,10,11,12] },
+            { round: 3, table: 4, ns: 7, ew: 8, boards: [9,10,11,12] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [13,14,15,16] },
             { round: 4, table: 2, ns: 6, ew: 4, boards: [13,14,15,16] },
             { round: 4, table: 3, ns: 7, ew: 3, boards: [13,14,15,16] },
+            { round: 4, table: 4, ns: 8, ew: 2, boards: [13,14,15,16] },
             { round: 5, table: 1, ns: 1, ew: 6, boards: [17,18,19,20] },
             { round: 5, table: 2, ns: 7, ew: 5, boards: [17,18,19,20] },
+            { round: 5, table: 3, ns: 8, ew: 4, boards: [17,18,19,20] },
             { round: 5, table: 4, ns: 2, ew: 3, boards: [17,18,19,20] },
             { round: 6, table: 1, ns: 1, ew: 7, boards: [21,22,23,24] },
+            { round: 6, table: 2, ns: 8, ew: 6, boards: [21,22,23,24] },
             { round: 6, table: 3, ns: 2, ew: 5, boards: [21,22,23,24] },
             { round: 6, table: 4, ns: 3, ew: 4, boards: [21,22,23,24] },
+            { round: 7, table: 1, ns: 1, ew: 8, boards: [25,26,27,28] },
             { round: 7, table: 2, ns: 2, ew: 7, boards: [25,26,27,28] },
             { round: 7, table: 3, ns: 3, ew: 6, boards: [25,26,27,28] },
             { round: 7, table: 4, ns: 4, ew: 5, boards: [25,26,27,28] }
@@ -326,8 +344,6 @@ const ENHANCED_MOVEMENTS = {
     // ─────────────────────────────────────────────
     // 8 PAIRS - 4 tables
     // ─────────────────────────────────────────────
-    
-
     "8_howell_14": {
         pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
         type: 'howell',
@@ -423,44 +439,55 @@ const ENHANCED_MOVEMENTS = {
 
     // ─────────────────────────────────────────────
     // 9 PAIRS - 4.5 tables
+    // Uses 5-table Howell with pair 10 as sit-out position.
+    // table-card-generator displays pair 10 as "Sit Out".
     // ─────────────────────────────────────────────
     "9_howell_18": {
-        pairs: 9, tables: 4.5, rounds: 9, totalBoards: 18, boardsPerRound: 2,
+        pairs: 9, tables: 5, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'howell', hasSitOut: true,
         description: "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
+            { round: 1, table: 2, ns: 3, ew: 10, boards: [1,2] },
             { round: 1, table: 3, ns: 4, ew: 9, boards: [1,2] },
             { round: 1, table: 4, ns: 5, ew: 8, boards: [1,2] },
             { round: 1, table: 5, ns: 6, ew: 7, boards: [1,2] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
             { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
+            { round: 2, table: 3, ns: 5, ew: 10, boards: [3,4] },
             { round: 2, table: 4, ns: 6, ew: 9, boards: [3,4] },
             { round: 2, table: 5, ns: 7, ew: 8, boards: [3,4] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
             { round: 3, table: 2, ns: 5, ew: 3, boards: [5,6] },
             { round: 3, table: 3, ns: 6, ew: 2, boards: [5,6] },
+            { round: 3, table: 4, ns: 7, ew: 10, boards: [5,6] },
             { round: 3, table: 5, ns: 8, ew: 9, boards: [5,6] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [7,8] },
             { round: 4, table: 2, ns: 6, ew: 4, boards: [7,8] },
             { round: 4, table: 3, ns: 7, ew: 3, boards: [7,8] },
             { round: 4, table: 4, ns: 8, ew: 2, boards: [7,8] },
+            { round: 4, table: 5, ns: 9, ew: 10, boards: [7,8] },
             { round: 5, table: 1, ns: 1, ew: 6, boards: [9,10] },
             { round: 5, table: 2, ns: 7, ew: 5, boards: [9,10] },
             { round: 5, table: 3, ns: 8, ew: 4, boards: [9,10] },
             { round: 5, table: 4, ns: 9, ew: 3, boards: [9,10] },
+            { round: 5, table: 5, ns: 10, ew: 2, boards: [9,10] },
             { round: 6, table: 1, ns: 1, ew: 7, boards: [11,12] },
             { round: 6, table: 2, ns: 8, ew: 6, boards: [11,12] },
             { round: 6, table: 3, ns: 9, ew: 5, boards: [11,12] },
+            { round: 6, table: 4, ns: 10, ew: 4, boards: [11,12] },
             { round: 6, table: 5, ns: 2, ew: 3, boards: [11,12] },
             { round: 7, table: 1, ns: 1, ew: 8, boards: [13,14] },
             { round: 7, table: 2, ns: 9, ew: 7, boards: [13,14] },
+            { round: 7, table: 3, ns: 10, ew: 6, boards: [13,14] },
             { round: 7, table: 4, ns: 2, ew: 5, boards: [13,14] },
             { round: 7, table: 5, ns: 3, ew: 4, boards: [13,14] },
             { round: 8, table: 1, ns: 1, ew: 9, boards: [15,16] },
+            { round: 8, table: 2, ns: 10, ew: 8, boards: [15,16] },
             { round: 8, table: 3, ns: 2, ew: 7, boards: [15,16] },
             { round: 8, table: 4, ns: 3, ew: 6, boards: [15,16] },
             { round: 8, table: 5, ns: 4, ew: 5, boards: [15,16] },
+            { round: 9, table: 1, ns: 1, ew: 10, boards: [17,18] },
             { round: 9, table: 2, ns: 2, ew: 9, boards: [17,18] },
             { round: 9, table: 3, ns: 3, ew: 8, boards: [17,18] },
             { round: 9, table: 4, ns: 4, ew: 7, boards: [17,18] },
@@ -469,42 +496,51 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "9_howell_27": {
-        pairs: 9, tables: 4.5, rounds: 9, totalBoards: 27, boardsPerRound: 3,
+        pairs: 9, tables: 5, rounds: 9, totalBoards: 27, boardsPerRound: 3,
         type: 'howell', hasSitOut: true,
         description: "4.5-table Howell, 27 boards, ~3.5 hrs (1 sit-out)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
+            { round: 1, table: 2, ns: 3, ew: 10, boards: [1,2,3] },
             { round: 1, table: 3, ns: 4, ew: 9, boards: [1,2,3] },
             { round: 1, table: 4, ns: 5, ew: 8, boards: [1,2,3] },
             { round: 1, table: 5, ns: 6, ew: 7, boards: [1,2,3] },
             { round: 2, table: 1, ns: 1, ew: 3, boards: [4,5,6] },
             { round: 2, table: 2, ns: 4, ew: 2, boards: [4,5,6] },
+            { round: 2, table: 3, ns: 5, ew: 10, boards: [4,5,6] },
             { round: 2, table: 4, ns: 6, ew: 9, boards: [4,5,6] },
             { round: 2, table: 5, ns: 7, ew: 8, boards: [4,5,6] },
             { round: 3, table: 1, ns: 1, ew: 4, boards: [7,8,9] },
             { round: 3, table: 2, ns: 5, ew: 3, boards: [7,8,9] },
             { round: 3, table: 3, ns: 6, ew: 2, boards: [7,8,9] },
+            { round: 3, table: 4, ns: 7, ew: 10, boards: [7,8,9] },
             { round: 3, table: 5, ns: 8, ew: 9, boards: [7,8,9] },
             { round: 4, table: 1, ns: 1, ew: 5, boards: [10,11,12] },
             { round: 4, table: 2, ns: 6, ew: 4, boards: [10,11,12] },
             { round: 4, table: 3, ns: 7, ew: 3, boards: [10,11,12] },
             { round: 4, table: 4, ns: 8, ew: 2, boards: [10,11,12] },
+            { round: 4, table: 5, ns: 9, ew: 10, boards: [10,11,12] },
             { round: 5, table: 1, ns: 1, ew: 6, boards: [13,14,15] },
             { round: 5, table: 2, ns: 7, ew: 5, boards: [13,14,15] },
             { round: 5, table: 3, ns: 8, ew: 4, boards: [13,14,15] },
             { round: 5, table: 4, ns: 9, ew: 3, boards: [13,14,15] },
+            { round: 5, table: 5, ns: 10, ew: 2, boards: [13,14,15] },
             { round: 6, table: 1, ns: 1, ew: 7, boards: [16,17,18] },
             { round: 6, table: 2, ns: 8, ew: 6, boards: [16,17,18] },
             { round: 6, table: 3, ns: 9, ew: 5, boards: [16,17,18] },
+            { round: 6, table: 4, ns: 10, ew: 4, boards: [16,17,18] },
             { round: 6, table: 5, ns: 2, ew: 3, boards: [16,17,18] },
             { round: 7, table: 1, ns: 1, ew: 8, boards: [19,20,21] },
             { round: 7, table: 2, ns: 9, ew: 7, boards: [19,20,21] },
+            { round: 7, table: 3, ns: 10, ew: 6, boards: [19,20,21] },
             { round: 7, table: 4, ns: 2, ew: 5, boards: [19,20,21] },
             { round: 7, table: 5, ns: 3, ew: 4, boards: [19,20,21] },
             { round: 8, table: 1, ns: 1, ew: 9, boards: [22,23,24] },
+            { round: 8, table: 2, ns: 10, ew: 8, boards: [22,23,24] },
             { round: 8, table: 3, ns: 2, ew: 7, boards: [22,23,24] },
             { round: 8, table: 4, ns: 3, ew: 6, boards: [22,23,24] },
             { round: 8, table: 5, ns: 4, ew: 5, boards: [22,23,24] },
+            { round: 9, table: 1, ns: 1, ew: 10, boards: [25,26,27] },
             { round: 9, table: 2, ns: 2, ew: 9, boards: [25,26,27] },
             { round: 9, table: 3, ns: 3, ew: 8, boards: [25,26,27] },
             { round: 9, table: 4, ns: 4, ew: 7, boards: [25,26,27] },
@@ -637,11 +673,9 @@ const ENHANCED_MOVEMENTS = {
 
     // ─────────────────────────────────────────────
     // MITCHELL MOVEMENTS (5-10 tables)
-    // Even tables = Skip Mitchell
-    // Odd tables = Standard Mitchell
+    // Even tables = Skip Mitchell, Odd tables = Standard Mitchell
     // ─────────────────────────────────────────────
 
-    // 5 tables - 10 pairs (ODD - no skip)
     "10_mitchell_15": {
         pairs: 10, tables: 5, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'mitchell',
@@ -656,7 +690,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellMovement(5, 5, false)
     },
 
-    // 6 tables - 12 pairs (EVEN - skip needed)
     "12_mitchell_18": {
         pairs: 12, tables: 6, rounds: 6, totalBoards: 18, boardsPerRound: 3,
         type: 'mitchell',
@@ -671,7 +704,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellMovement(6, 4, true)
     },
 
-    // 7 tables - 14 pairs (ODD - no skip)
     "14_mitchell_21": {
         pairs: 14, tables: 7, rounds: 7, totalBoards: 21, boardsPerRound: 3,
         type: 'mitchell',
@@ -686,7 +718,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellMovement(7, 4, false)
     },
 
-    // 8 tables - 16 pairs (EVEN - skip needed)
     "16_mitchell_16": {
         pairs: 16, tables: 8, rounds: 8, totalBoards: 16, boardsPerRound: 2,
         type: 'mitchell',
@@ -701,7 +732,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellMovement(8, 3, true)
     },
 
-    // 9 tables - 18 pairs (ODD - no skip)
     "18_mitchell_18": {
         pairs: 18, tables: 9, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'mitchell',
@@ -716,7 +746,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellMovement(9, 3, false)
     },
 
-    // 10 tables - 20 pairs (EVEN - skip needed)
     "20_mitchell_20": {
         pairs: 20, tables: 10, rounds: 10, totalBoards: 20, boardsPerRound: 2,
         type: 'mitchell',
@@ -733,10 +762,8 @@ const ENHANCED_MOVEMENTS = {
 
     // ─────────────────────────────────────────────
     // ODD PAIR COUNTS - Mitchell with sit-out
-    // Uses lower table count + 1 pair sits out each round
     // ─────────────────────────────────────────────
 
-    // 11 pairs: 5.5 tables (5 playing + 1 sit-out = 6 physical tables)
     "11_mitchell_15": {
         pairs: 11, tables: 6, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
@@ -751,7 +778,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellWithSitOut(5, 5, false)
     },
 
-    // 13 pairs: 6.5 tables (6 playing + 1 sit-out = 7 physical tables)
     "13_mitchell_18": {
         pairs: 13, tables: 7, rounds: 6, totalBoards: 18, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
@@ -766,7 +792,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellWithSitOut(6, 4, true)
     },
 
-    // 15 pairs: 7.5 tables (7 playing + 1 sit-out = 8 physical tables)
     "15_mitchell_21": {
         pairs: 15, tables: 8, rounds: 7, totalBoards: 21, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true,
@@ -781,7 +806,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellWithSitOut(7, 4, false)
     },
 
-    // 17 pairs: 8.5 tables (8 playing + 1 sit-out = 9 physical tables)
     "17_mitchell_16": {
         pairs: 17, tables: 9, rounds: 8, totalBoards: 16, boardsPerRound: 2,
         type: 'mitchell', hasSitOut: true,
@@ -796,7 +820,6 @@ const ENHANCED_MOVEMENTS = {
         movement: generateMitchellWithSitOut(8, 3, true)
     },
 
-    // 19 pairs: 9.5 tables (9 playing + 1 sit-out = 10 physical tables)
     "19_mitchell_18": {
         pairs: 19, tables: 10, rounds: 9, totalBoards: 18, boardsPerRound: 2,
         type: 'mitchell', hasSitOut: true,
@@ -813,15 +836,12 @@ const ENHANCED_MOVEMENTS = {
 
 };
 
-// Export for use in duplicate.js and duplicateTemplates.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ENHANCED_MOVEMENTS;
 }
 
 if (typeof window !== 'undefined') {
     window.ENHANCED_MOVEMENTS = ENHANCED_MOVEMENTS;
-
-    // If duplicate bridge is already running, reload its movements now
     if (window.duplicateBridge && window.duplicateBridge.initializeMovements) {
         window.duplicateBridge.initializeMovements();
         console.log('✅ Notified duplicate bridge to reload movements');
