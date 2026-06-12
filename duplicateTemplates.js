@@ -176,26 +176,96 @@ class DuplicateTemplates {
             movement = Object.values(this.movements).find(m => m.pairs === parseInt(key));
         }
         if (!movement) { alert('Movement not available'); return; }
+        this._showTravelerOverlay(movement);
+    }
+
+    _showTravelerOverlay(movement) {
+        const existing = document.getElementById('traveler-overlay');
+        if (existing) existing.remove();
 
         const sitOutPair = this._getSitOutPair(movement);
         const boardPairMap = this._getBoardPairMapping(movement, sitOutPair);
         const boardNumbers = Object.keys(boardPairMap).sort((a, b) => parseInt(a) - parseInt(b));
+        const desc = this._getMovementDescription(movement);
 
-        let html = this._travelerHTMLHeader(movement);
-
-        // 2 travelers per row on A4 landscape
+        // Build all traveler content
+        let travelersHTML = '';
         for (let i = 0; i < boardNumbers.length; i += 2) {
-            html += '<div class="traveler-row">';
-            html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+            travelersHTML += '<div class="traveler-row">';
+            travelersHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
             if (boardNumbers[i + 1]) {
-                html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+                travelersHTML += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
             }
-            html += '</div>';
+            travelersHTML += '</div>';
         }
 
-        html += '</body></html>';
-        const safeName = (movement.description || key).replace(/[^a-z0-9]/gi, '-').toLowerCase();
-        this._downloadFile(html, `bridge-travelers-${safeName}.html`);
+        const overlay = document.createElement('div');
+        overlay.id = 'traveler-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f5f5f5;overflow-y:auto;font-family:Arial,sans-serif;';
+
+        overlay.innerHTML = `
+            <style>
+                ${this._travelerInlineStyles()}
+                #traveler-toolbar {
+                    position: sticky; top: 0; z-index: 10;
+                    background: #2c3e50; color: white;
+                    padding: 12px 16px;
+                    display: flex; align-items: center; justify-content: space-between;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                }
+                #traveler-toolbar h2 { font-size: 16px; font-weight: 700; margin: 0; }
+                .trav-btn {
+                    border: none; border-radius: 6px; padding: 8px 14px;
+                    font-size: 13px; font-weight: 600; cursor: pointer; margin-left: 8px;
+                    touch-action: manipulation;
+                }
+                #trav-print-btn { background: #27ae60; color: white; }
+                #trav-dl-btn    { background: #3498db; color: white; }
+                #trav-close-btn { background: #e74c3c; color: white; }
+                #traveler-content { padding: 12px; }
+                @media print {
+                    #traveler-toolbar { display: none !important; }
+                    #traveler-overlay { position: static; overflow: visible; }
+                    #traveler-content { padding: 0; }
+                    @page { size: A4 landscape; margin: 8mm; }
+                }
+            </style>
+            <div id="traveler-toolbar">
+                <h2>📊 Traveler Sheets — ${desc}</h2>
+                <div>
+                    <button class="trav-btn" id="trav-print-btn">🖨️ Print</button>
+                    <button class="trav-btn" id="trav-dl-btn">💾 Download</button>
+                    <button class="trav-btn" id="trav-close-btn">✕ Close</button>
+                </div>
+            </div>
+            <div id="traveler-content">${travelersHTML}</div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const addPixelHandler = (id, action) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const handler = (e) => { e.preventDefault(); e.stopPropagation(); action(); };
+            btn.addEventListener('click', handler, { passive: false });
+            btn.addEventListener('touchend', handler, { passive: false });
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); btn.style.opacity='0.7'; setTimeout(()=>{btn.style.opacity='1';},150); }, { passive: false });
+        };
+
+        addPixelHandler('trav-print-btn', () => window.print());
+        addPixelHandler('trav-dl-btn', () => {
+            let html = this._travelerHTMLHeader(movement);
+            for (let i = 0; i < boardNumbers.length; i += 2) {
+                html += '<div class="traveler-row">';
+                html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+                if (boardNumbers[i + 1]) html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+                html += '</div>';
+            }
+            html += '</body></html>';
+            const safeName = (movement.description || '').replace(/[^a-z0-9]/gi, '-').toLowerCase();
+            this._downloadFile(html, `bridge-travelers-${safeName}.html`);
+        });
+        addPixelHandler('trav-close-btn', () => overlay.remove());
     }
 
     _getBoardPairMapping(movement, sitOutPair) {
@@ -211,6 +281,58 @@ class DuplicateTemplates {
             });
         });
         return mapping;
+    }
+
+    _travelerInlineStyles() {
+        return `
+            .traveler-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8mm;
+                padding: 8mm;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            .traveler-sheet {
+                border: 2px solid #2c3e50;
+                border-radius: 4px;
+                overflow: hidden;
+            }
+            .traveler-header {
+                background: #2c3e50;
+                color: white;
+                padding: 6px 10px;
+                text-align: center;
+            }
+            .traveler-header-brand { font-size: 11pt; font-weight: 800; }
+            .traveler-header-url { font-size: 8.5pt; opacity: 0.85; margin-bottom: 3px; }
+            .traveler-header-title { font-size: 13pt; font-weight: 800; margin: 2px 0; }
+            .traveler-header-sub { font-size: 9pt; opacity: 0.9; }
+            .vuln-badge {
+                display: inline-block; padding: 2px 10px;
+                border-radius: 10px; font-size: 8.5pt; font-weight: 700; margin-top: 3px;
+            }
+            .vuln-none { background: #95a5a6; color: white; }
+            .vuln-ns   { background: #27ae60; color: white; }
+            .vuln-ew   { background: #e74c3c; color: white; }
+            .vuln-both { background: #f39c12; color: white; }
+            .traveler-table { width: 100%; border-collapse: collapse; }
+            .traveler-table th {
+                background: #34495e; color: white; font-size: 9pt;
+                font-weight: 700; padding: 6px 2px; text-align: center;
+                border: 1px solid #2c3e50;
+            }
+            .traveler-table td {
+                font-size: 11pt; padding: 6px 2px; text-align: center;
+                border: 1px solid #bdc3c7; height: 32px;
+            }
+            .pair-cell { font-weight: 700; color: #2c3e50; background: #f8f9fa; }
+            .ns-pair { color: #27ae60; }
+            .ew-pair { color: #e74c3c; }
+            .plus-cell { color: #27ae60; font-weight: 700; }
+            .minus-cell { color: #e74c3c; font-weight: 700; }
+            .traveler-table tr:nth-child(even) td { background: #f9f9f9; }
+        `;
     }
 
     _travelerHTMLHeader(movement) {
@@ -284,18 +406,18 @@ class DuplicateTemplates {
         .traveler-table th {
             background: #34495e;
             color: white;
-            font-size: 8pt;
+            font-size: 9pt;
             font-weight: 700;
-            padding: 4px 2px;
+            padding: 6px 2px;
             text-align: center;
             border: 1px solid #2c3e50;
         }
         .traveler-table td {
-            font-size: 9pt;
-            padding: 5px 2px;
+            font-size: 11pt;
+            padding: 6px 2px;
             text-align: center;
             border: 1px solid #bdc3c7;
-            height: 22px;
+            height: 32px;
         }
         .pair-cell { font-weight: 700; color: #2c3e50; background: #f8f9fa; }
         .ns-pair { color: #27ae60; }
