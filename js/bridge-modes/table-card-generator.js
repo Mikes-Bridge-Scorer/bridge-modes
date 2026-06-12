@@ -159,8 +159,27 @@ class TableCardGenerator {
         `;
 
         document.body.appendChild(overlay);
-        document.getElementById('tcg-print-btn').addEventListener('click', () => window.print());
-        document.getElementById('tcg-close-btn').addEventListener('click', () => overlay.remove());
+
+        // Pixel-compatible handlers for Print and Close buttons
+        const addPixelHandler = (id, action) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const handler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action();
+            };
+            btn.addEventListener('click', handler, { passive: false });
+            btn.addEventListener('touchend', handler, { passive: false });
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btn.style.opacity = '0.7';
+                setTimeout(() => { btn.style.opacity = '1'; }, 150);
+            }, { passive: false });
+        };
+
+        addPixelHandler('tcg-print-btn', () => window.print());
+        addPixelHandler('tcg-close-btn', () => overlay.remove());
     }
 
     // ─── HTML BUILDERS ───────────────────────────────────────────────────────
