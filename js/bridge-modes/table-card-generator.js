@@ -210,7 +210,9 @@ class TableCardGenerator {
                     rows += `
             <tr class="sitout-row">
                 <td class="round-col">${round.round}</td>
-                <td colspan="3" class="sitout-cell">— SIT OUT —</td>
+                <td class="sitout-cell" style="color:#27ae60;font-weight:700;">${nsDisplay === 'Sit Out' ? 'Sit Out' : nsDisplay}</td>
+                <td class="sitout-cell" style="color:#e74c3c;font-weight:700;">${ewDisplay === 'Sit Out' ? 'Sit Out' : ewDisplay}</td>
+                <td class="sitout-cell">—</td>
             </tr>`;
                 } else {
                     rows += `
