@@ -182,12 +182,15 @@ class TableCardGenerator {
         const totalRounds = Math.max(...movement.movement.map(e => e.round));
         const roundsAtTable = new Map(tableRounds.map(r => [r.round, r]));
 
-        // Detect sit-out pair: highest pair number in a hasSitOut movement
+        // Detect sit-out pair: it's pairs+1 (the ghost pair in the underlying even movement)
+        // e.g. 7-pair uses 8-pair movement, sit-out = pair 8 = pairs+1
+        // Fall back to max pair number detected in data
         const allPairNums = movement.movement
             .flatMap(e => [e.ns, e.ew])
             .filter(p => p !== '' && p !== 'Sit out' && p !== 'Sit Out' && typeof p === 'number');
         const maxPair = Math.max(...allPairNums);
         const sitOutPairNum = movement.hasSitOut ? maxPair : null;
+        // sitOutPairNum will be pairs+1 (e.g. 8 for 7-pair, 10 for 9-pair, 6 for 5-pair)
 
         const formatPair = (p) => {
             if (sitOutPairNum && p === sitOutPairNum) return 'Sit Out';
