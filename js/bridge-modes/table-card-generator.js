@@ -166,13 +166,32 @@ class TableCardGenerator {
             .filter(e => e.table === tableNum)
             .sort((a, b) => a.round - b.round);
 
-        const rows = tableRounds.map(round => `
+        // Find total rounds in this movement
+        const totalRounds = Math.max(...movement.movement.map(e => e.round));
+        const roundsAtTable = new Map(tableRounds.map(r => [r.round, r]));
+
+        // Build rows for ALL rounds, inserting sit-out where table has no entry
+        let rows = '';
+        for (let r = 1; r <= totalRounds; r++) {
+            if (roundsAtTable.has(r)) {
+                const round = roundsAtTable.get(r);
+                rows += `
             <tr>
                 <td class="round-col">${round.round}</td>
                 <td class="ns-col">${round.ns}</td>
                 <td class="ew-col">${round.ew}</td>
                 <td>${this._formatBoards(round.boards)}</td>
-            </tr>`).join('');
+            </tr>`;
+            } else {
+                rows += `
+            <tr style="background: #fff3cd;">
+                <td class="round-col">${r}</td>
+                <td colspan="3" style="text-align:center; font-weight:700; color:#856404; font-size:11px;">
+                    SIT OUT
+                </td>
+            </tr>`;
+            }
+        }
 
         const instructions = this._movementInstructions(movement, tableNum, tableRounds);
 
