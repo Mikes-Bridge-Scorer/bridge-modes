@@ -76,12 +76,17 @@ class TableCardGenerator {
                     print-color-adjust: exact; -webkit-print-color-adjust: exact;
                 }
                 .card-branding {
-                    font-size: 9px; opacity: 0.85; letter-spacing: 0.5px;
-                    margin-bottom: 4px;
+                    font-size: 12px; font-weight: 800; opacity: 1;
+                    letter-spacing: 0.3px; margin-bottom: 5px;
+                    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+                }
+                .card-branding-url {
+                    font-size: 10px; opacity: 0.9; letter-spacing: 0.5px;
+                    margin-bottom: 6px;
                 }
                 .movement-title {
                     font-size: 11px; font-weight: 800; margin-bottom: 6px;
-                    opacity: 0.95; letter-spacing: 0.3px;
+                    opacity: 0.95; letter-spacing: 0.2px;
                 }
                 .table-number { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin: 4px 0; }
                 .card-body { padding: 12px; }
@@ -93,20 +98,21 @@ class TableCardGenerator {
                     print-color-adjust: exact; -webkit-print-color-adjust: exact;
                 }
                 .rounds-table td { padding: 7px 5px; text-align: center; border: 1px solid #bdc3c7; font-size: 12px; }
-                .rounds-table tr:nth-child(even) td:not(.sitout-cell) { background: #f9f9f9; }
+                .rounds-table tr:nth-child(even) { background: #f9f9f9; }
+                .sitout-row td { background: #fff3cd !important; }
                 .round-col { font-weight: 700; color: #2c3e50; }
                 .ns-col { color: #27ae60; font-weight: 700; }
                 .ew-col { color: #e74c3c; font-weight: 700; }
-                .sitout-row td { background: #fff3cd !important; }
                 .sitout-cell { font-weight: 700; color: #856404; font-size: 11px; }
                 .movement-instructions {
                     border-top: 2px solid #e0e0e0; padding-top: 8px;
-                    font-size: 10px; line-height: 1.6; color: #444;
+                    font-size: 10px; line-height: 1.7; color: #444;
                 }
-                .instructions-title { font-weight: 800; margin-bottom: 4px; font-size: 11px; color: #2c3e50; }
+                .instructions-title { font-weight: 800; margin-bottom: 5px; font-size: 11px; color: #2c3e50; }
                 .instruction-line { margin: 2px 0; }
                 .ns-inst { color: #27ae60; font-weight: 700; }
                 .ew-inst { color: #e74c3c; font-weight: 700; }
+                .sitout-note { color: #856404; font-size: 9px; margin-top: 4px; }
                 .card-footer {
                     text-align: center; padding: 8px; background: #f8f9fa;
                     border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; font-weight: 600;
@@ -119,9 +125,11 @@ class TableCardGenerator {
                     margin-bottom: 20px;
                     print-color-adjust: exact; -webkit-print-color-adjust: exact;
                 }
-                .mitchell-header h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+                .mitchell-branding { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
+                .mitchell-url { font-size: 11px; opacity: 0.85; margin-bottom: 8px; }
+                .mitchell-header h1 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
                 .mitchell-header p { font-size: 13px; opacity: .9; margin: 2px 0; }
-                .instructions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                .instructions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
                 .instruction-box { border: 2px solid #2c3e50; border-radius: 10px; padding: 15px; }
                 .instruction-box h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
                 .ns-box { border-color: #27ae60; }
@@ -214,12 +222,13 @@ class TableCardGenerator {
         }
 
         const instructions = this._buildMovementInstructions(movement, tableNum, sitOutPairNum);
-        const titleText = this._boldTitle(movement.description);
+        const titleText = this._formatTitle(movement.description);
 
         return `
         <div class="table-card">
             <div class="card-header">
-                <div class="card-branding">🃏 bridgescorer.com</div>
+                <div class="card-branding">🃏 Bridge at Sea</div>
+                <div class="card-branding-url">bridgescorer.com</div>
                 <div class="movement-title">${titleText}</div>
                 <div class="table-number">TABLE ${tableNum}</div>
             </div>
@@ -237,11 +246,12 @@ class TableCardGenerator {
         </div>`;
     }
 
-    _boldTitle(description) {
-        // Make the description bold and clean up format
-        // e.g. "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)"
+    _formatTitle(description) {
+        // Bold, strip sit-out note, replace commas with dashes
+        // "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)" 
         // -> "<strong>4.5-table Howell — 18 boards — ~2.5 hrs</strong>"
-        return `<strong>${description.replace(/\(.*?\)/g, '').trim().replace(/,/g, ' —')}</strong>`;
+        const clean = description.replace(/\s*\(.*?\)\s*/g, '').trim();
+        return `<strong>${clean.replace(/,\s*/g, ' — ')}</strong>`;
     }
 
     _buildMovementInstructions(movement, tableNum, sitOutPairNum) {
@@ -252,24 +262,23 @@ class TableCardGenerator {
             `;
         }
 
-        // For Howell: find where NS and EW pairs go after a typical playing round
-        // Use the first non-sit-out round to determine the pattern
+        // For Howell: find a typical playing round to derive movement pattern
         const tableRounds = movement.movement
             .filter(e => e.table === tableNum)
             .sort((a, b) => a.round - b.round);
 
-        // Find a playing round (not sit-out) that has a next round
         const totalRounds = Math.max(...movement.movement.map(e => e.round));
         let nsInstruction = null;
         let ewInstruction = null;
 
         for (const cur of tableRounds) {
+            // Skip sit-out rounds
             if (cur.ns === sitOutPairNum || cur.ew === sitOutPairNum) continue;
             if (cur.round >= totalRounds) continue;
 
             const nextRound = cur.round + 1;
 
-            // Find next round for NS pair (skip if next round is a sit-out round for them)
+            // Find where NS pair goes next round (must be a non-sit-out round for them)
             const nsNext = movement.movement.find(e =>
                 e.round === nextRound &&
                 (e.ns === cur.ns || e.ew === cur.ns) &&
@@ -281,7 +290,7 @@ class TableCardGenerator {
                 e.ns !== sitOutPairNum && e.ew !== sitOutPairNum
             );
 
-            if (nsNext && ewNext && !nsInstruction) {
+            if (nsNext && ewNext) {
                 const nsRole = nsNext.ns === cur.ns ? 'N/S' : 'E/W';
                 const ewRole = ewNext.ns === cur.ew ? 'N/S' : 'E/W';
                 nsInstruction = `<span class="ns-inst">N/S</span> — Go to Table ${nsNext.table} as ${nsRole}`;
@@ -291,10 +300,13 @@ class TableCardGenerator {
         }
 
         if (nsInstruction && ewInstruction) {
+            const sitOutNote = movement.hasSitOut
+                ? `<div class="sitout-note">⚠️ When your card shows SIT OUT — rest that round</div>`
+                : '';
             return `
                 <div class="instruction-line">${nsInstruction}</div>
                 <div class="instruction-line">${ewInstruction}</div>
-                ${movement.hasSitOut ? '<div class="instruction-line" style="color:#856404;font-size:9px;margin-top:4px;">⚠️ One pair sits out each round — see your card</div>' : ''}
+                ${sitOutNote}
             `;
         }
 
@@ -302,10 +314,11 @@ class TableCardGenerator {
     }
 
     _buildMitchellHTML(movement) {
-        const titleText = this._boldTitle(movement.description);
+        const titleText = this._formatTitle(movement.description);
         return `
         <div class="mitchell-header">
-            <div style="font-size:10px;opacity:0.8;margin-bottom:6px;">🃏 bridgescorer.com</div>
+            <div class="mitchell-branding">🃏 Bridge at Sea</div>
+            <div class="mitchell-url">bridgescorer.com</div>
             <h1>${titleText}</h1>
             <p>${movement.pairs} Pairs &bull; ${movement.tables} Tables &bull; ${movement.totalBoards || movement.rounds} Boards</p>
         </div>
