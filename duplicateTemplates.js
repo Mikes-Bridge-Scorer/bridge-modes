@@ -188,13 +188,12 @@ class DuplicateTemplates {
         const boardNumbers = Object.keys(boardPairMap).sort((a, b) => parseInt(a) - parseInt(b));
         const desc = this._getMovementDescription(movement);
 
-        // Build all traveler content
+        // Build all traveler content - 4 per page (2x2 grid)
         let travelersHTML = '';
-        for (let i = 0; i < boardNumbers.length; i += 2) {
+        for (let i = 0; i < boardNumbers.length; i += 4) {
             travelersHTML += '<div class="traveler-row">';
-            travelersHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-            if (boardNumbers[i + 1]) {
-                travelersHTML += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+            for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
+                travelersHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
             }
             travelersHTML += '</div>';
         }
@@ -264,13 +263,12 @@ class DuplicateTemplates {
         };
 
         addPixelHandler('trav-print-btn', () => {
-            // Build standalone print HTML - no overlay, no app chrome
+            // Build standalone print HTML - 4 per page
             let printHTML = this._travelerHTMLHeader(movement);
-            for (let i = 0; i < boardNumbers.length; i += 2) {
+            for (let i = 0; i < boardNumbers.length; i += 4) {
                 printHTML += '<div class="traveler-row">';
-                printHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-                if (boardNumbers[i + 1]) {
-                    printHTML += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+                for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
+                    printHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
                 }
                 printHTML += '</div>';
             }
@@ -289,10 +287,11 @@ class DuplicateTemplates {
         });
         addPixelHandler('trav-dl-btn', () => {
             let html = this._travelerHTMLHeader(movement);
-            for (let i = 0; i < boardNumbers.length; i += 2) {
+            for (let i = 0; i < boardNumbers.length; i += 4) {
                 html += '<div class="traveler-row">';
-                html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-                if (boardNumbers[i + 1]) html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+                for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
+                    html += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+                }
                 html += '</div>';
             }
             html += '</body></html>';
@@ -322,10 +321,13 @@ class DuplicateTemplates {
             .traveler-row {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 8mm;
-                padding: 8mm 8mm 0 8mm;
-                page-break-inside: avoid;
-                break-inside: avoid;
+                grid-template-rows: 1fr 1fr;
+                gap: 4mm;
+                padding: 4mm;
+                height: calc(100vh - 8mm);
+                page-break-after: always;
+                break-after: page;
+                box-sizing: border-box;
             }
             .traveler-sheet {
                 border: 2px solid #2c3e50;
@@ -452,7 +454,7 @@ class DuplicateTemplates {
             padding: 6px 2px;
             text-align: center;
             border: 1px solid #bdc3c7;
-            height: 32px;
+            height: 24px;
         }
         .pair-cell { font-weight: 700; color: #2c3e50; background: #f8f9fa; }
         .ns-pair { color: #27ae60; }
