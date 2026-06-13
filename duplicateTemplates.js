@@ -263,7 +263,30 @@ class DuplicateTemplates {
             btn.addEventListener('touchstart', (e) => { e.preventDefault(); btn.style.opacity='0.7'; setTimeout(()=>{btn.style.opacity='1';},150); }, { passive: false });
         };
 
-        addPixelHandler('trav-print-btn', () => window.print());
+        addPixelHandler('trav-print-btn', () => {
+            // Build standalone print HTML - no overlay, no app chrome
+            let printHTML = this._travelerHTMLHeader(movement);
+            for (let i = 0; i < boardNumbers.length; i += 2) {
+                printHTML += '<div class="traveler-row">';
+                printHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+                if (boardNumbers[i + 1]) {
+                    printHTML += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+                }
+                printHTML += '</div>';
+            }
+            printHTML += '</body></html>';
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(printHTML);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 500);
+            } else {
+                // Popup blocked - fall back to inline print
+                window.print();
+            }
+        });
         addPixelHandler('trav-dl-btn', () => {
             let html = this._travelerHTMLHeader(movement);
             for (let i = 0; i < boardNumbers.length; i += 2) {
