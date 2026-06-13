@@ -188,12 +188,19 @@ class DuplicateTemplates {
         const boardNumbers = Object.keys(boardPairMap).sort((a, b) => parseInt(a) - parseInt(b));
         const desc = this._getMovementDescription(movement);
 
-        // Build all traveler content - 4 per page (2x2 grid)
+        // Build all traveler content - 4 per page (2 rows of 2)
         let travelersHTML = '';
         for (let i = 0; i < boardNumbers.length; i += 4) {
             travelersHTML += '<div class="traveler-page">';
-            for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
-                travelersHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+            travelersHTML += '<div class="traveler-page-row">';
+            travelersHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+            if (boardNumbers[i+1]) travelersHTML += this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair);
+            travelersHTML += '</div>';
+            if (boardNumbers[i+2]) {
+                travelersHTML += '<div class="traveler-page-row">';
+                travelersHTML += this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair);
+                if (boardNumbers[i+3]) travelersHTML += this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair);
+                travelersHTML += '</div>';
             }
             travelersHTML += '</div>';
         }
@@ -263,12 +270,21 @@ class DuplicateTemplates {
         };
 
         addPixelHandler('trav-print-btn', () => {
-            // Build standalone print HTML - 4 per page with explicit page breaks
+            // Build standalone print HTML - 4 per page (2 rows of 2)
             let printHTML = this._travelerHTMLHeader(movement);
             for (let i = 0; i < boardNumbers.length; i += 4) {
                 printHTML += '<div class="traveler-page">';
-                for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
-                    printHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+                // Row 1: boards i and i+1
+                printHTML += '<div class="traveler-page-row">';
+                printHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+                if (boardNumbers[i+1]) printHTML += this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair);
+                printHTML += '</div>';
+                // Row 2: boards i+2 and i+3
+                if (boardNumbers[i+2]) {
+                    printHTML += '<div class="traveler-page-row">';
+                    printHTML += this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair);
+                    if (boardNumbers[i+3]) printHTML += this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair);
+                    printHTML += '</div>';
                 }
                 printHTML += '</div>';
             }
@@ -289,8 +305,15 @@ class DuplicateTemplates {
             let html = this._travelerHTMLHeader(movement);
             for (let i = 0; i < boardNumbers.length; i += 4) {
                 html += '<div class="traveler-page">';
-                for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
-                    html += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+                html += '<div class="traveler-page-row">';
+                html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+                if (boardNumbers[i+1]) html += this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair);
+                html += '</div>';
+                if (boardNumbers[i+2]) {
+                    html += '<div class="traveler-page-row">';
+                    html += this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair);
+                    if (boardNumbers[i+3]) html += this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair);
+                    html += '</div>';
                 }
                 html += '</div>';
             }
@@ -319,16 +342,20 @@ class DuplicateTemplates {
     _travelerInlineStyles() {
         return `
             .traveler-page {
-                display: grid;
-                grid-template-columns: calc(50% - 3mm) calc(50% - 3mm);
-                grid-template-rows: auto auto;
-                gap: 5mm;
-                padding: 15mm 8mm 8mm 8mm;
                 page-break-after: always;
                 break-after: page;
-                page-break-inside: avoid;
+                padding: 15mm 8mm 8mm 8mm;
                 box-sizing: border-box;
-                width: 100%;
+            }
+            .traveler-page-row {
+                display: flex;
+                flex-direction: row;
+                gap: 5mm;
+                margin-bottom: 5mm;
+            }
+            .traveler-page-row .traveler-sheet {
+                flex: 1;
+                min-width: 0;
             }
             .traveler-sheet {
                 border: 2px solid #2c3e50;
