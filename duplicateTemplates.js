@@ -191,7 +191,7 @@ class DuplicateTemplates {
         // Build all traveler content - 4 per page (2x2 grid)
         let travelersHTML = '';
         for (let i = 0; i < boardNumbers.length; i += 4) {
-            travelersHTML += '<div class="traveler-row">';
+            travelersHTML += '<div class="traveler-page">';
             for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
                 travelersHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
             }
@@ -223,7 +223,7 @@ class DuplicateTemplates {
                 #trav-close-btn { background: #e74c3c; color: white; }
                 #traveler-content { padding: 12px; }
                 @media print {
-                    @page { size: A4 landscape; margin: 8mm; }
+                    @page { size: A4 landscape; margin: 0; }
                     #traveler-toolbar { display: none !important; }
                     #traveler-overlay {
                         position: static !important;
@@ -263,10 +263,10 @@ class DuplicateTemplates {
         };
 
         addPixelHandler('trav-print-btn', () => {
-            // Build standalone print HTML - 4 per page
+            // Build standalone print HTML - 4 per page with explicit page breaks
             let printHTML = this._travelerHTMLHeader(movement);
             for (let i = 0; i < boardNumbers.length; i += 4) {
-                printHTML += '<div class="traveler-row">';
+                printHTML += '<div class="traveler-page">';
                 for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
                     printHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
                 }
@@ -288,7 +288,7 @@ class DuplicateTemplates {
         addPixelHandler('trav-dl-btn', () => {
             let html = this._travelerHTMLHeader(movement);
             for (let i = 0; i < boardNumbers.length; i += 4) {
-                html += '<div class="traveler-row">';
+                html += '<div class="traveler-page">';
                 for (let j = i; j < Math.min(i + 4, boardNumbers.length); j++) {
                     html += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
                 }
@@ -318,15 +318,14 @@ class DuplicateTemplates {
 
     _travelerInlineStyles() {
         return `
-            .traveler-row {
+            .traveler-page {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
-                gap: 4mm;
-                padding: 8mm 4mm 4mm 4mm;
-                height: calc(100vh - 4mm);
+                gap: 5mm;
+                padding: 15mm 8mm 8mm 8mm;
                 page-break-after: always;
                 break-after: page;
+                page-break-inside: avoid;
                 box-sizing: border-box;
             }
             .traveler-sheet {
@@ -470,7 +469,7 @@ class DuplicateTemplates {
         .traveler-table tr:nth-child(even) td { background: #f9f9f9; }
 
         @media print {
-            @page { size: A4 landscape; margin: 8mm; }
+            @page { size: A4 landscape; margin: 0; }
             body { padding: 0; }
             .traveler-row { padding: 0; gap: 8mm; page-break-after: always; }
         }
