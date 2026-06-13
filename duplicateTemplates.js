@@ -3,7 +3,7 @@
  * Handles all PDF/HTML template downloads for duplicate bridge
  * PIXEL FIX: All popups use touchend + click handlers
  * SIT-OUT FIX: Correctly handles half-table Howell movements
- * TRAVELLER FIX: A4 landscape, 2 per page, much larger
+ * TRAVELLER: A4 landscape, print window, 2 per page
  */
 class DuplicateTemplates {
     constructor() {
@@ -13,28 +13,19 @@ class DuplicateTemplates {
     initializeMovements() {
         if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
             this.movements = ENHANCED_MOVEMENTS;
-            console.log('✅ DuplicateTemplates: using enhanced movements -', Object.keys(this.movements).length, 'movements');
         } else {
-            console.warn('⚠️ DuplicateTemplates: enhanced movements not yet loaded, using fallback');
             this.movements = {};
             setTimeout(() => {
                 if (typeof ENHANCED_MOVEMENTS !== 'undefined') {
                     this.movements = ENHANCED_MOVEMENTS;
-                    console.log('✅ DuplicateTemplates: movements reloaded on retry -', Object.keys(this.movements).length);
                 }
             }, 500);
         }
     }
 
-    // ─── SHARED PIXEL-COMPATIBLE HANDLER ─────────────────────────────────────
-
     _addPixelHandler(btn, action) {
         if (!btn) return;
-        const handler = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            action();
-        };
+        const handler = (e) => { e.preventDefault(); e.stopPropagation(); action(); };
         btn.addEventListener('click', handler, { passive: false });
         btn.addEventListener('touchend', handler, { passive: false });
         btn.addEventListener('touchstart', (e) => {
@@ -44,31 +35,17 @@ class DuplicateTemplates {
         }, { passive: false });
     }
 
-    // ─── POPUP ENTRY POINTS ───────────────────────────────────────────────────
-
     showBoardTemplates() {
-        this._showMovementPickerPopup(
-            'boardTemplatesPopup',
-            '🎴 Board Slips',
+        this._showMovementPickerPopup('boardTemplatesPopup', '🎴 Board Slips',
             'Select movement to generate slips:',
-            (key, movement) => {
-                this.downloadBoardTemplate(movement.totalBoards);
-            }
-        );
+            (key, movement) => { this.downloadBoardTemplate(movement.totalBoards); });
     }
 
     showTravelerTemplates() {
-        this._showMovementPickerPopup(
-            'travelerTemplatesPopup',
-            '📊 Traveler Sheets',
+        this._showMovementPickerPopup('travelerTemplatesPopup', '📊 Traveler Sheets',
             'Select movement to generate travelers:',
-            (key, movement) => {
-                this.downloadMovementTravelers(key, movement);
-            }
-        );
+            (key, movement) => { this.downloadMovementTravelers(key, movement); });
     }
-
-    // ─── SHARED MOVEMENT PICKER ───────────────────────────────────────────────
 
     _showMovementPickerPopup(popupId, title, subtitle, onSelect) {
         const existing = document.getElementById(popupId);
@@ -76,69 +53,53 @@ class DuplicateTemplates {
 
         const popup = document.createElement('div');
         popup.id = popupId;
-        popup.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000;
-            display: flex; align-items: flex-start; justify-content: center;
-            overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 0;
-        `;
+        popup.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;
+            background:rgba(0,0,0,0.85);z-index:1000;
+            display:flex;align-items:flex-start;justify-content:center;
+            overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 0;`;
 
         const sortedEntries = Object.entries(this.movements).sort((a, b) => {
             if (a[1].pairs !== b[1].pairs) return a[1].pairs - b[1].pairs;
             return a[1].totalBoards - b[1].totalBoards;
         });
-
         const groups = {};
         sortedEntries.forEach(([key, mov]) => {
             if (!groups[mov.pairs]) groups[mov.pairs] = [];
             groups[mov.pairs].push({ key, mov });
         });
-
         const colors = ['#27ae60','#3498db','#e67e22','#9b59b6','#1abc9c',
                         '#e74c3c','#f39c12','#16a085','#8e44ad','#2980b9'];
-        let colorIdx = 0;
-        let groupHTML = '';
-
+        let colorIdx = 0, groupHTML = '';
         Object.keys(groups).sort((a,b) => a-b).forEach(pairs => {
-            groupHTML += `<div style="margin-bottom:8px;">
-                <div style="font-size:11px;color:#95a5a6;text-transform:uppercase;
-                    letter-spacing:1px;margin-bottom:4px;">${pairs} Pairs</div>`;
+            groupHTML += `<div style="margin-bottom:8px;"><div style="font-size:11px;color:#95a5a6;
+                text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${pairs} Pairs</div>`;
             groups[pairs].forEach(({ key, mov }) => {
                 const color = colors[colorIdx++ % colors.length];
-                const sitOut = mov.hasSitOut ? ' ⚠️' : '';
-                groupHTML += `
-                    <button class="tmpl-pick-btn" data-key="${key}"
-                        style="display:block;width:100%;padding:11px 14px;
-                            margin-bottom:6px;border:none;border-radius:7px;
-                            background:${color};color:white;font-size:14px;
-                            font-weight:600;cursor:pointer;text-align:left;
-                            line-height:1.3;min-height:44px;touch-action:manipulation;">
-                        ${mov.description}${sitOut}
-                    </button>`;
+                groupHTML += `<button class="tmpl-pick-btn" data-key="${key}"
+                    style="display:block;width:100%;padding:11px 14px;margin-bottom:6px;
+                    border:none;border-radius:7px;background:${color};color:white;
+                    font-size:14px;font-weight:600;cursor:pointer;text-align:left;
+                    min-height:44px;touch-action:manipulation;">
+                    ${mov.description}${mov.hasSitOut ? ' ⚠️' : ''}
+                </button>`;
             });
             groupHTML += `</div>`;
         });
 
-        popup.innerHTML = `
-            <div style="background:white;border-radius:10px;width:88%;max-width:340px;
-                padding:18px;color:#2c3e50;box-shadow:0 4px 20px rgba(0,0,0,0.4);margin:auto;">
-                <div style="text-align:center;margin-bottom:14px;">
-                    <h3 style="margin:0 0 3px 0;color:#2c3e50;font-size:16px;">${title}</h3>
-                    <p style="margin:0;font-size:12px;color:#7f8c8d;">${subtitle}</p>
-                </div>
-                ${groupHTML}
-                <button id="${popupId}_close" style="display:block;width:100%;padding:11px;
-                    margin-top:8px;border:2px solid #bdc3c7;border-radius:7px;
-                    background:white;color:#7f8c8d;font-size:14px;font-weight:600;
-                    cursor:pointer;min-height:44px;touch-action:manipulation;">
-                    ✕ Close
-                </button>
+        popup.innerHTML = `<div style="background:white;border-radius:10px;width:88%;max-width:340px;
+            padding:18px;color:#2c3e50;box-shadow:0 4px 20px rgba(0,0,0,0.4);margin:auto;">
+            <div style="text-align:center;margin-bottom:14px;">
+                <h3 style="margin:0 0 3px 0;color:#2c3e50;font-size:16px;">${title}</h3>
+                <p style="margin:0;font-size:12px;color:#7f8c8d;">${subtitle}</p>
             </div>
-        `;
+            ${groupHTML}
+            <button id="${popupId}_close" style="display:block;width:100%;padding:11px;
+                margin-top:8px;border:2px solid #bdc3c7;border-radius:7px;
+                background:white;color:#7f8c8d;font-size:14px;font-weight:600;
+                cursor:pointer;min-height:44px;touch-action:manipulation;">✕ Close</button>
+        </div>`;
 
         document.body.appendChild(popup);
-
-        // Pixel-compatible handlers for movement buttons
         popup.querySelectorAll('.tmpl-pick-btn').forEach(btn => {
             this._addPixelHandler(btn, () => {
                 const key = btn.getAttribute('data-key');
@@ -146,35 +107,25 @@ class DuplicateTemplates {
                 onSelect(key, this.movements[key]);
             });
         });
-
-        this._addPixelHandler(
-            document.getElementById(`${popupId}_close`),
-            () => popup.remove()
-        );
+        this._addPixelHandler(document.getElementById(`${popupId}_close`), () => popup.remove());
         popup.addEventListener('click', e => { if (e.target === popup) popup.remove(); });
     }
 
-    // ─── SIT-OUT DETECTION ────────────────────────────────────────────────────
-
     _getSitOutPair(movement) {
         if (!movement.hasSitOut) return null;
-        const allPairs = movement.movement
-            .flatMap(e => [e.ns, e.ew])
+        const allPairs = movement.movement.flatMap(e => [e.ns, e.ew])
             .filter(p => p !== '' && typeof p === 'number');
-        return Math.max(...allPairs); // pairs+1, e.g. 10 for 9-pair movement
+        return Math.max(...allPairs);
     }
 
     _getMovementDescription(movement) {
-        // Use actual table count from description, not Math.ceil(movement.tables)
         return movement.description.replace(/\s*\(.*?\)\s*/g, '').trim();
     }
 
     // ─── TRAVELLER SHEETS ─────────────────────────────────────────────────────
 
     downloadMovementTravelers(key, movement) {
-        if (!movement) {
-            movement = Object.values(this.movements).find(m => m.pairs === parseInt(key));
-        }
+        if (!movement) movement = Object.values(this.movements).find(m => m.pairs === parseInt(key));
         if (!movement) { alert('Movement not available'); return; }
         this._showTravelerOverlay(movement);
     }
@@ -188,20 +139,11 @@ class DuplicateTemplates {
         const boardNumbers = Object.keys(boardPairMap).sort((a, b) => parseInt(a) - parseInt(b));
         const desc = this._getMovementDescription(movement);
 
-        // Build all traveler content - 4 per page (2 rows of 2)
         let travelersHTML = '';
-        for (let i = 0; i < boardNumbers.length; i += 4) {
-            travelersHTML += '<div class="traveler-page">';
-            travelersHTML += '<div class="traveler-page-row">';
+        for (let i = 0; i < boardNumbers.length; i += 2) {
+            travelersHTML += '<div class="traveler-row">';
             travelersHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-            if (boardNumbers[i+1]) travelersHTML += this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair);
-            travelersHTML += '</div>';
-            if (boardNumbers[i+2]) {
-                travelersHTML += '<div class="traveler-page-row">';
-                travelersHTML += this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair);
-                if (boardNumbers[i+3]) travelersHTML += this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair);
-                travelersHTML += '</div>';
-            }
+            if (boardNumbers[i + 1]) travelersHTML += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
             travelersHTML += '</div>';
         }
 
@@ -213,38 +155,23 @@ class DuplicateTemplates {
             <style>
                 ${this._travelerInlineStyles()}
                 #traveler-toolbar {
-                    position: sticky; top: 0; z-index: 10;
-                    background: #2c3e50; color: white;
-                    padding: 12px 16px;
-                    display: flex; align-items: center; justify-content: space-between;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    position:sticky;top:0;z-index:10;background:#2c3e50;color:white;
+                    padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.3);
                 }
-                #traveler-toolbar h2 { font-size: 16px; font-weight: 700; margin: 0; }
-                .trav-btn {
-                    border: none; border-radius: 6px; padding: 8px 14px;
-                    font-size: 13px; font-weight: 600; cursor: pointer; margin-left: 8px;
-                    touch-action: manipulation;
-                }
-                #trav-print-btn { background: #27ae60; color: white; }
-                #trav-dl-btn    { background: #3498db; color: white; }
-                #trav-close-btn { background: #e74c3c; color: white; }
-                #traveler-content { padding: 12px; }
+                #traveler-toolbar h2 { font-size:16px;font-weight:700;margin:0; }
+                .trav-btn { border:none;border-radius:6px;padding:8px 14px;font-size:13px;
+                    font-weight:600;cursor:pointer;margin-left:8px;touch-action:manipulation; }
+                #trav-print-btn { background:#27ae60;color:white; }
+                #trav-dl-btn { background:#3498db;color:white; }
+                #trav-close-btn { background:#e74c3c;color:white; }
+                #traveler-content { padding:12px; }
                 @media print {
-                    @page { size: A4 landscape; margin: 0; }
-                    #traveler-toolbar { display: none !important; }
-                    #traveler-overlay {
-                        position: static !important;
-                        overflow: visible !important;
-                        background: white !important;
-                        height: auto !important;
-                    }
-                    #traveler-content {
-                        padding: 0 !important;
-                        overflow: visible !important;
-                    }
-                    body > *:not(#traveler-overlay) { display: none !important; }
-                    * { overflow: visible !important; }
-                    ::-webkit-scrollbar { display: none !important; }
+                    @page { size: A4 landscape; margin: 8mm; }
+                    #traveler-toolbar { display:none !important; }
+                    #traveler-overlay { position:static !important; overflow:visible !important; }
+                    #traveler-content { padding:0 !important; }
+                    body > *:not(#traveler-overlay) { display:none !important; }
                 }
             </style>
             <div id="traveler-toolbar">
@@ -270,67 +197,44 @@ class DuplicateTemplates {
         };
 
         addPixelHandler('trav-print-btn', () => {
-            // Build standalone print HTML - 4 per page (2 rows of 2)
-            let printHTML = this._travelerHTMLHeader(movement);
-            for (let i = 0; i < boardNumbers.length; i += 4) {
-                printHTML += '<div class="traveler-page">';
-                // Row 1: boards i and i+1
-                printHTML += '<div class="traveler-page-row">';
-                printHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-                if (boardNumbers[i+1]) printHTML += this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair);
-                printHTML += '</div>';
-                // Row 2: boards i+2 and i+3
-                if (boardNumbers[i+2]) {
-                    printHTML += '<div class="traveler-page-row">';
-                    printHTML += this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair);
-                    if (boardNumbers[i+3]) printHTML += this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair);
-                    printHTML += '</div>';
-                }
-                printHTML += '</div>';
+            let html = this._travelerHTMLHeader(movement);
+            for (let i = 0; i < boardNumbers.length; i += 2) {
+                html += '<div class="traveler-row">';
+                html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
+                if (boardNumbers[i + 1]) html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+                html += '</div>';
             }
-            printHTML += '</body></html>';
-
+            html += '</body></html>';
             const printWindow = window.open('', '_blank');
             if (printWindow) {
-                printWindow.document.write(printHTML);
+                printWindow.document.write(html);
                 printWindow.document.close();
                 printWindow.focus();
                 setTimeout(() => printWindow.print(), 500);
-            } else {
-                // Popup blocked - fall back to inline print
-                window.print();
-            }
+            } else { window.print(); }
         });
+
         addPixelHandler('trav-dl-btn', () => {
             let html = this._travelerHTMLHeader(movement);
-            for (let i = 0; i < boardNumbers.length; i += 4) {
-                html += '<div class="traveler-page">';
-                html += '<div class="traveler-page-row">';
+            for (let i = 0; i < boardNumbers.length; i += 2) {
+                html += '<div class="traveler-row">';
                 html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-                if (boardNumbers[i+1]) html += this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair);
-                html += '</div>';
-                if (boardNumbers[i+2]) {
-                    html += '<div class="traveler-page-row">';
-                    html += this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair);
-                    if (boardNumbers[i+3]) html += this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair);
-                    html += '</div>';
-                }
+                if (boardNumbers[i + 1]) html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
                 html += '</div>';
             }
             html += '</body></html>';
             const safeName = (movement.description || '').replace(/[^a-z0-9]/gi, '-').toLowerCase();
             this._downloadFile(html, `bridge-travelers-${safeName}.html`);
         });
+
         addPixelHandler('trav-close-btn', () => overlay.remove());
     }
 
     _getBoardPairMapping(movement, sitOutPair) {
         const mapping = {};
         movement.movement.forEach(entry => {
-            // Skip sit-out entries
             if (!entry.boards || entry.boards.length === 0) return;
             if (entry.ns === '' || entry.ns === sitOutPair || entry.ew === sitOutPair) return;
-
             entry.boards.forEach(boardNum => {
                 if (!mapping[boardNum]) mapping[boardNum] = [];
                 mapping[boardNum].push({ ns: entry.ns, ew: entry.ew });
@@ -341,210 +245,75 @@ class DuplicateTemplates {
 
     _travelerInlineStyles() {
         return `
-            .traveler-page {
-                page-break-after: always;
-                break-after: page;
-                padding: 15mm 8mm 8mm 8mm;
-                box-sizing: border-box;
-            }
-            .traveler-page-row {
-                display: flex;
-                flex-direction: row;
-                gap: 5mm;
-                margin-bottom: 5mm;
-            }
-            .traveler-page-row .traveler-sheet {
-                flex: 1;
-                min-width: 0;
-            }
-            .traveler-sheet {
-                border: 2px solid #2c3e50;
-                border-radius: 4px;
-                overflow: hidden;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
-            .traveler-header {
-                background: white;
-                color: #2c3e50;
-                border-bottom: 2px solid #2c3e50;
-                padding: 6px 10px;
-                text-align: center;
-            }
-            .traveler-header-brand { font-size: 11pt; font-weight: 800; color: #2c3e50; }
-            .traveler-header-url { font-size: 8.5pt; color: #666; margin-bottom: 3px; }
-            .traveler-header-title { font-size: 13pt; font-weight: 800; color: #2c3e50; margin: 2px 0; }
-            .traveler-header-sub { font-size: 9pt; color: #555; }
-            .vuln-badge {
-                display: inline-block; padding: 2px 10px;
-                border-radius: 10px; font-size: 8.5pt; font-weight: 700; margin-top: 3px;
-            }
-            .vuln-none { border: 2px solid #95a5a6; color: #95a5a6; background: white; }
-            .vuln-ns   { border: 2px solid #27ae60; color: #27ae60; background: white; font-weight: 800; }
-            .vuln-ew   { border: 2px solid #e74c3c; color: #e74c3c; background: white; font-weight: 800; }
-            .vuln-both { border: 2px solid #f39c12; color: #f39c12; background: white; font-weight: 800; }
-            .traveler-table { width: 100%; border-collapse: collapse; }
-            .traveler-table th {
-                background: #34495e; color: white; font-size: 9pt;
-                font-weight: 700; padding: 6px 2px; text-align: center;
-                border: 1px solid #2c3e50;
-            }
-            .traveler-table td {
-                font-size: 11pt; padding: 6px 2px; text-align: center;
-                border: 1px solid #bdc3c7; height: 32px;
-            }
-            .pair-cell { font-weight: 700; color: #2c3e50; background: #f8f9fa; }
-            .ns-pair { color: #27ae60; }
-            .ew-pair { color: #e74c3c; }
-            .plus-cell { color: #27ae60; font-weight: 700; }
-            .minus-cell { color: #e74c3c; font-weight: 700; }
-            .traveler-table tr:nth-child(even) td { background: #f9f9f9; }
+            .traveler-row { display:flex;flex-direction:row;gap:8mm;padding:10mm 8mm 4mm 8mm;
+                page-break-after:always;break-after:page;page-break-inside:avoid; }
+            .traveler-sheet { flex:1;min-width:0;border:2px solid #2c3e50;border-radius:4px;
+                overflow:hidden;print-color-adjust:exact;-webkit-print-color-adjust:exact; }
+            .traveler-header { background:white;color:#2c3e50;border-bottom:2px solid #2c3e50;
+                padding:6px 10px;text-align:center; }
+            .traveler-header-brand { font-size:11pt;font-weight:800;color:#2c3e50; }
+            .traveler-header-url { font-size:8.5pt;color:#666;margin-bottom:3px; }
+            .traveler-header-title { font-size:13pt;font-weight:800;color:#2c3e50;margin:2px 0; }
+            .traveler-header-sub { font-size:9pt;color:#555; }
+            .vuln-badge { display:inline-block;padding:2px 10px;border-radius:10px;
+                font-size:8.5pt;font-weight:700;margin-top:3px; }
+            .vuln-none { border:2px solid #95a5a6;color:#95a5a6;background:white; }
+            .vuln-ns { border:2px solid #27ae60;color:#27ae60;background:white;font-weight:800; }
+            .vuln-ew { border:2px solid #e74c3c;color:#e74c3c;background:white;font-weight:800; }
+            .vuln-both { border:2px solid #f39c12;color:#f39c12;background:white;font-weight:800; }
+            .traveler-table { width:100%;border-collapse:collapse; }
+            .traveler-table th { background:#34495e;color:white;font-size:9pt;font-weight:700;
+                padding:6px 2px;text-align:center;border:1px solid #2c3e50;
+                print-color-adjust:exact;-webkit-print-color-adjust:exact; }
+            .traveler-table td { font-size:11pt;padding:6px 2px;text-align:center;
+                border:1px solid #bdc3c7;height:24px; }
+            .pair-cell { font-weight:700;background:#f8f9fa; }
+            .ns-pair { color:#27ae60; }
+            .ew-pair { color:#e74c3c; }
+            .plus-cell { color:#27ae60;font-weight:700; }
+            .minus-cell { color:#e74c3c;font-weight:700; }
+            .traveler-table tr:nth-child(even) td { background:#f9f9f9; }
         `;
     }
 
     _travelerHTMLHeader(movement) {
         const desc = this._getMovementDescription(movement);
         return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Traveler Sheets — ${desc}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: white; }
-
-        .traveler-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8mm;
-            padding: 8mm;
-            page-break-after: always;
-            page-break-inside: avoid;
-        }
-
-        .traveler-sheet {
-            border: 2px solid #2c3e50;
-            border-radius: 4px;
-            overflow: hidden;
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-        }
-
-        .traveler-header {
-            background: white;
-            color: #2c3e50;
-            border-bottom: 2px solid #2c3e50;
-            padding: 6px 10px;
-            text-align: center;
-        }
-        .traveler-header-brand {
-            font-size: 9pt;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-            color: #2c3e50;
-        }
-        .traveler-header-url {
-            font-size: 7.5pt;
-            color: #666;
-            margin-bottom: 3px;
-        }
-        .traveler-header-title {
-            font-size: 11pt;
-            font-weight: 800;
-            margin: 2px 0;
-        }
-        .traveler-header-sub {
-            font-size: 8.5pt;
-            opacity: 0.9;
-        }
-        .vuln-badge {
-            display: inline-block;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-size: 8pt;
-            font-weight: 700;
-            margin-top: 3px;
-        }
-        .vuln-none { border: 2px solid #95a5a6; color: #95a5a6; background: white; }
-        .vuln-ns   { border: 2px solid #27ae60; color: #27ae60; background: white; font-weight: 800; }
-        .vuln-ew   { border: 2px solid #e74c3c; color: #e74c3c; background: white; font-weight: 800; }
-        .vuln-both { border: 2px solid #f39c12; color: #f39c12; background: white; font-weight: 800; }
-
-        .traveler-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .traveler-table th {
-            background: #34495e;
-            color: white;
-            font-size: 9pt;
-            font-weight: 700;
-            padding: 6px 2px;
-            text-align: center;
-            border: 1px solid #2c3e50;
-        }
-        .traveler-table td {
-            font-size: 11pt;
-            padding: 6px 2px;
-            text-align: center;
-            border: 1px solid #bdc3c7;
-            height: 24px;
-        }
-        .pair-cell { font-weight: 700; color: #2c3e50; background: #f8f9fa; }
-        .ns-pair { color: #27ae60; }
-        .ew-pair { color: #e74c3c; }
-        .plus-cell { color: #27ae60; font-weight: 700; }
-        .minus-cell { color: #e74c3c; font-weight: 700; }
-        .traveler-table tr:nth-child(even) td { background: #f9f9f9; }
-
-        @media print {
-            @page { size: A4 landscape; margin: 0; }
-            body { padding: 0; }
-            .traveler-row { padding: 0; gap: 8mm; page-break-after: always; }
-        }
-    </style>
-</head>
-<body>`;
+<html lang="en"><head><meta charset="UTF-8">
+<title>Traveler Sheets — ${desc}</title>
+<style>
+    * { margin:0;padding:0;box-sizing:border-box; }
+    body { font-family:Arial,sans-serif;background:white; }
+    ${this._travelerInlineStyles()}
+    @media print { @page { size:A4 landscape;margin:10mm; } }
+</style></head><body>`;
     }
 
     _generateTravelerSheet(boardNumber, pairInstances, movement, sitOutPair) {
         const vulnerability = this._getBoardVulnerability(parseInt(boardNumber));
-        const vulnLabels = {
-            'None': 'None Vulnerable',
-            'NS': 'N-S Vulnerable',
-            'EW': 'E-W Vulnerable',
-            'Both': 'Both Vulnerable'
-        };
-        const vulnClasses = { 'None': 'vuln-none', 'NS': 'vuln-ns', 'EW': 'vuln-ew', 'Both': 'vuln-both' };
+        const vulnLabels = { 'None':'None Vulnerable','NS':'N-S Vulnerable','EW':'E-W Vulnerable','Both':'Both Vulnerable' };
+        const vulnClasses = { 'None':'vuln-none','NS':'vuln-ns','EW':'vuln-ew','Both':'vuln-both' };
         const desc = this._getMovementDescription(movement);
 
         let rows = '';
         pairInstances.forEach(instance => {
-            rows += `
-                <tr>
-                    <td class="pair-cell ns-pair">${instance.ns}</td>
-                    <td class="pair-cell ew-pair">${instance.ew}</td>
-                    <td></td><td></td><td></td><td></td>
-                    <td class="plus-cell">+</td>
-                    <td class="minus-cell">-</td>
-                    <td></td><td></td>
-                </tr>`;
-        });
-
-        // Pad to at least 6 rows
-        const emptyRows = Math.max(0, 6 - pairInstances.length);
-        for (let i = 0; i < emptyRows; i++) {
             rows += `<tr>
-                <td class="pair-cell"></td><td class="pair-cell"></td>
+                <td class="pair-cell ns-pair">${instance.ns}</td>
+                <td class="pair-cell ew-pair">${instance.ew}</td>
                 <td></td><td></td><td></td><td></td>
-                <td class="plus-cell">+</td>
-                <td class="minus-cell">-</td>
+                <td class="plus-cell">+</td><td class="minus-cell">-</td>
                 <td></td><td></td>
             </tr>`;
+        });
+        const emptyRows = Math.max(0, 6 - pairInstances.length);
+        for (let i = 0; i < emptyRows; i++) {
+            rows += `<tr><td class="pair-cell"></td><td class="pair-cell"></td>
+                <td></td><td></td><td></td><td></td>
+                <td class="plus-cell">+</td><td class="minus-cell">-</td>
+                <td></td><td></td></tr>`;
         }
 
-        return `
-        <div class="traveler-sheet">
+        return `<div class="traveler-sheet">
             <div class="traveler-header">
                 <div class="traveler-header-brand">🃏 Bridge at Sea</div>
                 <div class="traveler-header-url">bridgescorer.com</div>
@@ -553,20 +322,11 @@ class DuplicateTemplates {
                 <span class="vuln-badge ${vulnClasses[vulnerability]}">${vulnLabels[vulnerability]}</span>
             </div>
             <table class="traveler-table">
-                <thead>
-                    <tr>
-                        <th>NS<br>Pair</th>
-                        <th>EW<br>Pair</th>
-                        <th>Bid</th>
-                        <th>Suit</th>
-                        <th>Decl</th>
-                        <th>Tricks</th>
-                        <th>Plus</th>
-                        <th>Minus</th>
-                        <th>Score<br>NS</th>
-                        <th>Score<br>EW</th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th>NS<br>Pair</th><th>EW<br>Pair</th><th>Bid</th><th>Suit</th>
+                    <th>Decl</th><th>Tricks</th><th>Plus</th><th>Minus</th>
+                    <th>Score<br>NS</th><th>Score<br>EW</th>
+                </tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>`;
@@ -575,44 +335,33 @@ class DuplicateTemplates {
     // ─── BOARD SLIPS ─────────────────────────────────────────────────────────
 
     downloadBoardTemplate(numBoards) {
-        let html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Board Slips — ${numBoards} Boards</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; margin: 10mm; }
-        .slips-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm; }
-        .slip {
-            border: 2px solid #2c3e50; border-radius: 6px; padding: 8px;
-            text-align: center; page-break-inside: avoid;
-        }
-        .slip-brand { font-size: 7pt; color: #666; margin-bottom: 3px; }
-        .slip-board { font-size: 14pt; font-weight: 800; color: #2c3e50; }
-        .slip-vuln { font-size: 9pt; font-weight: 700; margin: 4px 0; padding: 2px 6px; border-radius: 8px; display: inline-block; }
-        .vuln-none { border: 2px solid #95a5a6; color: #95a5a6; background: white; }
-        .vuln-ns   { border: 2px solid #27ae60; color: #27ae60; background: white; font-weight: 800; }
-        .vuln-ew   { border: 2px solid #e74c3c; color: #e74c3c; background: white; font-weight: 800; }
-        .vuln-both { border: 2px solid #f39c12; color: #f39c12; background: white; font-weight: 800; }
-        @media print { @page { size: A4; margin: 10mm; } }
-    </style>
-</head>
-<body>
-<div class="slips-grid">`;
+        let html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Board Slips — ${numBoards} Boards</title>
+<style>
+    * { box-sizing:border-box; }
+    body { font-family:Arial,sans-serif;margin:10mm; }
+    .slips-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:5mm; }
+    .slip { border:2px solid #2c3e50;border-radius:6px;padding:8px;text-align:center;page-break-inside:avoid; }
+    .slip-brand { font-size:7pt;color:#666;margin-bottom:3px; }
+    .slip-board { font-size:14pt;font-weight:800;color:#2c3e50; }
+    .slip-vuln { font-size:9pt;font-weight:700;margin:4px 0;padding:2px 6px;border-radius:8px;display:inline-block; }
+    .vuln-none { border:2px solid #95a5a6;color:#95a5a6; }
+    .vuln-ns { border:2px solid #27ae60;color:#27ae60; }
+    .vuln-ew { border:2px solid #e74c3c;color:#e74c3c; }
+    .vuln-both { border:2px solid #f39c12;color:#f39c12; }
+    @media print { @page { size:A4;margin:10mm; } }
+</style></head><body><div class="slips-grid">`;
 
         for (let board = 1; board <= numBoards; board++) {
             const vuln = this._getBoardVulnerability(board);
-            const vulnLabels = { 'None': 'None Vul', 'NS': 'N-S Vul', 'EW': 'E-W Vul', 'Both': 'Both Vul' };
-            const vulnClasses = { 'None': 'vuln-none', 'NS': 'vuln-ns', 'EW': 'vuln-ew', 'Both': 'vuln-both' };
-            html += `
-            <div class="slip">
+            const vulnLabels = { 'None':'None Vul','NS':'N-S Vul','EW':'E-W Vul','Both':'Both Vul' };
+            const vulnClasses = { 'None':'vuln-none','NS':'vuln-ns','EW':'vuln-ew','Both':'vuln-both' };
+            html += `<div class="slip">
                 <div class="slip-brand">🃏 Bridge at Sea • bridgescorer.com</div>
                 <div class="slip-board">Board ${board}</div>
                 <span class="slip-vuln ${vulnClasses[vuln]}">${vulnLabels[vuln]}</span>
             </div>`;
         }
-
         html += '</div></body></html>';
         this._downloadFile(html, `board-slips-${numBoards}-boards.html`);
     }
@@ -626,21 +375,20 @@ class DuplicateTemplates {
 
     _buildMovementSheetHTML(movement) {
         if (!movement || !movement.movement) return '<html><body>No data</body></html>';
-
         const sitOutPair = this._getSitOutPair(movement);
         const rounds = {};
         movement.movement.forEach(entry => {
             if (!rounds[entry.round]) rounds[entry.round] = [];
             rounds[entry.round].push(entry);
         });
-        const tables = [...new Set(movement.movement.map(e => e.table))].sort((a, b) => a - b);
+        const tables = [...new Set(movement.movement.map(e => e.table))].sort((a,b) => a-b);
         const desc = this._getMovementDescription(movement);
 
         let tableRows = '<tr><th>Round</th>';
         tables.forEach(t => { tableRows += `<th>Table ${t}</th>`; });
         tableRows += '</tr>';
 
-        Object.keys(rounds).sort((a, b) => a - b).forEach(roundNum => {
+        Object.keys(rounds).sort((a,b) => a-b).forEach(roundNum => {
             tableRows += `<tr><td><strong>Rd ${roundNum}</strong></td>`;
             tables.forEach(tableNum => {
                 const entry = rounds[roundNum].find(e => e.table === tableNum);
@@ -648,46 +396,37 @@ class DuplicateTemplates {
                     const nsIsSitOut = sitOutPair && entry.ns === sitOutPair;
                     const ewIsSitOut = sitOutPair && entry.ew === sitOutPair;
                     const boardsText = entry.boards && entry.boards.length > 0
-                        ? `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}`
-                        : '—';
+                        ? `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : '—';
                     const nsText = nsIsSitOut ? '<span style="color:#856404">Sit Out</span>' : `<span style="color:#27ae60">${entry.ns}</span>`;
                     const ewText = ewIsSitOut ? '<span style="color:#856404">Sit Out</span>' : `<span style="color:#e74c3c">${entry.ew}</span>`;
                     tableRows += `<td>NS: ${nsText}<br>EW: ${ewText}<br><small>${boardsText}</small></td>`;
-                } else {
-                    tableRows += '<td>—</td>';
-                }
+                } else { tableRows += '<td>—</td>'; }
             });
             tableRows += '</tr>';
         });
 
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Movement Sheet — ${desc}</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 15mm; }
-        .header { text-align: center; margin-bottom: 15px; }
-        .brand { font-size: 11pt; font-weight: 800; color: #2c3e50; }
-        .url { font-size: 9pt; color: #666; }
-        h2 { color: #2c3e50; margin: 8px 0 4px; }
-        table { border-collapse: collapse; width: 100%; }
-        td, th { border: 1px solid #bdc3c7; padding: 6px 8px; text-align: center; font-size: 10pt; }
-        th { background: #34495e; color: white; font-weight: 700; }
-        tr:nth-child(even) td { background: #f9f9f9; }
-        @media print { @page { size: A4 landscape; margin: 10mm; } }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="brand">🃏 Bridge at Sea</div>
-        <div class="url">bridgescorer.com</div>
-        <h2>${desc}</h2>
-        <p>${movement.pairs} pairs • ${movement.rounds} rounds • ${movement.totalBoards} boards</p>
-    </div>
-    <table>${tableRows}</table>
-</body>
-</html>`;
+        return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Movement Sheet — ${desc}</title>
+<style>
+    body { font-family:Arial,sans-serif;margin:15mm; }
+    .header { text-align:center;margin-bottom:15px; }
+    .brand { font-size:11pt;font-weight:800;color:#2c3e50; }
+    .url { font-size:9pt;color:#666; }
+    h2 { color:#2c3e50;margin:8px 0 4px; }
+    table { border-collapse:collapse;width:100%; }
+    td,th { border:1px solid #bdc3c7;padding:6px 8px;text-align:center;font-size:10pt; }
+    th { background:#34495e;color:white;font-weight:700; }
+    tr:nth-child(even) td { background:#f9f9f9; }
+    @media print { @page { size:A4 landscape;margin:10mm; } }
+</style></head><body>
+<div class="header">
+    <div class="brand">🃏 Bridge at Sea</div>
+    <div class="url">bridgescorer.com</div>
+    <h2>${desc}</h2>
+    <p>${movement.pairs} pairs • ${movement.rounds} rounds • ${movement.totalBoards} boards</p>
+</div>
+<table>${tableRows}</table>
+</body></html>`;
     }
 
     // ─── HELPERS ─────────────────────────────────────────────────────────────
@@ -701,7 +440,7 @@ class DuplicateTemplates {
 
     _downloadFile(content, filename) {
         try {
-            const blob = new Blob([content], { type: 'text/html' });
+            const blob = new Blob([content], { type:'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url; a.download = filename; a.style.display = 'none';
@@ -714,31 +453,22 @@ class DuplicateTemplates {
         }
     }
 
-    // Legacy compatibility methods
     downloadHTML(html, filename) { this._downloadFile(html, filename); }
     getBoardVulnerability(b) { return this._getBoardVulnerability(b); }
 }
 
 if (typeof window !== 'undefined') {
     window.DuplicateTemplates = DuplicateTemplates;
-
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            window.templateGenerator = new DuplicateTemplates();
-        });
+        document.addEventListener('DOMContentLoaded', () => { window.templateGenerator = new DuplicateTemplates(); });
     } else {
         window.templateGenerator = new DuplicateTemplates();
     }
-
-    // Update movements when ENHANCED_MOVEMENTS loads after us
     const _origEM = Object.getOwnPropertyDescriptor(window, 'ENHANCED_MOVEMENTS');
     Object.defineProperty(window, 'ENHANCED_MOVEMENTS', {
         set(value) {
-            Object.defineProperty(window, 'ENHANCED_MOVEMENTS', { value, writable: true, configurable: true });
-            if (window.templateGenerator) {
-                window.templateGenerator.movements = value;
-                console.log('✅ DuplicateTemplates: movements updated via setter');
-            }
+            Object.defineProperty(window, 'ENHANCED_MOVEMENTS', { value, writable:true, configurable:true });
+            if (window.templateGenerator) window.templateGenerator.movements = value;
         },
         get() { return _origEM ? _origEM.value : undefined; },
         configurable: true
