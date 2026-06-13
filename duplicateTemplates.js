@@ -224,10 +224,21 @@ class DuplicateTemplates {
                 #trav-close-btn { background: #e74c3c; color: white; }
                 #traveler-content { padding: 12px; }
                 @media print {
-                    #traveler-toolbar { display: none !important; }
-                    #traveler-overlay { position: static; overflow: visible; }
-                    #traveler-content { padding: 0; }
                     @page { size: A4 landscape; margin: 8mm; }
+                    #traveler-toolbar { display: none !important; }
+                    #traveler-overlay {
+                        position: static !important;
+                        overflow: visible !important;
+                        background: white !important;
+                        height: auto !important;
+                    }
+                    #traveler-content {
+                        padding: 0 !important;
+                        overflow: visible !important;
+                    }
+                    body > *:not(#traveler-overlay) { display: none !important; }
+                    * { overflow: visible !important; }
+                    ::-webkit-scrollbar { display: none !important; }
                 }
             </style>
             <div id="traveler-toolbar">
