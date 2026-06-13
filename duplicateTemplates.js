@@ -289,9 +289,9 @@ class DuplicateTemplates {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 8mm;
-                padding: 8mm;
-                page-break-after: always;
+                padding: 8mm 8mm 0 8mm;
                 page-break-inside: avoid;
+                break-inside: avoid;
             }
             .traveler-sheet {
                 border: 2px solid #2c3e50;
@@ -299,23 +299,24 @@ class DuplicateTemplates {
                 overflow: hidden;
             }
             .traveler-header {
-                background: #2c3e50;
-                color: white;
+                background: white;
+                color: #2c3e50;
+                border-bottom: 2px solid #2c3e50;
                 padding: 6px 10px;
                 text-align: center;
             }
-            .traveler-header-brand { font-size: 11pt; font-weight: 800; }
-            .traveler-header-url { font-size: 8.5pt; opacity: 0.85; margin-bottom: 3px; }
-            .traveler-header-title { font-size: 13pt; font-weight: 800; margin: 2px 0; }
-            .traveler-header-sub { font-size: 9pt; opacity: 0.9; }
+            .traveler-header-brand { font-size: 11pt; font-weight: 800; color: #2c3e50; }
+            .traveler-header-url { font-size: 8.5pt; color: #666; margin-bottom: 3px; }
+            .traveler-header-title { font-size: 13pt; font-weight: 800; color: #2c3e50; margin: 2px 0; }
+            .traveler-header-sub { font-size: 9pt; color: #555; }
             .vuln-badge {
                 display: inline-block; padding: 2px 10px;
                 border-radius: 10px; font-size: 8.5pt; font-weight: 700; margin-top: 3px;
             }
-            .vuln-none { background: #95a5a6; color: white; }
-            .vuln-ns   { background: #27ae60; color: white; }
-            .vuln-ew   { background: #e74c3c; color: white; }
-            .vuln-both { background: #f39c12; color: white; }
+            .vuln-none { border: 2px solid #95a5a6; color: #95a5a6; background: white; }
+            .vuln-ns   { border: 2px solid #27ae60; color: #27ae60; background: white; font-weight: 800; }
+            .vuln-ew   { border: 2px solid #e74c3c; color: #e74c3c; background: white; font-weight: 800; }
+            .vuln-both { border: 2px solid #f39c12; color: #f39c12; background: white; font-weight: 800; }
             .traveler-table { width: 100%; border-collapse: collapse; }
             .traveler-table th {
                 background: #34495e; color: white; font-size: 9pt;
@@ -394,10 +395,10 @@ class DuplicateTemplates {
             font-weight: 700;
             margin-top: 3px;
         }
-        .vuln-none { background: #95a5a6; color: white; }
-        .vuln-ns   { background: #27ae60; color: white; }
-        .vuln-ew   { background: #e74c3c; color: white; }
-        .vuln-both { background: #f39c12; color: white; }
+        .vuln-none { border: 2px solid #95a5a6; color: #95a5a6; background: white; }
+        .vuln-ns   { border: 2px solid #27ae60; color: #27ae60; background: white; font-weight: 800; }
+        .vuln-ew   { border: 2px solid #e74c3c; color: #e74c3c; background: white; font-weight: 800; }
+        .vuln-both { border: 2px solid #f39c12; color: #f39c12; background: white; font-weight: 800; }
 
         .traveler-table {
             width: 100%;
@@ -520,10 +521,10 @@ class DuplicateTemplates {
         .slip-brand { font-size: 7pt; color: #666; margin-bottom: 3px; }
         .slip-board { font-size: 14pt; font-weight: 800; color: #2c3e50; }
         .slip-vuln { font-size: 9pt; font-weight: 700; margin: 4px 0; padding: 2px 6px; border-radius: 8px; display: inline-block; }
-        .vuln-none { background: #95a5a6; color: white; }
-        .vuln-ns   { background: #27ae60; color: white; }
-        .vuln-ew   { background: #e74c3c; color: white; }
-        .vuln-both { background: #f39c12; color: white; }
+        .vuln-none { border: 2px solid #95a5a6; color: #95a5a6; background: white; }
+        .vuln-ns   { border: 2px solid #27ae60; color: #27ae60; background: white; font-weight: 800; }
+        .vuln-ew   { border: 2px solid #e74c3c; color: #e74c3c; background: white; font-weight: 800; }
+        .vuln-both { border: 2px solid #f39c12; color: #f39c12; background: white; font-weight: 800; }
         @media print { @page { size: A4; margin: 10mm; } }
     </style>
 </head>
