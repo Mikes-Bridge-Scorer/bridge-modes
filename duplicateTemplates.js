@@ -323,8 +323,8 @@ class DuplicateTemplates {
                 grid-template-columns: 1fr 1fr;
                 grid-template-rows: 1fr 1fr;
                 gap: 4mm;
-                padding: 4mm;
-                height: calc(100vh - 8mm);
+                padding: 8mm 4mm 4mm 4mm;
+                height: calc(100vh - 4mm);
                 page-break-after: always;
                 break-after: page;
                 box-sizing: border-box;
@@ -333,6 +333,8 @@ class DuplicateTemplates {
                 border: 2px solid #2c3e50;
                 border-radius: 4px;
                 overflow: hidden;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
             .traveler-header {
                 background: white;
@@ -396,6 +398,8 @@ class DuplicateTemplates {
             border: 2px solid #2c3e50;
             border-radius: 4px;
             overflow: hidden;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
 
         .traveler-header {
