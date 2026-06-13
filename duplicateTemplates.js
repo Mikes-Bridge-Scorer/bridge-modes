@@ -403,8 +403,9 @@ class DuplicateTemplates {
         }
 
         .traveler-header {
-            background: #2c3e50;
-            color: white;
+            background: white;
+            color: #2c3e50;
+            border-bottom: 2px solid #2c3e50;
             padding: 6px 10px;
             text-align: center;
         }
@@ -412,10 +413,11 @@ class DuplicateTemplates {
             font-size: 9pt;
             font-weight: 800;
             letter-spacing: 0.3px;
+            color: #2c3e50;
         }
         .traveler-header-url {
             font-size: 7.5pt;
-            opacity: 0.85;
+            color: #666;
             margin-bottom: 3px;
         }
         .traveler-header-title {
