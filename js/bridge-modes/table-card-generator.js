@@ -143,7 +143,7 @@ class TableCardGenerator {
                     #tcg-toolbar { display: none !important; }
                     #tcg-overlay { position: static; overflow: visible; }
                     #tcg-content { padding: 0; }
-                    @page { size: A4 landscape; margin: 12mm 8mm 8mm 8mm; }
+                    @page { size: A4 landscape; margin: 15mm 8mm 8mm 8mm; }
                     .table-card { width: 88mm; box-shadow: none; page-break-inside: avoid; }
                     .cards-container { gap: 6mm; }
                 }
@@ -182,9 +182,9 @@ class TableCardGenerator {
             // Build standalone print HTML for multi-page support
             const printCSS = `
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: white; padding: 12mm 8mm 8mm 8mm; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: white; padding: 15mm 8mm 8mm 8mm; }
                 .cards-container { display: flex; flex-wrap: wrap; gap: 5mm; justify-content: flex-start; }
-                .table-card { width: 85mm; background: white; border: 2px solid #2c3e50; border-radius: 10px; overflow: hidden; page-break-inside: avoid; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                .table-card { width: 85mm; background: white; border: 2px solid #2c3e50; border-radius: 10px; overflow: hidden; page-break-inside: avoid; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; margin-top: 2mm; }
                 .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
                 .card-branding { font-size: 12px; font-weight: 800; margin-bottom: 5px; }
                 .card-branding-url { font-size: 10px; opacity: 0.9; margin-bottom: 6px; }
@@ -207,7 +207,7 @@ class TableCardGenerator {
                 .ew-inst { color: #e74c3c; font-weight: 700; }
                 .sitout-note { color: #856404; font-size: 9px; margin-top: 4px; }
                 .card-footer { text-align: center; padding: 8px; background: #f8f9fa; border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; font-weight: 600; }
-                @page { size: A4 landscape; margin: 12mm 8mm 8mm 8mm; }
+                @page { size: A4 landscape; margin: 15mm 8mm 8mm 8mm; }
             `;
             const contentEl = document.getElementById('tcg-content');
             const cardHTML = contentEl ? contentEl.innerHTML : innerHTML;
