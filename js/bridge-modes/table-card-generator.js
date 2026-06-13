@@ -211,7 +211,7 @@ class TableCardGenerator {
             `;
             const contentEl = document.getElementById('tcg-content');
             const cardHTML = contentEl ? contentEl.innerHTML : innerHTML;
-            const printHTML = \`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Table Movement Cards</title><style>\${printCSS}</style></head><body>\${cardHTML}</body></html>\`;
+            const printHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Table Movement Cards</title><style>${printCSS}</style></head><body>${cardHTML}</body></html>`;
 
             const printWindow = window.open('', '_blank');
             if (printWindow) {
