@@ -320,13 +320,15 @@ class DuplicateTemplates {
         return `
             .traveler-page {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: calc(50% - 3mm) calc(50% - 3mm);
+                grid-template-rows: auto auto;
                 gap: 5mm;
                 padding: 15mm 8mm 8mm 8mm;
                 page-break-after: always;
                 break-after: page;
                 page-break-inside: avoid;
                 box-sizing: border-box;
+                width: 100%;
             }
             .traveler-sheet {
                 border: 2px solid #2c3e50;
