@@ -143,7 +143,7 @@ class TableCardGenerator {
                     #tcg-toolbar { display: none !important; }
                     #tcg-overlay { position: static; overflow: visible; }
                     #tcg-content { padding: 0; }
-                    @page { size: A4 landscape; margin: 20mm 8mm 8mm 8mm; }
+                    @page { size: A4 landscape; margin: 15mm 8mm 8mm 8mm; }
                     .table-card { width: 88mm; box-shadow: none; page-break-inside: avoid; }
                     .cards-container { gap: 6mm; }
                 }
@@ -182,8 +182,9 @@ class TableCardGenerator {
             // Build standalone print HTML for multi-page support
             const printCSS = `
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: white; padding: 20mm 8mm 8mm 8mm; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: white; padding: 0; }
                 .cards-container { display: flex; flex-wrap: wrap; gap: 5mm; justify-content: flex-start; align-items: flex-start; }
+                .card-page { display: flex; flex-direction: row; gap: 5mm; align-items: flex-start; padding: 8mm 8mm 0 8mm; page-break-after: always; break-after: page; page-break-inside: avoid; }
                 .table-card { width: 85mm; background: white; border: 2px solid #2c3e50; border-radius: 10px; overflow: hidden; page-break-inside: avoid; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; margin-top: 3mm; }
                 .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
                 .card-branding { font-size: 12px; font-weight: 800; margin-bottom: 5px; }
@@ -207,11 +208,24 @@ class TableCardGenerator {
                 .ew-inst { color: #e74c3c; font-weight: 700; }
                 .sitout-note { color: #856404; font-size: 9px; margin-top: 4px; }
                 .card-footer { text-align: center; padding: 8px; background: #f8f9fa; border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; font-weight: 600; }
-                @page { size: A4 landscape; margin: 20mm 8mm 8mm 8mm; }
+                @page { size: A4 landscape; margin: 15mm 8mm 8mm 8mm; }
             `;
+            // Group cards into rows of 3 for proper page breaking
             const contentEl = document.getElementById('tcg-content');
-            const cardHTML = contentEl ? contentEl.innerHTML : innerHTML;
-            const printHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Table Movement Cards</title><style>${printCSS}</style></head><body>${cardHTML}</body></html>`;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = contentEl ? contentEl.innerHTML : innerHTML;
+            const allCards = Array.from(tempDiv.querySelectorAll('.table-card'));
+            
+            let groupedHTML = '';
+            for (let i = 0; i < allCards.length; i += 3) {
+                groupedHTML += '<div class="card-page">';
+                for (let j = i; j < Math.min(i + 3, allCards.length); j++) {
+                    groupedHTML += allCards[j].outerHTML;
+                }
+                groupedHTML += '</div>';
+            }
+            
+            const printHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Table Movement Cards</title><style>${printCSS}</style></head><body>${groupedHTML}</body></html>`;
 
             const printWindow = window.open('', '_blank');
             if (printWindow) {
