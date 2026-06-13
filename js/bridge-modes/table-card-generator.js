@@ -178,7 +178,51 @@ class TableCardGenerator {
             }, { passive: false });
         };
 
-        addPixelHandler('tcg-print-btn', () => window.print());
+        addPixelHandler('tcg-print-btn', () => {
+            // Build standalone print HTML for multi-page support
+            const printCSS = `
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: white; padding: 10mm; }
+                .cards-container { display: flex; flex-wrap: wrap; gap: 6mm; justify-content: flex-start; }
+                .table-card { width: 88mm; background: white; border: 2px solid #2c3e50; border-radius: 10px; overflow: hidden; page-break-inside: avoid; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                .card-branding { font-size: 12px; font-weight: 800; margin-bottom: 5px; }
+                .card-branding-url { font-size: 10px; opacity: 0.9; margin-bottom: 6px; }
+                .movement-title { font-size: 11px; font-weight: 800; margin-bottom: 6px; }
+                .table-number { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin: 4px 0; }
+                .card-body { padding: 12px; }
+                .rounds-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                .rounds-table th { background: #34495e; color: white; padding: 7px 4px; font-size: 11px; font-weight: 700; border: 1px solid #bdc3c7; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                .rounds-table td { padding: 7px 5px; text-align: center; border: 1px solid #bdc3c7; font-size: 12px; }
+                .rounds-table tr:nth-child(even) { background: #f9f9f9; }
+                .sitout-row td { background: #fff3cd !important; }
+                .round-col { font-weight: 700; color: #2c3e50; }
+                .ns-col { color: #27ae60; font-weight: 700; }
+                .ew-col { color: #e74c3c; font-weight: 700; }
+                .sitout-cell { font-weight: 700; color: #856404; font-size: 11px; }
+                .movement-instructions { border-top: 2px solid #e0e0e0; padding-top: 8px; font-size: 10px; line-height: 1.7; color: #444; }
+                .instructions-title { font-weight: 800; margin-bottom: 5px; font-size: 11px; color: #2c3e50; }
+                .instruction-line { margin: 2px 0; }
+                .ns-inst { color: #27ae60; font-weight: 700; }
+                .ew-inst { color: #e74c3c; font-weight: 700; }
+                .sitout-note { color: #856404; font-size: 9px; margin-top: 4px; }
+                .card-footer { text-align: center; padding: 8px; background: #f8f9fa; border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; font-weight: 600; }
+                @page { size: A4 landscape; margin: 10mm; }
+            `;
+            const contentEl = document.getElementById('tcg-content');
+            const cardHTML = contentEl ? contentEl.innerHTML : innerHTML;
+            const printHTML = \`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Table Movement Cards</title><style>\${printCSS}</style></head><body>\${cardHTML}</body></html>\`;
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(printHTML);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 500);
+            } else {
+                window.print();
+            }
+        });
         addPixelHandler('tcg-close-btn', () => overlay.remove());
     }
 
