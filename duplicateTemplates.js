@@ -106,19 +106,17 @@ class DuplicateTemplates {
 
     _buildTravelerPages(movement, boardNumbers, boardPairMap, sitOutPair) {
         let html = '';
-        for (let i = 0; i < boardNumbers.length; i += 4) {
+        for (let i = 0; i < boardNumbers.length; i += 6) {
             html += '<div class="traveler-page">';
-            html += '<table width="100%" cellspacing="4" cellpadding="0" border="0"><tbody>';
-            // Row 1
-            html += '<tr>';
-            html += '<td width="50%" valign="top">' + this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair) + '</td>';
-            html += '<td width="50%" valign="top">' + (boardNumbers[i+1] ? this._generateTravelerSheet(boardNumbers[i+1], boardPairMap[boardNumbers[i+1]], movement, sitOutPair) : '') + '</td>';
-            html += '</tr>';
-            // Row 2
-            if (boardNumbers[i+2]) {
+            html += '<table width="100%" cellspacing="3" cellpadding="0" border="0"><tbody>';
+            // 3 rows of 2 columns
+            for (let row = 0; row < 3; row++) {
+                const a = i + row * 2;
+                const b = a + 1;
+                if (!boardNumbers[a]) break;
                 html += '<tr>';
-                html += '<td width="50%" valign="top">' + this._generateTravelerSheet(boardNumbers[i+2], boardPairMap[boardNumbers[i+2]], movement, sitOutPair) + '</td>';
-                html += '<td width="50%" valign="top">' + (boardNumbers[i+3] ? this._generateTravelerSheet(boardNumbers[i+3], boardPairMap[boardNumbers[i+3]], movement, sitOutPair) : '') + '</td>';
+                html += '<td width="50%" valign="top">' + this._generateTravelerSheet(boardNumbers[a], boardPairMap[boardNumbers[a]], movement, sitOutPair) + '</td>';
+                html += '<td width="50%" valign="top">' + (boardNumbers[b] ? this._generateTravelerSheet(boardNumbers[b], boardPairMap[boardNumbers[b]], movement, sitOutPair) : '') + '</td>';
                 html += '</tr>';
             }
             html += '</tbody></table>';
