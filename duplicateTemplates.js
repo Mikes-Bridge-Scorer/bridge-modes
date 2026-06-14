@@ -255,36 +255,36 @@ class DuplicateTemplates {
                 padding: 8mm;
                 box-sizing: border-box;
                 display: grid;
-                grid-template-columns: 95mm 95mm;
-                grid-template-rows: 136mm 136mm;
+                grid-template-columns: 94mm 94mm;
+                grid-template-rows: 138mm 138mm;
                 gap: 5mm;
                 page-break-after: always;
                 break-after: page;
             }
             .traveler-sheet { 
-                width: 95mm; height: 136mm;
+                width: 94mm; height: 138mm;
                 border:2px solid #2c3e50;border-radius:4px;
                 overflow:hidden;box-sizing:border-box;
                 print-color-adjust:exact;-webkit-print-color-adjust:exact;
             }
             .traveler-header { background:white;color:#2c3e50;border-bottom:2px solid #2c3e50;
-                padding:3px 6px;text-align:center; }
-            .traveler-header-brand { font-size:8pt;font-weight:800;color:#2c3e50; }
-            .traveler-header-url { font-size:7pt;color:#666; }
-            .traveler-header-title { font-size:10pt;font-weight:800;color:#2c3e50;margin:1px 0; }
-            .traveler-header-sub { font-size:7.5pt;color:#555; }
-            .vuln-badge { display:inline-block;padding:1px 6px;border-radius:8px;
-                font-size:7pt;font-weight:700;margin-top:2px; }
+                padding:4px 8px;text-align:center; }
+            .traveler-header-brand { font-size:9pt;font-weight:800;color:#2c3e50; }
+            .traveler-header-url { font-size:7.5pt;color:#666; }
+            .traveler-header-title { font-size:11pt;font-weight:800;color:#2c3e50;margin:2px 0; }
+            .traveler-header-sub { font-size:8pt;color:#555; }
+            .vuln-badge { display:inline-block;padding:2px 8px;border-radius:8px;
+                font-size:8pt;font-weight:700;margin-top:3px; }
             .vuln-none { border:1px solid #95a5a6;color:#95a5a6;background:white; }
             .vuln-ns { border:1px solid #27ae60;color:#27ae60;background:white;font-weight:800; }
             .vuln-ew { border:1px solid #e74c3c;color:#e74c3c;background:white;font-weight:800; }
             .vuln-both { border:1px solid #f39c12;color:#f39c12;background:white;font-weight:800; }
             .traveler-table { width:100%;border-collapse:collapse; }
-            .traveler-table th { background:#34495e;color:white;font-size:7pt;font-weight:700;
-                padding:3px 2px;text-align:center;border:1px solid #2c3e50;
+            .traveler-table th { background:#34495e;color:white;font-size:8.5pt;font-weight:700;
+                padding:5px 2px;text-align:center;border:1px solid #2c3e50;
                 print-color-adjust:exact;-webkit-print-color-adjust:exact; }
-            .traveler-table td { font-size:8pt;padding:3px 2px;text-align:center;
-                border:1px solid #bdc3c7;height:14px; }
+            .traveler-table td { font-size:9.5pt;padding:4px 2px;text-align:center;
+                border:1px solid #bdc3c7;height:18px; }
             .pair-cell { font-weight:700;background:#f8f9fa; }
             .ns-pair { color:#27ae60; }
             .ew-pair { color:#e74c3c; }
