@@ -417,8 +417,14 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     generateTravelerRows(boardNumber) {
+        // For half-table Howells (5/7/9 pairs), ENHANCED_MOVEMENTS uses a ghost pair
+        // numbered pairs+1 to handle sit-outs. These are structural movement entries only
+        // and must never appear as scoreable rows on a traveller.
+        const ghostPair = this.session.movement.hasSitOut ? this.session.pairs + 1 : null;
+
         const instances = this.session.movement.movement.filter(entry => 
-            entry.boards && entry.boards.includes(boardNumber)
+            entry.boards && entry.boards.includes(boardNumber) &&
+            entry.ns !== ghostPair && entry.ew !== ghostPair
         );
         return instances.map((instance) => ({
             nsPair: instance.ns,
