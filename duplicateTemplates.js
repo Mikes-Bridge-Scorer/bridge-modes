@@ -140,10 +140,11 @@ class DuplicateTemplates {
         const desc = this._getMovementDescription(movement);
 
         let travelersHTML = '';
-        for (let i = 0; i < boardNumbers.length; i += 2) {
-            travelersHTML += '<div class="traveler-row">';
-            travelersHTML += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-            if (boardNumbers[i + 1]) travelersHTML += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+        for (let i = 0; i < boardNumbers.length; i += 4) {
+            travelersHTML += '<div class="traveler-page">';
+            for (let j = i; j < Math.min(i+4, boardNumbers.length); j++) {
+                travelersHTML += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+            }
             travelersHTML += '</div>';
         }
 
@@ -198,10 +199,11 @@ class DuplicateTemplates {
 
         addPixelHandler('trav-print-btn', () => {
             let html = this._travelerHTMLHeader(movement);
-            for (let i = 0; i < boardNumbers.length; i += 2) {
-                html += '<div class="traveler-row">';
-                html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-                if (boardNumbers[i + 1]) html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+            for (let i = 0; i < boardNumbers.length; i += 4) {
+                html += '<div class="traveler-page">';
+                for (let j = i; j < Math.min(i+4, boardNumbers.length); j++) {
+                    html += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+                }
                 html += '</div>';
             }
             html += '</body></html>';
@@ -216,10 +218,11 @@ class DuplicateTemplates {
 
         addPixelHandler('trav-dl-btn', () => {
             let html = this._travelerHTMLHeader(movement);
-            for (let i = 0; i < boardNumbers.length; i += 2) {
-                html += '<div class="traveler-row">';
-                html += this._generateTravelerSheet(boardNumbers[i], boardPairMap[boardNumbers[i]], movement, sitOutPair);
-                if (boardNumbers[i + 1]) html += this._generateTravelerSheet(boardNumbers[i + 1], boardPairMap[boardNumbers[i + 1]], movement, sitOutPair);
+            for (let i = 0; i < boardNumbers.length; i += 4) {
+                html += '<div class="traveler-page">';
+                for (let j = i; j < Math.min(i+4, boardNumbers.length); j++) {
+                    html += this._generateTravelerSheet(boardNumbers[j], boardPairMap[boardNumbers[j]], movement, sitOutPair);
+                }
                 html += '</div>';
             }
             html += '</body></html>';
@@ -245,28 +248,43 @@ class DuplicateTemplates {
 
     _travelerInlineStyles() {
         return `
-            .traveler-row { display:flex;flex-direction:row;gap:8mm;padding:10mm 8mm 4mm 8mm;
-                page-break-after:always;break-after:page;page-break-inside:avoid; }
-            .traveler-sheet { flex:1;min-width:0;border:2px solid #2c3e50;border-radius:4px;
-                overflow:hidden;print-color-adjust:exact;-webkit-print-color-adjust:exact; }
+            body { margin:0;padding:0; }
+            .traveler-page {
+                width: 210mm;
+                height: 297mm;
+                padding: 8mm;
+                box-sizing: border-box;
+                display: grid;
+                grid-template-columns: 95mm 95mm;
+                grid-template-rows: 136mm 136mm;
+                gap: 5mm;
+                page-break-after: always;
+                break-after: page;
+            }
+            .traveler-sheet { 
+                width: 95mm; height: 136mm;
+                border:2px solid #2c3e50;border-radius:4px;
+                overflow:hidden;box-sizing:border-box;
+                print-color-adjust:exact;-webkit-print-color-adjust:exact;
+            }
             .traveler-header { background:white;color:#2c3e50;border-bottom:2px solid #2c3e50;
-                padding:6px 10px;text-align:center; }
-            .traveler-header-brand { font-size:11pt;font-weight:800;color:#2c3e50; }
-            .traveler-header-url { font-size:8.5pt;color:#666;margin-bottom:3px; }
-            .traveler-header-title { font-size:13pt;font-weight:800;color:#2c3e50;margin:2px 0; }
-            .traveler-header-sub { font-size:9pt;color:#555; }
-            .vuln-badge { display:inline-block;padding:2px 10px;border-radius:10px;
-                font-size:8.5pt;font-weight:700;margin-top:3px; }
-            .vuln-none { border:2px solid #95a5a6;color:#95a5a6;background:white; }
-            .vuln-ns { border:2px solid #27ae60;color:#27ae60;background:white;font-weight:800; }
-            .vuln-ew { border:2px solid #e74c3c;color:#e74c3c;background:white;font-weight:800; }
-            .vuln-both { border:2px solid #f39c12;color:#f39c12;background:white;font-weight:800; }
+                padding:3px 6px;text-align:center; }
+            .traveler-header-brand { font-size:8pt;font-weight:800;color:#2c3e50; }
+            .traveler-header-url { font-size:7pt;color:#666; }
+            .traveler-header-title { font-size:10pt;font-weight:800;color:#2c3e50;margin:1px 0; }
+            .traveler-header-sub { font-size:7.5pt;color:#555; }
+            .vuln-badge { display:inline-block;padding:1px 6px;border-radius:8px;
+                font-size:7pt;font-weight:700;margin-top:2px; }
+            .vuln-none { border:1px solid #95a5a6;color:#95a5a6;background:white; }
+            .vuln-ns { border:1px solid #27ae60;color:#27ae60;background:white;font-weight:800; }
+            .vuln-ew { border:1px solid #e74c3c;color:#e74c3c;background:white;font-weight:800; }
+            .vuln-both { border:1px solid #f39c12;color:#f39c12;background:white;font-weight:800; }
             .traveler-table { width:100%;border-collapse:collapse; }
-            .traveler-table th { background:#34495e;color:white;font-size:9pt;font-weight:700;
-                padding:6px 2px;text-align:center;border:1px solid #2c3e50;
+            .traveler-table th { background:#34495e;color:white;font-size:7pt;font-weight:700;
+                padding:3px 2px;text-align:center;border:1px solid #2c3e50;
                 print-color-adjust:exact;-webkit-print-color-adjust:exact; }
-            .traveler-table td { font-size:11pt;padding:6px 2px;text-align:center;
-                border:1px solid #bdc3c7;height:24px; }
+            .traveler-table td { font-size:8pt;padding:3px 2px;text-align:center;
+                border:1px solid #bdc3c7;height:14px; }
             .pair-cell { font-weight:700;background:#f8f9fa; }
             .ns-pair { color:#27ae60; }
             .ew-pair { color:#e74c3c; }
@@ -285,7 +303,7 @@ class DuplicateTemplates {
     * { margin:0;padding:0;box-sizing:border-box; }
     body { font-family:Arial,sans-serif;background:white; }
     ${this._travelerInlineStyles()}
-    @media print { @page { size:A4 landscape;margin:10mm; } }
+    @media print { @page { size:A4 portrait;margin:0; } }
 </style></head><body>`;
     }
 
@@ -417,7 +435,7 @@ class DuplicateTemplates {
     td,th { border:1px solid #bdc3c7;padding:6px 8px;text-align:center;font-size:10pt; }
     th { background:#34495e;color:white;font-weight:700; }
     tr:nth-child(even) td { background:#f9f9f9; }
-    @media print { @page { size:A4 landscape;margin:10mm; } }
+    @media print { @page { size:A4 portrait;margin:0; } }
 </style></head><body>
 <div class="header">
     <div class="brand">🃏 Bridge at Sea</div>
