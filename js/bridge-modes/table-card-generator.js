@@ -137,6 +137,18 @@ class TableCardGenerator {
                 .ew-box { border-color: #e74c3c; }
                 .ew-box h2 { color: #e74c3c; }
                 .big-instruction { font-size: 16px; font-weight: 800; text-align: center; padding: 10px; background: rgba(52,152,219,.05); border-radius: 6px; }
+                .skip-notice {
+                    margin-top: 15px; padding: 14px 16px;
+                    background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px;
+                    font-size: 14px; line-height: 1.6; color: #664d03;
+                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+                }
+                .sitout-mitchell-note {
+                    margin-bottom: 15px; padding: 12px 16px;
+                    background: #e8f4fd; border: 2px solid #3498db; border-radius: 10px;
+                    font-size: 13px; color: #1a5276;
+                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+                }
 
                 /* ── Print ── */
                 @media print {
@@ -397,6 +409,21 @@ class TableCardGenerator {
 
     _buildMitchellHTML(movement) {
         const titleText = this._formatTitle(movement.description);
+
+        // Skip notice for Skip Mitchell movements
+        const skipNotice = movement.skipRound ? `
+        <div class="skip-notice">
+            ⚠️ <strong>SKIP MITCHELL:</strong> After Round ${movement.skipRound - 1},
+            E/W pairs move up <strong>TWO tables</strong> instead of one.
+            From Round ${movement.skipRound} onwards, resume moving up one table per round.
+        </div>` : '';
+
+        // Sit-out note for odd pair counts
+        const sitOutNote = movement.hasSitOut ? `
+        <div class="sitout-mitchell-note">
+            ⚠️ One pair sits out each round in rotation — all results count toward final rankings.
+        </div>` : '';
+
         return `
         <div class="mitchell-header">
             <div class="mitchell-branding">🃏 Bridge at Sea</div>
@@ -404,6 +431,7 @@ class TableCardGenerator {
             <h1>${titleText}</h1>
             <p>${movement.pairs} Pairs &bull; ${movement.tables} Tables &bull; ${movement.totalBoards || movement.rounds} Boards</p>
         </div>
+        ${sitOutNote}
         <div class="instructions-grid">
             <div class="instruction-box ns-box">
                 <h2>🔵 North-South (1-${movement.tables})</h2>
@@ -413,7 +441,8 @@ class TableCardGenerator {
                 <h2>🔴 East-West (${movement.tables + 1}-${movement.pairs})</h2>
                 <p class="big-instruction">MOVE UP ONE TABLE</p>
             </div>
-        </div>`;
+        </div>
+        ${skipNotice}`;
     }
 
     // ─── HELPERS ─────────────────────────────────────────────────────────────
