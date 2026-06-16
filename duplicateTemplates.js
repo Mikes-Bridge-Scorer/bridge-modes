@@ -192,7 +192,8 @@ class DuplicateTemplates {
             + '.pair-cell{font-weight:700;background:#f8f9fa;}'
             + '.ns-pair{color:#27ae60;}.ew-pair{color:#e74c3c;}'
             + '.plus-cell{color:#27ae60;font-weight:700;}.minus-cell{color:#e74c3c;font-weight:700;}'
-            + '.traveler-table tr:nth-child(even) td{background:#f9f9f9;}';
+            + '.traveler-table tr:nth-child(even) td{background:#f9f9f9;}'
+            + '.traveler-header-skip{font-size:8pt;font-weight:700;color:#664d03;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:2px 6px;display:inline-block;margin:3px 0;}';
     }
 
     _travelerHTMLDoc(movement, boardNumbers, boardPairMap, sitOutPair) {
@@ -207,12 +208,18 @@ class DuplicateTemplates {
 
     _getBoardPairMapping(movement, sitOutPair) {
         const mapping = {};
+        // For Mitchell movements, EW pairs are numbered tables+1 through pairs.
+        // The movement generator uses relative positions 1-tables, so we offset.
+        const isMitchell = movement.type === 'mitchell';
+        const ewOffset = isMitchell ? movement.tables : 0;
+
         movement.movement.forEach(entry => {
             if (!entry.boards || entry.boards.length === 0) return;
             if (entry.ns === '' || entry.ns === sitOutPair || entry.ew === sitOutPair) return;
+            const ewDisplay = isMitchell ? entry.ew + ewOffset : entry.ew;
             entry.boards.forEach(boardNum => {
                 if (!mapping[boardNum]) mapping[boardNum] = [];
-                mapping[boardNum].push({ ns: entry.ns, ew: entry.ew });
+                mapping[boardNum].push({ ns: entry.ns, ew: ewDisplay });
             });
         });
         return mapping;
@@ -233,12 +240,17 @@ class DuplicateTemplates {
             rows += '<tr><td class="pair-cell"></td><td class="pair-cell"></td><td></td><td></td><td></td><td></td><td class="plus-cell">+</td><td class="minus-cell">-</td><td></td><td></td></tr>';
         }
 
+        const skipLine = movement.skipRound
+            ? '<span class="traveler-header-skip">⚠️ Skip after Rd ' + (movement.skipRound - 1) + ': EW move up TWO tables</span>'
+            : '';
+
         return '<div class="traveler-sheet">'
             + '<div class="traveler-header">'
             + '<span class="traveler-header-brand">🃏 Bridge at Sea</span>'
             + '<span class="traveler-header-url">bridgescorer.com</span>'
             + '<span class="traveler-header-title">Board ' + boardNumber + ' of ' + movement.totalBoards + '</span>'
             + '<span class="traveler-header-sub">' + desc + '</span>'
+            + skipLine
             + '<span class="vuln-badge ' + vulnClasses[vulnerability] + '">' + vulnLabels[vulnerability] + '</span>'
             + '</div>'
             + '<table class="traveler-table"><thead><tr>'
