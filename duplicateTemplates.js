@@ -274,10 +274,10 @@ class DuplicateTemplates {
         const sColor = nsVul ? '#c0392b' : '#27ae60';
         const eColor = ewVul ? '#c0392b' : '#27ae60';
         const wColor = ewVul ? '#c0392b' : '#27ae60';
-        const nDlr = dealer === 'N' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
-        const sDlr = dealer === 'S' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
-        const eDlr = dealer === 'E' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
-        const wDlr = dealer === 'W' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
+        const nDlr = dealer === 'N' ? '<br><span style="font-size:11pt;font-weight:700;">(DLR)</span>' : '';
+        const sDlr = dealer === 'S' ? '<br><span style="font-size:11pt;font-weight:700;">(DLR)</span>' : '';
+        const eDlr = dealer === 'E' ? '<br><span style="font-size:11pt;font-weight:700;">(DLR)</span>' : '';
+        const wDlr = dealer === 'W' ? '<br><span style="font-size:11pt;font-weight:700;">(DLR)</span>' : '';
         return '<div class="card">' +
             '<div class="compass">' +
             '<div class="cell top-bar" style="background:' + nColor + ';">N' + nDlr + '</div>' +
@@ -298,13 +298,13 @@ class DuplicateTemplates {
             '.page:last-child{page-break-after:auto;break-after:auto;}' +
             '.card{border:2px solid #2c3e50;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;aspect-ratio:3/4;page-break-inside:avoid;break-inside:avoid;}' +
             '.compass{flex:1;display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:1fr 2fr 1fr;}' +
-            '.cell{display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:11pt;text-align:center;line-height:1.2;}' +
+            '.cell{display:flex;align-items:center;justify-content:center;font-weight:900;color:white;font-size:22pt;text-align:center;line-height:1.1;}' +
             '.top-bar{grid-column:1/4;grid-row:1;}' +
             '.bot-bar{grid-column:1/4;grid-row:3;}' +
             '.left{grid-column:1;grid-row:2;}' +
             '.right{grid-column:3;grid-row:2;}' +
             '.center{grid-column:2;grid-row:2;background:white;color:#2c3e50;font-size:28pt;font-weight:900;}' +
-            '.brand{text-align:center;font-size:7pt;color:#888;padding:3px;border-top:1px solid #ddd;background:#fafafa;}' +
+            '.brand{text-align:center;font-size:8pt;font-weight:600;color:#2c3e50;padding:4px;border-top:2px solid #2c3e50;background:#f0f0f0;}' +
             '@media print{@page{size:A4 portrait;margin:0;}body{margin:0;}}';
 
         let pages = '';
