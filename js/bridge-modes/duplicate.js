@@ -417,14 +417,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     }
 
     generateTravelerRows(boardNumber) {
-        // For half-table Howells (5/7/9 pairs), ENHANCED_MOVEMENTS uses a ghost pair
-        // numbered pairs+1 to handle sit-outs. These are structural movement entries only
-        // and must never appear as scoreable rows on a traveller.
-        const ghostPair = this.session.movement.hasSitOut ? this.session.pairs + 1 : null;
-
         const instances = this.session.movement.movement.filter(entry => 
-            entry.boards && entry.boards.includes(boardNumber) &&
-            entry.ns !== ghostPair && entry.ew !== ghostPair
+            entry.boards && entry.boards.includes(boardNumber)
         );
         return instances.map((instance) => ({
             nsPair: instance.ns,
@@ -1426,7 +1420,10 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         if (!movement || !movement.movement) {
             return '<p style="text-align: center; color: #e74c3c;">Movement data not available</p>';
         }
-        
+
+        // Ghost pair for half-table sit-out movements (pairs+1)
+        const ghostPair = movement.hasSitOut ? movement.pairs + 1 : null;
+
         const roundData = {};
         movement.movement.forEach(entry => {
             if (!roundData[entry.round]) roundData[entry.round] = [];
@@ -1458,9 +1455,16 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 if (entry) {
                     const boardRange = entry.boards.length > 1 ? 
                         `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : entry.boards[0];
+                    const nsIsGhost = ghostPair && entry.ns === ghostPair;
+                    const ewIsGhost = ghostPair && entry.ew === ghostPair;
+                    const nsDisplay = nsIsGhost
+                        ? `<div style="font-weight:bold;color:#856404;margin-bottom:2px;">NS: <em>Sit Out</em></div>`
+                        : `<div style="font-weight:bold;color:#27ae60;margin-bottom:2px;">NS: ${entry.ns}</div>`;
+                    const ewDisplay = ewIsGhost
+                        ? `<div style="font-weight:bold;color:#856404;margin-bottom:4px;">EW: <em>Sit Out</em></div>`
+                        : `<div style="font-weight:bold;color:#e74c3c;margin-bottom:4px;">EW: ${entry.ew}</div>`;
                     html += `<td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-size: 11px; vertical-align: middle;">
-                        <div style="font-weight: bold; color: #27ae60; margin-bottom: 2px;">NS: ${entry.ns}</div>
-                        <div style="font-weight: bold; color: #e74c3c; margin-bottom: 4px;">EW: ${entry.ew}</div>
+                        ${nsDisplay}${ewDisplay}
                         <div style="color: #7f8c8d; font-size: 10px; background: rgba(52,152,219,0.1);
                             padding: 2px 4px; border-radius: 3px; display: inline-block;">Boards: ${boardRange}</div>
                     </td>`;
