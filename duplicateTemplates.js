@@ -258,20 +258,70 @@ class DuplicateTemplates {
             + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
     }
 
-    // ─── BOARD SLIPS ─────────────────────────────────────────────────────────
+    // ─── BOARD SLIPS ───────────────────────────────────────────────────────────────────────────
 
-    downloadBoardTemplate(numBoards) {
-        let html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Board Slips</title><style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;margin:10mm;}.slips-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm;}.slip{border:2px solid #2c3e50;border-radius:6px;padding:8px;text-align:center;page-break-inside:avoid;}.slip-brand{font-size:7pt;color:#666;margin-bottom:3px;}.slip-board{font-size:14pt;font-weight:800;color:#2c3e50;}.slip-vuln{font-size:9pt;font-weight:700;margin:4px 0;padding:2px 6px;border-radius:8px;display:inline-block;}.vuln-none{border:2px solid #95a5a6;color:#95a5a6;}.vuln-ns{border:2px solid #27ae60;color:#27ae60;}.vuln-ew{border:2px solid #e74c3c;color:#e74c3c;}.vuln-both{border:2px solid #f39c12;color:#f39c12;}@media print{@page{size:A4;margin:10mm;}}</style></head><body><div class="slips-grid">';
-        for (let board = 1; board <= numBoards; board++) {
-            const vuln = this._getBoardVulnerability(board);
-            const vulnLabels = { 'None':'None Vul','NS':'N-S Vul','EW':'E-W Vul','Both':'Both Vul' };
-            const vulnClasses = { 'None':'vuln-none','NS':'vuln-ns','EW':'vuln-ew','Both':'vuln-both' };
-            html += '<div class="slip"><div class="slip-brand">🃏 Bridge at Sea • bridgescorer.com</div><div class="slip-board">Board ' + board + '</div><span class="slip-vuln ' + vulnClasses[vuln] + '">' + vulnLabels[vuln] + '</span></div>';
-        }
-        html += '</div></body></html>';
-        this._downloadFile(html, 'board-slips-' + numBoards + '-boards.html');
+    _getBoardDealer(boardNumber) {
+        const dealers = ['N','E','S','W'];
+        return dealers[(boardNumber - 1) % 4];
     }
 
+    _buildCompassCard(board) {
+        const vuln   = this._getBoardVulnerability(board);
+        const dealer = this._getBoardDealer(board);
+        const nsVul  = (vuln === 'NS'   || vuln === 'Both');
+        const ewVul  = (vuln === 'EW'   || vuln === 'Both');
+        const nColor = nsVul ? '#c0392b' : '#27ae60';
+        const sColor = nsVul ? '#c0392b' : '#27ae60';
+        const eColor = ewVul ? '#c0392b' : '#27ae60';
+        const wColor = ewVul ? '#c0392b' : '#27ae60';
+        const nDlr = dealer === 'N' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
+        const sDlr = dealer === 'S' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
+        const eDlr = dealer === 'E' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
+        const wDlr = dealer === 'W' ? '<br><span style="font-size:7pt;">(DLR)</span>' : '';
+        return '<div class="card">' +
+            '<div class="compass">' +
+            '<div class="cell top-bar" style="background:' + nColor + ';">N' + nDlr + '</div>' +
+            '<div class="cell left" style="background:' + wColor + ';">W' + wDlr + '</div>' +
+            '<div class="cell center">' + board + '</div>' +
+            '<div class="cell right" style="background:' + eColor + ';">E' + eDlr + '</div>' +
+            '<div class="cell bot-bar" style="background:' + sColor + ';">S' + sDlr + '</div>' +
+            '</div>' +
+            '<div class="brand">🃏 bridgescorer.com</div>' +
+            '</div>';
+    }
+
+    downloadBoardTemplate(numBoards) {
+        const css =
+            '*{box-sizing:border-box;margin:0;padding:0;}' +
+            'body{font-family:Arial,sans-serif;background:#fff;}' +
+            '.page{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;padding:8mm;page-break-after:always;break-after:page;}' +
+            '.page:last-child{page-break-after:auto;break-after:auto;}' +
+            '.card{border:2px solid #2c3e50;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;aspect-ratio:3/4;page-break-inside:avoid;break-inside:avoid;}' +
+            '.compass{flex:1;display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:1fr 2fr 1fr;}' +
+            '.cell{display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:11pt;text-align:center;line-height:1.2;}' +
+            '.top-bar{grid-column:1/4;grid-row:1;}' +
+            '.bot-bar{grid-column:1/4;grid-row:3;}' +
+            '.left{grid-column:1;grid-row:2;}' +
+            '.right{grid-column:3;grid-row:2;}' +
+            '.center{grid-column:2;grid-row:2;background:white;color:#2c3e50;font-size:28pt;font-weight:900;}' +
+            '.brand{text-align:center;font-size:7pt;color:#888;padding:3px;border-top:1px solid #ddd;background:#fafafa;}' +
+            '@media print{@page{size:A4 portrait;margin:0;}body{margin:0;}}';
+
+        let pages = '';
+        for (let i = 1; i <= numBoards; i += 9) {
+            pages += '<div class="page">';
+            for (let b = i; b < i + 9 && b <= numBoards; b++) {
+                pages += this._buildCompassCard(b);
+            }
+            pages += '</div>';
+        }
+
+        const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+            '<title>Board Cards — ' + numBoards + ' Boards</title>' +
+            '<style>' + css + '</style></head><body>' + pages + '</body></html>';
+
+        this._downloadFile(html, 'board-cards-' + numBoards + '-boards.html');
+    }
     // ─── MOVEMENT SHEET ───────────────────────────────────────────────────────
 
     downloadMovementSheet(movement) {
