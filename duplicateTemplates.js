@@ -104,6 +104,16 @@ class DuplicateTemplates {
         this._showTravelerOverlay(movement);
     }
 
+    // Returns full HTML string for a movement's traveller sheets (used by generator)
+    generateTravellerHTML(key, movement) {
+        if (!movement) movement = Object.values(this.movements).find(m => m.pairs === parseInt(key));
+        if (!movement) return '';
+        const sitOutPair = this._getSitOutPair(movement);
+        const boardPairMap = this._getBoardPairMapping(movement, sitOutPair);
+        const boardNumbers = Object.keys(boardPairMap).sort((a, b) => parseInt(a) - parseInt(b));
+        return this._travelerHTMLDoc(movement, boardNumbers, boardPairMap, sitOutPair);
+    }
+
     _buildTravelerPages(movement, boardNumbers, boardPairMap, sitOutPair) {
         let html = '';
         for (let i = 0; i < boardNumbers.length; i += 6) {
