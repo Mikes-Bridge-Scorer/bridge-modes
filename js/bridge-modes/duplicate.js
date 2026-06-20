@@ -1424,6 +1424,11 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         // Ghost pair for half-table sit-out movements (pairs+1)
         const ghostPair = movement.hasSitOut ? movement.pairs + 1 : null;
 
+        // For Mitchell movements, EW pairs are numbered tables+1 through pairs.
+        // The movement generator uses relative positions 1-tables, so we offset here too.
+        const isMitchell = movement.type === 'mitchell';
+        const ewOffset = isMitchell ? movement.tables : 0;
+
         const roundData = {};
         movement.movement.forEach(entry => {
             if (!roundData[entry.round]) roundData[entry.round] = [];
@@ -1455,16 +1460,18 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 if (entry) {
                     const boardRange = entry.boards.length > 1 ? 
                         `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : entry.boards[0];
+                    // Apply EW offset for Mitchell movements before ghost pair check
+                    const ewDisplay = isMitchell ? entry.ew + ewOffset : entry.ew;
                     const nsIsGhost = ghostPair && entry.ns === ghostPair;
-                    const ewIsGhost = ghostPair && entry.ew === ghostPair;
-                    const nsDisplay = nsIsGhost
+                    const ewIsGhost = ghostPair && ewDisplay === ghostPair;
+                    const nsHtml = nsIsGhost
                         ? `<div style="font-weight:bold;color:#856404;margin-bottom:2px;">NS: <em>Sit Out</em></div>`
                         : `<div style="font-weight:bold;color:#27ae60;margin-bottom:2px;">NS: ${entry.ns}</div>`;
-                    const ewDisplay = ewIsGhost
+                    const ewHtml = ewIsGhost
                         ? `<div style="font-weight:bold;color:#856404;margin-bottom:4px;">EW: <em>Sit Out</em></div>`
-                        : `<div style="font-weight:bold;color:#e74c3c;margin-bottom:4px;">EW: ${entry.ew}</div>`;
+                        : `<div style="font-weight:bold;color:#e74c3c;margin-bottom:4px;">EW: ${ewDisplay}</div>`;
                     html += `<td style="padding: 8px; border: 1px solid #bdc3c7; text-align: center; font-size: 11px; vertical-align: middle;">
-                        ${nsDisplay}${ewDisplay}
+                        ${nsHtml}${ewHtml}
                         <div style="color: #7f8c8d; font-size: 10px; background: rgba(52,152,219,0.1);
                             padding: 2px 4px; border-radius: 3px; display: inline-block;">Boards: ${boardRange}</div>
                     </td>`;
