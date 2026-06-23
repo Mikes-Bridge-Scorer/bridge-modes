@@ -1,7 +1,7 @@
 // Bridge Modes Calculator - COMPLETE Offline Service Worker
 // Version: 2025-02-13-TABLE-CARDS - All files included for cruise use
 // This caches EVERYTHING needed for 100% offline operation
-const CACHE_VERSION = 'bridge-modes-v2026-06-14f-2x3 fix14';
+const CACHE_VERSION = 'bridge-modes-v2026-06-14f-2x3 fix15';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
@@ -73,7 +73,6 @@ self.addEventListener('install', event => {
             .then(cache => {
                 console.log('📦 Caching required files...');
                 
-                // Cache required files one by one to see which succeed/fail
                 return Promise.all(
                     STATIC_FILES.map(file => 
                         cache.add(file)
@@ -89,8 +88,6 @@ self.addEventListener('install', event => {
                 )
                 .then(() => {
                     console.log('✅ All required files cached!');
-                    
-                    // Try optional files (don't fail if missing)
                     console.log('📦 Caching optional files...');
                     return Promise.allSettled(
                         OPTIONAL_FILES.map(file =>
@@ -104,7 +101,6 @@ self.addEventListener('install', event => {
             .then(() => {
                 console.log('🚀 Service Worker installation complete');
                 console.log('📡 App ready for offline use');
-                // Force immediate activation
                 return self.skipWaiting();
             })
             .catch(error => {
@@ -122,7 +118,6 @@ self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys()
             .then(cacheNames => {
-                // Delete old cache versions
                 const deletePromises = cacheNames
                     .filter(cacheName => 
                         cacheName.startsWith('bridge-modes-v') && 
@@ -139,7 +134,6 @@ self.addEventListener('activate', event => {
             .then(() => {
                 console.log('✅ Old caches cleaned up');
                 console.log('🌐 Taking control of all pages...');
-                // Take control immediately
                 return self.clients.claim();
             })
             .then(() => {
@@ -164,6 +158,14 @@ self.addEventListener('fetch', event => {
         return;
     }
     
+    // ── DOWNLOADS FOLDER: always fetch fresh from network, never cache ──
+    // These are standalone HTML files served to website visitors and must
+    // not be intercepted by the service worker.
+    if (url.pathname.includes('/downloads/')) {
+        event.respondWith(fetch(request));
+        return;
+    }
+    
     // Clean up the pathname for matching
     let pathname = url.pathname;
     
@@ -175,14 +177,11 @@ self.addEventListener('fetch', event => {
     
     if (isDynamicFile) {
         // NETWORK FIRST for JavaScript files
-        // Try to get fresh version, fall back to cache if offline
         event.respondWith(
             fetch(request)
                 .then(response => {
-                    // Got fresh version
                     if (response && response.ok) {
                         console.log('🌐 Fresh from network:', pathname);
-                        // Update cache with new version
                         const responseClone = response.clone();
                         caches.open(DYNAMIC_CACHE)
                             .then(cache => cache.put(request, responseClone))
@@ -191,7 +190,6 @@ self.addEventListener('fetch', event => {
                     return response;
                 })
                 .catch(error => {
-                    // Network failed (OFFLINE) - use cache
                     console.log('📡 OFFLINE - serving from cache:', pathname);
                     return caches.match(request)
                         .then(response => {
@@ -200,7 +198,6 @@ self.addEventListener('fetch', event => {
                                 return response;
                             }
                             
-                            // Try without query parameters
                             const urlWithoutQuery = new URL(request.url);
                             urlWithoutQuery.search = '';
                             
@@ -210,7 +207,6 @@ self.addEventListener('fetch', event => {
                                         console.log('💾 Cache hit (no query):', pathname);
                                         return response;
                                     }
-                                    
                                     console.error('❌ File not in cache:', pathname);
                                     throw error;
                                 });
@@ -223,17 +219,14 @@ self.addEventListener('fetch', event => {
             caches.match(request)
                 .then(response => {
                     if (response) {
-                        // Found in cache - instant!
                         console.log('⚡ Cache hit:', pathname);
                         return response;
                     }
                     
-                    // Not in cache - fetch from network
                     console.log('🌐 Fetching from network:', pathname);
                     return fetch(request)
                         .then(response => {
                             if (response && response.ok) {
-                                // Cache the new file
                                 const responseClone = response.clone();
                                 caches.open(STATIC_CACHE)
                                     .then(cache => cache.put(request, responseClone))
