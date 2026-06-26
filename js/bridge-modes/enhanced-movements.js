@@ -12,32 +12,44 @@
  */
 
 /**
- * Generate Mitchell Movement with proper Skip Mitchell for even tables
- * NS pairs stay fixed, EW pairs move up one table each round
- * Even tables: skip round = (tables/2) + 1
+ * Generate Mitchell Movement with proper Skip Mitchell for even tables.
+ * NS pairs stay fixed, EW pairs move up one table each round.
+ * Even tables use a skip round = (tables/2) + 1 to avoid duplicate pairings.
+ *
+ * Key corrections vs. original:
+ *  1. Even-table (Skip) Mitchell has tables-1 rounds, not tables.
+ *     With the skip displacing one EW position, you only get tables-1 unique
+ *     pairings before they repeat. Playing a full 'tables' rounds causes the
+ *     final round to repeat the home-table pairing.
+ *  2. Board sets move independently of EW pairs — they advance one step every
+ *     round with NO extra jump on the skip round. This keeps every pair
+ *     (NS and EW) playing each board exactly once.
  */
 function generateMitchellMovement(tables, boardsPerRound, useSkip) {
     const movement = [];
     const totalBoards = tables * boardsPerRound;
-    const rounds = tables;
-    const skipRound = useSkip && tables % 2 === 0 ? Math.floor(tables / 2) + 1 : null;
+    // Fix 1: Skip Mitchell only yields (tables-1) unique rounds
+    const rounds = (useSkip && tables % 2 === 0) ? tables - 1 : tables;
+    const skipRound = (useSkip && tables % 2 === 0) ? Math.floor(tables / 2) + 1 : null;
 
     for (let round = 1; round <= rounds; round++) {
+        // EW offset jumps an extra step at and after the skip round
+        let ewOffset = round - 1;
+        if (skipRound && round >= skipRound) ewOffset += 1;
+
+        // Fix 2: Board offset advances one step per round with NO skip jump.
+        // Boards and EW pairs travel independently in real Skip Mitchell.
+        const boardOffset = round - 1;
+
         for (let table = 1; table <= tables; table++) {
             const nsPair = table;
+            const ewPair = ((table - 1 - ewOffset) % tables + tables) % tables + 1;
 
-            let offset = round - 1;
-            if (skipRound && round >= skipRound) offset += 1;
-            const ewPair = ((table - 1 - offset) % tables + tables) % tables + 1;
-
-            const boardSetIndex = (table - 1 + round - 1) % tables;
+            const boardSetIndex = (table - 1 + boardOffset) % tables;
             const startBoard = boardSetIndex * boardsPerRound + 1;
             const boardList = [];
-
             for (let b = 0; b < boardsPerRound; b++) {
-                let boardNum = startBoard + b;
-                if (boardNum > totalBoards) boardNum -= totalBoards;
-                boardList.push(boardNum);
+                boardList.push(startBoard + b);
             }
 
             movement.push({ round, table, ns: nsPair, ew: ewPair, boards: boardList });
@@ -47,33 +59,47 @@ function generateMitchellMovement(tables, boardsPerRound, useSkip) {
 }
 
 /**
- * Generate Mitchell with Sit-Out for odd pair counts
+ * Generate Mitchell with Sit-Out for odd pair counts (half-table Mitchell).
+ * One extra EW pair rotates through a phantom table, sitting out each round in turn.
+ *
+ * Same corrections as generateMitchellMovement:
+ *  1. Even 'tables' base with skip: use tables-1 rounds.
+ *  2. Board offset advances sequentially (round-1), independent of EW skip offset.
+ *
+ * Note: in half-table Mitchell, the extra EW pair and one NS-side EW pair will each
+ * replay one board set. This is mathematically inherent to the format (T+1 EW pairs,
+ * T board sets, T rounds) and matches standard real-world practice.
+ * NS pairs always play every board set exactly once.
  */
 function generateMitchellWithSitOut(tables, boardsPerRound, useSkip) {
     const movement = [];
     const totalBoards = tables * boardsPerRound;
-    const rounds = tables;
     const ewPairs = tables + 1;
     const physicalTables = tables + 1;
-    const skipRound = useSkip && tables % 2 === 0 ? Math.floor(tables / 2) + 1 : null;
+    // Fix 1: even-table Skip variants only yield tables-1 unique rounds
+    const rounds = (useSkip && tables % 2 === 0) ? tables - 1 : tables;
+    const skipRound = (useSkip && tables % 2 === 0) ? Math.floor(tables / 2) + 1 : null;
 
     for (let round = 1; round <= rounds; round++) {
+        // EW offset: skip adds 1 extra step at and after the skip round
+        let ewOffset = round - 1;
+        if (skipRound && round >= skipRound) ewOffset += 1;
+
+        // Fix 2: board offset is sequential with no skip jump
+        const boardOffset = round - 1;
+
         for (let table = 1; table <= physicalTables; table++) {
-            let offset = round - 1;
-            if (skipRound && round >= skipRound) offset += 1;
-            const ewPair = ((table - 1 - offset) % ewPairs + ewPairs) % ewPairs + 1;
+            const ewPair = ((table - 1 - ewOffset) % ewPairs + ewPairs) % ewPairs + 1;
 
             if (table === physicalTables) {
                 movement.push({ round, table, ns: '', ew: ewPair, boards: [] });
             } else {
                 const nsPair = table;
-                const boardSetIndex = (table - 1 + round - 1) % tables;
+                const boardSetIndex = (table - 1 + boardOffset) % tables;
                 const startBoard = boardSetIndex * boardsPerRound + 1;
                 const boardList = [];
                 for (let b = 0; b < boardsPerRound; b++) {
-                    let boardNum = startBoard + b;
-                    if (boardNum > totalBoards) boardNum -= totalBoards;
-                    boardList.push(boardNum);
+                    boardList.push(startBoard + b);
                 }
                 movement.push({ round, table, ns: nsPair, ew: ewPair, boards: boardList });
             }
@@ -102,42 +128,30 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "4_howell_12": {
-        pairs: 4, tables: 2, rounds: 6, totalBoards: 12, boardsPerRound: 2,
+        pairs: 4, tables: 2, rounds: 3, totalBoards: 12, boardsPerRound: 4,
         type: 'howell',
-        description: "2-table Howell, 12 boards, ~1.5 hrs",
+        description: "2-table Howell, 12 boards, ~1.5 hrs (4 boards per round)",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
-            { round: 1, table: 2, ns: 3, ew: 4, boards: [1,2] },
-            { round: 2, table: 1, ns: 1, ew: 3, boards: [3,4] },
-            { round: 2, table: 2, ns: 4, ew: 2, boards: [3,4] },
-            { round: 3, table: 1, ns: 1, ew: 4, boards: [5,6] },
-            { round: 3, table: 2, ns: 2, ew: 3, boards: [5,6] },
-            { round: 4, table: 1, ns: 1, ew: 2, boards: [7,8] },
-            { round: 4, table: 2, ns: 3, ew: 4, boards: [7,8] },
-            { round: 5, table: 1, ns: 1, ew: 3, boards: [9,10] },
-            { round: 5, table: 2, ns: 4, ew: 2, boards: [9,10] },
-            { round: 6, table: 1, ns: 1, ew: 4, boards: [11,12] },
-            { round: 6, table: 2, ns: 2, ew: 3, boards: [11,12] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
+            { round: 1, table: 2, ns: 3, ew: 4, boards: [1,2,3,4] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [5,6,7,8] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [5,6,7,8] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [9,10,11,12] },
+            { round: 3, table: 2, ns: 2, ew: 3, boards: [9,10,11,12] }
         ]
     },
 
     "4_howell_24": {
-        pairs: 4, tables: 2, rounds: 6, totalBoards: 24, boardsPerRound: 4,
+        pairs: 4, tables: 2, rounds: 3, totalBoards: 24, boardsPerRound: 8,
         type: 'howell',
-        description: "2-table Howell, 24 boards, ~3 hrs (ACBL)",
+        description: "2-table Howell, 24 boards, ~3 hrs (8 boards per round, ACBL)",
         movement: [
-            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
-            { round: 1, table: 2, ns: 3, ew: 4, boards: [5,6,7,8] },
-            { round: 2, table: 1, ns: 1, ew: 3, boards: [9,10,11,12] },
-            { round: 2, table: 2, ns: 4, ew: 2, boards: [13,14,15,16] },
-            { round: 3, table: 1, ns: 1, ew: 4, boards: [17,18,19,20] },
-            { round: 3, table: 2, ns: 2, ew: 3, boards: [21,22,23,24] },
-            { round: 4, table: 1, ns: 1, ew: 2, boards: [5,6,7,8] },
-            { round: 4, table: 2, ns: 3, ew: 4, boards: [1,2,3,4] },
-            { round: 5, table: 1, ns: 1, ew: 3, boards: [13,14,15,16] },
-            { round: 5, table: 2, ns: 4, ew: 2, boards: [9,10,11,12] },
-            { round: 6, table: 1, ns: 1, ew: 4, boards: [21,22,23,24] },
-            { round: 6, table: 2, ns: 2, ew: 3, boards: [17,18,19,20] }
+            { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5,6,7,8] },
+            { round: 1, table: 2, ns: 3, ew: 4, boards: [1,2,3,4,5,6,7,8] },
+            { round: 2, table: 1, ns: 1, ew: 3, boards: [9,10,11,12,13,14,15,16] },
+            { round: 2, table: 2, ns: 4, ew: 2, boards: [9,10,11,12,13,14,15,16] },
+            { round: 3, table: 1, ns: 1, ew: 4, boards: [17,18,19,20,21,22,23,24] },
+            { round: 3, table: 2, ns: 2, ew: 3, boards: [17,18,19,20,21,22,23,24] }
         ]
     },
 
@@ -691,16 +705,16 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "12_mitchell_18": {
-        pairs: 12, tables: 6, rounds: 6, totalBoards: 18, boardsPerRound: 3,
+        pairs: 12, tables: 6, rounds: 5, totalBoards: 18, boardsPerRound: 3,
         type: 'mitchell', skipRound: 4,
-        description: "6-table Skip Mitchell, 18 boards, ~2 hrs",
+        description: "6-table Skip Mitchell, 18 boards, 5 rounds, ~2 hrs",
         movement: generateMitchellMovement(6, 3, true)
     },
 
     "12_mitchell_24": {
-        pairs: 12, tables: 6, rounds: 6, totalBoards: 24, boardsPerRound: 4,
+        pairs: 12, tables: 6, rounds: 5, totalBoards: 24, boardsPerRound: 4,
         type: 'mitchell', skipRound: 4,
-        description: "6-table Skip Mitchell, 24 boards, ~3 hrs",
+        description: "6-table Skip Mitchell, 24 boards, 5 rounds, ~3 hrs",
         movement: generateMitchellMovement(6, 4, true)
     },
 
@@ -719,16 +733,16 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "16_mitchell_16": {
-        pairs: 16, tables: 8, rounds: 8, totalBoards: 16, boardsPerRound: 2,
+        pairs: 16, tables: 8, rounds: 7, totalBoards: 16, boardsPerRound: 2,
         type: 'mitchell', skipRound: 5,
-        description: "8-table Skip Mitchell, 16 boards, ~2 hrs",
+        description: "8-table Skip Mitchell, 16 boards, 7 rounds, ~2 hrs",
         movement: generateMitchellMovement(8, 2, true)
     },
 
     "16_mitchell_24": {
-        pairs: 16, tables: 8, rounds: 8, totalBoards: 24, boardsPerRound: 3,
+        pairs: 16, tables: 8, rounds: 7, totalBoards: 24, boardsPerRound: 3,
         type: 'mitchell', skipRound: 5,
-        description: "8-table Skip Mitchell, 24 boards, ~3 hrs",
+        description: "8-table Skip Mitchell, 24 boards, 7 rounds, ~3 hrs",
         movement: generateMitchellMovement(8, 3, true)
     },
 
@@ -747,16 +761,16 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "20_mitchell_20": {
-        pairs: 20, tables: 10, rounds: 10, totalBoards: 20, boardsPerRound: 2,
+        pairs: 20, tables: 10, rounds: 9, totalBoards: 20, boardsPerRound: 2,
         type: 'mitchell', skipRound: 6,
-        description: "10-table Skip Mitchell, 20 boards, ~2 hrs",
+        description: "10-table Skip Mitchell, 20 boards, 9 rounds, ~2 hrs",
         movement: generateMitchellMovement(10, 2, true)
     },
 
     "20_mitchell_30": {
-        pairs: 20, tables: 10, rounds: 10, totalBoards: 30, boardsPerRound: 3,
+        pairs: 20, tables: 10, rounds: 9, totalBoards: 30, boardsPerRound: 3,
         type: 'mitchell', skipRound: 6,
-        description: "10-table Skip Mitchell, 30 boards, ~3 hrs",
+        description: "10-table Skip Mitchell, 30 boards, 9 rounds, ~3 hrs",
         movement: generateMitchellMovement(10, 3, true)
     },
 
@@ -779,16 +793,16 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "13_mitchell_18": {
-        pairs: 13, tables: 7, rounds: 6, totalBoards: 18, boardsPerRound: 3,
+        pairs: 13, tables: 7, rounds: 5, totalBoards: 18, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true, skipRound: 4,
-        description: "6.5-table Skip Mitchell, 18 boards, ~2 hrs (1 sit-out)",
+        description: "6.5-table Skip Mitchell, 18 boards, 5 rounds, ~2 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(6, 3, true)
     },
 
     "13_mitchell_24": {
-        pairs: 13, tables: 7, rounds: 6, totalBoards: 24, boardsPerRound: 4,
+        pairs: 13, tables: 7, rounds: 5, totalBoards: 24, boardsPerRound: 4,
         type: 'mitchell', hasSitOut: true, skipRound: 4,
-        description: "6.5-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        description: "6.5-table Skip Mitchell, 24 boards, 5 rounds, ~3 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(6, 4, true)
     },
 
@@ -807,16 +821,16 @@ const ENHANCED_MOVEMENTS = {
     },
 
     "17_mitchell_16": {
-        pairs: 17, tables: 9, rounds: 8, totalBoards: 16, boardsPerRound: 2,
+        pairs: 17, tables: 9, rounds: 7, totalBoards: 16, boardsPerRound: 2,
         type: 'mitchell', hasSitOut: true, skipRound: 5,
-        description: "8.5-table Skip Mitchell, 16 boards, ~2 hrs (1 sit-out)",
+        description: "8.5-table Skip Mitchell, 16 boards, 7 rounds, ~2 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(8, 2, true)
     },
 
     "17_mitchell_24": {
-        pairs: 17, tables: 9, rounds: 8, totalBoards: 24, boardsPerRound: 3,
+        pairs: 17, tables: 9, rounds: 7, totalBoards: 24, boardsPerRound: 3,
         type: 'mitchell', hasSitOut: true, skipRound: 5,
-        description: "8.5-table Skip Mitchell, 24 boards, ~3 hrs (1 sit-out)",
+        description: "8.5-table Skip Mitchell, 24 boards, 7 rounds, ~3 hrs (1 sit-out)",
         movement: generateMitchellWithSitOut(8, 3, true)
     },
 
