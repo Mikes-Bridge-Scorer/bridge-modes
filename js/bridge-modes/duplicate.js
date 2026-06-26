@@ -661,6 +661,17 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         if (['1','2','3','4','5','6','7'].includes(value)) {
             currentResult.level = parseInt(value);
             this.travelerInputState = 'suit_selection';
+        } else if (value === '0') {
+            // Passed out hand — score 0 to both sides
+            currentResult.level    = 'P';
+            currentResult.suit     = '';
+            currentResult.declarer = '';
+            currentResult.double   = '';
+            currentResult.result   = 'P';
+            currentResult.nsScore  = 0;
+            currentResult.ewScore  = 0;
+            currentResult.isComplete = true;
+            this.travelerInputState = 'result_complete';
         }
     }
 
@@ -741,7 +752,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     getTravelerActiveButtons() {
         const currentResult = this.traveler.data[this.currentResultIndex];
         switch (this.travelerInputState) {
-            case 'level_selection': return ['1','2','3','4','5','6','7'];
+            case 'level_selection': return ['1','2','3','4','5','6','7','0'];
             case 'suit_selection': return ['♣','♦','♥','♠','NT'];
             case 'declarer_selection': return ['N','S','E','W'];
             case 'double_selection': return ['X','MADE','PLUS','DOWN'];
@@ -769,10 +780,20 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             case 'result_type_selection': this.travelerInputState = 'double_selection'; break;
             case 'result_number_selection': this.travelerInputState = 'result_type_selection'; this.resultMode = null; break;
             case 'result_complete':
-                this.travelerInputState = 'result_type_selection';
-                currentResult.result = null; currentResult.nsScore = null;
-                currentResult.ewScore = null; currentResult.isComplete = false;
-                this.resultMode = null; break;
+                // If this was a passed out hand, clear it fully back to level selection
+                if (currentResult.level === 'P') {
+                    currentResult.level = null; currentResult.suit = null;
+                    currentResult.declarer = null; currentResult.double = '';
+                    currentResult.result = null; currentResult.nsScore = null;
+                    currentResult.ewScore = null; currentResult.isComplete = false;
+                    this.travelerInputState = 'level_selection';
+                } else {
+                    this.travelerInputState = 'result_type_selection';
+                    currentResult.result = null; currentResult.nsScore = null;
+                    currentResult.ewScore = null; currentResult.isComplete = false;
+                    this.resultMode = null;
+                }
+                break;
             case 'level_selection':
                 if (this.currentResultIndex > 0) this.previousTravelerResult();
                 else this.closeTraveler();
@@ -804,6 +825,8 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     calculateTravelerScore(rowIndex) {
         const row = this.traveler.data[rowIndex];
         if (!row.level || !row.suit || !row.declarer || !row.result) return;
+        // Passed out hand — score already set to 0 in handleTravelerLevelSelection
+        if (row.level === 'P') return;
         
         const isVulnerable = this.isDeclarerVulnerable(this.traveler.boardNumber, row.declarer);
         const declarerSide = ['N','S'].includes(row.declarer) ? 'NS' : 'EW';
@@ -924,6 +947,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
     getTravelerContractDisplay(result) {
         let contract = '';
+        if (result.level === 'P') return 'Passed Out';
         if (result.level) contract += result.level;
         if (result.suit) contract += result.suit;
         if (result.double) contract += ` ${result.double}`;
@@ -1075,6 +1099,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                             <h4 style="color: #2c3e50; margin-bottom: 10px;">Traveler Entry</h4>
                             <p style="line-height: 1.5;">Level → Suit → Declarer → Double (optional) → Result<br>
                             Made = exact, Plus = overtricks, Down = undertricks</p>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #e74c3c; margin-bottom: 10px;">Passed Out Hand</h4>
+                            <p style="line-height: 1.5;">If all four players pass, press <strong>0</strong> instead of a bid level.<br>
+                            The score is recorded as NS 0 • EW 0 and both sides score equal matchpoints.<br>
+                            Press Back to undo if entered by mistake.</p>
                         </div>
                         <div style="margin-bottom: 20px;">
                             <h4 style="color: #2c3e50; margin-bottom: 10px;">Scoring</h4>
@@ -1844,7 +1874,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         const progressHTML = (typeof ProgressIndicator !== 'undefined') ? ProgressIndicator.generateDuplicateTravelerProgress(this) : '';
         
         const statePrompts = {
-            'level_selection': 'Select bid level (1-7)',
+            'level_selection': 'Select bid level (1-7) or 0 = Passed Out',
             'suit_selection': 'Select suit',
             'declarer_selection': 'Select declarer (N/S/E/W)',
             'double_selection': 'Press X for double, or Made/Plus/Down',
