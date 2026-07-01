@@ -33,17 +33,19 @@ function generateMitchellMovement(tables, boardsPerRound, useSkip) {
     const skipRound = (useSkip && tables % 2 === 0) ? Math.floor(tables / 2) + 1 : null;
 
     for (let round = 1; round <= rounds; round++) {
-        // EW offset jumps an extra step at and after the skip round
+        // EW offset: jumps an extra step at and after the skip round
         let ewOffset = round - 1;
         if (skipRound && round >= skipRound) ewOffset += 1;
 
-        // Fix 2: Board offset advances one step per round with NO skip jump.
-        // Boards and EW pairs travel independently in real Skip Mitchell.
+        // Board offset advances one step per round, independent of EW skip.
         const boardOffset = round - 1;
 
         for (let table = 1; table <= tables; table++) {
             const nsPair = table;
-            const ewPair = ((table - 1 - ewOffset) % tables + tables) % tables + 1;
+            // EW pairs are numbered tables+1 .. 2*tables.
+            // In round 1 EW pair (tables+table) sits at table T.
+            // Each round EW pairs move up one table (mod tables).
+            const ewPair = tables + ((table - 1 - ewOffset) % tables + tables) % tables + 1;
 
             const boardSetIndex = (table - 1 + boardOffset) % tables;
             const startBoard = boardSetIndex * boardsPerRound + 1;
@@ -89,7 +91,9 @@ function generateMitchellWithSitOut(tables, boardsPerRound, useSkip) {
         const boardOffset = round - 1;
 
         for (let table = 1; table <= physicalTables; table++) {
-            const ewPair = ((table - 1 - ewOffset) % ewPairs + ewPairs) % ewPairs + 1;
+            // EW pairs numbered tables+1 .. 2*tables+1 (one extra for sit-out).
+            // In round 1 EW pair (ewPairs+table-1) ... simplified:
+            const ewPair = tables + ((table - 1 - ewOffset) % ewPairs + ewPairs) % ewPairs + 1;
 
             if (table === physicalTables) {
                 movement.push({ round, table, ns: '', ew: ewPair, boards: [] });
