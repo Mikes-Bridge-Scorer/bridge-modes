@@ -1454,10 +1454,13 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         // Ghost pair for half-table sit-out movements (pairs+1)
         const ghostPair = movement.hasSitOut ? movement.pairs + 1 : null;
 
-        // For Mitchell movements, EW pairs are numbered tables+1 through pairs.
-        // The movement generator uses relative positions 1-tables, so we offset here too.
+        // NOTE: enhanced-movements.js already stores the correct pair numbers
+        // directly on each entry (entry.ns / entry.ew) — straight Mitchells use
+        // the ACBL convention (NS_k/EW_k share a number), Hesitation Mitchells
+        // use globally unique numbers. No offset should be added here; doing so
+        // previously re-broke the display even after the movement data itself
+        // was fixed.
         const isMitchell = movement.type === 'mitchell';
-        const ewOffset = isMitchell ? movement.tables : 0;
 
         const roundData = {};
         movement.movement.forEach(entry => {
@@ -1488,14 +1491,20 @@ class DuplicateBridgeMode extends BaseBridgeMode {
             for (let t = 1; t <= movement.tables; t++) {
                 const entry = roundData[round].find(e => e.table === t);
                 if (entry) {
-                    const boardRange = entry.boards.length > 1 ? 
-                        `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : entry.boards[0];
-                    // Apply EW offset for Mitchell movements before ghost pair check
-                    const ewDisplay = isMitchell ? entry.ew + ewOffset : entry.ew;
-                    const nsIsGhost = ghostPair && entry.ns === ghostPair;
-                    const ewIsGhost = ghostPair && ewDisplay === ghostPair;
-                    const nsHtml = nsIsGhost
-                        ? `<div style="font-weight:bold;color:#856404;margin-bottom:2px;">NS: <em>Sit Out</em></div>`
+                    const boardRange = !entry.boards || entry.boards.length === 0 ? '—'
+                        : entry.boards.length > 1 ? `${entry.boards[0]}-${entry.boards[entry.boards.length-1]}` : entry.boards[0];
+                    // Pair numbers come straight from the movement data — already correct
+                    const ewDisplay = entry.ew;
+                    // Sit-out detection differs by movement type:
+                    // Howell: the ghost pair (pairs+1) is a real numbered entrant every round
+                    // Mitchell (straight or Hesitation): an empty table is marked with ns:'',
+                    // and entry.ew holds the number of whichever real pair is sitting out
+                    const isMitchellType = movement.type === 'mitchell';
+                    const mitchellSitOut = isMitchellType && entry.ns === '';
+                    const nsIsGhost = isMitchellType ? false : (ghostPair && entry.ns === ghostPair);
+                    const ewIsGhost = isMitchellType ? mitchellSitOut : (ghostPair && ewDisplay === ghostPair);
+                    const nsHtml = (nsIsGhost || mitchellSitOut)
+                        ? `<div style="font-weight:bold;color:#856404;margin-bottom:2px;">NS: <em>—</em></div>`
                         : `<div style="font-weight:bold;color:#27ae60;margin-bottom:2px;">NS: ${entry.ns}</div>`;
                     const ewHtml = ewIsGhost
                         ? `<div style="font-weight:bold;color:#856404;margin-bottom:4px;">EW: <em>Sit Out</em></div>`
