@@ -42,7 +42,11 @@ function generateMitchellMovement(tables, boardsPerRound, useSkip) {
 
         for (let table = 1; table <= tables; table++) {
             const nsPair = table;
-            const ewPair = tables + ((table - 1 - ewOffset) % tables + tables) % tables + 1;
+            // ACBL convention: EW pair number matches the table it STARTED at
+            // (round 1), same number as its round-1 NS opponent. No offset —
+            // NS and EW are separate fields, so sharing a number is correct,
+            // not a collision. Direction (ns vs ew field) is the disambiguator.
+            const ewPair = ((table - 1 - ewOffset) % tables + tables) % tables + 1;
             const boardSetIndex = (table - 1 + boardOffset) % tables;
             const startBoard = boardSetIndex * boardsPerRound + 1;
             const boardList = [];
@@ -71,7 +75,10 @@ function generateSitOutMitchell(realTables, boardsPerRound) {
 
         for (let table = 1; table <= physicalTables; table++) {
             const ewIdx = ((table - 1) - ewOffset + physicalTables * 100) % physicalTables;
-            const ewPair = realTables + 1 + ewIdx;
+            // ACBL convention: no offset. EW pairs numbered 1..(realTables+1) —
+            // one more than NS since there's one extra "rover" EW pair with no
+            // fixed NS partner (the whole reason this movement needs a sit-out).
+            const ewPair = ewIdx + 1;
             const boardSetIdx = ((table - 1) + boardOffset) % physicalTables;
             const startBoard = boardSetIdx * boardsPerRound + 1;
             const boardList = [];
