@@ -10,6 +10,115 @@ class TableCardGenerator {
         console.log('🎴 Table Card Generator (mobile-compatible) loaded');
     }
 
+    // ─── SHARED CSS (used by the overlay, and by standalone downloaded files) ──
+
+    _getCardCSS() {
+        return `
+            .cards-container { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-start; }
+            .table-card {
+                width: 260px; background: white;
+                border: 2px solid #2c3e50; border-radius: 10px;
+                overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .card-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; padding: 12px 16px; text-align: center;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .card-branding {
+                font-size: 12px; font-weight: 800; opacity: 1;
+                letter-spacing: 0.3px; margin-bottom: 5px;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            }
+            .card-branding-url { font-size: 10px; opacity: 0.9; letter-spacing: 0.5px; margin-bottom: 6px; }
+            .movement-title { font-size: 11px; font-weight: 800; margin-bottom: 6px; opacity: 0.95; letter-spacing: 0.2px; }
+            .table-number { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin: 4px 0; }
+            .card-body { padding: 12px; }
+            .rounds-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+            .rounds-table th {
+                background: #34495e; color: white;
+                padding: 7px 4px; font-size: 11px; font-weight: 700;
+                border: 1px solid #bdc3c7; text-align: center;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .rounds-table td { padding: 7px 5px; text-align: center; border: 1px solid #bdc3c7; font-size: 12px; }
+            .rounds-table tr:nth-child(even) { background: #f9f9f9; }
+            .sitout-row td { background: #fff3cd !important; }
+            .round-col { font-weight: 700; color: #2c3e50; }
+            .ns-col { color: #27ae60; font-weight: 700; }
+            .ew-col { color: #e74c3c; font-weight: 700; }
+            .sitout-cell { font-weight: 700; color: #856404; font-size: 11px; }
+            .movement-instructions { border-top: 2px solid #e0e0e0; padding-top: 8px; font-size: 10px; line-height: 1.7; color: #444; }
+            .instructions-title { font-weight: 800; margin-bottom: 5px; font-size: 11px; color: #2c3e50; }
+            .instruction-line { margin: 2px 0; }
+            .ns-inst { color: #27ae60; font-weight: 700; }
+            .ew-inst { color: #e74c3c; font-weight: 700; }
+            .sitout-note { color: #856404; font-size: 9px; margin-top: 4px; }
+            .card-footer { text-align: center; padding: 8px; background: #f8f9fa; border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; font-weight: 600; }
+
+            .mitchell-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; border-radius: 12px; padding: 20px; text-align: center;
+                margin-bottom: 20px;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .mitchell-branding { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
+            .mitchell-url { font-size: 11px; opacity: 0.85; margin-bottom: 8px; }
+            .mitchell-header h1 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+            .mitchell-header p { font-size: 13px; opacity: .9; margin: 2px 0; }
+            .instructions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+            .instruction-box { border: 2px solid #2c3e50; border-radius: 10px; padding: 15px; }
+            .instruction-box h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+            .ns-box { border-color: #27ae60; }
+            .ns-box h2 { color: #27ae60; }
+            .ew-box { border-color: #e74c3c; }
+            .ew-box h2 { color: #e74c3c; }
+            .big-instruction { font-size: 16px; font-weight: 800; text-align: center; padding: 10px; background: rgba(52,152,219,.05); border-radius: 6px; }
+            .skip-notice {
+                margin-top: 15px; padding: 14px 16px;
+                background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px;
+                font-size: 14px; line-height: 1.6; color: #664d03;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .sitout-mitchell-note {
+                margin-bottom: 15px; padding: 12px 16px;
+                background: #e8f4fd; border: 2px solid #3498db; border-radius: 10px;
+                font-size: 13px; color: #1a5276;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .board-assignment-section { margin-top: 20px; }
+            .board-assignment-title { font-family: inherit; font-weight: 800; font-size: 15px; color: #2c3e50; margin-bottom: 10px; }
+            .board-assignment-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            .board-assignment-table th {
+                background: #2c3e50; color: white; padding: 8px 6px; text-align: center;
+                border: 1px solid #bdc3c7; font-weight: 700;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
+            }
+            .board-assignment-table td { padding: 7px 6px; text-align: center; border: 1px solid #bdc3c7; }
+            .board-assignment-table td.round-col { font-weight: 700; color: #2c3e50; background: #f5f5f5; }
+            .board-assignment-table tr:nth-child(even) td:not(.round-col) { background: #f9f9f9; }
+            @media print {
+                @page { size: A4 landscape; margin: 15mm 8mm 8mm 8mm; }
+                .table-card { width: 88mm; box-shadow: none; page-break-inside: avoid; }
+                .cards-container { gap: 6mm; }
+            }
+        `;
+    }
+
+    // Returns a COMPLETE standalone HTML document (used by generate-downloads.html
+    // to batch-produce files, and by any other caller that needs a self-contained
+    // file rather than an in-page overlay).
+    generateHTML(movement) {
+        const innerHTML = movement.type === 'mitchell'
+            ? this._buildMitchellHTML(movement)
+            : this._buildTableCardsHTML(movement);
+        const title = movement.type === 'mitchell' ? 'Movement Instructions' : 'Table Movement Cards';
+        return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title} — ${movement.description}</title>`
+            + `<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:16px;background:white;}${this._getCardCSS()}</style>`
+            + `</head><body>${innerHTML}</body></html>`;
+    }
+
     // ─── MAIN ENTRY POINTS ───────────────────────────────────────────────────
 
     generateTableCards(movement) {
@@ -21,9 +130,7 @@ class TableCardGenerator {
     }
 
     downloadTableCardsHTML(movement) {
-        const html = movement.type === 'mitchell'
-            ? this._buildMitchellHTML(movement)
-            : this._buildTableCardsHTML(movement);
+        const html = this.generateHTML(movement);
         const filename = movement.type === 'mitchell'
             ? `Mitchell-${movement.pairs}-Pairs-Instructions.html`
             : `Table-Cards-${movement.pairs}-Pairs.html`;
@@ -62,102 +169,13 @@ class TableCardGenerator {
                 #tcg-close-btn { background: #e74c3c; color: white; }
                 #tcg-content { padding: 16px; }
 
-                /* ── Card styles ── */
-                .cards-container { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-start; }
-                .table-card {
-                    width: 260px; background: white;
-                    border: 2px solid #2c3e50; border-radius: 10px;
-                    overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
-                }
-                .card-header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white; padding: 12px 16px; text-align: center;
-                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
-                }
-                .card-branding {
-                    font-size: 12px; font-weight: 800; opacity: 1;
-                    letter-spacing: 0.3px; margin-bottom: 5px;
-                    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-                }
-                .card-branding-url {
-                    font-size: 10px; opacity: 0.9; letter-spacing: 0.5px;
-                    margin-bottom: 6px;
-                }
-                .movement-title {
-                    font-size: 11px; font-weight: 800; margin-bottom: 6px;
-                    opacity: 0.95; letter-spacing: 0.2px;
-                }
-                .table-number { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin: 4px 0; }
-                .card-body { padding: 12px; }
-                .rounds-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-                .rounds-table th {
-                    background: #34495e; color: white;
-                    padding: 7px 4px; font-size: 11px; font-weight: 700;
-                    border: 1px solid #bdc3c7; text-align: center;
-                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
-                }
-                .rounds-table td { padding: 7px 5px; text-align: center; border: 1px solid #bdc3c7; font-size: 12px; }
-                .rounds-table tr:nth-child(even) { background: #f9f9f9; }
-                .sitout-row td { background: #fff3cd !important; }
-                .round-col { font-weight: 700; color: #2c3e50; }
-                .ns-col { color: #27ae60; font-weight: 700; }
-                .ew-col { color: #e74c3c; font-weight: 700; }
-                .sitout-cell { font-weight: 700; color: #856404; font-size: 11px; }
-                .movement-instructions {
-                    border-top: 2px solid #e0e0e0; padding-top: 8px;
-                    font-size: 10px; line-height: 1.7; color: #444;
-                }
-                .instructions-title { font-weight: 800; margin-bottom: 5px; font-size: 11px; color: #2c3e50; }
-                .instruction-line { margin: 2px 0; }
-                .ns-inst { color: #27ae60; font-weight: 700; }
-                .ew-inst { color: #e74c3c; font-weight: 700; }
-                .sitout-note { color: #856404; font-size: 9px; margin-top: 4px; }
-                .card-footer {
-                    text-align: center; padding: 8px; background: #f8f9fa;
-                    border-top: 1px solid #e0e0e0; font-size: 10px; color: #666; font-weight: 600;
-                }
+                ${this._getCardCSS()}
 
-                /* ── Mitchell styles ── */
-                .mitchell-header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white; border-radius: 12px; padding: 20px; text-align: center;
-                    margin-bottom: 20px;
-                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
-                }
-                .mitchell-branding { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
-                .mitchell-url { font-size: 11px; opacity: 0.85; margin-bottom: 8px; }
-                .mitchell-header h1 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-                .mitchell-header p { font-size: 13px; opacity: .9; margin: 2px 0; }
-                .instructions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-                .instruction-box { border: 2px solid #2c3e50; border-radius: 10px; padding: 15px; }
-                .instruction-box h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
-                .ns-box { border-color: #27ae60; }
-                .ns-box h2 { color: #27ae60; }
-                .ew-box { border-color: #e74c3c; }
-                .ew-box h2 { color: #e74c3c; }
-                .big-instruction { font-size: 16px; font-weight: 800; text-align: center; padding: 10px; background: rgba(52,152,219,.05); border-radius: 6px; }
-                .skip-notice {
-                    margin-top: 15px; padding: 14px 16px;
-                    background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px;
-                    font-size: 14px; line-height: 1.6; color: #664d03;
-                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
-                }
-                .sitout-mitchell-note {
-                    margin-bottom: 15px; padding: 12px 16px;
-                    background: #e8f4fd; border: 2px solid #3498db; border-radius: 10px;
-                    font-size: 13px; color: #1a5276;
-                    print-color-adjust: exact; -webkit-print-color-adjust: exact;
-                }
-
-                /* ── Print ── */
+                /* ── Print (overlay-specific: hides toolbar) ── */
                 @media print {
                     #tcg-toolbar { display: none !important; }
                     #tcg-overlay { position: static; overflow: visible; }
                     #tcg-content { padding: 0; }
-                    @page { size: A4 landscape; margin: 15mm 8mm 8mm 8mm; }
-                    .table-card { width: 88mm; box-shadow: none; page-break-inside: avoid; }
-                    .cards-container { gap: 6mm; }
                 }
             </style>
             <div id="tcg-toolbar">
@@ -452,6 +470,13 @@ class TableCardGenerator {
             </div>
         </div>`;
 
+        // Board Assignments by Round — a real per-table, per-round grid built
+        // directly from the movement data, not recomputed or guessed. Works
+        // correctly for straight Mitchell, sit-out Mitchell, and Hesitation
+        // Mitchell alike, since it just reads whatever's actually in the data
+        // (including "—" for a genuine empty/sit-out table that round).
+        const boardTable = this._buildBoardAssignmentTable(movement);
+
         return `
         <div class="mitchell-header">
             <div class="mitchell-branding">🃏 Bridge at Sea</div>
@@ -461,7 +486,36 @@ class TableCardGenerator {
         </div>
         ${sitOutNote}
         ${instructionsGrid}
-        ${skipNotice}`;
+        ${skipNotice}
+        ${boardTable}`;
+    }
+
+    _buildBoardAssignmentTable(movement) {
+        const rounds = movement.rounds;
+        const tables = movement.tables;
+
+        let headerCells = '<th>Round</th>';
+        for (let t = 1; t <= tables; t++) headerCells += `<th>T${t}</th>`;
+
+        let bodyRows = '';
+        for (let r = 1; r <= rounds; r++) {
+            let rowCells = `<td class="round-col">${r}</td>`;
+            for (let t = 1; t <= tables; t++) {
+                const entry = movement.movement.find(e => e.round === r && e.table === t);
+                const boardsText = entry ? this._formatBoards(entry.boards) : '—';
+                rowCells += `<td>${boardsText}</td>`;
+            }
+            bodyRows += `<tr>${rowCells}</tr>`;
+        }
+
+        return `
+        <div class="board-assignment-section">
+            <div class="board-assignment-title">Board Assignments by Round</div>
+            <table class="board-assignment-table">
+                <thead><tr>${headerCells}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>`;
     }
 
     // ─── HELPERS ─────────────────────────────────────────────────────────────
@@ -474,8 +528,9 @@ class TableCardGenerator {
     }
 
     _downloadHTML(html, filename) {
-        const fullHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${filename}</title></head><body>${html}</body></html>`;
-        const blob = new Blob([fullHTML], { type: 'text/html' });
+        // Callers now always pass a complete, already-wrapped HTML document
+        // (from generateHTML()) — no wrapping needed here, just the download.
+        const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = filename;

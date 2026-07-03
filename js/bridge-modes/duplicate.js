@@ -977,8 +977,13 @@ class DuplicateBridgeMode extends BaseBridgeMode {
 
     showMovementPopup() {
         const movement = this.session.movement;
-        const isSkipMitchell = movement.type === 'mitchell' && movement.tables % 2 === 0;
-        const skipRound = isSkipMitchell ? Math.floor(movement.tables / 2) + 1 : null;
+        // Use the movement's own skipRound property — set explicitly on genuine
+        // Skip Mitchell entries — rather than guessing from table count parity.
+        // That old heuristic (even tables = must be Skip Mitchell) wrongly
+        // flagged Hesitation Mitchells too, since those also have even table
+        // counts (6, 8) but have no skip at all.
+        const isSkipMitchell = movement.type === 'mitchell' && !!movement.skipRound;
+        const skipRound = isSkipMitchell ? movement.skipRound : null;
         
         let skipWarning = '';
         if (isSkipMitchell) {
@@ -1796,10 +1801,12 @@ class DuplicateBridgeMode extends BaseBridgeMode {
     getMovementConfirmContent() {
         const movement = this.session.movement;
         const estimatedTime = movement.description.match(/~(.+)/)?.[1] || '2-3 hours';
-        const isSkipMitchell = movement.type === 'mitchell' && movement.tables % 2 === 0;
+        // Same fix as showMovementPopup() — use the real skipRound property,
+        // not a guess based on table count parity.
+        const isSkipMitchell = movement.type === 'mitchell' && !!movement.skipRound;
         let skipWarning = '';
         if (isSkipMitchell) {
-            const skipRound = Math.floor(movement.tables / 2) + 1;
+            const skipRound = movement.skipRound;
             skipWarning = `
                 <div style="background: #fff3cd; padding: 12px; border-radius: 6px; border: 2px solid #ffc107; margin: 12px 0;">
                     <div style="text-align: center; font-size: 15px; font-weight: bold; color: #856404;">⚠️ Skip Round ${skipRound}</div>
