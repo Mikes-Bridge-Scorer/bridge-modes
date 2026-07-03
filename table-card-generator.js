@@ -438,7 +438,7 @@ class TableCardGenerator {
             <div class="instruction-box ew-box">
                 <h2>🔴 Moving Pairs (${movement.tables}-${movement.pairs})</h2>
                 <p class="big-instruction" style="font-size:14px;">FOLLOW YOUR TABLE CARD</p>
-                <p style="font-size:11px;color:#7f8c8d;text-align:center;margin-top:6px;">Mostly East-West — one round you'll sit North-South at Table ${movement.tables}, then continue as East-West</p>
+                <p style="font-size:13px;color:#555;text-align:center;margin-top:8px;font-weight:600;">Mostly East-West — one round you'll sit North-South at Table ${movement.tables}, then continue as East-West</p>
             </div>
         </div>` : `
         <div class="instructions-grid">
