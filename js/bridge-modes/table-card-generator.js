@@ -227,7 +227,7 @@ class TableCardGenerator {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = contentEl ? contentEl.innerHTML : innerHTML;
             const allCards = Array.from(tempDiv.querySelectorAll('.table-card'));
-            
+
             let groupedHTML = '';
             for (let i = 0; i < allCards.length; i += 3) {
                 groupedHTML += '<div class="card-page">';
@@ -236,7 +236,7 @@ class TableCardGenerator {
                 }
                 groupedHTML += '</div>';
             }
-            
+
             const printHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Table Movement Cards</title><style>${printCSS}</style></head><body>${groupedHTML}</body></html>`;
 
             const printWindow = window.open('', '_blank');
@@ -342,7 +342,7 @@ class TableCardGenerator {
 
     _formatTitle(description) {
         // Bold, strip sit-out note, replace commas with dashes
-        // "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)" 
+        // "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)"
         // -> "<strong>4.5-table Howell — 18 boards — ~2.5 hrs</strong>"
         const clean = description.replace(/\s*\(.*?\)\s*/g, '').trim();
         return `<strong>${clean.replace(/,\s*/g, ' — ')}</strong>`;
@@ -438,7 +438,7 @@ class TableCardGenerator {
                 <p class="big-instruction">STAY AT YOUR TABLE</p>
             </div>
             <div class="instruction-box ew-box">
-                <h2>🔴 East-West (${movement.tables + 1}-${movement.pairs})</h2>
+                <h2>🔴 East-West (1-${movement.tables})</h2>
                 <p class="big-instruction">MOVE UP ONE TABLE</p>
             </div>
         </div>
