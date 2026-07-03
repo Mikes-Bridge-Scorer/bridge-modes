@@ -424,14 +424,23 @@ class TableCardGenerator {
             ⚠️ One pair sits out each round in rotation — all results count toward final rankings.
         </div>` : '';
 
-        return `
-        <div class="mitchell-header">
-            <div class="mitchell-branding">🃏 Bridge at Sea</div>
-            <div class="mitchell-url">bridgescorer.com</div>
-            <h1>${titleText}</h1>
-            <p>${movement.pairs} Pairs &bull; ${movement.tables} Tables &bull; ${movement.totalBoards || movement.rounds} Boards</p>
-        </div>
-        ${sitOutNote}
+        // Hesitation Mitchell: only the first (tables-1) pairs are genuinely
+        // stationary NS. The rest are "moving" pairs who spend most rounds as
+        // East-West but briefly sit North-South at the hesitation table (the
+        // highest-numbered table) before continuing — NOT a simple "move up
+        // one table" pattern, so they get their own accurate instruction.
+        const instructionsGrid = movement.isHesitation ? `
+        <div class="instructions-grid">
+            <div class="instruction-box ns-box">
+                <h2>🔵 North-South (1-${movement.tables - 1})</h2>
+                <p class="big-instruction">STAY AT YOUR TABLE</p>
+            </div>
+            <div class="instruction-box ew-box">
+                <h2>🔴 Moving Pairs (${movement.tables}-${movement.pairs})</h2>
+                <p class="big-instruction" style="font-size:14px;">FOLLOW YOUR TABLE CARD</p>
+                <p style="font-size:11px;color:#7f8c8d;text-align:center;margin-top:6px;">Mostly East-West — one round you'll sit North-South at Table ${movement.tables}, then continue as East-West</p>
+            </div>
+        </div>` : `
         <div class="instructions-grid">
             <div class="instruction-box ns-box">
                 <h2>🔵 North-South (1-${movement.tables})</h2>
@@ -441,7 +450,17 @@ class TableCardGenerator {
                 <h2>🔴 East-West (1-${movement.tables})</h2>
                 <p class="big-instruction">MOVE UP ONE TABLE</p>
             </div>
+        </div>`;
+
+        return `
+        <div class="mitchell-header">
+            <div class="mitchell-branding">🃏 Bridge at Sea</div>
+            <div class="mitchell-url">bridgescorer.com</div>
+            <h1>${titleText}</h1>
+            <p>${movement.pairs} Pairs &bull; ${movement.tables} Tables &bull; ${movement.totalBoards || movement.rounds} Boards</p>
         </div>
+        ${sitOutNote}
+        ${instructionsGrid}
         ${skipNotice}`;
     }
 
