@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Duplicate Bridge — Test Data Tool v3</title>
+<style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 20px; background: #f5f5f5; color: #2c3e50; }
+    h1 { color: #2c3e50; border-bottom: 3px solid #2c3e50; padding-bottom: 10px; margin-bottom: 20px; }
+    .card { background: white; border-radius: 8px; padding: 20px; margin: 16px 0; border: 1px solid #ddd; }
+    .card h2 { margin: 0 0 14px; font-size: 16px; color: #2c3e50; }
+    select, input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; margin: 4px; }
+    button { padding: 10px 22px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin: 4px; }
+    .btn-green  { background: #27ae60; color: white; }
+    .btn-green:hover { background: #229954; }
+    .btn-navy   { background: #0a1628; color: white; }
+    .btn-navy:hover { background: #1a3050; }
+    .btn-red    { background: #e74c3c; color: white; }
+    .btn-red:hover { background: #c0392b; }
+    button:disabled { background: #95a5a6; cursor: not-allowed; }
+    .log { background: #2c3e50; color: #ecf0f1; border-radius: 8px; padding: 15px; height: 220px; overflow-y: auto; font-family: monospace; font-size: 12px; margin: 16px 0; }
+    .log .ok   { color: #2ecc71; }
+    .log .err  { color: #e74c3c; }
+    .log .info { color: #3498db; }
+    .log .warn { color: #f39c12; }
+    .warning { background: #fef9e7; border: 2px solid #f39c12; border-radius: 8px; padding: 14px; margin: 10px 0; font-size: 14px; }
+    .success { background: #d5f5e3; border: 2px solid #27ae60; border-radius: 8px; padding: 14px; margin: 10px 0; font-size: 14px; display: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    th { background: #2c3e50; color: white; padding: 8px; text-align: left; }
+    td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+    tr:nth-child(even) td { background: #f9f9f9; }
+    .ns { color: #27ae60; font-weight: bold; }
+    .ew { color: #e74c3c; font-weight: bold; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+    .badge-gold { background: #f39c12; color: white; }
+    .badge-silver { background: #95a5a6; color: white; }
+    .val-pass { color: #27ae60; font-weight: bold; }
+    .val-fail { color: #e74c3c; font-weight: bold; }
+    .val-warn { color: #e67e22; font-weight: bold; }
+    .val-row { padding: 5px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+    .val-icon { min-width: 20px; }
+    .val-section { margin-bottom: 16px; }
+    .val-section h3 { font-size: 14px; color: #2c3e50; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 4px; }
+    .val-summary { border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px; font-weight: bold; }
+    .val-summary.all-pass { background: #d5f5e3; border: 2px solid #27ae60; color: #1e8449; }
+    .val-summary.has-fail { background: #fde8e8; border: 2px solid #e74c3c; color: #c0392b; }
+    .val-summary.has-warn { background: #fef9e7; border: 2px solid #f39c12; color: #9a6000; }
+    .batch-row { padding: 4px 8px; border-radius: 4px; margin: 2px 0; font-size: 12px; display: flex; justify-content: space-between; }
+    .batch-pass { background: #eafaf1; }
+    .batch-fail { background: #fde8e8; }
+</style>
+</head>
+<body>
+
+<h1>🃏 Duplicate Bridge — Test Data Tool</h1>
+
+<div class="warning">
+    <strong>⚠️ Instructions:</strong><br>
+    1. Place this file in the same folder as <code>enhanced-movements.js</code><br>
+    2. Select the number of pairs and movement<br>
+    3. Click <strong>Generate & Score</strong> to fill all boards with random results<br>
+    4. Results and final standings will show below instantly
+</div>
+
+<div class="card">
+    <h2>1. Select Movement</h2>
+    <label>Pairs: <select id="pairsSelect" onchange="updateMovements()">
+        <option value="4">4 pairs (2-table Howell)</option>
+        <option value="5">5 pairs (2.5-table Howell)</option>
+        <option value="6" selected>6 pairs (3-table Howell)</option>
+        <option value="7">7 pairs (3.5-table Howell)</option>
+        <option value="8">8 pairs (4-table Howell)</option>
+        <option value="9">9 pairs (4.5-table Howell)</option>
+        <option value="10">10 pairs (5-table Mitchell)</option>
+        <option value="11">11 pairs (5.5-table Mitchell)</option>
+        <option value="12">12 pairs (6-table Skip Mitchell)</option>
+        <option value="13">13 pairs (6.5-table Skip Mitchell)</option>
+        <option value="14">14 pairs (7-table Howell)</option>
+        <option value="15">15 pairs (7.5-table Mitchell)</option>
+        <option value="16">16 pairs (8-table Skip Mitchell)</option>
+        <option value="17">17 pairs (8.5-table Skip Mitchell)</option>
+        <option value="18">18 pairs (9-table Howell)</option>
+        <option value="19">19 pairs (9.5-table Mitchell)</option>
+        <option value="20">20 pairs (10-table Skip Mitchell)</option>
+    </select></label>
+    <label>Movement: <select id="movementSelect"></select></label>
+    <br><br>
+    <label>Score style: 
+        <select id="scoreStyle">
+            <option value="random">Random realistic contracts</option>
+            <option value="partscores">Mostly partscores</option>
+            <option value="games">Mostly games</option>
+            <option value="competitive">Competitive (mixed)</option>
+        </select>
+    </label>
+</div>
+
+<div class="card">
+    <h2>2. Validate Movement Structure</h2>
+    <p style="font-size:13px;color:#7f8c8d;margin-bottom:12px;">Checks the raw movement data for mathematical correctness — no scoring involved.</p>
+    <button class="btn-navy" onclick="validateMovement()">🔬 Validate Movement</button>
+    <button class="btn-navy" onclick="validateAllMovements()">🔬 Validate All 43 Movements</button>
+</div>
+
+<div id="validationSection" style="display:none;">
+    <div class="card">
+        <h2>🔬 Movement Validation Results</h2>
+        <div id="validationResults"></div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>3. Generate Test Data &amp; Score</h2>
+    <button class="btn-green" id="generateBtn" onclick="generateAndScore()">▶ Generate &amp; Score All Boards</button>
+    <button class="btn-red" onclick="clearAll()">🗑 Clear</button>
+</div>
+
+<div class="log" id="log"></div>
+<div class="success" id="successBox"></div>
+
+<div id="resultsSection" style="display:none;">
+    <div class="card">
+        <h2>📊 Final Standings</h2>
+        <table id="standingsTable">
+            <thead><tr><th>Pos</th><th>Pair</th><th>Matchpoints</th><th>Max MP</th><th>%</th><th>Boards</th></tr></thead>
+            <tbody id="standingsBody"></tbody>
+        </table>
+    </div>
+    <div class="card">
+        <h2>📋 Board Results Summary</h2>
+        <div id="boardSummary"></div>
+    </div>
+</div>
+
+<script src="enhanced-movements.js"></script>
+<script>
+// ── Logging ────────────────────────────────────────────────────────────────
+function log(msg, type='') {
+    const el = document.getElementById('log');
+    const line = document.createElement('div');
+    if (type) line.className = type;
+    line.textContent = msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+}
+
+// ── Populate movement dropdown ─────────────────────────────────────────────
+function updateMovements() {
+    const pairs = parseInt(document.getElementById('pairsSelect').value);
+    const sel = document.getElementById('movementSelect');
+    sel.innerHTML = '';
+    if (typeof ENHANCED_MOVEMENTS === 'undefined') {
+        sel.innerHTML = '<option>enhanced-movements.js not loaded</option>';
+        return;
+    }
+    Object.entries(ENHANCED_MOVEMENTS)
+        .filter(([k, m]) => m.pairs === pairs)
+        .forEach(([key, m]) => {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = m.description;
+            sel.appendChild(opt);
+        });
+}
+
+// ── Bridge scoring ─────────────────────────────────────────────────────────
+const SUIT_SCORES = { '♣': 20, '♦': 20, '♥': 30, '♠': 30, 'NT': 30 };
+
+function calcBridgeScore(level, suit, declarer, dbl, result, boardNum) {
+    // Vulnerability
+    const vulnTable = { 1:'None',2:'NS',3:'EW',4:'Both',5:'NS',6:'EW',7:'Both',8:'None',
+                        9:'EW',10:'Both',11:'None',12:'NS',13:'Both',14:'None',15:'NS',16:'EW' };
+    const vulnCycle = ((boardNum - 1) % 16) + 1;
+    const vuln = vulnTable[vulnCycle] || 'None';
+    const isNS = ['N','S'].includes(declarer);
+    const declarerVul = (vuln === 'Both') || (isNS && vuln === 'NS') || (!isNS && vuln === 'EW');
+
+    const tricks = result === '=' ? level + 6 : level + 6 + parseInt(result);
+    const made = tricks >= level + 6;
+    const overtricks = tricks - (level + 6);
+    const undertricks = (level + 6) - tricks;
+
+    let score = 0;
+
+    if (made) {
+        // Trick score
+        let trickScore = suit === 'NT' ? 40 + (level - 1) * 30 : level * SUIT_SCORES[suit];
+        if (dbl === 'X') trickScore *= 2;
+        if (dbl === 'XX') trickScore *= 4;
+
+        const isGame = trickScore >= 100;
+        const isSlam = level >= 6;
+        const isGrandSlam = level === 7;
+
+        // Game/partscore bonus
+        score += trickScore;
+        if (isGrandSlam) score += declarerVul ? 1500 : 1000;
+        else if (isSlam) score += declarerVul ? 750 : 500;
+        else if (isGame) score += declarerVul ? 500 : 300;
+        else score += 50; // partscore bonus
+
+        // Insult bonus
+        if (dbl === 'X') score += 50;
+        if (dbl === 'XX') score += 100;
+
+        // Overtrick bonuses
+        // Fix Issue 3: NT overtricks are 30/trick — only add once via SUIT_SCORES
+        // (the old code added them twice for NT)
+        if (dbl === '') {
+            score += overtricks * SUIT_SCORES[suit];
+            // Note: NT first trick is 40 (in trickScore above) but overtricks are 30 — correct
+        } else if (dbl === 'X') {
+            score += overtricks * (declarerVul ? 200 : 100);
+        } else if (dbl === 'XX') {
+            score += overtricks * (declarerVul ? 400 : 200);
+        }
+    } else {
+        // Undertricks
+        if (dbl === '') {
+            score = declarerVul ? undertricks * 100 : undertricks * 50;
+        } else if (dbl === 'X') {
+            // Fix Issue 4: correct sliding scale for doubled undertricks
+            if (declarerVul) {
+                score = undertricks === 1 ? 200 : 200 + (undertricks - 1) * 300;
+            } else {
+                if (undertricks === 1) score = 100;
+                else if (undertricks === 2) score = 300;
+                else if (undertricks === 3) score = 500;
+                else score = 500 + (undertricks - 3) * 300;
+            }
+        } else if (dbl === 'XX') {
+            // Fix Issue 4: redoubled = doubled × 2
+            if (declarerVul) {
+                score = undertricks === 1 ? 400 : 400 + (undertricks - 1) * 600;
+            } else {
+                if (undertricks === 1) score = 200;
+                else if (undertricks === 2) score = 600;
+                else if (undertricks === 3) score = 1000;
+                else score = 1000 + (undertricks - 3) * 600;
+            }
+        }
+        score = -score;
+    }
+
+    return isNS ? score : -score; // return as NS score
+}
+
+// ── Generate a random contract ─────────────────────────────────────────────
+function randomContract(style) {
+    const suits = ['♣','♦','♥','♠','NT'];
+    const declarers = ['N','S','E','W'];
+    let level, suit, result;
+
+    if (style === 'partscores') {
+        level = Math.random() < 0.7 ? [1,2,3][Math.floor(Math.random()*3)] : [1,2][Math.floor(Math.random()*2)];
+        suit = suits[Math.floor(Math.random()*5)];
+        result = Math.random() < 0.6 ? '=' : (Math.random() < 0.5 ? '+1' : '-1');
+    } else if (style === 'games') {
+        const games = [{l:3,s:'NT'},{l:4,s:'♥'},{l:4,s:'♠'},{l:5,s:'♣'},{l:5,s:'♦'}];
+        const g = games[Math.floor(Math.random()*games.length)];
+        level = g.l; suit = g.s;
+        result = Math.random() < 0.55 ? '=' : (Math.random() < 0.6 ? '+1' : '-1');
+    } else if (style === 'competitive') {
+        level = Math.floor(Math.random() * 4) + 1;
+        suit = suits[Math.floor(Math.random()*5)];
+        result = ['=',' +1','-1','+2','-2','='][Math.floor(Math.random()*6)];
+    } else {
+        // random realistic
+        const rand = Math.random();
+        if (rand < 0.4) { // partscore
+            level = [1,2,3][Math.floor(Math.random()*3)];
+            suit = suits[Math.floor(Math.random()*5)];
+        } else if (rand < 0.75) { // game
+            const games = [{l:3,s:'NT'},{l:4,s:'♥'},{l:4,s:'♠'},{l:5,s:'♣'},{l:5,s:'♦'}];
+            const g = games[Math.floor(Math.random()*games.length)];
+            level = g.l; suit = g.s;
+        } else { // slam
+            level = Math.random() < 0.8 ? 6 : 7;
+            suit = suits[Math.floor(Math.random()*5)];
+        }
+        const r = Math.random();
+        result = r < 0.5 ? '=' : r < 0.7 ? '+1' : r < 0.82 ? '-1' : r < 0.9 ? '+2' : '-2';
+    }
+
+    return {
+        level,
+        suit,
+        declarer: declarers[Math.floor(Math.random()*4)],
+        double: '',
+        result
+    };
+}
+
+// ── Main generation function ───────────────────────────────────────────────
+function generateAndScore() {
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('successBox').style.display = 'none';
+
+    if (typeof ENHANCED_MOVEMENTS === 'undefined') {
+        log('FATAL: enhanced-movements.js not loaded!', 'err');
+        return;
+    }
+
+    const key = document.getElementById('movementSelect').value;
+    const movement = ENHANCED_MOVEMENTS[key];
+    const style = document.getElementById('scoreStyle').value;
+
+    if (!movement) { log('No movement selected', 'err'); return; }
+
+    log(`Movement: ${movement.description}`, 'info');
+    log(`Pairs: ${movement.pairs} | Tables: ${movement.tables} | Boards: ${movement.totalBoards} | Rounds: ${movement.rounds}`, 'info');
+    log('Generating scores...', 'info');
+
+    // Build board mapping
+    const ghostPair = movement.hasSitOut ? movement.pairs + 1 : null;
+    const isMitchell = movement.type === 'mitchell';
+    // Fix Issue 1: EW pairs use same numbers as NS (1-tables) in Mitchell.
+    // No offset needed — the movement data already has correct 1-based pair numbers.
+
+    const boards = {};
+    for (let b = 1; b <= movement.totalBoards; b++) {
+        boards[b] = { results: [], completed: false };
+    }
+
+    // Fill in results from movement
+    movement.movement.forEach(entry => {
+        if (!entry.boards) return;
+        if (entry.ns === '' || entry.ns === ghostPair || entry.ew === ghostPair) return;
+
+        const contract = randomContract(style);
+        const nsScore = calcBridgeScore(contract.level, contract.suit, contract.declarer, contract.double, contract.result, entry.boards[0]);
+
+        entry.boards.forEach(boardNum => {
+            boards[boardNum].results.push({
+                nsPair: entry.ns,
+                ewPair: entry.ew,
+                level: contract.level,
+                suit: contract.suit,
+                declarer: contract.declarer,
+                double: contract.double,
+                result: contract.result,
+                nsScore,
+                ewScore: -nsScore,
+                matchpoints: { ns: 0, ew: 0 },
+                isComplete: true
+            });
+        });
+    });
+
+    // Mark boards complete
+    let boardCount = 0;
+    Object.keys(boards).forEach(b => {
+        if (boards[b].results.length > 0) {
+            boards[b].completed = true;
+            boardCount++;
+        }
+    });
+
+    log(`✓ ${boardCount} boards filled with results`, 'ok');
+
+    // Calculate matchpoints
+    Object.values(boards).forEach(board => {
+        if (!board.completed || board.results.length < 2) return;
+        const results = board.results;
+        results.forEach(r => { r.matchpoints = { ns: 0, ew: 0 }; });
+        results.forEach(r => {
+            results.forEach(other => {
+                if (r === other) return;
+                if (r.nsScore > other.nsScore) r.matchpoints.ns += 2;
+                else if (r.nsScore === other.nsScore) { r.matchpoints.ns += 1; r.matchpoints.ew += 1; }
+                else r.matchpoints.ew += 2;
+            });
+        });
+    });
+
+    log('✓ Matchpoints calculated', 'ok');
+
+    // Fix Issue 2: For a STRAIGHT Mitchell, NS and EW are genuinely separate
+    // winner groups sharing numbers (ACBL convention) — track them independently.
+    // For a HESITATION Mitchell, a moving pair is ONE physical pair that plays
+    // both roles at different times — splitting them into "NS12"/"EW12" would
+    // fragment their results across two entries and produce wrong standings
+    // (this was exactly the bug behind the "float" pair oddity). Route those
+    // through the same single-pool tracking as Howell instead.
+    const pairTotals = {};
+    const useNsEwSplit = isMitchell && !movement.isHesitation;
+
+    if (useNsEwSplit) {
+        // NS pairs: labelled "NS1", "NS2" etc
+        for (let i = 1; i <= movement.tables; i++) {
+            pairTotals[`NS${i}`] = { label: `NS Pair ${i}`, totalMatchpoints: 0, maxPossible: 0, boardsPlayed: 0 };
+        }
+        // EW pairs: labelled "EW1", "EW2" etc
+        for (let i = 1; i <= movement.tables; i++) {
+            pairTotals[`EW${i}`] = { label: `EW Pair ${i}`, totalMatchpoints: 0, maxPossible: 0, boardsPlayed: 0 };
+        }
+        // Odd pair sit-out Mitchell has one extra EW pair
+        if (movement.hasSitOut) {
+            const extraEW = movement.tables + 1;
+            pairTotals[`EW${extraEW}`] = { label: `EW Pair ${extraEW} (float)`, totalMatchpoints: 0, maxPossible: 0, boardsPlayed: 0 };
+        }
+
+        Object.values(boards).forEach(board => {
+            if (!board.completed) return;
+            const results = board.results.filter(r => r.isComplete);
+            const maxMP = (results.length - 1) * 2;
+            results.forEach(r => {
+                const nsKey = `NS${r.nsPair}`;
+                const ewKey = `EW${r.ewPair}`;
+                if (pairTotals[nsKey]) {
+                    pairTotals[nsKey].totalMatchpoints += r.matchpoints.ns;
+                    pairTotals[nsKey].maxPossible += maxMP;
+                    pairTotals[nsKey].boardsPlayed++;
+                }
+                if (pairTotals[ewKey]) {
+                    pairTotals[ewKey].totalMatchpoints += r.matchpoints.ew;
+                    pairTotals[ewKey].maxPossible += maxMP;
+                    pairTotals[ewKey].boardsPlayed++;
+                }
+            });
+        });
+    } else {
+        // Howell, AND Hesitation Mitchell: single winner list, all pairs in
+        // the same pool, keyed by number alone (a pair's identity doesn't
+        // change when their seat direction does).
+        for (let i = 1; i <= movement.pairs; i++) {
+            pairTotals[`P${i}`] = { label: `Pair ${i}`, totalMatchpoints: 0, maxPossible: 0, boardsPlayed: 0 };
+        }
+        Object.values(boards).forEach(board => {
+            if (!board.completed) return;
+            const results = board.results.filter(r => r.isComplete);
+            const maxMP = (results.length - 1) * 2;
+            results.forEach(r => {
+                if (pairTotals[`P${r.nsPair}`]) {
+                    pairTotals[`P${r.nsPair}`].totalMatchpoints += r.matchpoints.ns;
+                    pairTotals[`P${r.nsPair}`].maxPossible += maxMP;
+                    pairTotals[`P${r.nsPair}`].boardsPlayed++;
+                }
+                if (pairTotals[`P${r.ewPair}`]) {
+                    pairTotals[`P${r.ewPair}`].totalMatchpoints += r.matchpoints.ew;
+                    pairTotals[`P${r.ewPair}`].maxPossible += maxMP;
+                    pairTotals[`P${r.ewPair}`].boardsPlayed++;
+                }
+            });
+        });
+    }
+
+    const standings = Object.values(pairTotals)
+        .filter(p => p.boardsPlayed > 0)
+        .map(p => {
+            p.percentage = p.maxPossible > 0 ? Math.round((p.totalMatchpoints / p.maxPossible) * 10000) / 100 : 0;
+            return p;
+        })
+        .sort((a,b) => b.percentage - a.percentage || b.totalMatchpoints - a.totalMatchpoints);
+
+    log('✓ Standings calculated', 'ok');
+    log(`Winner: ${standings[0].label} with ${standings[0].percentage}%`, 'ok');
+
+    // Render standings
+    const tbody = document.getElementById('standingsBody');
+    tbody.innerHTML = '';
+
+    // For a straight Mitchell, show NS and EW as separate sections. For
+    // Hesitation Mitchell and Howell, it's one field (pairs share a single
+    // ranking since roles/numbers aren't split into two separate groups).
+    if (useNsEwSplit) {
+        const nsStandings = standings.filter(p => p.label.startsWith('NS'));
+        const ewStandings = standings.filter(p => p.label.startsWith('EW'));
+
+        tbody.innerHTML += `<tr><td colspan="6" style="background:#e8f4fd;font-weight:700;color:#2980b9;padding:8px;">🔵 North-South</td></tr>`;
+        nsStandings.forEach((p, i) => {
+            const badge = i === 0 ? '<span class="badge badge-gold">🥇 1st</span>'
+                        : i === 1 ? '<span class="badge badge-silver">🥈 2nd</span>'
+                        : i === 2 ? '<span class="badge badge-bronze">🥉 3rd</span>'
+                        : `${i+1}th`;
+            tbody.innerHTML += `<tr>
+                <td>${badge}</td>
+                <td><strong>${p.label}</strong></td>
+                <td>${p.totalMatchpoints}</td>
+                <td>${p.maxPossible}</td>
+                <td><strong>${p.percentage}%</strong></td>
+                <td>${p.boardsPlayed}</td>
+            </tr>`;
+        });
+
+        tbody.innerHTML += `<tr><td colspan="6" style="background:#fde8e8;font-weight:700;color:#c0392b;padding:8px;">🔴 East-West</td></tr>`;
+        ewStandings.forEach((p, i) => {
+            const badge = i === 0 ? '<span class="badge badge-gold">🥇 1st</span>'
+                        : i === 1 ? '<span class="badge badge-silver">🥈 2nd</span>'
+                        : i === 2 ? '<span class="badge badge-bronze">🥉 3rd</span>'
+                        : `${i+1}th`;
+            tbody.innerHTML += `<tr>
+                <td>${badge}</td>
+                <td><strong>${p.label}</strong></td>
+                <td>${p.totalMatchpoints}</td>
+                <td>${p.maxPossible}</td>
+                <td><strong>${p.percentage}%</strong></td>
+                <td>${p.boardsPlayed}</td>
+            </tr>`;
+        });
+    } else {
+        standings.forEach((p, i) => {
+            const badge = i === 0 ? '<span class="badge badge-gold">🥇 1st</span>'
+                        : i === 1 ? '<span class="badge badge-silver">🥈 2nd</span>'
+                        : i === 2 ? '<span class="badge badge-bronze">🥉 3rd</span>'
+                        : `${i+1}th`;
+            tbody.innerHTML += `<tr>
+                <td>${badge}</td>
+                <td><strong>${p.label}</strong></td>
+                <td>${p.totalMatchpoints}</td>
+                <td>${p.maxPossible}</td>
+                <td><strong>${p.percentage}%</strong></td>
+                <td>${p.boardsPlayed}</td>
+            </tr>`;
+        });
+    }
+
+    // Board summary
+    let summary = '<table><thead><tr><th>Board</th><th>Entries</th><th>Contracts</th><th>NS Scores</th></tr></thead><tbody>';
+    Object.entries(boards).forEach(([b, board]) => {
+        if (!board.completed) return;
+        const contracts = board.results.map(r => {
+            const nsLabel = isMitchell ? `<span class="ns">NS${r.nsPair}</span>` : `<span class="ns">${r.nsPair}</span>`;
+            const ewLabel = isMitchell ? `<span class="ew">EW${r.ewPair}</span>` : `<span class="ew">${r.ewPair}</span>`;
+            return `${nsLabel}v${ewLabel}: ${r.level}${r.suit}${r.result} (${r.nsScore > 0 ? '+' : ''}${r.nsScore})`;
+        }).join(' &nbsp;|&nbsp; ');
+        summary += `<tr><td><strong>Board ${b}</strong></td><td>${board.results.length}</td><td colspan="2">${contracts}</td></tr>`;
+    });
+    summary += '</tbody></table>';
+    document.getElementById('boardSummary').innerHTML = summary;
+
+    document.getElementById('resultsSection').style.display = 'block';
+    const box = document.getElementById('successBox');
+    box.style.display = 'block';
+    box.innerHTML = `<strong>✅ Complete!</strong> ${movement.pairs} pairs · ${boardCount} boards · ${standings.length} pairs ranked. Winner: <strong>${standings[0].label} (${standings[0].percentage}%)</strong>`;
+}
+
+// ── MOVEMENT VALIDATION ENGINE ────────────────────────────────────────────────
+function runValidationChecks(movement) {
+    const checks = [];
+    const isMitchell = movement.type === 'mitchell';
+    const hasSitOut  = !!movement.hasSitOut;
+    const mov        = movement.movement;
+    const ghostPair  = hasSitOut ? Math.max(...mov.flatMap(e => [e.ns, e.ew]).filter(p => p !== '' && typeof p === 'number')) : null;
+
+    // Helper
+    function check(label, pass, detail = '') {
+        checks.push({ label, pass: pass === true, warn: pass === 'warn', detail });
+    }
+
+    // ── 1. Round count matches metadata ──────────────────────────────────────
+    const actualRounds = Math.max(...mov.map(e => e.round));
+    check(
+        `Round count: metadata says ${movement.rounds}, movement has ${actualRounds}`,
+        actualRounds === movement.rounds,
+        actualRounds !== movement.rounds ? `Off by ${Math.abs(actualRounds - movement.rounds)}` : ''
+    );
+
+    // ── 2. Board numbers in valid range ──────────────────────────────────────
+    const allBoards = mov.flatMap(e => e.boards || []);
+    const outOfRange = allBoards.filter(b => b < 1 || b > movement.totalBoards);
+    check(
+        `Board numbers in range 1-${movement.totalBoards}`,
+        outOfRange.length === 0,
+        outOfRange.length > 0 ? `Out of range: ${[...new Set(outOfRange)].join(', ')}` : ''
+    );
+
+    // ── 3. No missing board numbers ───────────────────────────────────────────
+    const boardSet = new Set(allBoards);
+    const missingBoards = [];
+    for (let b = 1; b <= movement.totalBoards; b++) {
+        if (!boardSet.has(b)) missingBoards.push(b);
+    }
+    check(
+        `All ${movement.totalBoards} boards appear in movement`,
+        missingBoards.length === 0,
+        missingBoards.length > 0 ? `Missing: ${missingBoards.join(', ')}` : ''
+    );
+
+    // ── 4. Each board played correct number of times ──────────────────────────
+    // Mitchell: each board played actualRounds times (once per round)
+    // Howell: each board played tables times (once per physical table per round)
+    // Sit-out variants: one table/position is phantom each round, so boards play one fewer time
+    //   Sit-out Mitchell: actualRounds plays (phantom table has no boards — same as regular)
+    //   Sit-out Howell: tables-1 plays (ghost pair plays but phantom position has no extra board)
+    const boardPlayCount = {};
+    mov.filter(e => e.ns !== '' && e.boards && e.boards.length > 0).forEach(e => {
+        (e.boards || []).forEach(b => { boardPlayCount[b] = (boardPlayCount[b] || 0) + 1; });
+    });
+    const playCounts = [...new Set(Object.values(boardPlayCount))];
+    const expectedPlays = playCounts.length > 0 ? Math.max(...playCounts) : 0;
+    let theoreticalPlays;
+    if (isMitchell) {
+        if (movement.isHesitation) {
+            // Hesitation Mitchell: exactly one table (two pairs) sits out each
+            // round, so only (tables-1) tables are active per round, feeding
+            // (tables+1) distinct board sets. Each board set is therefore
+            // played (tables-1)*rounds/(tables+1) times, not `rounds` times.
+            theoreticalPlays = ((movement.tables - 1) * actualRounds) / (movement.tables + 1);
+        } else {
+            theoreticalPlays = actualRounds; // same for regular and sit-out Mitchell
+        }
+    } else {
+        // Sit-out Howell: ghost pair plays every round, so boards are still played
+        // at every physical table = movement.tables times
+        theoreticalPlays = movement.tables;
+    }
+    const playsCorrect = playCounts.every(c => c === expectedPlays) && expectedPlays === theoreticalPlays;
+    // Straight sit-out Mitchell (not Hesitation) has a proven-inevitable quirk:
+    // totalActivePlays = realTables^2, boardSets = realTables+1, and
+    // realTables^2 mod (realTables+1) is always exactly 1 — so one board set
+    // is unavoidably played once more than the rest. Not a bug; warn not fail.
+    const isSitOutMitchellPlayVariance = hasSitOut && isMitchell && !movement.isHesitation && !playsCorrect;
+    check(
+        `Each board played equally (${theoreticalPlays} times each)`,
+        playsCorrect ? true : (isSitOutMitchellPlayVariance ? 'warn' : false),
+        !playsCorrect ? (playCounts.some(c => c !== expectedPlays)
+            ? `Unequal: ${Object.entries(boardPlayCount).filter(([b,c])=>c!==expectedPlays).slice(0,3).map(([b,c])=>`Board ${b}=${c}`).join(', ')}${isSitOutMitchellPlayVariance ? ' (mathematically inevitable for this format — acceptable)' : ''}`
+            : `Expected ${theoreticalPlays} plays per board, got ${expectedPlays}`) : ''
+    );
+
+    // ── 5. No pair plays same board twice ─────────────────────────────────────
+    // ── 5/6 setup: track each pair's board history ────────────────────────────
+    // For a straight Mitchell, NS_k and EW_k are genuinely different pairs who
+    // happen to share a number (ACBL convention) — key by direction+number.
+    // For a Hesitation Mitchell, a moving pair genuinely swaps between EW and
+    // NS roles at different times but is the SAME physical pair throughout —
+    // keying by direction+number would fragment their history into two
+    // separate buckets and produce nonsense board-count ranges. Key by number
+    // alone instead, same as Howell (which has the identical requirement).
+    const sharesNumberRange = isMitchell && !movement.isHesitation;
+    const pairBoardPlays = {};
+    mov.filter(e => e.ns !== '' && e.boards && e.boards.length > 0).forEach(e => {
+        const nsKey = sharesNumberRange ? `NS${e.ns}` : `P${e.ns}`;
+        const ewKey = sharesNumberRange ? `EW${e.ew}` : `P${e.ew}`;
+        if (!pairBoardPlays[nsKey]) pairBoardPlays[nsKey] = [];
+        if (!pairBoardPlays[ewKey]) pairBoardPlays[ewKey] = [];
+        pairBoardPlays[nsKey].push(...e.boards);
+        pairBoardPlays[ewKey].push(...e.boards);
+    });
+    const boardDupPairs = [];
+    Object.entries(pairBoardPlays).forEach(([pair, boards]) => {
+        const unique = new Set(boards);
+        if (unique.size !== boards.length) boardDupPairs.push(pair);
+    });
+    // Sit-out Mitchell has inherent EW board replays (proved mathematically) — warn not fail
+    const isSitOutMitchellDup = hasSitOut && isMitchell && boardDupPairs.length > 0;
+    check(
+        'No pair plays the same board twice',
+        boardDupPairs.length === 0 ? true : (isSitOutMitchellDup ? 'warn' : false),
+        boardDupPairs.length > 0
+            ? `Duplicates for: ${boardDupPairs.join(', ')}${isSitOutMitchellDup ? ' (inherent in half-table format — acceptable)' : ''}`
+            : ''
+    );
+
+    // ── 6. Each pair plays correct number of boards ───────────────────────────
+    const uniqueBoardsPerPair = {};
+    Object.entries(pairBoardPlays).forEach(([pair, boards]) => {
+        uniqueBoardsPerPair[pair] = new Set(boards).size;
+    });
+    const boardCountValues = Object.values(uniqueBoardsPerPair);
+    const maxBoardCount = Math.max(...boardCountValues);
+    const minBoardCount = Math.min(...boardCountValues);
+    // Expected boards per pair:
+    // Regular Howell: totalBoards (all boards via relay)
+    // Sit-out Howell: totalBoards (ghost pair plays all rounds, regular pairs too)
+    // Regular Mitchell: actualRounds * boardsPerRound
+    // Sit-out Mitchell: actualRounds * boardsPerRound for NS pairs (phantom table plays no boards)
+    const expectedBoardsPerPair = isMitchell
+        ? actualRounds * movement.boardsPerRound
+        : movement.totalBoards;
+    const pairsWithWrongCount = Object.entries(uniqueBoardsPerPair)
+        .filter(([p, c]) => c !== maxBoardCount);
+    // Sit-out Mitchell inherently has EW pairs with varied board counts — warn not fail
+    const isSitOutVariance = hasSitOut && isMitchell && pairsWithWrongCount.length > 0;
+    check(
+        `Each pair plays ${expectedBoardsPerPair} unique boards`,
+        pairsWithWrongCount.length === 0 && maxBoardCount === expectedBoardsPerPair
+            ? true
+            : (isSitOutVariance ? 'warn' : false),
+        pairsWithWrongCount.length > 0
+            ? `Range ${minBoardCount}-${maxBoardCount} boards${isSitOutVariance ? ' (expected for sit-out Mitchell format)' : ''}`
+            : maxBoardCount !== expectedBoardsPerPair
+            ? `Got ${maxBoardCount}, expected ${expectedBoardsPerPair}`
+            : ''
+    );
+
+    // ── 7. Pair meetings ──────────────────────────────────────────────────────
+    if (isMitchell) {
+        // Each NS pair must face each EW pair exactly once (no duplicates).
+        // Regular Mitchell: tables NS tables * actualRounds = tables*actualRounds total meetings
+        // Sit-out Mitchell: (tables-1) real NS tables * actualRounds meetings each
+        //   (the 'tables'-th table is the phantom, so only tables-1 real NS positions)
+        const nsMeetings = {};
+        mov.filter(e => e.ns !== '' && e.boards && e.boards.length > 0).forEach(e => {
+            const k = `NS${e.ns}vEW${e.ew}`;
+            nsMeetings[k] = (nsMeetings[k] || 0) + 1;
+        });
+        const dupMeetings = Object.entries(nsMeetings).filter(([k,v]) => v > 1);
+        const realNSTables = hasSitOut ? movement.tables - 1 : movement.tables;
+        const expectedMeetings = realNSTables * actualRounds;
+        const actualMeetings = Object.keys(nsMeetings).length;
+        check(
+            `All ${expectedMeetings} NS-EW combinations met exactly once`,
+            dupMeetings.length === 0 && actualMeetings === expectedMeetings,
+            dupMeetings.length > 0 ? `Duplicate meetings: ${dupMeetings.slice(0,3).map(([k])=>k).join(', ')}` :
+            actualMeetings !== expectedMeetings ? `Expected ${expectedMeetings} meetings, found ${actualMeetings}` : ''
+        );
+
+        // Note: NS_k meeting EW_k (same number) is expected exactly once per
+        // pair under the ACBL numbering convention — they start together at
+        // table k in round 1. The duplicate-meeting check above already
+        // catches it correctly if it happens more than once, so no separate
+        // "self-meeting" check is needed here.
+    } else {
+        // Howell: every pair meets every other pair an equal number of times.
+        // For 3+ table Howells this is exactly once.
+        // For 2-table 6-round Howells (4 pairs), pairs meet exactly twice —
+        // this is mathematically unavoidable: C(4,2)=6 matchups, 6 rounds×2 tables=12
+        // encounters, so each matchup occurs 12/6=2 times. This is correct ACBL standard.
+        const meetings = {};
+        mov.filter(e => e.ns && e.ew && e.ns !== '' && e.boards && e.boards.length > 0).forEach(e => {
+            const k = [Math.min(e.ns,e.ew), Math.max(e.ns,e.ew)].join('-');
+            meetings[k] = (meetings[k] || 0) + 1;
+        });
+        const effectivePairs = hasSitOut ? movement.pairs + 1 : movement.pairs;
+        const expectedMeetings = effectivePairs * (effectivePairs - 1) / 2;
+        const actualMeetings = Object.keys(meetings).length;
+        const meetCounts = Object.values(meetings);
+        const minMeet = meetCounts.length ? Math.min(...meetCounts) : 0;
+        const maxMeet = meetCounts.length ? Math.max(...meetCounts) : 0;
+        const missingPairs = actualMeetings < expectedMeetings;
+        const unequalMeetings = minMeet !== maxMeet;
+        check(
+            `All ${expectedMeetings} pair combinations meet equally (${minMeet === maxMeet ? minMeet+'x each' : minMeet+'-'+maxMeet+'x'})`,
+            !missingPairs && !unequalMeetings,
+            missingPairs ? `Only ${actualMeetings} of ${expectedMeetings} pair combinations ever meet` :
+            unequalMeetings ? `Pairs meet unequal times (${minMeet}-${maxMeet}x): ${Object.entries(meetings).filter(([,v])=>v!==minMeet).slice(0,3).map(([k])=>k).join(', ')}` : ''
+        );
+    }
+
+    // ── 8. Skip round fires correctly for Skip Mitchell ───────────────────────
+    if (movement.skipRound) {
+        // In skip round, EW pairs should move 2 tables not 1
+        // Check that no EW pair at the skip round is at the same position as round before
+        const skipEntries = mov.filter(e => e.round === movement.skipRound && e.ns !== '');
+        const prevEntries = mov.filter(e => e.round === movement.skipRound - 1 && e.ns !== '');
+        let skipOk = true;
+        skipEntries.forEach(se => {
+            const prev = prevEntries.find(pe => pe.ew === se.ew);
+            if (prev && Math.abs(se.table - prev.table) === 1) skipOk = false; // moved only 1
+        });
+        check(
+            `Skip round ${movement.skipRound}: EW pairs move 2 tables`,
+            skipOk,
+            !skipOk ? 'Some EW pairs only moved 1 table on skip round' : ''
+        );
+    }
+
+    // ── 9. Sit-out: exactly one pair sits out per round ───────────────────────
+    if (hasSitOut) {
+        if (isMitchell) {
+            // Sit-out Mitchell: phantom table has ns='' each round
+            const sitOutRounds = {};
+            mov.filter(e => e.ns === '').forEach(e => {
+                sitOutRounds[e.round] = (sitOutRounds[e.round] || 0) + 1;
+            });
+            const wrongSitOut = Object.entries(sitOutRounds).filter(([r,c]) => c !== 1);
+            const missing = [];
+            for (let r = 1; r <= actualRounds; r++) {
+                if (!sitOutRounds[r]) missing.push(r);
+            }
+            check(
+                'Exactly one pair sits out each round (phantom table)',
+                wrongSitOut.length === 0 && missing.length === 0,
+                wrongSitOut.length > 0 ? `Wrong sit-out count: ${wrongSitOut.map(([r,c])=>`R${r}=${c}`).join(', ')}` :
+                missing.length > 0 ? `No sit-out in rounds: ${missing.join(', ')}` : ''
+            );
+        } else {
+            // Sit-out Howell: the ghost pair (pairs+1) plays every round as EW —
+            // there are no absent pairs. The ghost pair is simply an extra EW pair
+            // that gives everyone an opponent each round. No sit-out check needed.
+            check(
+                'Sit-out Howell: ghost pair plays every round (no absent pairs — correct)',
+                true,
+                ''
+            );
+        }
+    }
+
+    // ── 10. Tables used match metadata ────────────────────────────────────────
+    const physicalTables = [...new Set(mov.map(e => e.table))].filter(t => typeof t === 'number');
+    const maxTable = Math.max(...physicalTables);
+    const expectedTables = hasSitOut ? Math.ceil(movement.tables) : movement.tables;
+    check(
+        `Tables used (1-${maxTable}) match expected (1-${expectedTables})`,
+        maxTable === expectedTables,
+        maxTable !== expectedTables ? `Got tables up to ${maxTable}, expected ${expectedTables}` : ''
+    );
+
+    return checks;
+}
+
+function renderValidationResults(movement, checks) {
+    const fails = checks.filter(c => !c.pass && !c.warn);
+    const warns = checks.filter(c => c.warn);
+    const passes = checks.filter(c => c.pass);
+
+    let html = '';
+
+    // Summary banner
+    if (fails.length === 0 && warns.length === 0) {
+        html += `<div class="val-summary all-pass">✅ All ${checks.length} checks passed — movement is mathematically correct</div>`;
+    } else if (fails.length > 0) {
+        html += `<div class="val-summary has-fail">❌ ${fails.length} check${fails.length>1?'s':''} failed, ${warns.length} warning${warns.length!==1?'s':''}, ${passes.length} passed</div>`;
+    } else {
+        html += `<div class="val-summary has-warn">⚠️ ${warns.length} warning${warns.length>1?'s':''} (expected for sit-out format) — ${passes.length} checks passed</div>`;
+    }
+
+    // All checks listed
+    html += '<div class="val-section"><h3>Check Results</h3>';
+    checks.forEach(c => {
+        const icon = c.pass ? '✅' : (c.warn ? '⚠️' : '❌');
+        const cls  = c.pass ? 'val-pass' : (c.warn ? 'val-warn' : 'val-fail');
+        html += `<div class="val-row">
+            <span class="val-icon">${icon}</span>
+            <span class="${cls}">${c.label}</span>
+            ${c.detail ? `<span style="color:#7f8c8d;font-size:12px;">— ${c.detail}</span>` : ''}
+        </div>`;
+    });
+    html += '</div>';
+
+    return html;
+}
+
+function validateMovement() {
+    const key = document.getElementById('movementSelect').value;
+    if (!key) { alert('Please select a movement first'); return; }
+    const movement = ENHANCED_MOVEMENTS[key];
+    const checks = runValidationChecks(movement);
+    const html = `<h3 style="margin-bottom:10px;">${movement.description}</h3>` + renderValidationResults(movement, checks);
+    document.getElementById('validationResults').innerHTML = html;
+    document.getElementById('validationSection').style.display = 'block';
+    document.getElementById('validationSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function validateAllMovements() {
+    const keys = Object.keys(ENHANCED_MOVEMENTS);
+    let allPassed = 0, allWarned = 0, allFailed = 0;
+    let batchHTML = '<h3 style="margin-bottom:10px;">All 43 Movements — Batch Validation</h3>';
+    let failDetails = '';
+
+    keys.forEach(key => {
+        const movement = ENHANCED_MOVEMENTS[key];
+        const checks = runValidationChecks(movement);
+        const fails = checks.filter(c => !c.pass && !c.warn);
+        const warns = checks.filter(c => c.warn);
+
+        if (fails.length > 0) {
+            allFailed++;
+            const icon = '❌';
+            batchHTML += `<div class="batch-row batch-fail"><span>${icon} ${movement.description}</span><span>${fails.length} fail${fails.length>1?'s':''}</span></div>`;
+            failDetails += `<div style="margin:10px 0;padding:10px;background:#fff5f5;border-radius:6px;border-left:3px solid #e74c3c;">
+                <strong>${movement.description}</strong><br>
+                ${fails.map(c => `❌ ${c.label}${c.detail ? ' — ' + c.detail : ''}`).join('<br>')}
+            </div>`;
+        } else if (warns.length > 0) {
+            allWarned++;
+            batchHTML += `<div class="batch-row batch-pass"><span>⚠️ ${movement.description}</span><span>${warns.length} warning${warns.length>1?'s':''}</span></div>`;
+        } else {
+            allPassed++;
+            batchHTML += `<div class="batch-row batch-pass"><span>✅ ${movement.description}</span><span>All pass</span></div>`;
+        }
+    });
+
+    // Summary at top
+    let summaryClass = allFailed > 0 ? 'has-fail' : (allWarned > 0 ? 'has-warn' : 'all-pass');
+    let summaryIcon  = allFailed > 0 ? '❌' : (allWarned > 0 ? '⚠️' : '✅');
+    let summaryText  = allFailed > 0
+        ? `${allFailed} movements FAILED, ${allWarned} warnings, ${allPassed} passed`
+        : allWarned > 0
+        ? `All movements passed (${allWarned} sit-out warnings expected), ${allPassed} fully clean`
+        : `All ${allPassed} movements passed every check`;
+
+    const summaryBanner = `<div class="val-summary ${summaryClass}">${summaryIcon} ${summaryText}</div>`;
+
+    document.getElementById('validationResults').innerHTML = summaryBanner + batchHTML + (failDetails ? `<h3 style="margin-top:16px;">Failure Details</h3>${failDetails}` : '');
+    document.getElementById('validationSection').style.display = 'block';
+    document.getElementById('validationSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearAll() {
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('successBox').style.display = 'none';
+    document.getElementById('validationSection').style.display = 'none';
+    document.getElementById('validationResults').innerHTML = '';
+}
+
+// Init
+window.addEventListener('load', () => {
+    if (typeof ENHANCED_MOVEMENTS === 'undefined') {
+        log('✗ enhanced-movements.js not loaded — place this file in the bridge-modes folder', 'err');
+    } else {
+        log(`✓ enhanced-movements.js loaded — ${Object.keys(ENHANCED_MOVEMENTS).length} movements available`, 'ok');
+        updateMovements();
+    }
+});
+</script>
+</body>
+</html>

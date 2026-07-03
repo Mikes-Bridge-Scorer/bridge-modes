@@ -87,7 +87,17 @@ class DuplicateTemplates {
     }
 
     _getSitOutPair(movement) {
-        if (!movement.hasSitOut) return null;
+        // The "ghost pair" concept (a fixed numeric placeholder that plays
+        // every round as a real-looking entrant) is a Howell-specific
+        // technique. Mitchell-type sit-outs (straight or Hesitation) use a
+        // completely different convention — an empty table is marked with
+        // ns:'', and the real pair sitting out that round is recorded in ew.
+        // There is no fixed "ghost number" for Mitchell types, and every pair
+        // number up to movement.pairs is a genuine real pair — so applying
+        // Math.max(...) here would misidentify the highest-numbered REAL
+        // pair as a ghost and silently drop all their rows. Only compute a
+        // ghost pair for Howell.
+        if (!movement.hasSitOut || movement.type === 'mitchell') return null;
         const allPairs = movement.movement.flatMap(e => [e.ns, e.ew]).filter(p => p !== '' && typeof p === 'number');
         return Math.max(...allPairs);
     }
@@ -218,18 +228,15 @@ class DuplicateTemplates {
 
     _getBoardPairMapping(movement, sitOutPair) {
         const mapping = {};
-        // For Mitchell movements, EW pairs are numbered tables+1 through pairs.
-        // The movement generator uses relative positions 1-tables, so we offset.
-        const isMitchell = movement.type === 'mitchell';
-        const ewOffset = isMitchell ? movement.tables : 0;
-
+        // Pair numbers come straight from the movement data — already correct
+        // (straight Mitchell uses ACBL shared numbering, Hesitation Mitchell
+        // and Howell use globally unique numbering). No offset needed.
         movement.movement.forEach(entry => {
             if (!entry.boards || entry.boards.length === 0) return;
             if (entry.ns === '' || entry.ns === sitOutPair || entry.ew === sitOutPair) return;
-            const ewDisplay = isMitchell ? entry.ew + ewOffset : entry.ew;
             entry.boards.forEach(boardNum => {
                 if (!mapping[boardNum]) mapping[boardNum] = [];
-                mapping[boardNum].push({ ns: entry.ns, ew: ewDisplay });
+                mapping[boardNum].push({ ns: entry.ns, ew: entry.ew });
             });
         });
         return mapping;
@@ -358,11 +365,17 @@ class DuplicateTemplates {
             tables.forEach(tableNum => {
                 const entry = rounds[roundNum].find(e => e.table === tableNum);
                 if (entry) {
-                    const nsIsSitOut = sitOutPair && entry.ns === sitOutPair;
-                    const ewIsSitOut = sitOutPair && entry.ew === sitOutPair;
                     const boardsText = entry.boards && entry.boards.length > 0 ? entry.boards[0] + '-' + entry.boards[entry.boards.length-1] : '—';
-                    const nsText = nsIsSitOut ? '<span style="color:#856404">Sit Out</span>' : '<span style="color:#27ae60">' + entry.ns + '</span>';
-                    const ewText = ewIsSitOut ? '<span style="color:#856404">Sit Out</span>' : '<span style="color:#e74c3c">' + entry.ew + '</span>';
+                    // Howell: ghost pair (fixed number) marks the sit-out.
+                    // Mitchell (straight or Hesitation): ns:'' marks an empty
+                    // table, and the real sitting-out pair's number is in ew.
+                    const mitchellSitOut = movement.type === 'mitchell' && entry.ns === '';
+                    const nsIsSitOut = mitchellSitOut || (sitOutPair && entry.ns === sitOutPair);
+                    const ewIsSitOut = sitOutPair && entry.ew === sitOutPair;
+                    const nsText = nsIsSitOut ? '<span style="color:#856404">—</span>' : '<span style="color:#27ae60">' + entry.ns + '</span>';
+                    const ewText = mitchellSitOut ? '<span style="color:#856404">Sit Out</span>'
+                        : ewIsSitOut ? '<span style="color:#856404">Sit Out</span>'
+                        : '<span style="color:#e74c3c">' + entry.ew + '</span>';
                     tableRows += '<td>NS: ' + nsText + '<br>EW: ' + ewText + '<br><small>' + boardsText + '</small></td>';
                 } else { tableRows += '<td>—</td>'; }
             });
