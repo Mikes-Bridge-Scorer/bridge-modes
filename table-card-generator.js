@@ -110,23 +110,36 @@ class TableCardGenerator {
     // to batch-produce files, and by any other caller that needs a self-contained
     // file rather than an in-page overlay).
     generateHTML(movement) {
-        const innerHTML = movement.type === 'mitchell'
-            ? this._buildMitchellHTML(movement)
-            : this._buildTableCardsHTML(movement);
+        const innerHTML = this._buildMovementContent(movement);
         const title = movement.type === 'mitchell' ? 'Movement Instructions' : 'Table Movement Cards';
         return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title} — ${movement.description}</title>`
             + `<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:16px;background:white;}${this._getCardCSS()}</style>`
             + `</head><body>${innerHTML}</body></html>`;
     }
 
+    // Straight Mitchell: summary instructions only ("stay put" / "move up one"
+    // is a rule players can follow without a lookup table).
+    // Hesitation Mitchell: summary AND detailed per-table cards — moving
+    // pairs follow a real, non-obvious cycle (including one round sitting
+    // North-South), so "follow your table card" needs an actual table to
+    // follow, same as Howell already gets.
+    // Howell: detailed per-table cards only (as before).
+    _buildMovementContent(movement) {
+        if (movement.type === 'mitchell' && movement.isHesitation) {
+            return this._buildMitchellHTML(movement)
+                + '<div style="margin-top:24px;"><h2 style="font-size:16px;color:#2c3e50;margin-bottom:12px;">Detailed Table Cards — find your table below each round</h2></div>'
+                + this._buildTableCardsHTML(movement);
+        }
+        return movement.type === 'mitchell'
+            ? this._buildMitchellHTML(movement)
+            : this._buildTableCardsHTML(movement);
+    }
+
     // ─── MAIN ENTRY POINTS ───────────────────────────────────────────────────
 
     generateTableCards(movement) {
-        if (movement.type === 'mitchell') {
-            this._showOverlay(this._buildMitchellHTML(movement), 'Movement Instructions');
-        } else {
-            this._showOverlay(this._buildTableCardsHTML(movement), 'Table Movement Cards');
-        }
+        const title = movement.type === 'mitchell' ? 'Movement Instructions' : 'Table Movement Cards';
+        this._showOverlay(this._buildMovementContent(movement), title);
     }
 
     downloadTableCardsHTML(movement) {
@@ -289,15 +302,18 @@ class TableCardGenerator {
         const totalRounds = Math.max(...movement.movement.map(e => e.round));
         const roundsAtTable = new Map(tableRounds.map(r => [r.round, r]));
 
-        // Detect sit-out pair: it's pairs+1 (the ghost pair in the underlying even movement)
-        // e.g. 7-pair uses 8-pair movement, sit-out = pair 8 = pairs+1
-        // Fall back to max pair number detected in data
+        // Sit-out detection differs by movement type:
+        // Howell: the ghost pair (highest pair number) is a real numbered
+        // entrant every round — compare against that fixed number.
+        // Mitchell (straight sit-out or Hesitation): an empty table is
+        // marked with ns:'', and ew holds the number of whichever real
+        // pair is resting that round — there's no fixed "ghost number".
+        const isMitchellType = movement.type === 'mitchell';
         const allPairNums = movement.movement
             .flatMap(e => [e.ns, e.ew])
             .filter(p => p !== '' && p !== 'Sit out' && p !== 'Sit Out' && typeof p === 'number');
         const maxPair = Math.max(...allPairNums);
-        const sitOutPairNum = movement.hasSitOut ? maxPair : null;
-        // sitOutPairNum will be pairs+1 (e.g. 8 for 7-pair, 10 for 9-pair, 6 for 5-pair)
+        const sitOutPairNum = (!isMitchellType && movement.hasSitOut) ? maxPair : null;
 
         const formatPair = (p) => {
             if (sitOutPairNum && p === sitOutPairNum) return 'Sit Out';
@@ -309,6 +325,19 @@ class TableCardGenerator {
         for (let r = 1; r <= totalRounds; r++) {
             if (roundsAtTable.has(r)) {
                 const round = roundsAtTable.get(r);
+                const mitchellSitOut = isMitchellType && round.ns === '';
+
+                if (mitchellSitOut) {
+                    rows += `
+            <tr class="sitout-row">
+                <td class="round-col">${round.round}</td>
+                <td class="sitout-cell">&mdash;</td>
+                <td class="sitout-cell" style="color:#856404;font-weight:700;">Pair ${round.ew} &mdash; Sit Out</td>
+                <td class="sitout-cell">—</td>
+            </tr>`;
+                    continue;
+                }
+
                 const nsDisplay = formatPair(round.ns);
                 const ewDisplay = formatPair(round.ew);
                 const isSitOutRound = nsDisplay === 'Sit Out' || ewDisplay === 'Sit Out';
@@ -367,6 +396,17 @@ class TableCardGenerator {
     }
 
     _buildMovementInstructions(movement, tableNum, sitOutPairNum) {
+        if (movement.type === 'mitchell' && movement.isHesitation) {
+            // Hesitation Mitchell has no simple "move up one" rule — moving
+            // pairs follow a real cycle including one round sitting North-
+            // South. The round-by-round table above already shows exactly
+            // where to be each round, so the note here just points to it
+            // rather than stating a rule that would be wrong.
+            return `
+                <div class="instruction-line">Check the table above each round — Hesitation Mitchell doesn't follow a simple move pattern.</div>
+                <div class="sitout-note">⚠️ When your card shows SIT OUT — rest that round</div>
+            `;
+        }
         if (movement.type === 'mitchell') {
             return `
                 <div class="instruction-line"><span class="ns-inst">N/S</span> — Stay at your table</div>
