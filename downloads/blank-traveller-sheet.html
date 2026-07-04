@@ -1,56 +1,327 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
     <title>Blank Traveller Sheet</title>
-    <style>
-        body{font-family:Arial,sans-serif;margin:10mm;}
-        h2{text-align:center;color:#2c3e50;margin-bottom:4px;}
-        .sub{text-align:center;color:#7f8c8d;font-size:11pt;margin-bottom:12px;}
-        table{width:100%;border-collapse:collapse;font-size:10pt;}
-        th{background:#2c3e50;color:white;padding:8px;text-align:center;border:1px solid #2c3e50;}
-        td{padding:10px 6px;border:1px solid #bdc3c7;text-align:center;height:28px;}
-        .brand{text-align:center;font-size:9pt;color:#7f8c8d;margin-top:12px;}
-        @media print{@page{size:A4;margin:10mm;}}
+    <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;}
+        
+        .traveler-sheet{width:100%;border:2px solid #2c3e50;border-radius:4px;overflow:hidden;display:block;}
+        .traveler-header{background:white;color:#2c3e50;border-bottom:2px solid #2c3e50;padding:6px 8px;text-align:center;}
+        .traveler-header-brand{font-size:11pt;font-weight:800;color:#2c3e50;display:block;}
+        .traveler-header-url{font-size:8pt;color:#666;display:block;}
+        .traveler-header-title{font-size:13pt;font-weight:800;color:#2c3e50;display:block;margin:3px 0;}
+        .traveler-header-sub{font-size:9pt;color:#555;display:block;}
+        .traveler-table{width:100%;border-collapse:collapse;}
+        .traveler-table th{background:#34495e;color:white;font-size:8.5pt;font-weight:700;padding:5px 2px;text-align:center;border:1px solid #2c3e50;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+        .traveler-table td{font-size:9.5pt;padding:4px 2px;text-align:center;border:1px solid #bdc3c7;height:18px;}
+        .traveler-table tr:nth-child(even) td{background:#f9f9f9;}
+        .bts-entry{font-weight:700;background:#f8f9fa;}
+        .bts-page{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6mm;padding:8mm;}
+        .brand-footer{text-align:center;font-size:9pt;color:#7f8c8d;margin-top:12px;}
+    
+        @media print{@page{size:A4;margin:8mm;}}
     </style></head><body>
-    <h2>🃏 Bridge Traveller Sheet</h2>
-    <div class="sub">Board _______ &nbsp;&nbsp; Vulnerability: _______</div>
-    <table>
-        <thead><tr>
-            <th>Entry</th><th>NS Pair</th><th>EW Pair</th>
-            <th>Contract</th><th>By</th><th>Result</th>
-            <th>+Score</th><th>−Score</th><th>MP NS</th><th>MP EW</th>
-        </tr></thead>
-        <tbody>
+    <div class="bts-page">
+        <div class="traveler-sheet bts-sheet">
+            <div class="traveler-header">
+                <span class="traveler-header-brand">🃏 Bridge at Sea</span>
+                <span class="traveler-header-url">bridgescorer.com</span>
+                <span class="traveler-header-title">Blank Traveller Sheet</span>
+                <span class="traveler-header-sub">Board _______ &nbsp;&nbsp; Vulnerability: _______</span>
+            </div>
+            <table class="traveler-table">
+                <thead><tr>
+                    <th>Entry</th><th>NS<br>Pair</th><th>EW<br>Pair</th>
+                    <th>Contract</th><th>By</th><th>Result</th>
+                    <th>+Score</th><th>&minus;Score</th><th>MP<br>NS/EW</th>
+                </tr></thead>
+                <tbody>
         <tr>
-            <td style="text-align:center;font-weight:bold;">1</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">1</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">2</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">2</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">3</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">3</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">4</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">4</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">5</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">5</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">6</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">6</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">7</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">7</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
         <tr>
-            <td style="text-align:center;font-weight:bold;">8</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td class="bts-entry">8</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">9</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">10</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">11</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">12</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">13</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">14</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">15</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
         </tr></tbody>
-    </table>
-    <div class="brand">🃏 Bridge at Sea · bridgescorer.com — Free bridge resources for cruise ships</div>
+            </table>
+        </div>
+        <div class="traveler-sheet bts-sheet">
+            <div class="traveler-header">
+                <span class="traveler-header-brand">🃏 Bridge at Sea</span>
+                <span class="traveler-header-url">bridgescorer.com</span>
+                <span class="traveler-header-title">Blank Traveller Sheet</span>
+                <span class="traveler-header-sub">Board _______ &nbsp;&nbsp; Vulnerability: _______</span>
+            </div>
+            <table class="traveler-table">
+                <thead><tr>
+                    <th>Entry</th><th>NS<br>Pair</th><th>EW<br>Pair</th>
+                    <th>Contract</th><th>By</th><th>Result</th>
+                    <th>+Score</th><th>&minus;Score</th><th>MP<br>NS/EW</th>
+                </tr></thead>
+                <tbody>
+        <tr>
+            <td class="bts-entry">1</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">2</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">3</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">4</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">5</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">6</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">7</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">8</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">9</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">10</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">11</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">12</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">13</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">14</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">15</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr></tbody>
+            </table>
+        </div>
+        <div class="traveler-sheet bts-sheet">
+            <div class="traveler-header">
+                <span class="traveler-header-brand">🃏 Bridge at Sea</span>
+                <span class="traveler-header-url">bridgescorer.com</span>
+                <span class="traveler-header-title">Blank Traveller Sheet</span>
+                <span class="traveler-header-sub">Board _______ &nbsp;&nbsp; Vulnerability: _______</span>
+            </div>
+            <table class="traveler-table">
+                <thead><tr>
+                    <th>Entry</th><th>NS<br>Pair</th><th>EW<br>Pair</th>
+                    <th>Contract</th><th>By</th><th>Result</th>
+                    <th>+Score</th><th>&minus;Score</th><th>MP<br>NS/EW</th>
+                </tr></thead>
+                <tbody>
+        <tr>
+            <td class="bts-entry">1</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">2</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">3</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">4</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">5</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">6</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">7</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">8</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">9</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">10</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">11</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">12</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">13</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">14</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">15</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr></tbody>
+            </table>
+        </div>
+        <div class="traveler-sheet bts-sheet">
+            <div class="traveler-header">
+                <span class="traveler-header-brand">🃏 Bridge at Sea</span>
+                <span class="traveler-header-url">bridgescorer.com</span>
+                <span class="traveler-header-title">Blank Traveller Sheet</span>
+                <span class="traveler-header-sub">Board _______ &nbsp;&nbsp; Vulnerability: _______</span>
+            </div>
+            <table class="traveler-table">
+                <thead><tr>
+                    <th>Entry</th><th>NS<br>Pair</th><th>EW<br>Pair</th>
+                    <th>Contract</th><th>By</th><th>Result</th>
+                    <th>+Score</th><th>&minus;Score</th><th>MP<br>NS/EW</th>
+                </tr></thead>
+                <tbody>
+        <tr>
+            <td class="bts-entry">1</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">2</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">3</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">4</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">5</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">6</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">7</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">8</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">9</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">10</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">11</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">12</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">13</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">14</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td class="bts-entry">15</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr></tbody>
+            </table>
+        </div></div>
+    <div class="brand-footer">🃏 Bridge at Sea &middot; bridgescorer.com — Free bridge resources for cruise ships</div>
     </body></html>
