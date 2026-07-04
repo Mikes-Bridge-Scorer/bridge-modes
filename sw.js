@@ -2,7 +2,7 @@
 // Version: 2025-02-13-TABLE-CARDS - All files included for cruise use
 // This caches EVERYTHING needed for 100% offline operation
 
-const CACHE_VERSION = 'bridge-modes-v2026-07-03-hesitation-mitchell-complete';
+const CACHE_VERSION = 'bridge-modes-v2026-07-03-downloads-network-first';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
@@ -168,8 +168,15 @@ self.addEventListener('fetch', event => {
     // Clean up the pathname for matching
     let pathname = url.pathname;
     
-    // Check if this is a dynamic file (JavaScript that might update)
-    const isDynamicFile = DYNAMIC_FILES.some(file => {
+    // Check if this is a dynamic file (JavaScript that might update),
+    // OR anything in the downloads folder — those are individual movement
+    // cards and traveller sheets that get regenerated and re-uploaded
+    // periodically, and were never being treated as "might update" before.
+    // Without this, once a downloads/*.html file is cached a single time,
+    // it's served forever regardless of how many times the real file on
+    // GitHub is fixed and re-deployed — which is exactly what happened here.
+    const isDownloadsFile = pathname.includes('/downloads/');
+    const isDynamicFile = isDownloadsFile || DYNAMIC_FILES.some(file => {
         const cleanFile = file.replace('./', '');
         return pathname.endsWith(cleanFile) || pathname.includes(cleanFile);
     });
