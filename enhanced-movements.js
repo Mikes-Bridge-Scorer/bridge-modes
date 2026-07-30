@@ -227,9 +227,9 @@ const HARDCODED_MOVEMENTS = {
     },
 
     "5_howell_15": {
-        pairs: 5, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3,
-        type: 'howell', hasSitOut: true,
-        description: "2.5-table Howell, 15 boards, ~2 hrs (1 sit-out)",
+        pairs: 6, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3,
+        type: 'howell',
+        description: "3-table Howell, 15 boards, ~2 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
             { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2,3] },
@@ -250,9 +250,9 @@ const HARDCODED_MOVEMENTS = {
     },
 
     "5_howell_25": {
-        pairs: 5, tables: 3, rounds: 5, totalBoards: 25, boardsPerRound: 5,
-        type: 'howell', hasSitOut: true,
-        description: "2.5-table Howell, 25 boards, ~3 hrs (1 sit-out)",
+        pairs: 6, tables: 3, rounds: 5, totalBoards: 25, boardsPerRound: 5,
+        type: 'howell',
+        description: "3-table Howell, 25 boards, ~3 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5] },
             { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2,3,4,5] },
@@ -342,9 +342,9 @@ const HARDCODED_MOVEMENTS = {
     },
 
     "7_howell_14": {
-        pairs: 7, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
-        type: 'howell', hasSitOut: true,
-        description: "3.5-table Howell, 14 boards, ~2 hrs (1 sit-out)",
+        pairs: 8, tables: 4, rounds: 7, totalBoards: 14, boardsPerRound: 2,
+        type: 'howell',
+        description: "4-table Howell, 14 boards, ~2 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
             { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2] },
@@ -378,9 +378,9 @@ const HARDCODED_MOVEMENTS = {
     },
 
     "7_howell_28": {
-        pairs: 7, tables: 4, rounds: 7, totalBoards: 28, boardsPerRound: 4,
-        type: 'howell', hasSitOut: true,
-        description: "3.5-table Howell, 28 boards, ~3.5 hrs (1 sit-out)",
+        pairs: 8, tables: 4, rounds: 7, totalBoards: 28, boardsPerRound: 4,
+        type: 'howell',
+        description: "4-table Howell, 28 boards, ~3.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4] },
             { round: 1, table: 2, ns: 3, ew: 8, boards: [1,2,3,4] },
@@ -486,9 +486,9 @@ const HARDCODED_MOVEMENTS = {
     },
 
     "9_howell_18": {
-        pairs: 9, tables: 5, rounds: 9, totalBoards: 18, boardsPerRound: 2,
-        type: 'howell', hasSitOut: true,
-        description: "4.5-table Howell, 18 boards, ~2.5 hrs (1 sit-out)",
+        pairs: 10, tables: 5, rounds: 9, totalBoards: 18, boardsPerRound: 2,
+        type: 'howell',
+        description: "5-table Howell, 18 boards, ~2.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2] },
             { round: 1, table: 2, ns: 3, ew: 10, boards: [1,2] },
@@ -539,9 +539,9 @@ const HARDCODED_MOVEMENTS = {
     },
 
     "9_howell_27": {
-        pairs: 9, tables: 5, rounds: 9, totalBoards: 27, boardsPerRound: 3,
-        type: 'howell', hasSitOut: true,
-        description: "4.5-table Howell, 27 boards, ~3.5 hrs (1 sit-out)",
+        pairs: 10, tables: 5, rounds: 9, totalBoards: 27, boardsPerRound: 3,
+        type: 'howell',
+        description: "5-table Howell, 27 boards, ~3.5 hrs",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
             { round: 1, table: 2, ns: 3, ew: 10, boards: [1,2,3] },
