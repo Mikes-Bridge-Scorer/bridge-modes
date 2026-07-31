@@ -229,7 +229,7 @@ const HARDCODED_MOVEMENTS = {
     "5_howell_15": {
         pairs: 6, tables: 3, rounds: 5, totalBoards: 15, boardsPerRound: 3,
         type: 'howell',
-        description: "3-table Howell, 15 boards, ~2 hrs",
+        description: "3-table Howell, 15 boards, ~2 hrs (alt. rotation)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3] },
             { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2,3] },
@@ -252,7 +252,7 @@ const HARDCODED_MOVEMENTS = {
     "5_howell_25": {
         pairs: 6, tables: 3, rounds: 5, totalBoards: 25, boardsPerRound: 5,
         type: 'howell',
-        description: "3-table Howell, 25 boards, ~3 hrs",
+        description: "3-table Howell, 25 boards, ~3 hrs (alt. rotation)",
         movement: [
             { round: 1, table: 1, ns: 1, ew: 2, boards: [1,2,3,4,5] },
             { round: 1, table: 2, ns: 3, ew: 6, boards: [1,2,3,4,5] },
