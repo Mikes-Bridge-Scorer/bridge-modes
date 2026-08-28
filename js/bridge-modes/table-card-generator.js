@@ -302,67 +302,47 @@ class TableCardGenerator {
         const totalRounds = Math.max(...movement.movement.map(e => e.round));
         const roundsAtTable = new Map(tableRounds.map(r => [r.round, r]));
 
-        // Sit-out detection differs by movement type:
-        // Howell: the ghost pair (highest pair number) is a real numbered
-        // entrant every round — compare against that fixed number.
-        // Mitchell (straight sit-out or Hesitation): an empty table is
-        // marked with ns:'', and ew holds the number of whichever real
-        // pair is resting that round — there's no fixed "ghost number".
+        // Sit-out detection: a genuine sit-out is represented as an entry
+        // with an empty ns or ew side and an empty boards array — the same
+        // representation for every movement type. (An earlier version of
+        // this compared against the highest pair number in the movement
+        // instead, on the assumption Howell used a fixed "ghost pair"
+        // number — but that broke as soon as a real pair's own number
+        // happened to equal it: the last-numbered real pair got mislabeled
+        // "Sit Out" on rounds they were genuinely playing, while the actual
+        // sit-out round for a lower-numbered pair went undetected.)
         const isMitchellType = movement.type === 'mitchell';
-        const allPairNums = movement.movement
-            .flatMap(e => [e.ns, e.ew])
-            .filter(p => p !== '' && p !== 'Sit out' && p !== 'Sit Out' && typeof p === 'number');
-        const maxPair = Math.max(...allPairNums);
-        const sitOutPairNum = (!isMitchellType && movement.hasSitOut) ? maxPair : null;
-
-        const formatPair = (p) => {
-            if (sitOutPairNum && p === sitOutPairNum) return 'Sit Out';
-            return p;
-        };
 
         // Build rows for ALL rounds
         let rows = '';
         for (let r = 1; r <= totalRounds; r++) {
             if (roundsAtTable.has(r)) {
                 const round = roundsAtTable.get(r);
-                const mitchellSitOut = isMitchellType && round.ns === '';
+                const isSitOutRound = movement.hasSitOut && (round.ns === '' || round.ew === '');
 
-                if (mitchellSitOut) {
+                if (isSitOutRound) {
+                    const restingPair = round.ns === '' ? round.ew : round.ns;
                     rows += `
             <tr class="sitout-row">
                 <td class="round-col">${round.round}</td>
                 <td class="sitout-cell">&mdash;</td>
-                <td class="sitout-cell" style="color:#856404;font-weight:700;">Pair ${round.ew} &mdash; Sit Out</td>
+                <td class="sitout-cell" style="color:#856404;font-weight:700;">Pair ${restingPair} &mdash; Sit Out</td>
                 <td class="sitout-cell">—</td>
             </tr>`;
                     continue;
                 }
 
-                const nsDisplay = formatPair(round.ns);
-                const ewDisplay = formatPair(round.ew);
-                const isSitOutRound = nsDisplay === 'Sit Out' || ewDisplay === 'Sit Out';
-
-                if (isSitOutRound) {
-                    rows += `
-            <tr class="sitout-row">
-                <td class="round-col">${round.round}</td>
-                <td class="sitout-cell" style="color:#27ae60;font-weight:700;">${nsDisplay === 'Sit Out' ? 'Sit Out' : nsDisplay}</td>
-                <td class="sitout-cell" style="color:#e74c3c;font-weight:700;">${ewDisplay === 'Sit Out' ? 'Sit Out' : ewDisplay}</td>
-                <td class="sitout-cell">—</td>
-            </tr>`;
-                } else {
-                    rows += `
+                rows += `
             <tr>
                 <td class="round-col">${round.round}</td>
-                <td class="ns-col">${nsDisplay}</td>
-                <td class="ew-col">${ewDisplay}</td>
+                <td class="ns-col">${round.ns}</td>
+                <td class="ew-col">${round.ew}</td>
                 <td>${this._formatBoards(round.boards)}</td>
             </tr>`;
-                }
             }
         }
 
-        const instructions = this._buildMovementInstructions(movement, tableNum, sitOutPairNum);
+        const instructions = this._buildMovementInstructions(movement, tableNum);
         const titleText = this._formatTitle(movement.description);
 
         return `
@@ -395,7 +375,7 @@ class TableCardGenerator {
         return `<strong>${clean.replace(/,\s*/g, ' — ')}</strong>`;
     }
 
-    _buildMovementInstructions(movement, tableNum, sitOutPairNum) {
+    _buildMovementInstructions(movement, tableNum) {
         if (movement.type === 'mitchell' && movement.isHesitation) {
             // Hesitation Mitchell has no simple "move up one" rule — moving
             // pairs follow a real cycle including one round sitting North-
@@ -424,8 +404,9 @@ class TableCardGenerator {
         let ewInstruction = null;
 
         for (const cur of tableRounds) {
-            // Skip sit-out rounds
-            if (cur.ns === sitOutPairNum || cur.ew === sitOutPairNum) continue;
+            // Skip sit-out rounds — a genuine sit-out has an empty side,
+            // not a fixed "ghost pair" number.
+            if (cur.ns === '' || cur.ew === '') continue;
             if (cur.round >= totalRounds) continue;
 
             const nextRound = cur.round + 1;
@@ -434,12 +415,12 @@ class TableCardGenerator {
             const nsNext = movement.movement.find(e =>
                 e.round === nextRound &&
                 (e.ns === cur.ns || e.ew === cur.ns) &&
-                e.ns !== sitOutPairNum && e.ew !== sitOutPairNum
+                e.ns !== '' && e.ew !== ''
             );
             const ewNext = movement.movement.find(e =>
                 e.round === nextRound &&
                 (e.ns === cur.ew || e.ew === cur.ew) &&
-                e.ns !== sitOutPairNum && e.ew !== sitOutPairNum
+                e.ns !== '' && e.ew !== ''
             );
 
             if (nsNext && ewNext) {
