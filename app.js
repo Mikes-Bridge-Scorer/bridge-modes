@@ -45,6 +45,11 @@ class BridgeApp {
         
         // Load base mode class first
         await this.loadBaseMode();
+
+        // Create the persistent licence bar once — lives outside #display
+        // so it stays visible regardless of appState (mode selection,
+        // mid-game, license entry — everywhere)
+        this.createLicenseBar();
         
         // Check existing license
         const licenseStatus = this.licenseManager.checkLicenseStatus();
@@ -60,7 +65,73 @@ class BridgeApp {
         }
         
         this.setupEventListeners();
+        this.updateLicenseBar();
         console.log('✅ Bridge Modes Calculator ready');
+    }
+
+    // Build the fixed bottom bar once and insert it into the page
+    createLicenseBar() {
+        if (document.getElementById('licenseBar')) return;
+
+        const bar = document.createElement('div');
+        bar.id = 'licenseBar';
+        bar.style.cssText = `
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 500;
+            background: #0a1628;
+            color: #c8d8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 8px 10px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
+        `;
+        document.body.appendChild(bar);
+    }
+
+    // Refresh the bar's content — call this any time license/trial state
+    // might have changed, or when switching screens
+    updateLicenseBar() {
+        const bar = document.getElementById('licenseBar');
+        if (!bar) return;
+
+        // Hide the bar on the license-entry screen — that screen already
+        // shows the full explanation, no need to duplicate it underneath
+        if (this.appState === 'license_entry') {
+            bar.style.display = 'none';
+            return;
+        }
+
+        const status = this.licenseManager.checkLicenseStatus();
+        const annualUrl = this.licenseManager.config.annualBuyUrl;
+        const lifetimeUrl = this.licenseManager.config.lifetimeBuyUrl;
+        const linkStyle = 'color:#ffd27a;text-decoration:underline;';
+
+        let html = '';
+        if (status.status === 'lifetime') {
+            html = 'Lifetime access — thank you for your support! 🎉';
+        } else if (status.status === 'trial') {
+            html = status.daysLeft + ' day' + (status.daysLeft !== 1 ? 's' : '') + ' left · ' +
+                '<a href="' + annualUrl + '" target="_blank" style="' + linkStyle + '">1yr £10</a> · ' +
+                '<a href="' + lifetimeUrl + '" target="_blank" style="' + linkStyle + '">Lifetime £25</a>';
+        } else if (status.status === 'annual') {
+            html = status.daysLeft + ' day' + (status.daysLeft !== 1 ? 's' : '') + ' left · ' +
+                '<a href="' + annualUrl + '" target="_blank" style="' + linkStyle + '">Renew £10</a> · ' +
+                '<a href="' + lifetimeUrl + '" target="_blank" style="' + linkStyle + '">Lifetime £25</a>';
+        } else {
+            // trial_expired / annual_expired — license entry screen handles
+            // this in full, so keep the bar minimal here
+            html = 'Licence needed · ' +
+                '<a href="' + annualUrl + '" target="_blank" style="' + linkStyle + '">1yr £10</a> · ' +
+                '<a href="' + lifetimeUrl + '" target="_blank" style="' + linkStyle + '">Lifetime £25</a>';
+        }
+
+        bar.style.display = '';
+        bar.innerHTML = html;
     }
 
     // NEW METHOD: Enhanced help system initialization with fallback
@@ -256,6 +327,11 @@ class BridgeApp {
         // Mobile-specific touch handling
         if (this.isMobile) {
             document.addEventListener('touchend', (e) => {
+                // Let real links (like the license bar's buy links) behave
+                // normally — don't intercept taps on <a> elements
+                if (e.target.closest('a')) {
+                    return;
+                }
                 e.preventDefault(); // Prevent double-tap and click events
                 this.handleClick(e);
             }, { passive: false });
@@ -379,6 +455,10 @@ class BridgeApp {
             this.currentBridgeMode.updateDisplay();
             
             this.showMessage(modeName + ' loaded! 🎉', 'success');
+
+            // Keep the persistent bottom bar visible and current now that
+            // we've left the mode-selection screen
+            this.updateLicenseBar();
             
         } catch (error) {
             console.error('Failed to load ' + modeName + ':', error);
@@ -400,33 +480,6 @@ class BridgeApp {
             this.currentBridgeMode = null;
         }
         
-        // Get a fresh status check so the banner always reflects the
-        // current trial/annual countdown, not just the value passed in
-        const status = this.licenseManager.checkLicenseStatus();
-        
-        let licenseText = '';
-        if (status.status === 'trial') {
-            if (status.warning) {
-                licenseText = '⚠️ ' + status.daysLeft + ' day' + (status.daysLeft !== 1 ? 's' : '') +
-                    ' left in trial — <a href="' + this.licenseManager.config.annualBuyUrl +
-                    '" target="_blank" style="color:#ffd27a;">Annual £10</a> or <a href="' +
-                    this.licenseManager.config.lifetimeBuyUrl +
-                    '" target="_blank" style="color:#ffd27a;">Lifetime £25</a>';
-            } else {
-                licenseText = 'Free trial: ' + status.daysLeft + ' days left';
-            }
-        } else if (status.status === 'annual') {
-            licenseText = status.warning
-                ? '⚠️ Renews in ' + status.daysLeft + ' day' + (status.daysLeft !== 1 ? 's' : '') +
-                  ' — <a href="' + this.licenseManager.config.annualBuyUrl +
-                  '" target="_blank" style="color:#ffd27a;">Renew here</a>'
-                : 'Annual licence — ' + status.daysLeft + ' days remaining';
-        } else if (status.status === 'lifetime') {
-            licenseText = 'Lifetime access — thank you!';
-        } else {
-            licenseText = 'Full Version Activated';
-        }
-        
         const display = document.getElementById('display');
         if (!display) {
             console.error('Display element not found');
@@ -440,13 +493,15 @@ class BridgeApp {
         
         const gameContent = '<div class="game-content"><div class="mode-selection">' + modeGrid + '</div></div>';
         const currentState = '<div class="current-state">Press 1-5 to select bridge scoring mode</div>';
-        const licenseStatusHtml = '<div class="license-status">' + licenseText + '</div>';
 
-        display.innerHTML = titleRow + gameContent + currentState + licenseStatusHtml;
+        display.innerHTML = titleRow + gameContent + currentState;
 
         // Enable mode selection buttons and controls
         this.updateButtonStates(['1', '2', '3', '4', '5']);
         this.enableControls();
+
+        // Keep the persistent bottom bar in sync with current status
+        this.updateLicenseBar();
     }
 
     updateButtonStates(activeButtons) {
@@ -585,6 +640,7 @@ class BridgeApp {
         
         this.updateButtonStates(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'BACK']);
         this.updateLicenseDisplay();
+        this.updateLicenseBar();
     }
 // END SECTION SIX
 // SECTION SEVEN - Control Handling and Wake Lock
@@ -727,6 +783,10 @@ class BridgeApp {
                         <li>No Trump: 30 points + 10 bonus</li>
                         <li>Game bonus: 300 (NV) or 500 (Vul)</li>
                     </ul>
+
+                    <h4>Need a License?</h4>
+                    <p>Annual — £10/year: <a href="${this.licenseManager.config.annualBuyUrl}" target="_blank">${this.licenseManager.config.annualBuyUrl}</a></p>
+                    <p>Lifetime — £25 one-off: <a href="${this.licenseManager.config.lifetimeBuyUrl}" target="_blank">${this.licenseManager.config.lifetimeBuyUrl}</a></p>
                 `
             },
             'chicago': {
@@ -749,6 +809,10 @@ class BridgeApp {
                         <li>Dealer advances each deal</li>
                         <li>Natural 4-deal break points</li>
                     </ul>
+
+                    <h4>Need a License?</h4>
+                    <p>Annual — £10/year: <a href="${this.licenseManager.config.annualBuyUrl}" target="_blank">${this.licenseManager.config.annualBuyUrl}</a></p>
+                    <p>Lifetime — £25 one-off: <a href="${this.licenseManager.config.lifetimeBuyUrl}" target="_blank">${this.licenseManager.config.lifetimeBuyUrl}</a></p>
                 `
             },
             'bonus': {
@@ -770,6 +834,10 @@ class BridgeApp {
                         <li>Considers hand strength in scoring</li>
                         <li>More skill-based, less luck-dependent</li>
                     </ul>
+
+                    <h4>Need a License?</h4>
+                    <p>Annual — £10/year: <a href="${this.licenseManager.config.annualBuyUrl}" target="_blank">${this.licenseManager.config.annualBuyUrl}</a></p>
+                    <p>Lifetime — £25 one-off: <a href="${this.licenseManager.config.lifetimeBuyUrl}" target="_blank">${this.licenseManager.config.lifetimeBuyUrl}</a></p>
                 `
             },
             'rubber': {
@@ -790,6 +858,10 @@ class BridgeApp {
                         <li>Not vulnerable until you win first game</li>
                         <li>Vulnerable after winning one game</li>
                     </ul>
+
+                    <h4>Need a License?</h4>
+                    <p>Annual — £10/year: <a href="${this.licenseManager.config.annualBuyUrl}" target="_blank">${this.licenseManager.config.annualBuyUrl}</a></p>
+                    <p>Lifetime — £25 one-off: <a href="${this.licenseManager.config.lifetimeBuyUrl}" target="_blank">${this.licenseManager.config.lifetimeBuyUrl}</a></p>
                 `
             },
             'duplicate': {
@@ -811,6 +883,10 @@ class BridgeApp {
                         <li>Fair comparison of skill</li>
                         <li>Pre-determined vulnerability</li>
                     </ul>
+
+                    <h4>Need a License?</h4>
+                    <p>Annual — £10/year: <a href="${this.licenseManager.config.annualBuyUrl}" target="_blank">${this.licenseManager.config.annualBuyUrl}</a></p>
+                    <p>Lifetime — £25 one-off: <a href="${this.licenseManager.config.lifetimeBuyUrl}" target="_blank">${this.licenseManager.config.lifetimeBuyUrl}</a></p>
                 `
             }
         };
