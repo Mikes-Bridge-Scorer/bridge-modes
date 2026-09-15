@@ -831,7 +831,8 @@ class BridgeApp {
                 </ul>
                 
                 <h4>Need a License?</h4>
-                <p>Get Annual (£10/year) or Lifetime (£25) access at bridgescorer.com/bridge-modes-calculator/</p>
+                <p>Annual — £10/year: <a href="${this.licenseManager.config.annualBuyUrl}" target="_blank">${this.licenseManager.config.annualBuyUrl}</a></p>
+                <p>Lifetime — £25 one-off: <a href="${this.licenseManager.config.lifetimeBuyUrl}" target="_blank">${this.licenseManager.config.lifetimeBuyUrl}</a></p>
             `
         };
     }
