@@ -400,13 +400,29 @@ class BridgeApp {
             this.currentBridgeMode = null;
         }
         
-        const licenseType = licenseInfo.type || 'FULL';
-        const isTrialMode = licenseType === 'TRIAL';
+        // Get a fresh status check so the banner always reflects the
+        // current trial/annual countdown, not just the value passed in
+        const status = this.licenseManager.checkLicenseStatus();
         
         let licenseText = '';
-        if (isTrialMode) {
-            const status = this.licenseManager.checkLicenseStatus();
-            licenseText = 'Trial: ' + (status.daysLeft || 0) + ' days, ' + (status.dealsLeft || 0) + ' deals left';
+        if (status.status === 'trial') {
+            if (status.warning) {
+                licenseText = '⚠️ ' + status.daysLeft + ' day' + (status.daysLeft !== 1 ? 's' : '') +
+                    ' left in trial — <a href="' + this.licenseManager.config.annualBuyUrl +
+                    '" target="_blank" style="color:#ffd27a;">Annual £10</a> or <a href="' +
+                    this.licenseManager.config.lifetimeBuyUrl +
+                    '" target="_blank" style="color:#ffd27a;">Lifetime £25</a>';
+            } else {
+                licenseText = 'Free trial: ' + status.daysLeft + ' days left';
+            }
+        } else if (status.status === 'annual') {
+            licenseText = status.warning
+                ? '⚠️ Renews in ' + status.daysLeft + ' day' + (status.daysLeft !== 1 ? 's' : '') +
+                  ' — <a href="' + this.licenseManager.config.annualBuyUrl +
+                  '" target="_blank" style="color:#ffd27a;">Renew here</a>'
+                : 'Annual licence — ' + status.daysLeft + ' days remaining';
+        } else if (status.status === 'lifetime') {
+            licenseText = 'Lifetime access — thank you!';
         } else {
             licenseText = 'Full Version Activated';
         }
@@ -424,9 +440,9 @@ class BridgeApp {
         
         const gameContent = '<div class="game-content"><div class="mode-selection">' + modeGrid + '</div></div>';
         const currentState = '<div class="current-state">Press 1-5 to select bridge scoring mode</div>';
-        const licenseStatus = '<div class="license-status">' + licenseText + '</div>';
+        const licenseStatusHtml = '<div class="license-status">' + licenseText + '</div>';
 
-        display.innerHTML = titleRow + gameContent + currentState + licenseStatus;
+        display.innerHTML = titleRow + gameContent + currentState + licenseStatusHtml;
 
         // Enable mode selection buttons and controls
         this.updateButtonStates(['1', '2', '3', '4', '5']);
@@ -815,8 +831,7 @@ class BridgeApp {
                 </ul>
                 
                 <h4>Need a License?</h4>
-                <p>Request a code from Mike Smith</p>
-                <p>Email: <a href="mailto:mike.chris.smith@gmail.com">mike.chris.smith@gmail.com</a></p>
+                <p>Get Annual (£10/year) or Lifetime (£25) access at bridgescorer.com/bridge-modes-calculator/</p>
             `
         };
     }
@@ -825,7 +840,7 @@ class BridgeApp {
     // ENHANCED QUIT METHOD WITH LICENSE PURCHASE
     showQuit() {
         const licenseStatus = this.licenseManager.checkLicenseStatus();
-        const isTrialMode = licenseStatus.status === 'trial' || licenseStatus.status === 'expired';
+        const isTrialMode = ['trial', 'expired', 'annual_expired'].includes(licenseStatus.status);
         
         let title = 'Options';
         let content = '<p>What would you like to do?</p>';
@@ -833,7 +848,7 @@ class BridgeApp {
             { text: 'Continue', action: 'close' }
         ];
         
-        // Add license purchase option for trial users
+        // Add license purchase option for trial/expired users
         if (isTrialMode) {
             title = '🎯 Upgrade Available';
             content = `
@@ -845,23 +860,23 @@ class BridgeApp {
                     
                     <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                         <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
-                            <li style="margin-bottom: 6px;"><strong>✅ Unlimited deals and time</strong></li>
+                            <li style="margin-bottom: 6px;"><strong>✅ Unlimited time, no restrictions</strong></li>
                             <li style="margin-bottom: 6px;"><strong>✅ All 5 bridge scoring modes</strong></li>
                             <li style="margin-bottom: 6px;"><strong>✅ Advanced scoring features</strong></li>
-                            <li style="margin-bottom: 0;"><strong>✅ Lifetime updates</strong></li>
+                            <li style="margin-bottom: 0;"><strong>✅ Ongoing updates</strong></li>
                         </ul>
                     </div>
                     
                     <div style="background: #e3f2fd; padding: 16px; border-radius: 8px; text-align: center;">
-                        <p style="margin: 0; font-weight: bold; color: #1976d2;">Request a license code from Mike Smith</p>
+                        <p style="margin: 0; font-weight: bold; color: #1976d2;">Annual £10/year or Lifetime £25 one-off</p>
                     </div>
                 </div>
             `;
             
             buttons = [
                 { text: 'Continue Playing', action: 'close' },
-                { text: 'Request License', action: () => this.showPurchaseInfo() },
-                { text: 'Enter License Code', action: () => this.showLicenseEntry(this.licenseManager.checkLicenseStatus()) }
+                { text: 'Get a Licence', action: () => this.showPurchaseInfo() },
+                { text: 'Enter Code', action: () => this.showLicenseEntry(this.licenseManager.checkLicenseStatus()) }
             ];
         } else {
             // Full version - standard quit menu
@@ -874,79 +889,51 @@ class BridgeApp {
         this.showMobileOptimizedModal(title, content, buttons);
     }
 
-    // LICENSE REQUEST INFORMATION - MOBILE OPTIMIZED
+    // LICENSE PURCHASE INFORMATION - MOBILE OPTIMIZED
     showPurchaseInfo() {
+        const annualUrl = this.licenseManager.config.annualBuyUrl;
+        const lifetimeUrl = this.licenseManager.config.lifetimeBuyUrl;
+
         const content = `
             <div style="padding: 20px; font-size: 14px; line-height: 1.4;">
                 <div style="margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 16px;">📧 Request Full License</h4>
-                    <p style="margin: 0; font-weight: bold;">Bridge Modes Calculator - Full Version</p>
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 16px;">🔓 Unlock the Full Version</h4>
+                    <p style="margin: 0; font-weight: bold;">Bridge Modes Calculator</p>
                 </div>
                 
                 <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <h5 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 14px;">What's Included:</h5>
                     <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.4;">
                         <li>All 5 bridge scoring modes</li>
-                        <li>Unlimited deals and playing time</li>
+                        <li>Unlimited playing time</li>
                         <li>Advanced scoring features</li>
-                        <li>Detailed score tracking</li>
-                        <li>Lifetime updates</li>
+                        <li>Ongoing updates</li>
                     </ul>
                 </div>
                 
+                <div style="background: #e8f5e8; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+                    <p style="margin: 0 0 6px 0; font-weight: bold; color: #155724;">Annual — £10/year</p>
+                    <p style="margin: 0; font-size: 13px;"><a href="${annualUrl}" target="_blank" style="color: #155724;">${annualUrl}</a></p>
+                </div>
+
                 <div style="background: #e8f5e8; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                    <h5 style="margin: 0 0 12px 0; color: #155724; font-size: 14px;">How to Request:</h5>
-                    <div style="font-size: 13px; color: #155724;">
-                        <p style="margin: 0 0 8px 0;"><strong>1.</strong> Email: <a href="mailto:mike.chris.smith@gmail.com?subject=Bridge%20Modes%20License%20Request" style="color: #155724;">mike.chris.smith@gmail.com</a></p>
-                        <p style="margin: 0 0 8px 0;"><strong>2.</strong> Include "License Request" in subject</p>
-                        <p style="margin: 0;"><strong>3.</strong> Mike will respond with license details</p>
-                    </div>
+                    <p style="margin: 0 0 6px 0; font-weight: bold; color: #155724;">Lifetime — £25 one-off</p>
+                    <p style="margin: 0; font-size: 13px;"><a href="${lifetimeUrl}" target="_blank" style="color: #155724;">${lifetimeUrl}</a></p>
                 </div>
                 
                 <div style="text-align: center; background: #fff3cd; padding: 12px; border-radius: 8px;">
-                    <p style="margin: 0; font-weight: bold; color: #856404; font-size: 13px;">Contact Mike Smith for pricing and availability</p>
+                    <p style="margin: 0; font-weight: bold; color: #856404; font-size: 13px;">You'll receive a 6-digit unlock code by download after purchase.</p>
                 </div>
             </div>
         `;
         
         const buttons = [
-            { text: 'Send Email', action: () => this.openPurchaseEmail() },
-            { text: 'Back', action: () => this.showQuit() },
+            { text: 'Get Annual', action: () => window.open(annualUrl, '_blank') },
+            { text: 'Get Lifetime', action: () => window.open(lifetimeUrl, '_blank') },
             { text: 'Close', action: 'close' }
         ];
         
-        this.showMobileOptimizedModal('📧 Request License', content, buttons);
-    }
-
-    // OPEN EMAIL CLIENT FOR LICENSE REQUEST
-    openPurchaseEmail() {
-        const subject = encodeURIComponent('Bridge Modes License Request');
-        const body = encodeURIComponent(`Hi Mike,
-
-I would like to request information about a full license for Bridge Modes Calculator.
-
-Device Info:
-- User Agent: ${navigator.userAgent}
-- Date: ${new Date().toLocaleString()}
-
-Please let me know about pricing and availability.
-
-Thanks!`);
-        
-        const mailtoLink = `mailto:mike.chris.smith@gmail.com?subject=${subject}&body=${body}`;
-        
-        try {
-            window.open(mailtoLink, '_blank');
-        } catch (error) {
-            // Fallback for mobile devices
-            this.showMobileOptimizedModal('📧 Contact Information', 
-                `<div style="padding: 20px; text-align: center;">
-                    <p style="margin: 0 0 12px 0;"><strong>Email:</strong> mike.chris.smith@gmail.com</p>
-                    <p style="margin: 0;"><strong>Subject:</strong> Bridge Modes License Request</p>
-                </div>`,
-                [{ text: 'Close', action: 'close' }]
-            );
-        }
+        this.showMobileOptimizedModal('🔓 Unlock Full Version', content, buttons);
     }
 
     closeApp() {
@@ -1163,7 +1150,8 @@ Thanks!`);
         
         document.body.appendChild(modal);
     }
-// END SECTION NINE// SECTION TEN - UI State Management
+// END SECTION NINE
+// SECTION TEN - UI State Management
     showLoadingState(message = 'Loading...') {
         const statusMessage = document.getElementById('statusMessage');
         if (statusMessage) {
@@ -1201,10 +1189,6 @@ Thanks!`);
         return this.licenseManager.checkLicenseStatus();
     }
 
-    getDealsStats() {
-        return this.licenseManager.getDealsStats();
-    }
-
     // Return to mode selection (used by bridge modes)
     returnToModeSelection() {
         if (this.currentBridgeMode) {
@@ -1228,15 +1212,12 @@ Thanks!`);
     }
 
     // Deal completion callback
+    // NOTE: the new license system is time-based (2-month trial), not
+    // deal-based, so this no longer needs to check/increment a deal
+    // counter. Kept as a hook in case a bridge mode calls it, but it
+    // now does nothing license-related.
     onDealCompleted() {
-        const result = this.licenseManager.incrementDealsPlayed();
-        
-        if (result.trialExpired) {
-            this.showMessage('Trial expired! Enter full version code.', 'error');
-            setTimeout(() => {
-                this.showLicenseEntry(result.licenseStatus);
-            }, 2000);
-        }
+        // No-op under the new time-based trial system.
     }
 
     closeModal() {
@@ -1451,8 +1432,3 @@ if (location.hostname === 'localhost' ||
     console.log('• Check console for version: Should show "APP.JS VERSION: 2025-01-31-ENHANCED"');
 }
 // END SECTION TWELVE - FILE COMPLETE
-
-
-
-
-
