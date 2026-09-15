@@ -1309,9 +1309,9 @@ class DuplicateBridgeMode extends BaseBridgeMode {
         let groupHTML = '';
 
         Object.keys(groups).sort((a,b) => a-b).forEach(pairs => {
-            groupHTML += `<div style="margin-bottom: 8px;">
+            groupHTML += `<div style="margin-bottom: 20px;">
                 <div style="font-size: 11px; color: #95a5a6; text-transform: uppercase;
-                    letter-spacing: 1px; margin-bottom: 4px;">${pairs} Pairs</div>`;
+                    letter-spacing: 1px; margin-bottom: 10px;">${pairs} Pairs</div>`;
             groups[pairs].forEach(({ key, mov }) => {
                 const color = colors[colorIdx % colors.length];
                 colorIdx++;
@@ -1319,7 +1319,7 @@ class DuplicateBridgeMode extends BaseBridgeMode {
                 groupHTML += `
                     <button class="mov-pick-btn" data-key="${key}"
                         style="display: block; width: 100%; padding: 11px 14px;
-                            margin-bottom: 6px; border: none; border-radius: 7px;
+                            margin-bottom: 16px; border: none; border-radius: 7px;
                             background: ${color}; color: white; font-size: 14px;
                             font-weight: 600; cursor: pointer; text-align: left;
                             line-height: 1.3; min-height: 44px; touch-action: manipulation;">
