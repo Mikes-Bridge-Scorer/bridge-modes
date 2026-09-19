@@ -1,8 +1,8 @@
 // Bridge Modes Calculator - COMPLETE Offline Service Worker
 // Version: 2025-02-13-TABLE-CARDS - All files included for cruise use
-// This caches EVERYTHING needed for 100% offline operation fix 3
+// This caches EVERYTHING needed for 100% offline operation
 
-const CACHE_VERSION = 'bridge-modes-v2026-07-03-downloads-network-first';
+const CACHE_VERSION = 'bridge-modes-v2026-09-19-kitchen-bonus-fix';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const DYNAMIC_CACHE = CACHE_VERSION + '-dynamic';
 
