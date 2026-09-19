@@ -1068,7 +1068,6 @@ showQuit() {
                 <h3>📅 License Status</h3>
                 <div class="license-info">
                     <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days remaining</p>
-                    <p><strong>Deals Left:</strong> ${licenseStatus.dealsLeft} deals</p>
                 </div>
             </div>
         `;
@@ -2484,7 +2483,6 @@ showQuit() {
             <div style="padding: 15px; border-bottom: 1px solid #eee;">
                 <h3 style="color: #e67e22; margin-bottom: 10px;">📅 License Status</h3>
                 <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days remaining</p>
-                <p><strong>Deals Left:</strong> ${licenseStatus.dealsLeft} deals</p>
             </div>
         `;
     }

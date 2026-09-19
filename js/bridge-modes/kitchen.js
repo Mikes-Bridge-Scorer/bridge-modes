@@ -1199,7 +1199,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             licenseSection = `
                 <div class="content-section">
                     <h4 style="margin: 0 0 8px 0; color: #1976d2;">📅 License Status</h4>
-                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} days, ${licenseStatus.dealsLeft} deals remaining</p>
+                    <p><strong>Trial Version:</strong> ${licenseStatus.daysLeft} day${licenseStatus.daysLeft !== 1 ? 's' : ''} remaining</p>
                 </div>
             `;
         }

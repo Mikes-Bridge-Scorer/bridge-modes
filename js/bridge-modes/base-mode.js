@@ -124,7 +124,7 @@ class BaseBridgeMode {
         let text = '';
         
         if (status.status === 'trial') {
-            text = `Trial: ${status.daysLeft} days, ${status.dealsLeft} deals left`;
+            text = `Trial: ${status.daysLeft} day${status.daysLeft !== 1 ? 's' : ''} left`;
         } else if (status.status === 'full') {
             text = 'Full Version Activated';
         }
