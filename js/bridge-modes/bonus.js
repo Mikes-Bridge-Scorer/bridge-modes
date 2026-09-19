@@ -3104,6 +3104,7 @@ handleBack() {
             this.inputState = 'suit_selection';
             this.currentContract.suit = null;
             this.currentContract.doubled = '';
+            this.currentContract.declarer = null;
             console.log('🔙 Back to suit selection');
             break;
         case 'result_type_selection':

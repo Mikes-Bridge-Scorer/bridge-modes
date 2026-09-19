@@ -279,6 +279,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                 this.inputState = 'suit_selection';
                 this.currentContract.suit = null;
                 this.currentContract.doubled = '';
+                this.currentContract.declarer = null;
                 break;
             case 'result_type_selection':
                 this.inputState = 'declarer_selection';
