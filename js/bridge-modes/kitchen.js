@@ -1418,6 +1418,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
             case 'declarer_selection':
                 const contractSoFar = `${this.currentContract.level}${this.currentContract.suit}`;
                 const doubleText = this.currentContract.doubled ? ` ${this.currentContract.doubled}` : '';
+                const declarerText = this.currentContract.declarer ? ` by ${this.currentContract.declarer}` : '';
                 
                 return `
                     <div class="title-score-row">
@@ -1429,7 +1430,7 @@ class KitchenBridgeMode extends BaseBridgeMode {
                     </div>
                     <div class="game-content">
                         <div><strong>Deal ${this.currentDeal} - ${this.vulnerability}</strong></div>
-                        <div><strong>Contract: ${contractSoFar}${doubleText}</strong></div>
+                        <div><strong>Contract: ${contractSoFar}${doubleText}${declarerText}</strong></div>
                     </div>
                     <div class="current-state">
                         ${this.currentContract.declarer ? 
