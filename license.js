@@ -188,6 +188,16 @@ class LicenseManager {
         localStorage.removeItem(this.storageKey);
         console.log('🧹 License cleared');
     }
+
+    // ---- Legacy compatibility ----
+    // Older mode files (kitchen.js, and possibly others) still call this
+    // from a previous deals-counted trial system. The current trial is
+    // entirely date-based (see getTrialDaysLeft above), so this doesn't
+    // need to do anything — it just needs to exist so those calls don't
+    // throw and break the app mid-game.
+    incrementDealsPlayed() {
+        // Intentionally a no-op — trial tracking is date-based now.
+    }
 }
 
 // Export for both CommonJS and ES modules
