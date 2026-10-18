@@ -677,19 +677,42 @@ class BridgeApp {
         }
     }
 
+    // The browser cancels a screen wake lock whenever the app is hidden (switching apps,
+    // pulling down notifications, the phone's own lock). Ask for it again each time the
+    // app comes back, for as long as the Wake switch is on. (Oct 2026)
+    async requestWakeLock() {
+        try {
+            this.wakeLock = await navigator.wakeLock.request('screen');
+            this.wakeLock.addEventListener('release', () => { this.wakeLock = null; });
+            if (!this._wakeWatch) {
+                this._wakeWatch = true;
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible' && this.wantWake && !this.wakeLock) {
+                        this.requestWakeLock();
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Wake lock request failed:', e);
+            this.wakeLock = null;
+        }
+    }
+
     async toggleWakeLock() {
         const wakeToggle = document.getElementById('wakeToggle');
         
         try {
             if ('wakeLock' in navigator) {
-                if (this.wakeLock) {
-                    await this.wakeLock.release();
+                if (this.wakeLock || this.wantWake) {
+                    this.wantWake = false;
+                    if (this.wakeLock) await this.wakeLock.release();
                     this.wakeLock = null;
                     this.isWakeActive = false;
                     wakeToggle?.classList.remove('active');
                     this.showMessage('Screen sleep enabled', 'info');
                 } else {
-                    this.wakeLock = await navigator.wakeLock.request('screen');
+                    this.wantWake = true;
+                    await this.requestWakeLock();
                     this.isWakeActive = true;
                     wakeToggle?.classList.add('active');
                     this.showMessage('Screen will stay awake', 'success');
